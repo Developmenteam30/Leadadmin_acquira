@@ -1,4 +1,7 @@
 <?php
+
+chdir(__DIR__);
+
 $cron_version = '9.6';
 include("_f_onlms_v".$cron_version.".php");//all the functions necessary to run the script are included first.
 
