@@ -4,7 +4,7 @@ if(isset($_REQUEST['processLeadVersionOverride'])){
 	$version = $_REQUEST['processLeadVersionOverride'];
 	error_reporting(-1);
 } else { 
-	$version = "1.8";
+	$version = "1.9";
 	error_reporting(0);
 }
 include("processLead_v".$version.".php");
