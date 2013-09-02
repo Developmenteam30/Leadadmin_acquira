@@ -1,10 +1,13 @@
+<?php
+	include("c_config.php");
+?>
 <html>
 
 <head>
 </head>
 
 <body>
-<p>QMLeads.com</p>
+<p><?php echo SITE_URL; ?></p>
 </body>
 
 </html>
