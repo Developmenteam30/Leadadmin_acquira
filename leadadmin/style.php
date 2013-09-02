@@ -122,7 +122,7 @@ div.navContainer, div.logoutContainer{
 		border-right: 1px solid <?php echo $navDividers; ?>;
 		padding: 15px 15px 15px 15px;
 		margin: 0px;
-		font-size: .75em; 
+		font-size: .8em; 
 		background-image: linear-gradient();
 		background-image: -o-linear-gradient(<?php echo $gradient; ?>);
 		background-image: -moz-linear-gradient(<?php echo $gradient; ?>);
@@ -153,7 +153,7 @@ div.navContainer, div.logoutContainer{
 
 div.mainContainer { 
 	background: #FFFFFF;
-	width: 95%; min-height: 100%; 
+	width: 95%; min-height: 100%;	
 	min-width: 300px;
 	padding-top: 1px; 
 	margin:auto; margin-top: 0px; margin-bottom: 0px;
@@ -206,6 +206,7 @@ td.fTI_options { width: 35%; }
 
 div.dashboardIncoming { width: 50%; }
 div.dashboardOutgoing { width: 50%; }
+
 @media (max-width: 1360px){ 
 	div.navContainer { width: 100%; margin-top: 20px; }
 		a.navButton {		
