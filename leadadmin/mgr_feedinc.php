@@ -3,7 +3,7 @@
 if(isset($_REQUEST['mgr_feedincVersionOverride'])){ 
 	$version = $_REQUEST['mgr_feedincVersionOverride'];
 } else { 
-	$version = "1.1";
+	$version = "1.2";
 }
 include("mgr_feedinc_v".$version.".php");
 //Changelog
