@@ -8,7 +8,7 @@ if ( ( $result = getActiveFeeds() ) ) {
 
 		print "* Processing feed: {$obj->idFeedOut}\n";
 
-		system( sprintf( 'php -f /var/www/html/qmleads.com/leadadmin/pushLead/onlms_process.php -- --v=%s --idFeedOut=%s --cron=1 >/dev/null 2>&1 &',
+		system( sprintf( 'php -f onlms_process.php -- --v=%s --idFeedOut=%s --cron=1 >/dev/null 2>&1 &',
 							escapeshellarg( $cron_version ),
 							escapeshellarg( $obj->idFeedOut ) 
 						)
