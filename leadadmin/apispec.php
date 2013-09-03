@@ -61,7 +61,7 @@ to post a lead to the system.</FONT></P>
 </P>
 <P STYLE="margin-bottom: 0in"><FONT FACE="Verdana, sans-serif"><B>Posting
 URL</B></FONT><FONT FACE="Verdana, sans-serif">: 
-http://<?php echo SITE_URL; ?>/<?php echo LIVE_FOLDER; ?>/<?php echo $feed->label; ?>/livefeed.php</FONT></P>
+https://<?php echo SITE_URL; ?>/<?php echo LIVE_FOLDER; ?>/<?php echo $feed->label; ?>/livefeed.php</FONT></P>
 <P STYLE="margin-bottom: 0in"><BR>
 </P>
 <P STYLE="margin-bottom: 0in"><FONT FACE="Verdana, sans-serif">Use
