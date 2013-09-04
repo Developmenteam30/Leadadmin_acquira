@@ -25,7 +25,7 @@ if($c) {
 	}
 }
 
-lockTables();
+lockTables($feedLabel);
 
 if($c &&( 
 	!isset($_REQUEST['pswd'])
@@ -249,6 +249,8 @@ $xml = Array2XML::createXML('response', $result);
 
 echo $xml->saveXML();
 
+unlockTables();
+
 //Population Portion of the script. 
 if($c){ 
 	$feedsOut = getPopulationSettings($feedParams->idFeedIn);
@@ -332,4 +334,3 @@ if($c){
 	}
 }
 
-unlockTables();
