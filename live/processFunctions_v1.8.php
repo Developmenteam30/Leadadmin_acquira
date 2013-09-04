@@ -411,4 +411,17 @@ function checkDuplicate($column, $requestValues, $feedLabel, $dedupeAcross){
 	return $dupeCount;
 	
 }
-?>
+
+function lockTables($feedLabel){
+	dbCon();
+	$lockQuery = "LOCK TABLE `".DATABASE_NAME."`.`feedinc_".$feedLabel."` WRITE";
+	dbQry($lockQuery, 'Locking tables.', true);
+	dbDcon();
+}
+
+function unlockTables($feedLabel){
+	dbCon();
+	dbQry('UNLOCK TABLES', 'Unlocking tables.', true);
+	dbDcon();
+}
+

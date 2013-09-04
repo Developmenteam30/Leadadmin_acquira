@@ -24,6 +24,9 @@ if($c) {
 		$allowedFields = explode(';', $feedParams->allowedFields);
 	}
 }
+
+lockTables();
+
 if($c &&( 
 	!isset($_REQUEST['pswd'])
 	|| empty($_REQUEST['pswd'])
@@ -328,4 +331,5 @@ if($c){
 		}
 	}
 }
-?>
+
+unlockTables();

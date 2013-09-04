@@ -81,7 +81,7 @@ function dbQry(
 	, $logDupeNotices = false 
 	, $verbose = false
 ) { 
-	$nonSelectQueries = array('INSERT', 'UPDATE', 'DELETE', 'CREATE', 'RENAME');
+	$nonSelectQueries = array('INSERT', 'UPDATE', 'DELETE', 'CREATE', 'RENAME','LOCK','UNLOCK');
 	$nonSelect = false;
 	foreach($nonSelectQueries as $queryCommand){ 
 		if(preg_match('/^'.$queryCommand.'/', $query)){ 
