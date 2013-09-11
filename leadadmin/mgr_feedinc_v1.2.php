@@ -668,7 +668,7 @@ if($incomingFeeds === false){
 		<td class='fTI_label'><p><?php echo $feed->label; ?></p></td>
 		<td class='fTI_description'><p><?php echo $feed->description; ?></p></td>
 		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
-		<td class='fTI_rejected'><p class='aRight'><?php echo $feed->dailyCountInvalid; ?></p></td>
+		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
 			<p>
 				<a href='#' class='nonLink' 

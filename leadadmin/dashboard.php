@@ -107,7 +107,7 @@ if($incomingFeeds === false){
 		global $companyCache;
 		//print_r($companyCache[$item1]->name);
 		//print_r($companyCache[$item2]->name);
-		return strcmp ( $companyCache[$item1]->name , $companyCache[$item2]->name );
+		return strcasecmp ( $companyCache[$item1]->name , $companyCache[$item2]->name );
 	}
 	uksort($companyFeedLists,'companyListSort');
 ?>
@@ -180,7 +180,7 @@ if($incomingFeeds === false){
 		<td class='fTI_label'><p><?php echo $feed->label; ?></p></td>
 		<td class='fTI_description'><p><?php echo $feed->description; ?></p></td>
 		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
-		<td class='fTI_rejected'><p class='aRight'><?php echo $feed->dailyCountInvalid; ?></p></td>
+		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
 			<p>
 				<a href='#' class='nonLink' 
@@ -331,7 +331,7 @@ if($outgoingFeeds === false){
 		global $companyCache;
 		//print_r($companyCache[$item1]->name);
 		//print_r($companyCache[$item2]->name);
-		return strcmp ( $companyCache[$item1]->name , $companyCache[$item2]->name );
+		return strcasecmp ( $companyCache[$item1]->name , $companyCache[$item2]->name );
 	}
 	uksort($companyFeedLists,'companyListSort');
 ?>
@@ -406,7 +406,7 @@ if($outgoingFeeds === false){
 		<td class='fTO_statusFeed'><p><?php echo $feed->statusFeed; ?></p></td>
 		<td class='fTO_statusCron'><p><?php echo $feed->statusCron; ?></p></td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->accepted; ?></p></td>
-		<td class='fTO_rejected'><p class='aRight'><?php echo $feed->rejected; ?></p></td>
+		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></p></td>
 		<td class='fTO_options'>
 			<p>&nbsp;</p>
 		</td>

@@ -207,6 +207,48 @@ td.fTI_options { width: 35%; }
 div.dashboardIncoming { width: 50%; }
 div.dashboardOutgoing { width: 50%; }
 
+/* Rejections Table */
+.rejectionsTable {
+	border: 1px solid;
+	border-collapse: collapse;
+	margin: 20px 0 20px 0;
+	width: 100%;
+}
+
+.rejectionsTable th {
+	border: 1px solid #909090;
+	font-size:14px;
+	font-family:Arial;
+	font-weight:bold;
+	padding: 4px;
+	vertical-align: middle;
+}
+
+.rejectionsTable td {
+	border: 1px solid #909090;
+	font-size:12px;
+	font-family:Arial;
+	font-weight:normal;
+	padding: 4px;
+	vertical-align: middle;
+}
+
+.rejectionsTable tbody tr:nth-child(4n),
+.rejectionsTable tbody tr:nth-child(4n-1) {
+	background-color:#ffffff;
+}
+
+.rejectionsTable tbody tr:nth-child(4n-2),
+.rejectionsTable tbody tr:nth-child(4n-3) {
+	background-color:#ffd4aa;
+}
+
+.rejectionsTable .error {
+	border: 1px solid #909090;
+	color: #ff0000;
+	font-weight: bold;
+}
+
 @media (max-width: 1360px){ 
 	div.navContainer { width: 100%; margin-top: 20px; }
 		a.navButton {		
