@@ -10,7 +10,7 @@ include(SITE_ROOT."_connx.php");
 include(ADMIN_ROOT."loginCheck.php");
 include(ADMIN_ROOT."f_site.php");
 include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
-$title = 'Dashboard';
+$title = 'Rejection Log';
 include("c_header.php");
 
 function getInboundRejections( $label ) {
