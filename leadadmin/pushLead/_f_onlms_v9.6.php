@@ -189,7 +189,7 @@ function lockfile()
 		logError(
 			'Outgoing Feed '.$settings['feedParams']->label
 			, 'Script already running. Script overlap.'
-			, true
+			, false
 		);
 		echo "Script already running. Ending script.\n";
 	}
