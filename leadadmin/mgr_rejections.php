@@ -86,10 +86,11 @@ if(empty($label) || empty($type)) {
 <table class="rejectionsTable">
 	<thead>
 		<tr>
-			<th>Timestamp</th>
-			<th colspan="10">Error Message</th>
+			<th>Error Timestamp</th>
+			<th colspan="9">Error Message</th>
 			<th>URL</th>
 			<th>Email</th>
+			<th>Lead Timestamp</th>
 		</tr>
 		<tr>
 			<th>First Name</th>
@@ -111,9 +112,10 @@ if(empty($label) || empty($type)) {
 <?php		foreach($records as $record) {  ?>
 	<tr>
 		<td><?php echo htmlspecialchars($record->timestamp); ?></td>
-		<td class="error" colspan="10"><?php echo htmlspecialchars($record->error); ?></td>
+		<td class="error" colspan="9"><?php echo htmlspecialchars($record->error); ?></td>
 		<td><?php echo htmlspecialchars($record->url); ?></td>
 		<td><?php echo htmlspecialchars($record->email); ?></td>
+		<td><?php echo htmlspecialchars($record->stamp); ?></td>
 	</tr>
 	<tr>
 		<td><?php echo htmlspecialchars($record->fname); ?></td>
