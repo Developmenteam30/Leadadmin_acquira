@@ -251,7 +251,7 @@ function exportData($feedObject, $settings){
 	}
 	dbDcon();
 	if($c){ 
-		$filePath = ADMIN_ROOT.$feedObject->label."_".time().".csv";
+		$filePath = ADMIN_ROOT.'exports/'.$feedObject->label."_".time().".csv";
 		$fileLink = $feedObject->label."_".time().".csv";
 		$file = fopen($filePath, "w");
 		if(!file_exists($filePath)){ 
