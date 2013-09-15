@@ -594,7 +594,7 @@ if($incomingFeeds === false){
 		global $companyCache;
 		//print_r($companyCache[$item1]->name);
 		//print_r($companyCache[$item2]->name);
-		return strcmp ( $companyCache[$item1]->name , $companyCache[$item2]->name );
+		return strcasecmp ( $companyCache[$item1]->name , $companyCache[$item2]->name );
 	}
 	uksort($companyFeedLists,'companyListSort');
 ?>
