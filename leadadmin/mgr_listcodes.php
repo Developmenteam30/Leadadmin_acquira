@@ -175,18 +175,21 @@ if(isset($_REQUEST['a'])){
 
 				// First pass to validate the data
 				foreach( $urls as $url ) {
-					if( strlen( trim( $url ) ) > 0 && filter_var( 'http://' . $url, FILTER_VALIDATE_URL ) === FALSE ) {
+					if( strlen( trim( $url ) ) > 0 && !filter_var( 'http://' . trim( $url ), FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED ) ) {
+						$c = false;
 						$result['error'] = "Invalid URL: {$url}";
 						break;
 					}
 				}
 
-				// If validation passed, try to add the data to the DB
-				foreach( $urls as $url ) {
-					if( strlen( trim( $url ) ) > 0 ) {
-						$queryResult = addListcodeURL( $_REQUEST['idListcode'], trim ( $url ) );
-						if( !$queryResult ) {
-							$c = false;
+				if( $c ) {
+					// If validation passed, try to add the data to the DB
+					foreach( $urls as $url ) {
+						if( strlen( trim( $url ) ) > 0 ) {
+							$queryResult = addListcodeURL( $_REQUEST['idListcode'], trim ( $url ) );
+							if( !$queryResult ) {
+								$c = false;
+							}
 						}
 					}
 				}
