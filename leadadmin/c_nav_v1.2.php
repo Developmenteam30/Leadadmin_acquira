@@ -20,6 +20,9 @@
 		<a class='navButton' href='mgr_companies.php'><img 
 			class='navIcon' src='images/icon_companies_1.gif'
 		/>Companies</a>
+		<a class='navButton' href='mgr_listcodes.php'><img 
+			class='navIcon' src='images/icon_companies_1.gif'
+		/>List Codes</a>
 		<a class='navButton' href='mgr_feedinc.php'><img 
 			class='navIcon' src='images/icon_incoming_1.gif' 
 		/>Incoming Feeds</a>

@@ -678,15 +678,6 @@ if($incomingFeeds === false){
 					target='_blank'
 				>API Spec</a> |
 				<a href='#' class='nonLink'
-					onclick='display(<?php 
-						?>"dialog_listcodes"<?php
-						?>, { <?php
-							?>"sub":"<?php echo $feed->idFeedIn; ?>"<?php
-							?>, "idFeedIn": <?php echo $feed->idFeedIn; ?> <?php
-						?>}<?php
-					?>);'					
-				>Generate Listcode</a> |
-				<a href='#' class='nonLink'
 onclick='display("dialog_editfeed", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'
 				>Edit Feed</a> |
 				<a href='#' class='nonLink'

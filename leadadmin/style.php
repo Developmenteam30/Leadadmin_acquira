@@ -208,6 +208,11 @@ td.fTI_accepted { width: 8%;  }
 td.fTI_rejected { width: 8%;  }
 td.fTI_options { width: 35%; }
 
+table.feedTableListcodes { width: 100%; font-size: .8em; border-collapse: collapse; }
+table.feedTableListcodes td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top; }
+table.feedTableListcodes td p { padding: 0 0 3px 0; }
+table.feedTableListcodes tr.header { font-weight: bold; text-align: center; }
+
 div.dashboardIncoming { width: 50%; }
 div.dashboardOutgoing { width: 50%; }
 
