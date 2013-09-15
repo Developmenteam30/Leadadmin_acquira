@@ -53,7 +53,7 @@ function addFeedOut(
 			.", '".$GLOBALS['dbconnx']->escape_string($staticFields)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($varFields)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($fieldMap)."' "
-			.", '0', '0', '1' "
+			.", '1', '0', '1' "
 			.", '".$GLOBALS['dbconnx']->escape_string($successString)."' "
 			.", '100' "
 			.", '".$GLOBALS['dbconnx']->escape_string($urlassignments)."' "
@@ -175,9 +175,9 @@ function addPopulationParameter(
 	dbCon("insertUpdate");
 	$addParameter = "INSERT INTO `".DATABASE_NAME."`.`feedPopulation` "
 		."( "
-			."`idFeedIn`,`idFeedOut`,`filterTypeUrl`,`filterUrl`,`filterTypeEmail`,`filterEmail` "
+			."`enabled`,`idFeedIn`,`idFeedOut`,`filterTypeUrl`,`filterUrl`,`filterTypeEmail`,`filterEmail` "
 			.", `filterTypeListcode`,`filterListcode`, `forceUrl`, `forceUrlList` "
-		.") VALUES ( "
+		.") VALUES (1, "
 		."  ".$idFeedIn." "
 		.", ".$idFeedOut." "
 		.", ".$filterTypeUrl." "
@@ -752,6 +752,15 @@ if(isset($_REQUEST['a'])){
 				$result['status'] = 1;
 			}
 		break;
+		case 'sendTestRecord':
+        	system( sprintf( 'php -f %s/pushLead/onlms_process.php -- --v=9.6 --testing=1 --idFeedOut=%d >/dev/null 2>&1 &',
+							ADMIN_ROOT,
+                            intval($_REQUEST['idFeedOut'])
+                  )
+            );
+
+			$result['status'] = 1;
+		break;
 	}
 	echo json_encode($result);
 	exit;
@@ -934,6 +943,9 @@ if($outgoingFeeds === false){
 						<a href='#' class='nonLink' 
 					onclick="display('dialog_newfeedout', { 'idFeedOut':'<?php echo $feed->idFeedOut; ?>'}, true);  $('#cM_<?php echo $feed->idFeedOut; ?>').toggle();" 
 						>Create New Feed From This Feed</a><br />
+						<a href='#' class='nonLink'
+					onclick="sendTestRecord(<?php echo $feed->idFeedOut; ?>, { 'sub': '<?php echo $feed->idCompany; ?>'});"
+						>Send one test record</a><br />
 						<a href='#' class='nonLink'
 					onclick="feedRetire(<?php echo $feed->idFeedOut; ?>, { 'sub': '<?php echo $feed->idCompany; ?>'});"
 						>Retire This Feed</a>
@@ -2588,6 +2600,26 @@ function feedRetire(idFeedOut, options){
 			}			
 		});
 	}	
+}
+
+function sendTestRecord(idFeedOut, options){ 
+		var response = $.ajax({
+			url: "mgr_feedout.php",
+			type: "POST",
+			async: true,
+			data: ({
+				"a" : "sendTestRecord"
+				, "idFeedOut": idFeedOut
+			})
+		}).done(function(responseText){ 
+			var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
+			toggleHidden('cM_' + idFeedOut, '');
+			if(result===null) { 
+				alert("JSON Failed: "+responseText); 
+			} else { 
+				alert("One test record sent to feed");
+			}			
+		});
 }
 
 function equalHeight(group) {
