@@ -151,6 +151,10 @@ div.navContainer, div.logoutContainer{
 		border-right: 0px;
 	}
 
+a:hover.navButton{
+	text-decoration: underline;
+}
+
 div.mainContainer { 
 	background: #FFFFFF;
 	width: 95%; min-height: 100%;	
@@ -183,7 +187,7 @@ td.fTO_companyName { width: 21%;  }
 	td.fTO_idFeedOut { width: 3%;  }
 	td.fTO_label { width: 18%;  }
 td.fTO_feedOverview { width: 46%;  }
-	td.fTO_description { width: 20%;  }
+	td.fTO_description { width: 20%; word-break:break-all;  }
 	td.fTO_statusPop { width: 10%;  }
 	td.fTO_statusFeed { width: 8%;  }
 	td.fTO_statusCron { width: 8%;  }
@@ -249,22 +253,15 @@ div.dashboardOutgoing { width: 50%; }
 	font-weight: bold;
 }
 
-@media (max-width: 1360px){ 
-	div.navContainer { width: 100%; margin-top: 20px; }
-		a.navButton {		
-			border: 0px;
-			width: 14.65%; /*Six Buttons, each one sixth.*/
-			padding: 2% 1% 2% 1%;			
-		}
-		a:hover.navButton{
-			text-decoration: underline;
-		}
+@media (max-width: 1499px){
+	div.navContainer { margin: 20px auto 0; }
 }
 @media (max-width: 800px) {
 	div.dashboardIncoming { width: 100%; }
 	div.dashboardOutgoing { width: 100%; }
 }
 @media (max-width: 600px){
+	div.navContainer { margin-top: 0px; }
 	div.headerRow { width: 95%; }
 		div.logoutContainer { width: 100%; }
 		div.logoutContainer a.navButton { width: 100%; }

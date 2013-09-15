@@ -338,7 +338,7 @@ if($outgoingFeeds === false){
 <table class='feedTableOutgoing bgWhite'>
 	<tr class='fTORow fTO_Row bgGray' style='width: 100%;'>
 		<td class='fTO_companyName' colspan='2'><p>Company</p></td>
-		<td class='fTO_feedOverview' colspan='4'><p>Total Feeds</p></td>
+		<td class='fTO_feedOverview'><p>Total Feeds</p></td>
 		<td class='fTO_accepted'><p class='aCenter'>Total Accepted</p></td>
 		<td class='fTO_rejected'><p class='aCenter'>Total Rejected</p></td>
 		<td class='fTO_options'><p>Options</p></td>
@@ -367,7 +367,7 @@ if($outgoingFeeds === false){
 ?>
 	<tr class='fTORow fTO_Row bgGray'>
 		<td class='fTO_companyName' colspan='2'><p><?php echo $companyCache[$idCompany]->name; ?></p></td>
-		<td class='fTO_feedOverview' colspan='4'>
+		<td class='fTO_feedOverview'>
 			<p>
 				<?php echo count($companyFeedList); ?> (<?php echo $totalActive; ?> Active)
 			</p>
@@ -388,9 +388,6 @@ if($outgoingFeeds === false){
 		<td class='fTO_idFeedOut'><p>ID</p></td>
 		<td class='fTO_label'><p>Feed Label</p></td>
 		<td class='fTO_description'><p>Description</p></td>
-		<td class='fTO_statusPop'><p>Population</p></td>
-		<td class='fTO_statusFeed'><p>Feed Status</p></td>
-		<td class='fTO_statusCron'><p>Processing</p></td>
 		<td class='fTO_accepted'><p class='aCenter'>Accepted</p></td>
 		<td class='fTO_rejected'><p class='aCenter'>Rejected</p></td>
 		<td class='fTO_options'><p>Notes</p></td>
@@ -402,9 +399,6 @@ if($outgoingFeeds === false){
 		<td class='fTO_idFeedOut'><p><?php echo $feed->idFeedOut; ?></p></td>
 		<td class='fTO_label'><p><?php echo $feed->label; ?></p></td>
 		<td class='fTO_description'><p><?php echo $feed->description; ?></p></td>
-		<td class='fTO_statusPop'><p><?php echo $feed->statusPop; ?><p></td>
-		<td class='fTO_statusFeed'><p><?php echo $feed->statusFeed; ?></p></td>
-		<td class='fTO_statusCron'><p><?php echo $feed->statusCron; ?></p></td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->accepted; ?></p></td>
 		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></p></td>
 		<td class='fTO_options'>
