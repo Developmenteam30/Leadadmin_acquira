@@ -77,6 +77,17 @@ function hasinvalidchars($str){
 	return $test;
 }
 
+function hasinvalidzipchars($str){
+	$test=false;
+	$validchars="1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ- ";
+	for ($count=0; $count<strlen($str); $count++)
+	{
+		if (strpos($validchars, $str[$count])===false)
+		$test=true;
+	}
+	return $test;
+}
+
 function hasinvalidurlchars($str){
 	//VER 1.0
 	$test=false;

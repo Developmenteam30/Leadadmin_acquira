@@ -40,6 +40,12 @@ if($c &&(
 }
 
 if($c){ //Validation of incoming data.
+
+	// Special handling for TurnTwo feed that cannot change what URL value is being sent to us
+	if( !empty( $_REQUEST['url'] ) && 'www.5minutemoney.co.uk,www.5minutemoney.co.uk' == $_REQUEST['url'] ) {
+		$_REQUEST['url'] = 'www.5minutemoney.co.uk';
+	}
+
 	if($c){ 
 		foreach($required as $requiredKey){ 
 			switch($requiredKey){

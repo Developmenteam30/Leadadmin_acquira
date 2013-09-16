@@ -280,15 +280,10 @@ function validate($fieldType, $value, $feedParams){
 			}
 		break;
 		case 'zip': 
-			switch(strlen($value)){ 
-				case "5":
-				case "9":
-				case "10":
-				break;
-				default: 
-					$c = false; $result['reason'] = 'Zip (zip) is an invalid length.'; 
+			if( strlen( $value ) < 5 || strlen( $value ) > 10 ) {
+				$c = false; $result['reason'] = 'Zip (zip) is an invalid length.'; 
 			}
-			if($c && !missingalphas($value)){ 
+			if( $c && hasinvalidzipchars( $value ) ){ 
 				$c = false; $result['reason'] = 'Zip (zip) contains invalid characters.'; 
 			}
 		break;
