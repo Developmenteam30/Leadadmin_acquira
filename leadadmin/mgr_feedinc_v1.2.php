@@ -85,8 +85,9 @@ function addFeedIn(
 			."`landline` varchar(20) default NULL, "
 			."`cellphone` varchar(20) default NULL, "
 			."`country` varchar(75) default NULL, "
-			."PRIMARY KEY  (`idRecord`) "
-			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;";
+			."PRIMARY KEY  (`idRecord`), "
+			."KEY `urlTrim` (`urlTrim`) "
+			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
 		if($docreateValidsTable === false){ 
 			$c = false; $result['reason'] = 'Database failure - could not create valids table.';
@@ -117,7 +118,7 @@ function addFeedIn(
 			."`cellphone` varchar(20) default NULL, "
 			."`country` varchar(75) default NULL, "
 			."PRIMARY KEY  (`idRecord`) "
-			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;";
+			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
 		if($docreateValidsTable === false){ 
 			$c = false; $result['reason'] = 'Database failure - could not create valids table.';

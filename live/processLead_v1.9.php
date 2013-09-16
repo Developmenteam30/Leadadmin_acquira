@@ -119,6 +119,16 @@ if($c && $feedParams->dedupeCellphone && isset($_REQUEST['cellphone']) && $_REQU
 	}
 }
 if($c){ //Inputted information is validated, go ahead and insert the record into the database.
+
+    // Notify if this is the first time we've seen this URL on this feed
+	if( !empty( $_REQUEST['urlTrim'] ) ) {
+		$urlCount = checkDuplicate( 'urlTrim', $_REQUEST, $feedParams->label, 'global' );
+		if( $urlCount == 0 ) {
+			notifyManagers("\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: {$_REQUEST['urlTrim']}\r\n\r\n");
+		}
+	}
+
+
 	$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."` ( `queryString`, `received` ";
 	dbCon("insertUpdate");
 	foreach($allowedFields as $allowedField){ 

@@ -154,6 +154,28 @@ function logError($origination, $description, $notify = false){
 	}
 }
 
+function notifyManagers($body)
+{
+		$from 		= 'lmsalerts@'.SITE_URL;
+		$fromName 	= CONFIG_COMPANY_NAME.' List Management System';
+		$to			= MANAGER_EMAIL;
+		$subject	= 'List Management - New URL Alert';
+		$messages 	= $body;
+		$header 	= "From:" . $fromName . " <" . $from . ">\r\n";
+		$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+		$header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
+		$header .= "Reply-To: <" . $from . ">\r\n";
+		$header .= "X-Sender: <" . $from . ">\r\n";
+		$header .= "Return-Path: <" . $from . ">\r\n";
+		$sent = @mail($to, $subject, $messages ,$header);
+		if(!$sent){ 
+			logError(
+				'Error Logging'
+				, 'Failed to send error report notification to administrator'
+			);
+		}
+}
+
 function validate($fieldType, $value, $feedParams){ 
 	$result = array(
 		'valid' => false
