@@ -86,6 +86,7 @@ function addFeedIn(
 			."`cellphone` varchar(20) default NULL, "
 			."`country` varchar(75) default NULL, "
 			."PRIMARY KEY  (`idRecord`), "
+			."KEY `email` (`email`), "
 			."KEY `urlTrim` (`urlTrim`) "
 			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
