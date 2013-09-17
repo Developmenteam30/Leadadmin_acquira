@@ -122,7 +122,7 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 
     // Notify if this is the first time we've seen this URL on this feed
 	if( !empty( $_REQUEST['urlTrim'] ) ) {
-		$urlCount = checkDuplicate( 'urlTrim', $_REQUEST, $feedParams->label, 'global' );
+		$urlCount = checkExists( 'urlTrim', $_REQUEST, $feedParams->label );
 		if( $urlCount == 0 ) {
 			notifyManagers("\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: {$_REQUEST['urlTrim']}\r\n\r\n");
 		}

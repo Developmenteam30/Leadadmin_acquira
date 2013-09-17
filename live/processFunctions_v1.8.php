@@ -422,10 +422,23 @@ function checkDuplicate($column, $requestValues, $feedLabel, $dedupeAcross){
 	}	
 	$docheckDupe = dbQry($checkDupe, 'Checking if value is duplicate.', true);
 	dbDcon();
-	if($checkDupe === false){ return false; }
+	if($docheckDupe === false){ return false; }
 	$dupeCount = $docheckDupe->fetch_assoc();
 	$dupeCount = $dupeCount['count(*)'];
 	return $dupeCount;
+	
+}
+
+function checkExists( $column, $requestValues, $feedLabel ){
+	dbCon();
+	$query = "SELECT 1 AS cnt FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
+			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
+			."LIMIT 1";
+	$docheckDupe = dbQry($query, 'Checking if value exists.', true);
+	dbDcon();
+	if($docheckDupe === false){ return false; }
+	$dupeCount = $docheckDupe->fetch_assoc();
+	return $dupeCount['cnt'];
 	
 }
 
