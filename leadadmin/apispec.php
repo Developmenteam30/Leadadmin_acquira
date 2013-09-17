@@ -330,6 +330,23 @@ Fields</FONT></P>
 	</TR>
 	<TR VALIGN=TOP>
 		<TD WIDTH=66>
+			<P><FONT FACE="Verdana, sans-serif"><FONT SIZE=2>country</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=100>
+			<P><FONT FACE="Verdana, sans-serif"><FONT SIZE=2>char(2)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=62>
+			<P><FONT FACE="Verdana, sans-serif"><FONT SIZE=2>No</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=165>
+			<P><FONT FACE="Verdana, sans-serif"><FONT SIZE=2>XX</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=231>
+			<P><FONT FACE="Verdana, sans-serif"><FONT SIZE=2>2-letter ISO-3166 country code</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=66>
 			<P><FONT FACE="Verdana, sans-serif"><FONT SIZE=2>dob</FONT></FONT></P>
 		</TD>
 		<TD WIDTH=100>
