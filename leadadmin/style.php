@@ -13,7 +13,7 @@ body {
 	background: url("images/bg.png"); 
 	margin: 0px; padding: 0px;
 	font-family: Verdana, Helvetica, sans-serif; 
-	font-size: 16px;
+	font-size: 12px;
 	height: 100%; 
 }
 
