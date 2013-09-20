@@ -94,6 +94,13 @@ if($feedParams && in_array('url', $allowedFields)){ //URL is expected so trim it
 		$_REQUEST['urlTrim'] = url_reformat('No Url Given');
 	}
 }
+if( $c && !empty( $_REQUEST['email'] ) ) {
+	$exists = checkSuppression( $_REQUEST['email'], 'global' );
+	if( $exists ) {
+		$c = false;
+		$result['reason'] = 'Email exists in our global suppression file.';
+	}
+}
 if($c && $feedParams->dedupeEmail && isset($_REQUEST['email']) && $_REQUEST['email'] != ''){ 
 	$dupeCount = checkDuplicate('email', $_REQUEST, $feedParams->label, $feedParams->dedupeAcross);
 	if($dupeCount === false){ 

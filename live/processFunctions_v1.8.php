@@ -439,7 +439,18 @@ function checkExists( $column, $requestValues, $feedLabel ){
 	if($docheckDupe === false){ return false; }
 	$dupeCount = $docheckDupe->fetch_assoc();
 	return $dupeCount['cnt'];
-	
+}
+
+function checkSuppression( $email, $idCompany ) {
+	dbCon();
+	$query = "SELECT 1 AS cnt FROM `".DATABASE_NAME."`.`suppression_".$idCompany."` "
+			."WHERE `email` = '".$GLOBALS['dbconnx']->escape_string( $email )."' "
+			."LIMIT 1";
+	$result = dbQry($query, 'Checking if email is suppressed.', true);
+	dbDcon();
+	if($result === false){ return false; }
+	$count = $result->fetch_assoc();
+	return $count['cnt'];
 }
 
 function lockTables($feedLabel){
