@@ -21,6 +21,23 @@ function getSuppressionCount($idCompany){
 	return $count;
 }
 
+function getSuppressions($idCompany){
+    dbCon();
+    $query = "SELECT email ";
+    $query.= "FROM `" . DATABASE_NAME . "`.`suppression_" . $idCompany . "`";
+
+    $result = dbQry( $query, 'Getting suppressions', true );
+    dbDcon();
+
+    if( $result === false ) { return false; }
+    if( $result->num_rows == 0 ) { return 0; }
+    $values = array();
+    while( $row = $result->fetch_object() ){
+        $values[] = $row;
+    }
+    return $values;
+}
+
 function addToSuppressionList($idCompany, $email){
 	dbCon();
 	$insert = "INSERT INTO `".DATABASE_NAME."`.`suppression_".$idCompany."` "
@@ -46,6 +63,45 @@ if(isset($_REQUEST['a'])){
 		, 'error' => 'Action does not exist.'
 	);
 	switch($_REQUEST['a']){
+        case 'exportData':
+            $c = true; $result['error'] = 'Failed when trying to export data.';
+
+			if( empty( $_REQUEST['idCompany'] ) ) {
+				$idCompany = 'global';
+			} else {
+				$idCompany = intval ( $_REQUEST['idCompany'] );
+			}
+
+            if($c){
+                $records = getSuppressions( $idCompany );
+                if($records === false){
+                    $c = false; $result['error'] = 'Database failure - could not fetch suppression information.';
+                }
+                if($c && $records == 0){
+                    $c = false; $result['error'] = 'Error - no suppression records exist.';
+                }
+            }
+            if($c){
+              $fileLink = 'exports/suppression_'.$idCompany."_".time().".csv";
+              $filePath = ADMIN_ROOT.$fileLink;
+              $file = fopen($filePath, "w");
+              if(!file_exists($filePath)){
+                $c = false; $result['reason'] = 'Failed to create CSV file.';
+              }
+            }
+            if($c){
+              foreach( $records as $record ) {
+				fwrite( $file, $record->email . "\n" );
+              }
+              fclose($file);
+            }
+            if($c){
+                $result['status'] = 1;
+                $result['error'] = 'Successfully exported file.';
+                $result['link'] = $fileLink;
+            }
+        break;
+
 		case 'processSuppression':
 			$c = true; $result['error'] = 'Failed when processing new suppression.';
 			if($c && (
@@ -182,8 +238,8 @@ if(isset($_REQUEST['d'])){
 	<tbody>
 <?php
 			foreach($lists as $suppressionList){ 
-				if($suppressionList == 'global'){ $display_listName = 'Global'; }
-				else { $display_listName = $companyCache[$suppressionList]->name; }
+				if($suppressionList == 'global'){ $display_listName = 'Global'; $idCompany = 0; }
+				else { $display_listName = $companyCache[$suppressionList]->name; $idCompany = $suppressionList; }
 				$suppressionCount = getSuppressionCount($suppressionList);
 				if($suppressionCount === false){ $display_suppressionCount = 'Error'; }
 				else{ $display_suppressionCount = $suppressionCount; }
@@ -193,7 +249,9 @@ if(isset($_REQUEST['d'])){
 			<td><p class='aRight'><?php echo $display_suppressionCount; ?></p></td>
 			<td>
 				<p>
-					Export
+                	<input type='button' value='Export Data' onclick='exportFile(<?php echo $idCompany; ?>);'/>
+                	<a href='#' id='resultExport_<?php echo $idCompany; ?>'></a>
+                	<span id='resultQuery_<?php echo $idCompany; ?>'></span>
 				</p>
 			</td>
 		</tr>
@@ -347,7 +405,8 @@ if(isset($_REQUEST['d'])){
 $title = 'Suppressions Manager';
 include("c_header.php");
 ?>
-<script>
+<body>
+<script type="text/javascript">
 function checkIfMulti(){
 	suppress_list = $('#suppress_list').val();
 	if(suppress_list == 'multiple'){
@@ -466,11 +525,36 @@ function processSuppression(type){
 	}
 }
 
+function exportFile(idCompany){
+    var response = $.ajax({
+        url: "mgr_suppress.php",
+        type: "POST",
+        async: true,
+        data: ({
+            "a" : "exportData"
+            , "idCompany": idCompany
+        })
+    }).done(function(responseText){
+        var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
+        if(result===null) {
+            alert("JSON Failed: "+responseText);
+            return false;
+        }
+        if(result.status == 1){
+            $('#resultExport_'+idCompany).html('Download File');
+            $('#resultExport_'+idCompany).attr('href', result.link);
+        } else {
+            $('#resultExport_'+idCompany).html('');
+            alert(result.error);
+        }
+    });
+    $('#resultExport_'+idCompany).html("Processing...");
+}
+
 $(document).ready(function(){
 	display('suppressionCounts');
 });
 </script>
-<body>
 <div class='mainContainer'>
 	<?php include('c_nav.php'); ?>
 	<div style='margin: auto;'>

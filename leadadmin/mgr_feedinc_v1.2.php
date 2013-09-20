@@ -253,8 +253,8 @@ function exportData($feedObject, $settings){
 	}
 	dbDcon();
 	if($c){ 
-		$filePath = ADMIN_ROOT.'exports/'.$feedObject->label."_".time().".csv";
-		$fileLink = $feedObject->label."_".time().".csv";
+		$fileLink = 'exports/' . $feedObject->label."_".time().".csv";
+		$filePath = ADMIN_ROOT.$fileLink;
 		$file = fopen($filePath, "w");
 		if(!file_exists($filePath)){ 
 			$c = false; $result['reason'] = 'Failed to create CSV file.';
@@ -532,7 +532,7 @@ if(isset($_REQUEST['a'])){
 				$result['status'] = 1;
 				$result['error'] = 'Successfully exported file.';
 				$result['query'] = $exportResult['query'];
-				$result['link'] = 'exports/'.$exportResult['fileLink'];
+				$result['link'] = $exportResult['fileLink'];
 			}
 		break;
 	}
