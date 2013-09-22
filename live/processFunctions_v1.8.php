@@ -460,7 +460,7 @@ function lockTables($feedLabel){
 	dbDcon();
 }
 
-function unlockTables($feedLabel){
+function unlockTables(){
 	dbCon();
 	dbQry('UNLOCK TABLES', 'Unlocking tables.', true);
 	dbDcon();
