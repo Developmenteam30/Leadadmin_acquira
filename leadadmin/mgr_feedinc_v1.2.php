@@ -35,6 +35,8 @@ function addFeedIn(
 	, $dedupeLandline
 	, $dedupeCellphone
 	, $dedupeAcross
+	, $filterTypeUrl
+	, $filterUrl
 ){ 
 	$result = array(
 		'success' => false
@@ -56,6 +58,8 @@ function addFeedIn(
 			.", '".$GLOBALS['dbconnx']->escape_string($dedupeLandline)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($dedupeCellphone)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($dedupeAcross)."' "
+			.", '".$GLOBALS['dbconnx']->escape_string($filterTypeUrl)."' "
+			.", '".$GLOBALS['dbconnx']->escape_string($filterUrl)."' "
 			.");";
 		$doaddFeed = dbQry($addFeed, 'Adding new feed.', true);
 		if($doaddFeed === false){ 
@@ -186,7 +190,7 @@ function alterFeedIn($idFeedIn, $property, $newVal){
 				$updateProperty = "UPDATE `".DATABASE_NAME."`.`feedinc` "
 					."SET `".$property."` = '".$newVal."' "
 					."WHERE `idFeedIn` = '".$idFeedIn."'; ";
-				$doupdateProperty = dbQry($updateProperty, 'Updating feed label', true);
+				$doupdateProperty = dbQry($updateProperty, 'Updating incoming feed properties', true);
 				if($doupdateProperty === false){ $c = false; $result['reason'] = 'Database failure - could not update '
 					.$property.'.';
 				}
@@ -359,6 +363,8 @@ if(isset($_REQUEST['a'])){
 						, $_REQUEST['dedupeLandline']
 						, $_REQUEST['dedupeCellphone']
 						, $_REQUEST['dedupeAcross']
+						, $_REQUEST['filterTypeUrl']
+						, $_REQUEST['filterUrl']
 					);
 					if(!$addResult['success']){ 
 						$c = false; $result['error'] = $addResult['reason'];
@@ -489,6 +495,30 @@ if(isset($_REQUEST['a'])){
 							}
 						}
 					}
+                    if($_REQUEST['filterTypeUrl'] != $feed->filterTypeUrl){
+                        if($c){
+                            if($_REQUEST['filterTypeUrl'] == 'null'){ $filterTypeUrl = "NULL"; }
+                            else { $filterTypeUrl = $_REQUEST['filterTypeUrl']; }
+                            $alterResult = alterFeedIn(
+                                $_REQUEST['idFeedIn'], 'filterTypeUrl', $filterTypeUrl
+                            );
+                            if(!$alterResult){
+                                $c = false; $result['error'] = 'Database failure, could not update incoming feed '
+                                    .'parameter (filterTypeUrl)';
+                            }
+                        }
+                    }
+                    if($_REQUEST['filterUrl'] != $feed->filterUrl){
+                        if($c){
+                            $alterResult = alterFeedIn(
+                                $_REQUEST['idFeedIn'], 'filterUrl', $_REQUEST['filterUrl']
+                            );
+                            if(!$alterResult){
+                                $c = false; $result['error'] = 'Database failure, could not update incoming feed '
+                                    .'parameter (filterUrl)';
+                            }
+                        }
+                    }
 				}		
 				if($c){ 
 					$result['status'] = 1;
@@ -873,7 +903,7 @@ if($urlBreakdown_invalid === false){
 		case 'dialog_newfeed':
 			if(!isset($e)){ $e = 'new_'; $d = 'new'; }
 			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross'
+				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl'
 			);
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
@@ -888,6 +918,25 @@ if($urlBreakdown_invalid === false){
 					}
 				}
 			}
+            $explodableProperties = array(
+                'filterUrl',
+            );
+            foreach($explodableProperties as $eP){
+                if( !isset($_REQUEST['options'][$eP]) ){
+                    if(!isset($feed->$eP)){
+                        ${"feed_".$eP} = array();
+                    } else {
+                        ${"feed_".$eP} = explode(";", $feed->$eP);
+                    }
+                } else {
+                    if($_REQUEST['options'][$eP] == ''){
+                        ${"feed_".$eP} = array();
+                    } else {
+                        ${"feed_".$eP} = explode(";", $_REQUEST['options'][$eP]);
+                    }
+                }
+            }
+
 			if(!isset($selectedRequired)){ 
 				$selectedRequired = array('email', 'ip', 'url', 'stamp');
 			}
@@ -1060,6 +1109,80 @@ if($urlBreakdown_invalid === false){
 			</p>
 		</td>
 	</tr>
+        <tr>
+                <td><p>URL Filter Options</p></td>
+                <td>
+                        <p>
+                                Using the 'Accept' option, urls that are listed here are the only ones that will be accepted into
+                                the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed here.
+                        </p>
+                        <p>
+                                <input type='radio'
+                                        name='<?php echo $e; ?>feed_filterTypeUrl'
+                                        id='<?php echo $e; ?>feed_filterTypeUrl_disabled'
+                                        value='true'
+                                        <?php if(
+                                                empty($feed_filterTypeUrl)
+                                        ){ ?>
+                                        checked='checked'
+                                        <?php } ?>
+                                        onclick="$('#<?php echo $e; ?>feed_toggler_filterTypeUrl').hide(); <?php
+                                        ?>$('#<?php echo $e; ?>feed_filterUrl_descriptor').html('Do nothing with');"
+                                /> Disabled<br />
+                                <input type='radio'
+                                        name='<?php echo $e; ?>feed_filterTypeUrl'
+                                        id='<?php echo $e; ?>feed_filterTypeUrl_accept'
+                                        value='true'
+                                        <?php if($feed_filterTypeUrl == 'accept'){ ?>
+                                        checked='checked'
+                                        <?php } ?>
+                                        onclick="$('#<?php echo $e; ?>feed_toggler_filterTypeUrl').show(); <?php
+                                        ?>$('#<?php echo $e; ?>feed_filterUrl_descriptor').html('Accept');"
+                                /> Accept<br />
+                                <input type='radio'
+                                        name='<?php echo $e; ?>feed_filterTypeUrl'
+                                        id='<?php echo $e; ?>feed_filterTypeUrl_reject'
+                                        value='true'
+                                        <?php if($feed_filterTypeUrl == 'reject'){ ?>
+                                        checked='checked'
+                                        <?php } ?>
+                                        onclick="$('#<?php echo $e; ?>feed_toggler_filterTypeUrl').show(); <?php
+                                        ?>$('#<?php echo $e; ?>feed_filterUrl_descriptor').html('Reject');"
+                                /> Reject<br />
+                        </p>
+                        <div id='<?php echo $e; ?>feed_toggler_filterTypeUrl'
+                                style='display:<?php
+                                        if(empty($feed_filterTypeUrl)){ echo "none"; }
+                                        else { echo "block"; }
+                                ?>;'
+                        >
+                                <p>The following urls:</p>
+                                <p>
+                                        <a href='#' class='nonLink'
+                onclick='element("<?php echo $e; ?>feed_filterUrl_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Url" });'
+                                        >Add New URL to <span id='<?php echo $e; ?>feed_filterUrl_descriptor'></span></a>
+                                        | <a href='#' class='nonLink'
+                                                onclick='element("<?php echo $e; ?>feed_filterUrl_multipleInsert"<?php
+                                                ?>, "element_multifilter"<?php
+                                                ?>, { "e": "<?php echo $e; ?>"<?php
+                                                ?>, "type": "Url" });'
+                                        >Add Multiple</a>
+                                </p>
+                                <div id='<?php echo $e; ?>feed_filterUrl_multipleInsert'></div>
+                                <div id='<?php echo $e; ?>feed_filterUrl_container'>
+                                <?php foreach($feed_filterUrl as $filterUrl){ ?>
+                                        <div>
+                                                <input type='text'
+                                                        name='<?php echo $e; ?>feed_filterUrl[]'
+                                                        value='<?php echo $filterUrl; ?>'
+                                                />
+                                                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
+                                        </div>
+                                <?php } ?>
+                                </div>
+                        </div>
+                </td>
+        </tr>
 	<tr>
 		<td colspan='2'>
 			<p class='aRight'>
@@ -1261,6 +1384,33 @@ if($urlBreakdown_invalid === false){
 				break;
 			}			
 		break;
+                case 'element_filter':
+                        $e = $_REQUEST['options']['e'];
+                        $t = $_REQUEST['options']['type'];
+?>
+<div>
+        <input type='text'
+                name='<?php echo $e; ?>feed_filter<?php echo $t; ?>[]'
+                value='<?php if(isset($_REQUEST['options']['value'])){
+                        echo $_REQUEST['options']['value'];
+                } ?>'
+        />
+        <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
+</div>
+<?php
+                break;
+                case 'element_multifilter':
+                        $e = $_REQUEST['options']['e'];
+                        $t = $_REQUEST['options']['type'];
+?>
+<textarea name='<?php echo $e; ?>feed_filter<?php echo $t; ?>Multi'
+id='<?php echo $e; ?>feed_filter<?php echo $t; ?>Multi' ></textarea>
+<input type='button' value='Add Multiple Urls'
+        onclick="splitMultiFilter('<?php echo $e; ?>', '<?php echo $t; ?>');"
+/>
+<?php
+                break;
+
 		default:
 ?>
 <p>Requested information doesn't exist.</p>
@@ -1274,6 +1424,25 @@ $title = 'Incoming Feed Manager';
 include("c_header.php");
 ?>
 <script>
+function splitMultiFilter(e, t){
+    values = $('#'+e+'feed_filter'+t+'Multi').val();
+    //alert(values);
+    valueArray = values.match(/[^\r\n]+/g);
+    for(count = 0; count < valueArray.length; count++){
+        element(
+            e+"feed_filter"+t+"_container"
+            , "element_filter"
+            , {
+                "e": e
+                , "type": t
+                , "value": valueArray[count]
+            }
+        );
+    }
+    //alert('#'+e+'feed_filter'+t+'_multipleInsert');
+    $('#'+e+'feed_filter'+t+'_multipleInsert').html("");
+}
+
 function manageFeed(action, idFeedIn){ 
 	if(action == "new"){ e = "#new_feed_"; c = 'new'; } else { e = "#edit_"+idFeedIn+"_feed_"; c = 'edit'; }
 	idFeedIn = $(e+'idFeedIn').val();
@@ -1308,6 +1477,16 @@ foreach($incomingAdditionalRequirementSettings as $f){
 			allowedFieldsFlag = true;
 		}
 	}
+    if($(e+'filterTypeUrl_disabled').is(":checked")){
+        filterTypeUrl = 'null';
+    }else if($(e+'filterTypeUrl_accept').is(":checked")){
+        filterTypeUrl = 'accept';
+    }else if($(e+'filterTypeUrl_reject').is(":checked")){
+        filterTypeUrl = 'reject';
+    }
+    filterUrl = $("input[name='"+c+"_"+idFeedIn+"_feed_filterUrl\\[\\]']")
+        .map(function(){return $(this).val();}).get().join(";");
+
 	if($(e+'dedupeEmail').is(":checked")){ dedupeEmail = 1;	} else { dedupeEmail = 0; }
 	if($(e+'dedupeLandline').is(":checked")){ dedupeLandline = 1;	} else { dedupeLandline = 0; }
 	if($(e+'dedupeCellphone').is(":checked")){ dedupeCellphone = 1;	} else { dedupeCellphone = 0; }
@@ -1342,6 +1521,8 @@ foreach($incomingAdditionalRequirementSettings as $f){
 			, "dedupeLandline": dedupeLandline
 			, "dedupeCellphone": dedupeCellphone
 			, "dedupeAcross": dedupeAcross
+			, "filterTypeUrl": filterTypeUrl
+			, "filterUrl": filterUrl
 		})
 	}).done(function(responseText){ 
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);

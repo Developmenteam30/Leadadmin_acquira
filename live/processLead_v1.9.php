@@ -101,6 +101,16 @@ if( $c && !empty( $_REQUEST['email'] ) ) {
 		$result['reason'] = 'Email exists in our global suppression file.';
 	}
 }
+
+if( $c && !is_null( $feedParams->filterTypeUrl ) ) {
+                    
+	$urlAcceptable = filterValue($feedParams->filterTypeUrl, $_REQUEST['url'], $feedParams->filterUrl);
+	if( !$urlAcceptable ) {
+		$c = false;
+		$result['reason'] = 'URL is not allowed on this feed.';
+	}
+}
+
 if($c && $feedParams->dedupeEmail && isset($_REQUEST['email']) && $_REQUEST['email'] != ''){ 
 	$dupeCount = checkDuplicate('email', $_REQUEST, $feedParams->label, $feedParams->dedupeAcross);
 	if($dupeCount === false){ 
