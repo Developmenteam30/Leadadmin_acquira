@@ -9,6 +9,7 @@ include(SITE_ROOT."_connx.php");
 include(ADMIN_ROOT."loginCheck.php");
 include(ADMIN_ROOT."f_site.php");
 include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
+include(LIVE_ROOT."_f_validEmail.php");
 
 function getSuppressionCount($idCompany){
 	$getCount = "SELECT COUNT(*) FROM `".DATABASE_NAME."`.`suppression_".$idCompany."`;";
@@ -63,6 +64,104 @@ if(isset($_REQUEST['a'])){
 		, 'error' => 'Action does not exist.'
 	);
 	switch($_REQUEST['a']){
+
+		case 'Add':
+			$c = true;
+			$result['error'] = 'Failed when trying to import file.';
+
+			if( empty( $_REQUEST['list'] ) ) {
+				$c = false;
+				$result['error'] = 'No list selected!';
+			}
+
+			$lists = array();
+
+			if( $c ) {
+				if( 'multiple' == $_REQUEST['list'] ) {
+					foreach( $_REQUEST as $key => $val ) {
+						if( strpos( $key,'suppress_multiselect_' ) !== FALSE && isset( $val ) ) {
+							$lists[] = intval( $val );
+						}
+					}
+				} else if( 'global' == $_REQUEST['list'] ) {
+					$lists[] = 'global';
+				} else {
+					$lists[] = intval( $_REQUEST['list'] );
+				}
+			}
+
+			if( $c && sizeOf( $lists ) == 0 ) {
+				$c = false;
+				$result['error'] = 'No list selected!';
+			}
+
+			if( $c && empty( $_FILES['suppress_file']['tmp_name'] ) ) {
+				$c = false;
+				$result['error'] = 'No file uploaded!';
+			}
+
+			if( $c && !is_uploaded_file( $_FILES['suppress_file']['tmp_name'] ) ) {
+				$c = false;
+				$result['error'] = 'Possible file upload attack!';
+			}
+
+			if( $c && $_FILES['suppress_file']['size'] > 2097152 ) {
+				$c = false;
+				$result['error'] = 'File size cannot exceed 2MB.';
+			}
+
+			$counts = array(
+				'success' => 0,
+				'invalid' => 0,
+				'failures' => 0,
+				'dupe' => 0,
+			);
+
+			if( $c ) {
+				$handle = @fopen( $_FILES['suppress_file']['tmp_name'], "r" );
+				if ( !$handle ) {
+					$c = false;
+					$result['error'] = 'Cannot open file for reading';
+				}
+				if( $c ) {
+    				while ( ( $buffer = fgets($handle, 4096) ) !== false ) {
+
+						$buffer = trim ( $buffer );
+
+						if( !valid_email( $buffer ) ) {
+							$counts['invalid']++;
+						} else {
+							foreach($lists as $list){
+								$addResult = addToSuppressionList( $list, $buffer );
+								if(!$addResult['result']){
+									if(strpos($addResult['error'], "Duplicate") === false){ //Not a duplicate
+										$counts['failures']++;
+									} else { 
+										$counts['dupe']++;
+									}
+								} else { 
+									$counts['success']++;
+								}
+							}
+						}
+
+					} 
+			    	if ( !feof( $handle ) ) {
+			        	$c = false;
+						$result['error'] = 'Error: unexpected fgets() fail';
+			    	}
+			    	fclose( $handle );
+				}
+			}
+
+			if( $c ){ 
+				$result['status'] = 1;
+				$result['error'] = 'Successfully added new suppressions.';
+				$result['counts'] = $counts;
+			}
+
+		break;
+
         case 'exportData':
             $c = true; $result['error'] = 'Failed when trying to export data.';
 
@@ -118,7 +217,6 @@ if(isset($_REQUEST['a'])){
 					, 'failures' => 0
 					, 'dupe' => 0
 				);
-				include(LIVE_ROOT."_f_validEmail.php");
 				switch($_REQUEST['type']){
 					case 'single':
 						if($c && ( //email must not be empty.
@@ -208,8 +306,11 @@ if(isset($_REQUEST['a'])){
 			}
 		break;
 	}
-	echo json_encode($result);
-	exit;
+
+	if( 'Add' != $_REQUEST['a'] ) {
+		echo json_encode($result);
+		exit;
+	}
 }
 
 if(isset($_REQUEST['d'])){ 
@@ -294,7 +395,7 @@ if(isset($_REQUEST['d'])){
 						foreach($companies as $company){ 
 ?>
 	<div class='fl'>
-		<input type='checkbox' value='<?php echo $company->idCompany; ?>' name='suppress_multiselect' 
+		<input type='checkbox' value='<?php echo $company->idCompany; ?>' name='suppress_multiselect'
 			id='suppress_multiselect_<?php echo $company->idCompany; ?>'
 		> <?php echo $company->name; ?>
 	</div>
@@ -318,7 +419,7 @@ if(isset($_REQUEST['d'])){
 <p>
 	Emails: <textarea id='suppress_emailM' ></textarea> 
 	to Suppression List 
-	<select id='suppress_list' onchange='checkIfMulti();'>
+	<select name="list" id='suppress_list' onchange='checkIfMulti();'>
 		<option value='global'>Global Suppression</option>
 		<option value='multiple'>Multiple Separate Lists</option>
 <?php
@@ -351,46 +452,45 @@ if(isset($_REQUEST['d'])){
 		
 				break;
 				case 'file':
-					echo "<p>Feature not yet available. Coming soon.</p>";
-					exit;
-				
 					if($companies === false){ 
 ?><p>Database error: could not fetch companies.</p><?php
 					} else {
 ?>
-<p>Add Multiple Emails to Suppression</p>
+<p>Upload Suppression File</p>
+<p><strong>Suppression file must be saved in CSV format.  Excel format will not work.  There should only be one column in the spreadsheet and that column will contain the list of email addresses to be added.  Maximum file size is 2MB.</strong></p>
 <p>
-	File: <input type='file' id='suppress_file' multiple='false' accept='text/csv' 
-		onchange='handleFile(this.files);' 
-	/>
+<form enctype="multipart/form-data" action="mgr_suppress.php" method="post">
+	<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />
+	File: <input type="file" name="suppress_file" multiple="false" accept="text/csv" />
 	to Suppression List 
-	<select id='suppress_list' onchange='checkIfMulti();'>
-		<option value='global'>Global Suppression</option>
-		<option value='multiple'>Multiple Separate Lists</option>
+	<select id="suppress_list" name="list" onchange="checkIfMulti();">
+		<option value="global">Global Suppression</option>
+		<option value="multiple">Multiple Separate Lists</option>
 <?php
 						foreach($companies as $company){ 
 ?>
-		<option value='<?php echo $company->idCompany; ?>'><?php echo $company->name; ?> Suppression</option>
+		<option value="<?php echo $company->idCompany; ?>"><?php echo $company->name; ?> Suppression</option>
 <?php
 						}
 ?>
 	</select>
-	<input type='button' value='Add' onclick="processSuppression('multiple');" />
+	<input type="submit" name="a" value="Add" />
 </p>
-<div id='dialog_multiselect' class='hidden'>
+<div id="dialog_multiselect" class="hidden">
 	<p>Select suppression lists to add this email to.</p>
 <?php
 						foreach($companies as $company){ 
 ?>
-	<div class='fl'>
-		<input type='checkbox' value='<?php echo $company->idCompany; ?>' name='suppress_multiselect' 
-			id='suppress_multiselect_<?php echo $company->idCompany; ?>'
+	<div class="fl">
+		<input type="checkbox" value="<?php echo $company->idCompany; ?>" name="suppress_multiselect_<?php echo $company->idCompany; ?>" 
+			id="suppress_multiselect_<?php echo $company->idCompany; ?>"
 		> <?php echo $company->name; ?>
 	</div>
 <?php
 						}
 ?>
-	<div class='clr'></div>
+	<div class="clr"></div>
+</form>
 </div>
 <?php
 					}
@@ -565,6 +665,7 @@ $(document).ready(function(){
 				| <a href='#' class='nonLink' onclick="display('dialog_import',{ 'type': 'multiple' });">Add Multiple Emails</a>
 				| <a href='#' class='nonLink' onclick="display('dialog_import',{ 'type': 'file' });">Add File</a>
 			</p>
+			<div id='resultImport'><?php  if( !empty( $_REQUEST['a'] ) && 'Add' == $_REQUEST['a'] ) { print "<p style=\"color: blue;\">File import status: {$result['error']}</p><p>Successes: {$counts['success']}</p><p>Invalid emails: {$counts['invalid']}</p><p>Duplicates: {$counts['dupe']}</p><p>Failures: {$counts['failures']}</p>" ; } ?></div>
 			<div id='dialog_import'></div>
 		</div>
 		<div id='suppressionCounts' class='fl50'></div>
