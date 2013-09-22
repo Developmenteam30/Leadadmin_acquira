@@ -112,7 +112,7 @@ if($c){ //Validation of incoming data.
 	}
 }
 if($c && in_array('url', $allowedFields)){ //URL is expected so trim it and store in the database.
-	if(isset($_REQUEST['url'])){ 
+	if( !empty( $_REQUEST['url'] ) ){ 
 		$_REQUEST['urlTrim'] = url_reformat($_REQUEST['url']);
 	} else { 
 		$_REQUEST['url'] = 'No Url Given';
