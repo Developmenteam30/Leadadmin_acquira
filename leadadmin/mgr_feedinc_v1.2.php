@@ -303,9 +303,9 @@ if(isset($_REQUEST['a'])){
 				)){ $c = false; $result['error'] = 'Label cannot be empty.'; }
 				if($c //Label cannot have invalid characters
 				){
-					$pattern = '/^[a-z][a-z1-9_]*$/';
+					$pattern = '/^[a-z][a-z0-9_]*$/';
 					if(!preg_match($pattern, $_REQUEST['label'])){ 
-						$c = false; $result['error'] = 'Label must start with a letter, can contain letters, '
+						$c = false; $result['error'] = 'Label must start with a letter, can contain lowercase letters, '
 							.'numbers, and underscore only.';
 					}
 				}
@@ -368,21 +368,6 @@ if(isset($_REQUEST['a'])){
 					);
 					if(!$addResult['success']){ 
 						$c = false; $result['error'] = $addResult['reason'];
-					}
-				}
-				if($c){ //Create directory for the new live feed.	
-					$path = LIVE_ROOT.$_REQUEST['label'];
-					$directoryMade = mkdir($path, 0775);
-					if(!$directoryMade){ 
-						$c = false; $result['error'] = 'Could not create directory for new live feed. Please check '
-							.'permissions and try again.';
-					}
-				}
-				if($c){ //Create live feed processing file.
-					$copyResult = copy(ADMIN_ROOT."livefeed.php", $path.FD."livefeed.php");
-					if(!file_exists($path.FD."livefeed.php")){ 
-						$c = false; $result['error'] = 'Could not create live feed script. Please check permissions
-						and try again.';
 					}
 				}
 				if($c){ 
