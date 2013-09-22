@@ -17,6 +17,11 @@ if(isset($mysqlErrorSource)){
 
 function dbCon($level = 'selectOnly', $keepAlive = false)
 {
+	// If we've already setup a connection, no need to reconnect
+	if( !empty( $GLOBALS['dbconnx'] ) ) {
+		return true;
+	}
+
 	ini_set("mysql.connect_timeout", MYSQL_TIMEOUT);
 	$GLOBALS['dbconnx'] = 
 		new mysqli(
@@ -68,6 +73,9 @@ function dbCon($level = 'selectOnly', $keepAlive = false)
 
 function dbDcon()
 {
+	// Do not manually disconnect from the database
+	return;
+
 	$GLOBALS['dbconnx']->close();
 	if(MIGRATING){ 
 		$GLOBALS['dbmigration']->close();

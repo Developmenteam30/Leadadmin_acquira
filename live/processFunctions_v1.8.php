@@ -455,7 +455,7 @@ function checkSuppression( $email, $idCompany ) {
 
 function lockTables($feedLabel){
 	dbCon();
-	$lockQuery = "LOCK TABLE `".DATABASE_NAME."`.`feedinc_".$feedLabel."` WRITE";
+	$lockQuery = "LOCK TABLE `".DATABASE_NAME."`.`feedinc_".$feedLabel."` WRITE, `".DATABASE_NAME."`.`feedinc_".$feedLabel."_invalid` WRITE, `".DATABASE_NAME."`.urlcount WRITE, `".DATABASE_NAME."`.urlcount_invalid WRITE, `".DATABASE_NAME."`.suppression_global READ, `".DATABASE_NAME."`.errorlog WRITE ";
 	dbQry($lockQuery, 'Locking tables.', true);
 	dbDcon();
 }
