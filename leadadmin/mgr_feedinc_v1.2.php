@@ -47,7 +47,7 @@ function addFeedIn(
 	if($c){ //Add feed.
 		$addFeed = "INSERT INTO `".DATABASE_NAME."`.`feedinc` "
 			."(`label`,`description`,`idCompany`,`required`,`allowedFields`,`password`, "
-			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`) VALUES ( "
+			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`, `filterTypeUrl`, `filterUrl`) VALUES ( "
 			."  '".$GLOBALS['dbconnx']->escape_string($label)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($description)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($idCompany)."' "
