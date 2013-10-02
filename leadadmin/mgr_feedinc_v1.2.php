@@ -175,13 +175,6 @@ function alterFeedIn($idFeedIn, $property, $newVal){
 				}
 			}
 			dbDcon();
-			if($c){ //Update folder name.
-				$path = LIVE_ROOT.$feed->label;
-				$renameResult = rename($path, LIVE_ROOT.$newVal);
-				if(!$renameResult){ 
-					$c = false; $result['reason'] = 'Could not rename folder for incoming feed.';
-				}
-			}
 			if($c){ $result['success'] = true; $result['reason'] = 'Successfully updated label for incoming feed.'; }
 		break;
 		default: 
