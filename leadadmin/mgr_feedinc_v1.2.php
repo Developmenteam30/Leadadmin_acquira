@@ -89,8 +89,10 @@ function addFeedIn(
 			."`landline` varchar(20) default NULL, "
 			."`cellphone` varchar(20) default NULL, "
 			."`country` varchar(75) default NULL, "
+			."`jobId` INT(6) default NULL, "
 			."PRIMARY KEY  (`idRecord`), "
 			."KEY `email` (`email`), "
+			."KEY `jobId` (`jobId`), "
 			."KEY `urlTrim` (`urlTrim`) "
 			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
@@ -122,7 +124,9 @@ function addFeedIn(
 			."`landline` varchar(20) default NULL, "
 			."`cellphone` varchar(20) default NULL, "
 			."`country` varchar(75) default NULL, "
-			."PRIMARY KEY  (`idRecord`) "
+			."`jobId` INT(6) default NULL, "
+			."PRIMARY KEY  (`idRecord`), "
+			."KEY `jobId` (`jobId`) "
 			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
 		if($docreateValidsTable === false){ 

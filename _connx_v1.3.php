@@ -167,4 +167,24 @@ function dbQry(
 		}
 	}
 }
-?>
+
+function valueSet( $value ) {
+
+	if( !isset( $value ) ) {
+		return "NULL";
+	} else {
+		return "'" . $GLOBALS['dbconnx']->escape_string( $value ) . "'";
+	}
+
+}
+
+function valueEmpty( $value ) {
+
+	if( empty( $value ) ) {
+		return "NULL";
+	} else {
+		return "'" . $GLOBALS['dbconnx']->escape_string( $value ) . "'";
+	}
+
+}
+

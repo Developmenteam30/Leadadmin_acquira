@@ -111,7 +111,7 @@ if($c){ //Validation of incoming data.
 		}
 	}
 }
-if($c && in_array('url', $allowedFields)){ //URL is expected so trim it and store in the database.
+if(in_array('url', $allowedFields)){ //URL is expected so trim it and store in the database.
 	if( !empty( $_REQUEST['url'] ) ){ 
 		$_REQUEST['urlTrim'] = url_reformat($_REQUEST['url']);
 	} else { 
@@ -313,7 +313,7 @@ unlockTables();
 
 //Population Portion of the script. 
 if($c){ 
-	$feedsOut = getPopulationSettings($feedParams->idFeedIn);
+	$feedsOut = getIncomingPopulationSettings($feedParams->idFeedIn);
 	if($feedsOut === false){ 
 		logError(
 			'Feed '.$feedLabel

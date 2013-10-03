@@ -112,6 +112,16 @@ function loadParameters($feedLabel){
 	return $parameters;
 }
 
+function getFeedIn($idFeedIn){ 
+	dbCon();
+	$getParameters = "SELECT * FROM `".DATABASE_NAME."`.`feedinc` WHERE `idFeedIn` = " . intval( $idFeedIn );
+	$dogetParameters = dbQry($getParameters, 'Fetching parameters for '.$idFeedIn, true);
+	if($dogetParameters === false){ return false; }
+	if($dogetParameters->num_rows == 0){ return 0; }
+	$parameters = $dogetParameters->fetch_object();
+	return $parameters;
+}
+
 function logError($origination, $description, $notify = false){ 
 	//Store the error in the database.
 	dbCon("insertUpdate");
@@ -351,7 +361,7 @@ function validate($fieldType, $value, $feedParams){
 	return $result;
 }
 
-function getPopulationSettings($idFeedIn){ 
+function getIncomingPopulationSettings($idFeedIn){ 
 	dbCon();
 	$getSettings = 
 		"SELECT fp.*, fo.label "
@@ -466,3 +476,352 @@ function unlockTables(){
 	dbDcon();
 }
 
+function getPopulation( $idFeedOut ){
+	$query  = "SELECT p.*,i.label inLabel, o.label outLabel FROM `".DATABASE_NAME."`.`feedPopulation` p ";
+	$query .= "LEFT JOIN `".DATABASE_NAME."`.`feedinc` i ON p.idFeedIn = i.idFeedIn ";
+	$query .= "LEFT JOIN `".DATABASE_NAME."`.`feedout` o ON p.idFeedOut = o.idFeedOut ";
+    $query .= "WHERE i.label IS NOT NULL ";
+    $query .= "AND o.label IS NOT NULL ";
+    $query .= "AND p.idFeedOut = '" . intval( $idFeedOut ) . "'";
+    
+	dbCon();
+    $result = dbQry( $query, 'Getting population parameters', true );
+
+    if( $result === false ) { return false; }
+    if( $result->num_rows == 0 ) { return 0; }
+    $values = array();
+    while( $row = $result->fetch_object() ){
+        $values[] = $row;
+    }
+    return $values;
+}
+
+function getOutboundStamp( $label ) {
+	$query  = "SELECT MIN(stamp) stamp ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedout_".$label."` ";
+    
+	dbCon();
+    $result = dbQry($query, 'Getting earlist outbound record stamp.', true);
+    if( $result === false ) { return null; }
+    if( $result->num_rows == 0 ) { return null; }
+    $stamp = $result->fetch_assoc();
+    return $stamp['stamp'];
+}
+
+function addOutboundRecord( $label, $listcode, $urlTrim, $url, $ip, $stamp, $email, $fname, $lname, $addr, $addr2, $city, $state, $zip, $country, $dob, $gender, $landline, $cellphone, $processed = '0', $poststamp = null, $postrequest = null, $postresponse = null ) {
+	$query  = "INSERT INTO `".DATABASE_NAME."`.`feedout_".$label."` (processed,poststamp,postrequest,postresponse,listcode,urlTrim,url,ip,stamp,email,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone) ";
+	$query .= "VALUES( ";
+    $query .= "'" . $GLOBALS['dbconnx']->escape_string( $processed ) . "', ";
+    $query .= valueSet( $poststamp ) . ", ";
+    $query .= valueSet( $postrequest ) . ", ";
+    $query .= valueSet( $postresponse ) . ", ";
+    $query .= valueEmpty( $listcode ) . ", ";
+    $query .= valueEmpty( $urlTrim ) . ", ";
+    $query .= valueEmpty( $url ) . ", ";
+    $query .= valueEmpty( $ip ) . ", ";
+    $query .= valueEmpty( $stamp ) . ", ";
+    $query .= valueEmpty( $email ) . ", ";
+    $query .= valueEmpty( $fname ) . ", ";
+    $query .= valueEmpty( $lname ) . ", ";
+    $query .= valueEmpty( $addr ) . ", ";
+    $query .= valueEmpty( $addr2 ) . ", ";
+    $query .= valueEmpty( $city ) . ", ";
+    $query .= valueEmpty( $state ) . ", ";
+    $query .= valueEmpty( $zip ) . ", ";
+    $query .= valueEmpty( $country ) . ", ";
+    $query .= valueEmpty( $dob ) . ", ";
+    $query .= valueEmpty( $gender ) . ", ";
+    $query .= valueEmpty( $landline ) . ", ";
+    $query .= valueEmpty( $cellphone ) . " ";
+	$query .= " )";
+
+	$result = dbQry( $query, 'Populating '.$label, true);
+	if( $result === false ) {
+		logError(
+			'Feed '.$label
+			, 'Database failure when populate outgoing feed '.$label.'. Check MySQL log file.'
+			, true
+		);
+	}
+}
+
+function checkPopulationFilters( $feed, $url, $email, $listcode ) {
+
+	if( !is_null( $feed->filterTypeUrl ) ) {
+		$valid = filterValue( $feed->filterTypeUrl, $url, $feed->filterUrl );
+		if( !$valid ) {
+			return false;
+		}
+	}
+
+	if( !is_null( $feed->filterTypeEmail ) ) {
+		$valid = filterValue( $feed->filterTypeEmail, $email, $feed->filterEmail );
+		if( !$valid ) {
+			return false;
+		}
+	}
+
+	if( !is_null( $feed->filterTypeListcode ) ) {
+		$valid = filterValue( $feed->filterTypeListcode, $listcode, $feed->filterListcode );
+		if( !$valid ) {
+			return false;
+		}
+	}
+
+	return true;
+
+}
+
+function validateIncomingData( $feedParams, &$data ) {
+
+	$result = array();
+	$result['valid'] = true;
+
+	$requiredFields = explode(';', $feedParams->required);
+	$allowedFields = explode(';', $feedParams->allowedFields);
+
+	// Special handling for TurnTwo feed that cannot change what URL value is being sent to us
+	if( !empty( $data['url'] ) && 'www.5minutemoney.co.uk,www.5minutemoney.co.uk' == $data['url'] ) {
+		$data['url'] = 'www.5minutemoney.co.uk';
+	}
+
+	foreach( $requiredFields as $requiredKey ) {
+		switch( $requiredKey ) {
+			case "phone":
+				if(
+					(
+						!isset( $data['landline'] )
+						|| trim( $data['landline'] ) == ''
+					) && (
+						!isset( $data['cellphone'] )
+						|| trim( $data['cellphone'] ) == ''
+					)
+				){
+					$result['valid'] = false; 
+					$result['errors'][] = "A phone number is required, either landline or cellphone. They cannot both be empty.";
+				}
+			break; 
+			default:
+				if(
+					!isset( $data[$requiredKey] ) 
+					|| trim( $data[$requiredKey] ) == ''
+				){ 
+					$result['valid'] = false;
+					$result['errors'][] = ucfirst( $requiredKey ).' is a required field, and may not be empty.';
+				}
+		}
+	}
+
+	foreach( $allowedFields as $allowedField ) { 
+		if(	!empty( $data[$allowedField]) ) { 
+			$validateResult = validate( $allowedField, $data[$allowedField], $feedParams );
+			if( !$validateResult['valid'] ) { 
+				$result['valid'] = false;
+				$result['errors'][] = $validateResult['reason'];
+			}
+		}
+	}
+
+	if( in_array('url', $allowedFields) ) { //URL is expected so trim it and store in the database.
+		if( !empty( $data['url'] ) ){ 
+			$data['urlTrim'] = url_reformat( $data['url'] );
+		} else { 
+			$data['url'] = 'No Url Given';
+			$data['urlTrim'] = url_reformat( 'No Url Given' );
+		}
+	}
+
+	if( !$result['valid'] ) {
+		return $result;
+	}
+
+	if( !empty( $data['email'] ) ) {
+		$exists = checkSuppression( $data['email'], 'global' );
+		if( $exists ) {
+			$result['valid'] = false;
+			$result['errors'][] = 'Email exists in our global suppression file.';
+		}
+	}
+
+	if( !is_null( $feedParams->filterTypeUrl ) ) {
+		$urlAcceptable = filterValue( $feedParams->filterTypeUrl, $data['url'], $feedParams->filterUrl );
+		if( !$urlAcceptable ) {
+			$result['valid'] = false;
+			$result['errors'][] = 'URL is not allowed on this feed.';
+		}
+	}
+
+	if( $feedParams->dedupeEmail && !empty( $data['email'] ) ) {
+		$dupeCount = checkDuplicate( 'email', $data, $feedParams->label, $feedParams->dedupeAcross );
+		if( $dupeCount === false ) { 
+			$result['valid'] = false;
+			$result['errors'][] = 'Database failure - could not check duplicate email.';
+		} elseif( $dupeCount > 0 ) { 
+			$result['valid'] = false;
+			$result['errors'][] = 'Duplicate email.';
+		}
+	}
+
+	if( $feedParams->dedupeLandline && !empty( $data['landline'] ) ) {
+		$dupeCount = checkDuplicate( 'landline', $data, $feedParams->label, $feedParams->dedupeAcross );
+		if( $dupeCount === false ) { 
+			$result['valid'] = false;
+			$result['errors'][] = 'Database failure - could not check duplicate landline.';
+		} elseif( $dupeCount > 0 ) { 
+			$result['valid'] = false;
+			$result['errors'][] = 'Duplicate landline phone.';
+		}
+	}
+
+	if( $feedParams->dedupeCellphone && !empty( $data['cellphone'] ) ) {
+		$dupeCount = checkDuplicate('cellphone', $data, $feedParams->label, $feedParams->dedupeAcross);
+		if( $dupeCount === false ) { 
+			$result['valid'] = false;
+			$result['errors'][] = 'Database failure - could not check duplicate cellphone.';
+		} elseif( $dupeCount > 0 ) { 
+			$result['valid'] = false;
+			$result['errors'][] = 'Duplicate cellphone.';
+		}
+	}
+
+	return $result;
+}
+
+function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
+
+	$requiredFields = explode(';', $feedParams->required);
+	$allowedFields = explode(';', $feedParams->allowedFields);
+
+	// Establish our table names
+	if( !empty( $error ) ) {
+		$insertTable = "`".DATABASE_NAME."`.`feedinc_".$feedParams->label."_invalid`";
+		$countTable = "`".DATABASE_NAME."`.`urlcount_invalid`";
+		$insertRecord = "INSERT INTO " . $insertTable . " ( `jobId`,`queryString`,`received`,`error` ";
+	} else {
+		$insertTable = "`".DATABASE_NAME."`.`feedinc_".$feedParams->label."`";
+		$countTable = "`".DATABASE_NAME."`.`urlcount`";
+		$insertRecord = "INSERT INTO " . $insertTable . " ( `jobId`,`queryString`,`received` ";
+	}
+
+    // Notify if this is the first time we've seen this URL on this feed
+	if( 0 && !empty( $data['urlTrim'] ) ) {
+		$urlCount = checkExists( 'urlTrim', $data, $feedParams->label );
+		if( $urlCount == 0 ) {
+			notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
+										str_replace( '.', '*', $data['urlTrim'] ) )
+							);
+		}
+	}
+
+	dbCon("insertUpdate");
+
+	foreach( $allowedFields as $allowedField ) { 
+		$insertRecord .= ", `".$allowedField."` ";
+		if( 'url' == $allowedField ) { 
+			$insertRecord .= ", `urlTrim` ";
+		}
+	}
+	$insertRecord .= ") VALUES ( "
+		. valueEmpty( $jobId ) . ","
+		."'".$GLOBALS['dbconnx']->escape_string(serialize($data))."', "
+		."'".date("Y-m-d H:i:s")."' ";
+
+	if( !empty( $error ) ) {
+		$insertRecord .= "," . valueEmpty( $error );
+	}
+
+	foreach( $allowedFields as $allowedField ) { 
+		if( isset( $data[$allowedField] ) ) { 
+			if( $allowedField == 'listcode' && empty($data[$allowedField] ) ) { 
+				$insertRecord .= ", 'No listcode'";
+			} elseif( $allowedField == 'stamp' ) { 
+				$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($data[$allowedField]))."' ";
+			} else { 
+				$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($data[$allowedField])."' ";
+			}
+		} else { 
+			if($allowedField == 'listcode'){ 
+				$insertRecord .= ", 'No listcode'";
+			} else { 
+				$insertRecord .= ", ''";
+			}
+		}
+		if($allowedField == 'url'){ 
+			$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($data['urlTrim'])."' ";
+		}
+	}
+	$insertRecord .= ");";
+
+	$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedParams->label, true);
+	if($doinsertRecord === false){
+		logError(
+			'Feed '.$feedParams->label
+			, 'Database failure when attempting to insert record. Check MySQL log file.'
+			, true
+		);
+		return 'Database failure, please try again later.';
+
+	} else { //Successfully inserted into the data table, now insert into the count table.
+		$date = date("Y-m-d");
+		$insertCountChange = "INSERT INTO " . $countTable . "(`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) VALUES ("
+				." '".$feedParams->idFeedIn."' "
+				.",'".$GLOBALS['dbconnx']->escape_string($data['urlTrim'])."' "
+				.",'".$GLOBALS['dbconnx']->escape_string($data['url'])."' "
+				.",'1' "
+				.",'".$date."' "
+			.") "
+			."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
+		$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
+		if($doinsertCountChange === false){ 
+			logError(
+				'Feed '.$feedParams->label
+				, 'Database failure when attempting to add quantity change for record. Check MySQL log file.'
+				, true
+			);
+		}
+	}
+
+	return true;
+}
+
+function pushIncomingData( $idFeedIn, $data ) {
+
+	$populations = getIncomingPopulationSettings( $idFeedIn );
+    if( $populations === false ) {
+        print "Database error";
+    } else if( $populations == 0 ) {
+        print "No populations for this feed";
+    } else {
+        foreach( $populations as $population ) {
+
+			// Ensure the record passes the population parameter filters for this feed
+			if( checkPopulationFilters( $population,
+						isset( $data['url'] ) ? $data['url'] : null,
+						isset( $data['email'] ) ? $data['email'] : null,
+						isset( $data['listcode'] ) ? $data['listcode'] : null ) ) {
+
+				addOutboundRecord( $population->label, 
+					isset($data['listcode']) ? $data['listcode'] : null,
+					isset($data['urlTrim']) ? $data['urlTrim'] : null,
+					isset($data['url']) ? $data['url'] : null,
+					isset($data['ip']) ? $data['ip'] : null,
+					isset($data['stamp']) ? $data['stamp'] : null,
+					isset($data['email']) ? $data['email'] : null,
+					isset($data['fname']) ? $data['fname'] : null,
+					isset($data['lname']) ? $data['lname'] : null,
+					isset($data['addr']) ? $data['addr'] : null,
+					isset($data['addr2']) ? $data['addr2'] : null,
+					isset($data['city']) ? $data['city'] : null,
+					isset($data['state']) ? $data['state'] : null,
+					isset($data['zip']) ? $data['zip'] : null,
+					isset($data['country']) ? $data['country'] : null,
+					isset($data['dob']) ? $data['dob'] : null,
+					isset($data['gender']) ? $data['gender'] : null,
+					isset($data['landline']) ? $data['landline'] : null,
+					isset($data['cellphone']) ? $data['cellphone'] : null, 
+					'0', null, null, null );
+
+			}
+		}
+	}
+}
