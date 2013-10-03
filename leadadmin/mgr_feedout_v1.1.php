@@ -177,7 +177,7 @@ function addPopulationParameter(
 		."( "
 			."`enabled`,`idFeedIn`,`idFeedOut`,`filterTypeUrl`,`filterUrl`,`filterTypeEmail`,`filterEmail` "
 			.", `filterTypeListcode`,`filterListcode`, `forceUrl`, `forceUrlList` "
-		.") VALUES (1, "
+		.") VALUES ('1', "
 		."  ".$idFeedIn." "
 		.", ".$idFeedOut." "
 		.", ".$filterTypeUrl." "
