@@ -9,14 +9,24 @@ include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
 include(LIVE_ROOT."_f_validEmail.php");
 include(LIVE_ROOT."processFunctions.php");
 
-$jobId = '1';
-$idFeedIn = 8;
+ini_set("auto_detect_line_endings", true);
 
+if( empty( $_REQUEST['idFeedIn'] )) {
+	print '<p class="error">ERROR: No incoming feed ID supplied</p>';
+	exit;
+}
+
+if( empty( $_REQUEST['url'] )) {
+	print '<p class="error">ERROR: No url supplied</p>';
+	exit;
+}
+
+$idFeedIn = $_REQUEST['idFeedIn'];
+$jobId = time();
     
 $feedParams = getFeedIn ( $idFeedIn );
 if($feedParams === false){
-	print "Database failure, please try again later.";
-        
+	print '<p class="error">Database failure.  Cannot load feed information.</p>';
 	logError(
 		'Feed '.$idFeedIn
             , 'Database failure when attempting to load feed parameters. Check MySQL log file.'
@@ -25,80 +35,107 @@ if($feedParams === false){
 
 	exit;
 } else if( 0 === $feedParams ) {
-	print 'Invalid feed ID';
+	print '<p class="error">ERROR: Invalid incoming feed ID supplied</p>';
 	exit;
 }
 
-$file = './exports/payday.csv';
+if( !empty( $_FILES['import_file']['error'] ) ) {
+	print '<p class="error">ERROR: Upload error (' .  $_FILES['import_file']['error'] . ')</p>';
+	exit;
+}
 
-$handle = @fopen( $file, 'r' );
+if( empty( $_FILES['import_file']['tmp_name'] ) ) {
+	print '<p class="error">ERROR: No file uploaded</p>';
+	exit;
+}
+
+if( !is_uploaded_file( $_FILES['import_file']['tmp_name'] ) ) {
+	print '<p class="error">ERROR: Possible file upload attack!</p>';
+	exit;
+}
+
+if( $_FILES['import_file']['size'] > 5120000 ) {
+	print '<p class="error">ERROR: File size cannot exceed 5MB</p>';
+	exit;
+}
+
+$counts = array(
+	'success' => 0,
+	'invalid' => 0,
+	'failures' => 0,
+	'dupe' => 0,
+);
+
+$handle = @fopen( $_FILES['import_file']['tmp_name'], "r" );
 if( !$handle ) {
-	print 'Cannot open file for reading';
+	print '<p class="error">ERROR: Cannot open uploaded file for reading</p>';
 	exit;
 }
 
-print "<pre>\n";
+print "<p>Importing records from: <strong>{$_FILES['import_file']['name']}</strong></p>\n";
 
-$cnt = 0;
+$allowedFields = explode(";", $feedParams->allowedFields);
+
+$cnt = 1;
 while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 	$data = array();
 
-	if( !empty($raw_data[0]) && !empty( $raw_data[1] ) )
-		$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[0] . ' ' . $raw_data[1] ) );
-
-	if( !empty($raw_data[2]) )
-		$data['fname'] = $raw_data[2];
-
-	if( !empty($raw_data[3]) )
-		$data['lname'] = $raw_data[3];
-
-	if( !empty($raw_data[4]) )
-		$data['addr'] = $raw_data[4];
-
-	if( !empty($raw_data[5]) )
-		$data['city'] = $raw_data[5];
-
-	if( !empty($raw_data[6]) )
-		$data['state'] = $raw_data[6];
-
-	if( !empty($raw_data[7]) )
-		$data['zip'] = $raw_data[7];
-
-	if( !empty($raw_data[8]) )
-		$data['email'] = $raw_data[8];
-
-	if( !empty($raw_data[9]) )
-		$data['dob'] = date( "Y-m-d", strtotime( $raw_data[9] ) );
-
-	if( !empty($raw_data[15]) )
-		$data['ip'] = $raw_data[15];
-
-	$data['url'] = 'worldwidecashadvance.com';
-
-	// Fix zip codes with a missing leading zero
-	if( !empty( $data['zip']) && 4 == strlen( $data['zip'] ) ) {
-		$data['zip'] = '0' . $data['zip'];
+	foreach( $allowedFields as $field ) {
+		if( isset( $_REQUEST['field_' . $field] ) && is_numeric( $_REQUEST['field_' . $field] ) ) {
+			$col = $_REQUEST['field_' . $field];
+			if( !empty( $raw_data[$col] ) ) {
+				if( 'stamp' == $field )
+					$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
+				elseif( 'dob' == $field )
+					$data['dob'] = date( "Y-m-d", strtotime( $raw_data[$col] ) );
+				else
+					$data[$field] = $raw_data[$col];
+			}
+		}
 	}
+
+	if( !empty( $_REQUEST['url'] ) )
+		$data['url'] = $_REQUEST['url'];
+	if( !empty( $_REQUEST['listcode'] ) )
+		$data['listcode'] = $_REQUEST['listcode'];
+
+	// Fix zip codes with a missing leading zeros
+	if( !empty( $data['zip'] ) ) {
+		$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT);
+	}
+
+	print "{$data['email']}";
 
 	$result = validateIncomingData( $feedParams, &$data );
 
 	if( $result['valid'] ) {
 
-		print "{$data['email']} - VALID\n";
+		print " - VALID\n";
 
 		if( insertIncomingData( $feedParams, $data, $jobId ) === true ) {
 			pushIncomingData( $idFeedIn, $data );
+			$counts['success']++;
+		} else {
+			$counts['failures']++;
 		}
 
 	} else {
 
-		print "{$data['email']} - ERROR\n";
-		print_r($result['errors']);
+		$counts['invalid']++;
+
+		print " - ERROR\n";
+		print "<ul>\n";
+		foreach($result['errors'] as $error) {
+			print "<li class=\"error\">{$error}</li>\n";
+		}
+		print "</ul>\n";
 
 		insertIncomingData( $feedParams, $data, $jobId, $result['errors'][0] );
 
 	}
+
+	print "<br/>\n";
 
 	@ob_flush; flush();
 
@@ -106,3 +143,8 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 }
 fclose($handle);
+
+print "<p><strong>Successful: {$counts['success']}</strong></p>\n";
+print "<p><strong>Duplicates: {$counts['dupes']}</strong></p>\n";
+print "<p><strong>Invalid: {$counts['invalid']}</strong></p>\n";
+print "<p><strong>Failures: {$counts['failures']}</strong></p>\n";

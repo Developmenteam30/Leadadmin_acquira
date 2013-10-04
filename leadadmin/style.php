@@ -254,6 +254,9 @@ div.dashboardOutgoing { width: 50%; }
 
 .rejectionsTable .error {
 	border: 1px solid #909090;
+}
+
+.error {
 	color: #ff0000;
 	font-weight: bold;
 }

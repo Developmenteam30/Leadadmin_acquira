@@ -695,6 +695,9 @@ if($incomingFeeds === false){
 onclick='display("dialog_editfeed", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'
 				>Edit Feed</a> |
 				<a href='#' class='nonLink'
+onclick='display("dialog_import", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'
+				>Import legacy data</a> |
+				<a href='#' class='nonLink'
 onclick='display("dialog_export", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'
 				>Export Data to File</a>
 			</p>
@@ -704,6 +707,7 @@ onclick='display("dialog_export", { "sub":"<?php echo $feed->idFeedIn; ?>", "idF
 	<tr><td class='hidden' id='dialog_listcodes_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 	<tr><td class='hidden' id='dialog_editfeed_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 	<tr><td class='hidden' id='dialog_export_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
+	<tr><td class='hidden' id='dialog_import_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 <?php
 		}
 ?>
@@ -1196,6 +1200,74 @@ if($urlBreakdown_invalid === false){
 	</tr>
 </table>
 <?php
+		break;
+		case 'dialog_import':
+			$idFeedIn = $_REQUEST['options']['idFeedIn'];
+			$feed = getIncomingFeed($idFeedIn);
+?>
+<div class='fr'>
+	<a href='#' class='nonLink' onclick='closeContent("dialog_import", {"sub": <?php echo $idFeedIn; ?>});'>Close [X]</a>
+</div>
+<?php
+			if($feed === false){ 
+?>
+<p>Database failure - could not fetch feed information.</p>
+<?php 
+			} elseif(!is_object($feed) && $feed == 0){ 
+?>
+<p>Error fetching feed information - feed does not exist.</p>
+<?php
+			} else { 
+?>
+<form enctype="multipart/form-data" action="mgr_import.php" method="post">
+<input type="hidden" name="MAX_FILE_SIZE" value="5120000" />
+<input type="hidden" name="idFeedIn" value="<?php echo intval($idFeedIn); ?>" />
+
+<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+	<tr>
+		<td colspan='2'><p class='aCenter'>Import Settings</p></td>
+	</tr>
+	<tr>
+		<td><p>URL</p></td>
+		<td><input type="text" name="url" value="" /></td>
+	</tr>
+	<tr>
+		<td><p>Listcode</p></td>
+		<td><input type="text" name="listcode" value="" /></td>
+	</tr>
+	<tr>
+		<td><p>File</p></td>
+		<td><p>Please select the file to upload from your computer.  File must be in CSV format.  Limit 5 MB.</p><p><input type="file" name="import_file" multiple="false" accept="text/csv" /></p></td>
+	</tr>
+	<tr>
+		<td><p>Field mapping</p></td>
+		<td>
+<?php
+		$allowedFields = explode(";", $feed->allowedFields);
+		$requiredFields = explode(";", $feed->required);
+
+		foreach( $allowedFields as $field) {
+			if( 'listcode' != $field && 'url' != $field) {
+				printf ("<p>%s%s <select name=\"field_%s\">",
+					$field, in_array($field, $requiredFields) ? '*' : '', $field);
+				print "<option>--</option>\n";
+				for($i = 0; $i < 26; $i++) {
+					print "<option value=\"{$i}\">" . chr(65+$i) . "</option>\n";
+				}
+				print "</select></p>\n";
+			}
+		}
+
+?>
+		</td>
+	</tr>
+	<tr>
+		<td colspan='2'><p class='aRight'><input type="submit" name="a" value="Upload" /></p></td>
+	</tr>
+</table>
+</form>
+<?php
+			}
 		break;
 		case 'dialog_export':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
