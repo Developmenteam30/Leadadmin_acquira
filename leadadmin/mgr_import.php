@@ -144,7 +144,9 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 }
 fclose($handle);
 
+print "<strong>FILE UPLOAD COMPLETE!</strong>\n";
+
 print "<p><strong>Successful: {$counts['success']}</strong></p>\n";
-print "<p><strong>Duplicates: {$counts['dupes']}</strong></p>\n";
+print "<p><strong>Duplicates: {$counts['dupe']}</strong></p>\n";
 print "<p><strong>Invalid: {$counts['invalid']}</strong></p>\n";
 print "<p><strong>Failures: {$counts['failures']}</strong></p>\n";
