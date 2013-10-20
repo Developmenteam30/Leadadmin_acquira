@@ -44,11 +44,11 @@ function legacyPopulate( $feedId, $file = false ) {
 				$postResponse = null;
 
 			}
-				
+
 			$stamp = getOutboundStamp( $population->outLabel );
 
 	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` ";
-    		$query .= "WHERE stamp >= DATE_SUB(NOW(), INTERVAL 365 DAY) ";
+    		$query .= "WHERE stamp >= DATE_SUB(NOW(), INTERVAL 30 DAY) ";
 			if( $stamp ) {
 				$query .= "AND stamp <= '" . $stamp . "' ";
 			}
@@ -61,7 +61,7 @@ function legacyPopulate( $feedId, $file = false ) {
     		if( $result->num_rows == 0 ) { return 0; }
 	    	$values = array();
 
-print "Total records found: {$result->num_rows}\n";
+			print "Total records found: {$result->num_rows}\n";
 
 			$cnt = 0;
 	    	while( $row = $result->fetch_object() ) {
@@ -120,4 +120,4 @@ print "Records that match population filters: {$cnt}\n";
 
 }
 
-legacyPopulate( 64, false );
+legacyPopulate( 75, false );
