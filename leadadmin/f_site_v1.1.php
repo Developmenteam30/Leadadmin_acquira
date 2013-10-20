@@ -165,9 +165,10 @@ function getIncomingFeed($idFeedIn){
 }
 
 function getIncomingUrls( $label ){
-	$query  = "SELECT DISTINCT(urlTrim) ";
+	$query  = "SELECT DISTINCT(urlTrim),LEFT(MIN(received),10) start ";
 	$query .= "FROM `".DATABASE_NAME."`.`feedinc_" . $label . "` ";
-	$query .= "WHERE urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%'";
+	$query .= "WHERE urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
+	$query .= "GROUP BY 1";
 
 	dbCon();
 	$result = dbQry( $query, 'Getting incoming feed URLs', true );

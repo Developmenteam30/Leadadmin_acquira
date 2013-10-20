@@ -1539,7 +1539,7 @@ if($urlBreakdown_invalid === false){
 				if( $urls && is_array( $urls ) ) {
 					printf( "<select multiple=\"multiple\" id=\"urlreport_%s_urls\" size=\"%d\">\n", $idFeedIn, sizeOf( $urls ) );
 					foreach( $urls as $url ) {
-						printf( "<option value=\"%s\">%s</option>\n", htmlspecialchars( $url->urlTrim ), htmlspecialchars( $url->urlTrim ) );
+						printf( "<option value=\"%s\">%s (%s)</option>\n", htmlspecialchars( $url->urlTrim ), htmlspecialchars( $url->urlTrim ), $url->start );
 					}
 					print "</select>\n";
 				}
