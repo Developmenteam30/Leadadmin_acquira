@@ -32,6 +32,10 @@ function hex2rgb($hex) { //Converts a hex color code to rgb color code for css.
    //return $rgb; // returns an array with the rgb values
 }
 
+function add_quotes( $str ) {
+	return sprintf( "'%s'", $GLOBALS['dbconnx']->escape_string( $str ) );
+}
+
 function genFeedPass($length = 16) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $randomString = '';
@@ -159,6 +163,24 @@ function getIncomingFeed($idFeedIn){
 	if($dogetFeed->num_rows == 0){ return 0; }
 	return $dogetFeed->fetch_object();
 }
+
+function getIncomingUrls( $label ){
+	$query  = "SELECT DISTINCT(urlTrim) ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedinc_" . $label . "` ";
+	$query .= "WHERE urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%'";
+
+	dbCon();
+	$result = dbQry( $query, 'Getting incoming feed URLs', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
+}
+
 
 //Outgoing Feed Functions//
 
