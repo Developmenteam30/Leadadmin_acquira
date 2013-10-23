@@ -1,11 +1,19 @@
-<?php //c_nav.php versioning file
-//Version
-if(isset($_REQUEST['c_headerVersionOverride'])){ 
-	$version = $_REQUEST['c_headerVersionOverride'];
+<?php 
+//ADMIN_ROOT/c_header.php
+if(!isset($title)){ 
+	$title = CONFIG_COMPANY_NAME.' Admin';
 } else { 
-	$version = "1.1";
+	$title = $title .' | '.CONFIG_COMPANY_NAME.' Admin';
 }
-include("c_header_v".$version.".php");
-//Changelog
-//ES 2013 07 22 v1.0: Moved header information into a separate script.
-//ES 2013 08 27 v1.1: Created versioning file. Changed css file from .css to .php
+?><!DOCTYPE html>
+<html>
+<head>	
+
+<title><?php echo $title; ?></title>
+<link href='style.php' rel='stylesheet' type='text/css' />
+<link rel="stylesheet" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+<script src='//code.jquery.com/jquery-2.0.3.js'></script>
+<script src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<script src='default.js'></script>
+
+</head>
