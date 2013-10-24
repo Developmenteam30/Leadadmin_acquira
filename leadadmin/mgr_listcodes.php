@@ -241,7 +241,7 @@ else {
 ?>
 <table class="feedTableListcodes bgWhite">
 	<thead>
-		<tr class="bgGray">
+		<tr class="bgGray header">
 			<td class="fTI_companyName" colspan="3"><p>Company</p></td>
 			<td class="fTI_options"><p>Actions</p></td>
 		</tr>

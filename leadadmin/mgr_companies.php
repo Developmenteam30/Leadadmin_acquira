@@ -172,28 +172,28 @@ else {
 <?php
 			} else { 
 ?>
-<table border='1' cellpadding='0' cellspacing='0' class='tCompany'>
+<table border='1' cellpadding='0' cellspacing='0' class='feedTableListcodes bgWhite'>
 	<thead>
-		<tr>
-			<th>
+		<tr class="bgGray header">
+			<td>
 				<p>ID</p>
-			</th>
-			<th>
+			</td>
+			<td>
 				<p>Company Name</p>
-			</th>
-			<th>
+			</td>
+			<td>
 				<p>Notes</p>
-			</th>
-			<th>
+			</td>
+			<td>
 				<p>Options</p>
-			</th>
+			</td>
 		</tr>
 	</thead>
 	<tbody>
 <?php
 				foreach($companies as $company){ 
 ?>
-		<tr>
+		<tr class="bgGray">
 			<td>
 				<?php echo $company->idCompany; ?>
 			</td>
