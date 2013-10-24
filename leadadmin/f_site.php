@@ -224,6 +224,24 @@ function getOutgoingFeed($idFeedOut){
 	return $dogetFeed->fetch_object();
 }
 
+function getOutgoingUrls( $label ){
+	$query  = "SELECT DISTINCT(urlTrim),LEFT(MIN(postStamp),10) start ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedout_" . $label . "` ";
+	$query .= "WHERE processed = '1' AND urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
+	$query .= "GROUP BY 1";
+
+	dbCon();
+	$result = dbQry( $query, 'Getting outgoing feed URLs', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
+}
+
 //Population Functions//
 
 function getPopulationStatus($idFeedOut){ 

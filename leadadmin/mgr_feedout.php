@@ -948,7 +948,10 @@ if($outgoingFeeds === false){
 						>Send one test record</a><br />
 						<a href='#' class='nonLink'
 					onclick="feedRetire(<?php echo $feed->idFeedOut; ?>, { 'sub': '<?php echo $feed->idCompany; ?>'});"
-						>Retire This Feed</a>
+						>Retire This Feed</a><br />
+						<a href='#' class='nonLink'
+					onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
+						>URL Report</a>
 					</p>
 				</div>
 			</div>
@@ -957,6 +960,8 @@ if($outgoingFeeds === false){
 	<tr><td class='hidden' id='feedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 	<tr><td class='hidden' id='dialog_editpopulation_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 	<tr><td class='hidden' id='dialog_editfeedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden' id='dialog_urlreport_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden' id='dialog_urlreportdetails_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 <?php
 		}
 ?>
@@ -1356,6 +1361,208 @@ if($populationSettings === false){
 </table>
 <?php
 		break;
+
+		case 'dialog_urlreport':
+			$idFeedOut = $_REQUEST['options']['idFeedOut'];
+			$feed = getOutgoingFeed($idFeedOut);
+?>
+<div class='fr'>
+	<a href='#' class='nonLink' onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedOut; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedOut; ?>});' 
+	>Close [X]</a>
+</div>
+<?php
+			if($feed === false){ 
+?>
+<p>Database failure - could not fetch feed information.</p>
+<?php 
+			} elseif(!is_object($feed) && $feed == 0){ 
+?>
+<p>Error fetching feed information - feed does not exist.</p>
+<?php
+			} else { 
+?>
+<p>URL Report from Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
+<input type='hidden' id='urlreport_idFeedOut' value='<?php echo $feed->idFeedOut; ?>' />
+<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+	<tr>
+		<td colspan='2'><p class='aCenter'>Report Settings</p></td>
+	</tr>
+	<tr>
+		<td>
+			<p>Period</p>
+		</td>
+		<td>
+			<p>
+				Period goes from midnight of the first date to midnight of the second date. Leave blank to select
+				from all time records. (This could take a long time.)
+			</p>
+			<p>
+				<input type='text' 
+					name='urlreport_<?php echo $idFeedOut; ?>_dateStart' 
+					id='urlreport_<?php echo $idFeedOut; ?>_dateStart' 
+					class='dateSelector' 
+					value='<?php echo date("Y-m-d"); ?>'
+				/>
+				to <input type='text' 
+					name='urlreport_<?php echo $idFeedOut; ?>_dateEnd' 
+					id='urlreport_<?php echo $idFeedOut; ?>_dateEnd' 
+					class='dateSelector' 
+					value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'
+				/>
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<p>
+				URLs
+			</p>
+		</td>
+		<td>
+			<p>
+				URLs to limit the selection by. Leave blank to select all records regardless of URL.
+			</p>
+			<p>
+<?php
+				$urls = getOutgoingUrls( $feed->label );
+				if( $urls && is_array( $urls ) ) {
+					printf( "<select multiple=\"multiple\" id=\"urlreport_%s_urls\" size=\"%d\">\n", $idFeedOut, sizeOf( $urls ) );
+					foreach( $urls as $url ) {
+						printf( "<option value=\"%s\">%s (%s)</option>\n", htmlspecialchars( $url->urlTrim ), htmlspecialchars( $url->urlTrim ), $url->start );
+					}
+					print "</select>\n";
+				}
+?>
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<p>
+				Count By
+			</p>
+		</td>
+		<td>
+			<p><select id="urlreport_<?php echo $idFeedOut; ?>_breakdown"><option value="day" selected="selected">Day</option><option value="month">Month</option><option value="year">Year</option><option value="total">Total</option</select></p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<p>
+				Sort By
+			</p>
+		</td>
+		<td>
+			<p><select id="urlreport_<?php echo $idFeedOut; ?>_sort"><option value="date" selected="selected">Date</option><option value="url">URL</option></select></p>
+		</td>
+	</tr>
+	<tr>
+		<td colspan='2'>
+			<p class='aRight'>
+				<input type="button" value="Run Report" onclick="display( 'dialog_urlreportdetails', { 'sub': <?php echo $idFeedOut; ?>, 
+					'idFeedOut': <?php echo $idFeedOut; ?>, 
+					'dateStart': $('#urlreport_<?php echo $idFeedOut; ?>_dateStart').val(),
+					'dateEnd': $('#urlreport_<?php echo $idFeedOut; ?>_dateEnd').val(),
+					'urlList': $('#urlreport_<?php echo $idFeedOut; ?>_urls').val(),
+					'sort': $('#urlreport_<?php echo $idFeedOut; ?>_sort').val(),
+					'breakdown': $('#urlreport_<?php echo $idFeedOut; ?>_breakdown').val() });" />
+			</p>
+		</td>
+	</tr>
+</table>
+<?php
+			}
+		break;
+		case 'dialog_urlreportdetails':
+			$feed = getOutgoingFeed($_REQUEST['options']['idFeedOut']);
+			if($feed === false){ 
+?>
+<p>Database failure - could not fetch feed information.</p>
+<?php 
+
+			} else if( !is_object($feed) && $feed == 0 ) { 
+?>
+<p>Error - could not fetch feed. Feed does not exist.</p>
+<?php 
+			} else {
+
+				$urlList = '';
+				if( !empty( $_REQUEST['options']['urlList'] ) && is_array( $_REQUEST['options']['urlList'] ) ) {
+					$urlList =  implode(',', array_map( 'add_quotes', $_REQUEST['options']['urlList'] ) );
+				}
+
+				if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'month' )
+					$query  = "SELECT urlTrim,LEFT(postStamp,7) date,COUNT(*) cnt ";
+				else if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'year' )
+					$query  = "SELECT urlTrim,LEFT(postStamp,4) date,COUNT(*) cnt ";
+				else if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'total' )
+					$query  = "SELECT urlTrim,'TOTAL' as date,COUNT(*) cnt ";
+				else
+					$query  = "SELECT urlTrim,LEFT(postStamp,10) date,COUNT(*) cnt ";
+
+				$query .= "FROM `".DATABASE_NAME."`.`feedout_".$feed->label."` ";
+				$query .= "WHERE processed = '1' AND urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
+				if( !empty( $urlList ) ) {
+					$query .= "AND urlTrim IN (" . $urlList . ") ";
+				}
+				if( !empty( $_REQUEST['options']['dateStart'] ) && !empty( $_REQUEST['options']['dateEnd'] ) ) { 
+					if( strtotime($_REQUEST['options']['dateStart']) > strtotime($_REQUEST['options']['dateEnd']) ) { 
+						$dateStart = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateEnd']));
+						$dateEnd = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateStart']));
+					} else { 
+						$dateStart = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateStart']));
+						$dateEnd = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateEnd']));
+					}
+					$query .= "AND `postStamp` >= '".$dateStart."' AND `postStamp` < '".$dateEnd."' ";
+				}
+				$query .= "GROUP BY 1,2 ";
+				if( !empty( $_REQUEST['options']['sort'] ) && $_REQUEST['options']['sort'] == 'url' )
+					$query .= "ORDER BY 1,2";
+				else
+				$query .= "ORDER BY 2,1";
+
+				$dofetchData = dbQry($query, 'Fetching specified data set.', true);
+				if( $dofetchData === false ) {
+?>
+<p>Database failure - failed to run URL report query.</p>
+<?php 
+				} else {
+
+					$fileLink = 'exports/' . $feed->label."_".time().".csv";
+					$filePath = ADMIN_ROOT.$fileLink;
+					$file = fopen($filePath, "w");
+					if(!file_exists($filePath)){ 
+?>
+<p>Failed to create CSV report file.</p>
+<?php 
+					} else {
+						print "<table class='urlTable'>\n";
+						print "<thead>\n";
+						print "\t<tr>\n";
+						print "\t<td>URL</td>\n";
+						print "\t<td>Date</td>\n";
+						print "\t<td>Count</td>\n";
+						print "\t</tr>\n";
+						print "</thead>\n";
+						print "<tbody>\n";
+						print "\t<tr>\n";
+						while($row = $dofetchData->fetch_object()) {
+							print "\t<tr>\n";
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->urlTrim ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->date ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->cnt ) );
+							print "\t</tr>\n";
+							fputcsv( $file, array( $row->urlTrim, $row->date, $row->cnt ) );
+						}
+						fclose($file);
+						print "</tbody>\n";
+						print "</table>\n";
+						printf( '<p><a href="%s">Download this report</a></p>', $fileLink );
+					}
+				}
+			}
+		break;
+
 		case 'staticField':
 			$e = $_REQUEST['options']['e'];
 ?>
