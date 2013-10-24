@@ -568,9 +568,8 @@ function autoRefresh(){
 </script>
 <style>
 table.urlTable th, table.urlTable td { padding: 3px; }
-table.feedTable { font-size: .8em; }
 table.feedTable th, table.feedTable td { padding: 3px; }
-table.populationTable { font-size: .8em; margin-bottom: 20px; }
+table.populationTable { margin-bottom: 20px; }
 table.populationTable th, table.populationTable td { padding: 3px; }
 div.chartLabel { float: left; width: 100px; }
 div.chartValue { float: left; width: 75px; }

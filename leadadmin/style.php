@@ -12,8 +12,8 @@ include(ADMIN_ROOT."c_sitecustom.php");
 body { 
 	background: url("images/bg.png"); 
 	margin: 0px; padding: 0px;
-	font-family: Verdana, Helvetica, sans-serif; 
-	font-size: 12px;
+	font-family: Verdana, Helvetica, sans-serif;
+	font-size: 0.6em;
 	height: 100%; 
 }
 
@@ -122,7 +122,6 @@ div.navContainer, div.logoutContainer{
 		border-right: 1px solid <?php echo $navDividers; ?>;
 		padding: 15px 15px 15px 15px;
 		margin: 0px;
-		font-size: .8em; 
 		background-image: linear-gradient();
 		background-image: -o-linear-gradient(<?php echo $gradient; ?>);
 		background-image: -moz-linear-gradient(<?php echo $gradient; ?>);
@@ -180,7 +179,7 @@ div.loginBox { width: 100%;   }
 input.loginBox { width: 230px; }
 
 /*Feed Tables Outgoing*/
-table.feedTableOutgoing { width: 100%; font-size: .8em; border-collapse: collapse; }
+table.feedTableOutgoing { width: 100%; border-collapse: collapse; }
 	table.feedTableOutgoing td { border: 1px solid #CCCCCC; }
 	table.feedTableOutgoing td p { margin: 3px; }
 td.fTO_companyName { width: 21%;  }
@@ -196,7 +195,7 @@ td.fTO_rejected { width: 8%;  }
 td.fTO_options { width: 20%; }
 
 /*Feed Tables Incoming*/
-table.feedTableIncoming { width: 100%; font-size: .8em; border-collapse: collapse; }
+table.feedTableIncoming { width: 100%; border-collapse: collapse; }
 	table.feedTableIncoming td { border: 1px solid #CCCCCC; }
 	table.feedTableIncoming td p { margin: 3px; }
 td.fTI_companyName { width: 21%;  }
@@ -208,7 +207,7 @@ td.fTI_accepted { width: 8%;  }
 td.fTI_rejected { width: 8%;  }
 td.fTI_options { width: 35%; }
 
-table.feedTableListcodes { width: 100%; font-size: .8em; border-collapse: collapse; }
+table.feedTableListcodes { width: 100%; border-collapse: collapse; }
 table.feedTableListcodes td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top; }
 table.feedTableListcodes td p { padding: 0 0 3px 0; }
 table.feedTableListcodes tr.header { font-weight: bold; text-align: center; }
@@ -226,7 +225,6 @@ div.dashboardOutgoing { width: 50%; }
 
 .rejectionsTable th {
 	border: 1px solid #909090;
-	font-size:14px;
 	font-family:Arial;
 	font-weight:bold;
 	padding: 4px;
@@ -235,7 +233,6 @@ div.dashboardOutgoing { width: 50%; }
 
 .rejectionsTable td {
 	border: 1px solid #909090;
-	font-size:12px;
 	font-family:Arial;
 	font-weight:normal;
 	padding: 4px;

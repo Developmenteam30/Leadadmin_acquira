@@ -283,72 +283,6 @@ function exportData($feedObject, $settings){
 	return $result;
 }
 
-function urlReport($feedObject, $settings){
-	$result = array(
-		'success' => false
-		, 'reason' => 'None.'
-		, 'fileLink' => null
-	);
-	$c = true;
-	dbCon();
-
-	if( !empty( $settings['breakdown'] ) && $settings['breakdown'] == 'month' )
-		$query  = "SELECT urlTrim,LEFT(received,7) date,COUNT(*) cnt ";
-	else
-		$query  = "SELECT urlTrim,LEFT(received,10) date,COUNT(*) cnt ";
-	$query .= "FROM `".DATABASE_NAME."`.`feedinc_".$feedObject->label."` ";
-	$query .= "WHERE urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
-	if( !empty( $settings['urlList'] ) ) {
-		$query .= "AND urlTrim IN (" . $settings['urlList'] . ") ";
-	}
-	if( !empty( $settings['dateStart'] ) && !empty( $settings['dateEnd'] ) ) { 
-		if(
-			strtotime($settings['dateStart']) 
-			> strtotime($settings['dateEnd'])
-		){ 
-			$dateStart = date("Y-m-d H:i:s", strtotime($settings['dateEnd']));
-			$dateEnd = date("Y-m-d H:i:s", strtotime($settings['dateStart']));
-		}else { 
-			$dateStart = date("Y-m-d H:i:s", strtotime($settings['dateStart']));
-			$dateEnd = date("Y-m-d H:i:s", strtotime($settings['dateEnd']));
-		}
-		$query .= "AND `received` >= '".$dateStart."' AND `received` < '".$dateEnd."' ";
-	}
-	$query .= "GROUP BY 1,2 ";
-	if( !empty( $settings['sort'] ) && $settings['sort'] == 'url' )
-		$query .= "ORDER BY 1,2";
-	else
-		$query .= "ORDER BY 2,1";
-
-	if($c){ 
-		$dofetchData = dbQry($query, 'Fetching specified data set.', true);
-		if($dofetchData === false){ 
-			$c = false; $result['reason'] = 'Database failure - failed to fetch data set.';
-		}
-	}
-	dbDcon();
-	if($c){ 
-		$fileLink = 'exports/' . $feedObject->label."_".time().".csv";
-		$filePath = ADMIN_ROOT.$fileLink;
-		$file = fopen($filePath, "w");
-		if(!file_exists($filePath)){ 
-			$c = false; $result['reason'] = 'Failed to create CSV file.';
-		}
-	}
-	if($c){ 
-		while($row = $dofetchData->fetch_object()){ 
-			fputcsv( $file, array( $row->urlTrim, $row->date, $row->cnt ) );
-		}
-		fclose($file);
-	}
-	if($c){ 
-		$result['success'] = true;
-		$result['reason'] = 'Successfully exported data to file.';
-		$result['fileLink'] = $fileLink;
-	}
-	return $result;
-}
-
 if(isset($_REQUEST['a'])){ 
 	$result = array(
 		'status' => 0
@@ -613,40 +547,6 @@ if(isset($_REQUEST['a'])){
 				$result['link'] = $exportResult['fileLink'];
 			}
 		break;
-		case 'urlReport':
-			$c = true; $result['error'] = 'Failed when trying to run URL report.';
-			if($c){ 
-				$feed = getIncomingFeed($_REQUEST['idFeedIn']);
-				if($feed === false){ 
-					$c = false; $result['error'] = 'Database failure - could not fetch feed information.';
-				}
-				if($c && !is_object($feed) && $feed == 0){ 
-					$c = false; $result['error'] = 'Error - could not fetch feed. Feed does not exist.';
-				}
-			}
-			$urlList = '';
-			if( $c && !empty( $_REQUEST['urlreportUrlList'] ) && is_array( $_REQUEST['urlreportUrlList'] ) ) {
-				$urlList =  implode(',', array_map( 'add_quotes', $_REQUEST['urlreportUrlList'] ) );
-			}
-			if($c){
-				$settings = array(
-					'dateStart' => $_REQUEST['urlreportDateStart'],
-					'dateEnd' => $_REQUEST['urlreportDateEnd'],
-					'urlList' => $urlList,
-					'breakdown' => $_REQUEST['urlreportBreakdown'],
-					'sort' => $_REQUEST['urlreportSort'],
-				);
-				$exportResult = urlReport($feed, $settings);
-				if(!$exportResult['success']){ 
-					$c = false; $result['error'] = $exportResult['reason'];
-				}
-			}
-			if($c){
-				$result['status'] = 1;
-				$result['error'] = 'Successfully exported file.';
-				$result['link'] = $exportResult['fileLink'];
-			}
-		break;
 	}
 	echo json_encode($result);
 	exit;
@@ -812,6 +712,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 	<tr><td class='hidden' id='dialog_export_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 	<tr><td class='hidden' id='dialog_import_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 	<tr><td class='hidden' id='dialog_urlreport_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
+	<tr><td class='hidden' id='dialog_urlreportdetails_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 <?php
 		}
 ?>
@@ -1478,7 +1379,7 @@ if($urlBreakdown_invalid === false){
 			$feed = getIncomingFeed($idFeedIn);
 ?>
 <div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedIn; ?>});' 
+	<a href='#' class='nonLink' onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedIn; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedIn; ?>});' 
 	>Close [X]</a>
 </div>
 <?php
@@ -1554,7 +1455,7 @@ if($urlBreakdown_invalid === false){
 			</p>
 		</td>
 		<td>
-			<p><select id="urlreport_<?php echo $idFeedIn; ?>_breakdown"><option value="day" selected="selected">Day</option><option value="month">Month</option></select></p>
+			<p><select id="urlreport_<?php echo $idFeedIn; ?>_breakdown"><option value="day" selected="selected">Day</option><option value="month">Month</option><option value="year">Year</option><option value="total">Total</option</select></p>
 		</td>
 	</tr>
 	<tr>
@@ -1570,13 +1471,107 @@ if($urlBreakdown_invalid === false){
 	<tr>
 		<td colspan='2'>
 			<p class='aRight'>
-				<a href='#' id='resultUrlReport_<?php echo $idFeedIn; ?>'></a>
-				<input type='button' value='Run Report' onclick='urlReport(<?php echo $idFeedIn; ?>);'/>
+				<input type="button" value="Run Report" onclick="display( 'dialog_urlreportdetails', { 'sub': <?php echo $idFeedIn; ?>, 
+					'idFeedIn': <?php echo $idFeedIn; ?>, 
+					'dateStart': $('#urlreport_<?php echo $idFeedIn; ?>_dateStart').val(),
+					'dateEnd': $('#urlreport_<?php echo $idFeedIn; ?>_dateEnd').val(),
+					'urlList': $('#urlreport_<?php echo $idFeedIn; ?>_urls').val(),
+					'sort': $('#urlreport_<?php echo $idFeedIn; ?>_sort').val(),
+					'breakdown': $('#urlreport_<?php echo $idFeedIn; ?>_breakdown').val() });" />
 			</p>
 		</td>
 	</tr>
 </table>
 <?php
+			}
+		break;
+		case 'dialog_urlreportdetails':
+			$feed = getIncomingFeed($_REQUEST['options']['idFeedIn']);
+			if($feed === false){ 
+?>
+<p>Database failure - could not fetch feed information.</p>
+<?php 
+
+			} else if( !is_object($feed) && $feed == 0 ) { 
+?>
+<p>Error - could not fetch feed. Feed does not exist.</p>
+<?php 
+			} else {
+
+				$urlList = '';
+				if( !empty( $_REQUEST['options']['urlList'] ) && is_array( $_REQUEST['options']['urlList'] ) ) {
+					$urlList =  implode(',', array_map( 'add_quotes', $_REQUEST['options']['urlList'] ) );
+				}
+
+				if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'month' )
+					$query  = "SELECT urlTrim,LEFT(received,7) date,COUNT(*) cnt ";
+				else if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'year' )
+					$query  = "SELECT urlTrim,LEFT(received,4) date,COUNT(*) cnt ";
+				else if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'total' )
+					$query  = "SELECT urlTrim,'TOTAL' as date,COUNT(*) cnt ";
+				else
+					$query  = "SELECT urlTrim,LEFT(received,10) date,COUNT(*) cnt ";
+
+				$query .= "FROM `".DATABASE_NAME."`.`feedinc_".$feed->label."` ";
+				$query .= "WHERE urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
+				if( !empty( $urlList ) ) {
+					$query .= "AND urlTrim IN (" . $urlList . ") ";
+				}
+				if( !empty( $_REQUEST['options']['dateStart'] ) && !empty( $_REQUEST['options']['dateEnd'] ) ) { 
+					if( strtotime($_REQUEST['options']['dateStart']) > strtotime($_REQUEST['options']['dateEnd']) ) { 
+						$dateStart = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateEnd']));
+						$dateEnd = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateStart']));
+					} else { 
+						$dateStart = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateStart']));
+						$dateEnd = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateEnd']));
+					}
+					$query .= "AND `received` >= '".$dateStart."' AND `received` < '".$dateEnd."' ";
+				}
+				$query .= "GROUP BY 1,2 ";
+				if( !empty( $_REQUEST['options']['sort'] ) && $_REQUEST['options']['sort'] == 'url' )
+					$query .= "ORDER BY 1,2";
+				else
+				$query .= "ORDER BY 2,1";
+
+				$dofetchData = dbQry($query, 'Fetching specified data set.', true);
+				if( $dofetchData === false ) {
+?>
+<p>Database failure - failed to run URL report query.</p>
+<?php 
+				} else {
+
+					$fileLink = 'exports/' . $feed->label."_".time().".csv";
+					$filePath = ADMIN_ROOT.$fileLink;
+					$file = fopen($filePath, "w");
+					if(!file_exists($filePath)){ 
+?>
+<p>Failed to create CSV report file.</p>
+<?php 
+					} else {
+						print "<table class='urlTable'>\n";
+						print "<thead>\n";
+						print "\t<tr>\n";
+						print "\t<td>URL</td>\n";
+						print "\t<td>Date</td>\n";
+						print "\t<td>Count</td>\n";
+						print "\t</tr>\n";
+						print "</thead>\n";
+						print "<tbody>\n";
+						print "\t<tr>\n";
+						while($row = $dofetchData->fetch_object()) {
+							print "\t<tr>\n";
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->urlTrim ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->date ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->cnt ) );
+							print "\t</tr>\n";
+							fputcsv( $file, array( $row->urlTrim, $row->date, $row->cnt ) );
+						}
+						fclose($file);
+						print "</tbody>\n";
+						print "</table>\n";
+						printf( '<p><a href="%s">Download this report</a></p>', $fileLink );
+					}
+				}
 			}
 		break;
 		case 'urlField':
@@ -1687,7 +1682,7 @@ id='<?php echo $e; ?>feed_filter<?php echo $t; ?>Multi' ></textarea>
 $title = 'Incoming Feed Manager';
 include("c_header.php");
 ?>
-<script>
+<script type="text/javascript">
 function splitMultiFilter(e, t){
     values = $('#'+e+'feed_filter'+t+'Multi').val();
     //alert(values);
@@ -1933,47 +1928,13 @@ function exportFile(idFeedIn){
 	});
 	$('#resultExport_'+idFeedIn).html("Processing...");
 }
-function urlReport(idFeedIn){ 
-	urlreportDateStart = $('#urlreport_'+idFeedIn+'_dateStart').val();
-	urlreportDateEnd = $('#urlreport_'+idFeedIn+'_dateEnd').val();
-	urlreportUrlList = $('#urlreport_'+idFeedIn+'_urls').val();
-	urlreportSort = $('#urlreport_'+idFeedIn+'_sort').val();
-	urlreportBreakdown = $('#urlreport_'+idFeedIn+'_breakdown').val();
-	var response = $.ajax({
-		url: "mgr_feedinc.php",
-		type: "POST",
-		async: true,
-		data: ({
-			"a" : "urlReport"
-			, "idFeedIn": idFeedIn
-			, "urlreportDateStart": urlreportDateStart
-			, "urlreportDateEnd": urlreportDateEnd
-			, "urlreportUrlList": urlreportUrlList
-			, "urlreportSort": urlreportSort
-			, "urlreportBreakdown": urlreportBreakdown
-		})
-	}).done(function(responseText){ 
-		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-		if(result===null) { 
-			alert("JSON Failed: "+responseText); 
-			return false; 
-		}
-		if(result.status == 1){ 
-			$('#resultUrlReport_'+idFeedIn).html('Download File');
-			$('#resultUrlReport_'+idFeedIn).attr('href', result.link);
-		} else { 
-			alert(result.error);
-		}
-	});
-	$('#resultUrlReport_'+idFeedIn).html("Processing...");
-}
 $(document).ready(function(){ 
 	display('incomingFeeds');
 });
 </script>
-<style>
+<style type="text/css">
 table.urlTable th, table.urlTable td { padding: 3px; }
-table.feedTable { font-size: .8em; margin-bottom: 20px; }
+table.feedTable { margin-bottom: 20px; }
 table.feedTable th, table.feedTable td { padding: 3px; }
 </style>
 <body>
