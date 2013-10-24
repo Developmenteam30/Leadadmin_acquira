@@ -685,9 +685,6 @@ if($incomingFeeds === false){
 		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
 			<p>
-				<a href='#' class='nonLink' 
-	onclick='display("urlList", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn":"<?php echo $feed->idFeedIn; ?>"} );'
-				>Show URLs</a> |
 				<a href='apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>' 
 					target='_blank'
 				>API Spec</a> |
@@ -706,7 +703,6 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			</p>
 		</td>
 	</tr>
-	<tr><td class='hidden' id='urlList_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 	<tr><td class='hidden' id='dialog_listcodes_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 	<tr><td class='hidden' id='dialog_editfeed_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 	<tr><td class='hidden' id='dialog_export_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
@@ -726,152 +722,6 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 
 			
 			
-		break;
-		case 'urlList':
-$idFeedIn = $_REQUEST['options']['idFeedIn'];		
-$feed = getIncomingFeed($idFeedIn);
-if(isset($_REQUEST['options']['dateStart'])){ 
-	if(strtotime($_REQUEST['options']['dateStart']) 
-		> strtotime($_REQUEST['options']['dateEnd'])
-	){ 
-		$dateStart = $_REQUEST['options']['dateEnd'];
-	}else { 
-		$dateStart = $_REQUEST['options']['dateStart'];
-	}
-} else { 
-	$dateStart = date("Y-m-d");
-}
-if(isset($_REQUEST['options']['dateEnd'])){ 
-	if(strtotime($_REQUEST['options']['dateStart']) 
-		> strtotime($_REQUEST['options']['dateEnd'])
-	){ 
-		$dateStart = $_REQUEST['options']['dateEnd'];
-	}else { 
-		$dateStart = $_REQUEST['options']['dateStart'];
-	}
-	$dateEnd = $_REQUEST['options']['dateEnd'];
-} else { 
-	$dateEnd = date("Y-m-d");
-}
-if($dateStart == $dateEnd){ $period = 'Day of '.$dateStart; } else { 
-	$period = $dateStart.' to '.$dateEnd.' (inclusive).';
-}
-$urlBreakdown = getUrlsForPeriod($idFeedIn, $dateStart, $dateEnd);
-$urlBreakdown_invalid = getUrlsForPeriodInvalid($idFeedIn, $dateStart, $dateEnd);
-?>
-<div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("urlList", {"sub" : <?php echo $idFeedIn; ?>});' >Close [X]</a>
-</div>
-<hr />
-<p>URL Breakdown for <?php echo $feed->label; ?> (ID: <?php echo $feed->idFeedIn; ?>) : </p>
-<p>Period: <?php echo $period; ?></p>
-<p>Select New Period: 
-	<input type='text' name='dateStart' id='dateStart_<?php echo $idFeedIn; ?>' class='dateSelector' 
-		value='<?php echo $dateStart; ?>'
-	/>
-	to <input type='text' name='dateEnd' id='dateEnd_<?php echo $idFeedIn; ?>' class='dateSelector' 
-		value='<?php echo $dateEnd; ?>'
-	/>
-	<input type='button' value='Show Selected Period' 
-		onclick="<?php
-		?>display( <?php
-			?>'urlList'<?php
-			?>, { <?php
-				?>'sub': <?php echo $idFeedIn; ?> <?php
-				?>, 'idFeedIn': <?php echo $idFeedIn; ?> <?php
-				?>, 'dateStart': $('#dateStart_<?php echo $idFeedIn; ?>').val() <?php
-				?>, 'dateEnd': $('#dateEnd_<?php echo $idFeedIn; ?>').val() <?php
-			?>}<?php
-		?>);"
-	/>
-</p>
-<p>URL Breakdown for accepted leads: </p>
-<?php
-if($urlBreakdown === false){ 
-?>
-<p>Database error when fetching URL list.</p>
-<?php
-} elseif($urlBreakdown == 0){ 
-?>
-<p>No URLs received for <?php echo $period; ?></p>
-<?php
-} else { 
-?>
-<table class='urlTable' cellpadding='0' cellspacing='0' border='1' style='width: 100%;'>
-	<thead>
-		<tr>
-			<th>Base URL</th>
-			<th>Full URL</th>
-			<th>Quantity</th>
-		</tr>
-	</thead>
-	<tbody>
-<?php 
-	foreach($urlBreakdown as $urlEntry){ 
-		if(is_null($urlEntry->urlTrim)){ 
-			$urlEntry->urlTrim = 'No Valid URLs';
-			$urlEntry->urlFull = 'No Valid URLs';
-			$urlEntry->totalQty = 0;
-		}
-?>
-		<tr>
-			<td><?php echo $urlEntry->urlTrim; ?></td>
-			<td><?php echo $urlEntry->urlFull; ?></td>
-			<td class='aRight'><?php echo $urlEntry->totalQty; ?></td>
-		</tr>
-<?php
-	}
-?>
-	</tbody>
-</table>
-<?php
-}
-?>
-<p>URL Breakdown for rejected leads: </p>
-<?php
-if($urlBreakdown_invalid === false){ 
-?>
-<p>Database error when fetching URL list.</p>
-<?php
-} elseif($urlBreakdown_invalid == 0){ 
-?>
-<p>No URLs received for <?php echo $period; ?></p>
-<?php
-} else { 
-?>
-<table class='urlTable' cellpadding='0' cellspacing='0' border='1' style='width: 100%;'>
-	<thead>
-		<tr>
-			<th>Base URL</th>
-			<th>Full URL</th>
-			<th>Quantity</th>
-		</tr>
-	</thead>
-	<tbody>
-<?php 
-	foreach($urlBreakdown_invalid as $urlEntry){ 
-		if(is_null($urlEntry->urlTrim)){ 
-			$urlEntry->urlTrim = 'No Invalid URLs';
-			$urlEntry->urlFull = 'No Invalid URLs';
-			$urlEntry->totalQty = 0;
-		}
-?>
-		<tr>
-			<td><?php echo $urlEntry->urlTrim; ?></td>
-			<td><?php echo $urlEntry->urlFull; ?></td>
-			<td class='aRight'><?php echo $urlEntry->totalQty; ?></td>
-		</tr>
-<?php
-	}
-?>
-	</tbody>
-</table>
-<?php
-}
-?>
-<hr />
-<?php
-		
 		break;
 		
 		case 'dialog_editfeed':
