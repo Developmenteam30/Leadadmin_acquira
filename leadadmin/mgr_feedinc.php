@@ -1286,7 +1286,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			</p>
 			<p>
 <?php
-				$urls = getIncomingUrls( $feed->label );
+				$urls = getIncomingUrlsWithDate( $feed->label );
 				if( $urls && is_array( $urls ) ) {
 					printf( "<select multiple=\"multiple\" id=\"urlreport_%s_urls\" size=\"%d\">\n", $idFeedIn, sizeOf( $urls ) );
 					foreach( $urls as $url ) {

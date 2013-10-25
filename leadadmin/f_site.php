@@ -136,7 +136,7 @@ function getCompany($idCompany){
 
 function getIncomingFeeds(){
 	//Fetches all incoming feeds into an array of objects.
-	$getFeeds = "SELECT * FROM `".DATABASE_NAME."`.`feedinc`;";
+	$getFeeds = "SELECT f.*,c.name FROM `".DATABASE_NAME."`.`feedinc` f LEFT JOIN `".DATABASE_NAME."`.`companies` c ON f.idCompany = c.idCompany ORDER BY c.name;";
 	dbCon();
 	$dogetFeeds = dbQry($getFeeds, 'Fetching feeds.', true);
 	dbDcon();
@@ -164,11 +164,29 @@ function getIncomingFeed($idFeedIn){
 	return $dogetFeed->fetch_object();
 }
 
-function getIncomingUrls( $label ){
+function getIncomingUrlsWithDate( $label ){
 	$query  = "SELECT DISTINCT(urlTrim),LEFT(MIN(received),10) start ";
 	$query .= "FROM `".DATABASE_NAME."`.`feedinc_" . $label . "` ";
 	$query .= "WHERE urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
 	$query .= "GROUP BY 1";
+
+	dbCon();
+	$result = dbQry( $query, 'Getting incoming feed URLs', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
+}
+
+function getIncomingUrls( $label ){
+	$query  = "SELECT DISTINCT(urlTrim) ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedinc_" . $label . "` ";
+	$query .= "WHERE urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
+	$query .= "ORDER BY 1";
 
 	dbCon();
 	$result = dbQry( $query, 'Getting incoming feed URLs', true );
@@ -280,6 +298,43 @@ function getPopulationSettings($idFeedOut){
 		$settings[] = $row;
 	}
 	return $settings;
+}
+
+function getPopulationMapping( $idFeedIn ) { 
+	dbCon();
+	$getSettings = "SELECT * FROM `".DATABASE_NAME."`.`feedPopulation` "
+		."WHERE `idFeedIn` = '". intval($idFeedIn) ."';";
+	$dogetSettings = dbQry($getSettings, 'Fetching population settings', true);
+	if($dogetSettings === false){ return false; }
+	if($dogetSettings->num_rows == 0){ return 0; }
+	$settings = array();
+	while($row = $dogetSettings->fetch_object()){ 
+		$settings[] = $row;
+	}
+	return $settings;
+}
+
+function getPopulationMappingIn( $idFeedIn ){
+	$query  = "SELECT p.*,ci.name inName,co.name outName,i.label inLabel, o.label outLabel FROM `".DATABASE_NAME."`.`feedPopulation` p ";
+	$query .= "LEFT JOIN `".DATABASE_NAME."`.`feedinc` i ON p.idFeedIn = i.idFeedIn ";
+	$query .= "LEFT JOIN `".DATABASE_NAME."`.`feedout` o ON p.idFeedOut = o.idFeedOut ";
+	$query .= "LEFT JOIN `".DATABASE_NAME."`.`companies` ci ON i.idCompany = ci.idCompany ";
+	$query .= "LEFT JOIN `".DATABASE_NAME."`.`companies` co ON o.idCompany = co.idCompany ";
+	$query .= "WHERE i.label IS NOT NULL ";
+	$query .= "AND o.label IS NOT NULL ";
+	$query .= "AND p.enabled = '1' ";
+	$query .= "AND p.idFeedIn = " . intval( $idFeedIn );
+
+	dbCon();
+	$result = dbQry( $query, 'Getting population mapping', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
 }
 
 function getPopulationSetting($idAssoc){ 

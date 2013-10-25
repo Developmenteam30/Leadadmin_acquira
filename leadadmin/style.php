@@ -207,10 +207,10 @@ td.fTI_accepted { width: 8%;  }
 td.fTI_rejected { width: 8%;  }
 td.fTI_options { width: 35%; }
 
-table.feedTableListcodes { width: 100%; border-collapse: collapse; }
-table.feedTableListcodes td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top; }
-table.feedTableListcodes td p { padding: 0 0 3px 0; }
-table.feedTableListcodes tr.header { font-weight: bold; text-align: center; }
+table.standard { width: 100%; border-collapse: collapse; }
+table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top; }
+table.standard td p { padding: 0 0 3px 0; }
+table.standard thead { font-weight: bold; text-align: center; }
 
 div.dashboardIncoming { width: 50%; }
 div.dashboardOutgoing { width: 50%; }
@@ -258,7 +258,7 @@ div.dashboardOutgoing { width: 50%; }
 	font-weight: bold;
 }
 
-@media (max-width: 1499px){
+@media (max-width: 1662px){
 	div.navContainer { margin: 20px auto 0; }
 }
 @media (max-width: 800px) {

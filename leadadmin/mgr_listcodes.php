@@ -239,7 +239,7 @@ else {
 <?php
             } else {
 ?>
-<table class="feedTableListcodes bgWhite">
+<table class="standard bgWhite">
 	<thead>
 		<tr class="bgGray header">
 			<td class="fTI_companyName" colspan="3"><p>Company</p></td>
