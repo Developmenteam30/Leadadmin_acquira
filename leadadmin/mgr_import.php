@@ -49,13 +49,13 @@ if( empty( $_FILES['import_file']['tmp_name'] ) ) {
 	exit;
 }
 
-if( !is_uploaded_file( $_FILES['import_file']['tmp_name'] ) ) {
-	print '<p class="error">ERROR: Possible file upload attack!</p>';
+if( $_FILES['import_file']['size'] > MAX_UPLOAD_SIZE ) {
+	print '<p class="error">ERROR: File size cannot exceed 10MB</p>';
 	exit;
 }
 
-if( $_FILES['import_file']['size'] > 5120000 ) {
-	print '<p class="error">ERROR: File size cannot exceed 5MB</p>';
+if( !is_uploaded_file( $_FILES['import_file']['tmp_name'] ) ) {
+	print '<p class="error">ERROR: Possible file upload attack!</p>';
 	exit;
 }
 

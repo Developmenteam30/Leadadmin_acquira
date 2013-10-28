@@ -1075,7 +1075,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			} else { 
 ?>
 <form enctype="multipart/form-data" action="mgr_import.php" method="post">
-<input type="hidden" name="MAX_FILE_SIZE" value="5120000" />
+<input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>" />
 <input type="hidden" name="idFeedIn" value="<?php echo intval($idFeedIn); ?>" />
 
 <table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
