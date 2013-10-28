@@ -328,9 +328,9 @@ if(isset($_REQUEST['d'])){
 				}
 			}
 ?>
-<table>
+<table class="standard">
 	<thead>
-		<tr>
+		<tr class="bgGray">
 			<td><p>Suppression List</p></td>
 			<td><p>Record Count</p></td>
 			<td><p>Options</p></td>
@@ -345,7 +345,7 @@ if(isset($_REQUEST['d'])){
 				if($suppressionCount === false){ $display_suppressionCount = 'Error'; }
 				else{ $display_suppressionCount = $suppressionCount; }
 ?>
-		<tr>
+		<tr class="bgGray">
 			<td><p><?php echo $display_listName; ?></p></td>
 			<td><p class='aRight'><?php echo $display_suppressionCount; ?></p></td>
 			<td>

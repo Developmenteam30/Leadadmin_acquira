@@ -613,7 +613,8 @@ if($incomingFeeds === false){
 	uksort($companyFeedLists,'companyListSort');
 ?>
 <p>Incoming Feeds</p>
-<table class='feedTableIncoming bgWhite'>
+<table class='standard'>
+	<thead>
 	<tr class='bgGray'>
 		<td class='fTI_companyName' colspan='2'><p>Company</p></td>
 		<td class='fTI_feedOverview'><p>Total Feeds</p></td>
@@ -621,6 +622,7 @@ if($incomingFeeds === false){
 		<td class='fTI_rejected'><p class='aCenter'>Total Rejected</p></td>
 		<td class='fTI_options'><p>Actions</p></td>
 	</tr>
+	</thead>
 <?php
 	foreach($companyFeedLists as $idCompany => $companyFeedList){ 
 		$totalAccepted = 0;

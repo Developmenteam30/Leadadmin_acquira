@@ -172,7 +172,7 @@ else {
 <?php
 			} else { 
 ?>
-<table border='1' cellpadding='0' cellspacing='0' class='feedTableListcodes bgWhite'>
+<table class="standard">
 	<thead>
 		<tr class="bgGray header">
 			<td>

@@ -830,7 +830,8 @@ if($outgoingFeeds === false){
 	}
 	uksort($companyFeedLists,'companyListSort');
 ?>
-<table class='feedTableOutgoing bgWhite'>
+<table class='standard'>
+	<thead>
 	<tr class='fTORow fTO_Row bgGray' style='width: 100%;'>
 		<td class='fTO_companyName' colspan='2'><p>Company</p></td>
 		<td class='fTO_feedOverview' colspan='4'><p>Total Feeds</p></td>
@@ -838,6 +839,7 @@ if($outgoingFeeds === false){
 		<td class='fTO_rejected'><p class='aCenter'>Total Rejected</p></td>
 		<td class='fTO_options'><p>Options</p></td>
 	</tr>
+	</thead>
 <?php
 	foreach($companyFeedLists as $idCompany => $companyFeedList){ 
 		$totalAccepted = 0;

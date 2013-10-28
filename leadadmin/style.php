@@ -178,6 +178,11 @@ div.loginContainer { width: 250px; margin: auto; }
 div.loginBox { width: 100%;   }
 input.loginBox { width: 230px; }
 
+table.standard { width: 100%; border-collapse: collapse; }
+table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top; }
+table.standard td p { padding: 0 0 3px 0; }
+table.standard thead { font-weight: bold; text-align: center; }
+
 /*Feed Tables Outgoing*/
 table.feedTableOutgoing { width: 100%; border-collapse: collapse; }
 	table.feedTableOutgoing td { border: 1px solid #CCCCCC; }
@@ -206,11 +211,6 @@ td.fTI_feedOverview { width: 25%;  }
 td.fTI_accepted { width: 8%;  }
 td.fTI_rejected { width: 8%;  }
 td.fTI_options { width: 35%; }
-
-table.standard { width: 100%; border-collapse: collapse; }
-table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top; }
-table.standard td p { padding: 0 0 3px 0; }
-table.standard thead { font-weight: bold; text-align: center; }
 
 div.dashboardIncoming { width: 50%; }
 div.dashboardOutgoing { width: 50%; }
