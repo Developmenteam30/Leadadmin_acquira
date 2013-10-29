@@ -1317,7 +1317,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			</p>
 		</td>
 		<td>
-			<p><select id="urlreport_<?php echo $idFeedIn; ?>_sort"><option value="date" selected="selected">Date</option><option value="url">URL</option></select></p>
+			<p><select id="urlreport_<?php echo $idFeedIn; ?>_sort"><option value="date" selected="selected">Date</option><option value="url">URL</option><option value="count">Count</option></select></p>
 		</td>
 	</tr>
 	<tr>
@@ -1380,10 +1380,12 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 					$query .= "AND `received` >= '".$dateStart."' AND `received` < '".$dateEnd."' ";
 				}
 				$query .= "GROUP BY 1,2 ";
-				if( !empty( $_REQUEST['options']['sort'] ) && $_REQUEST['options']['sort'] == 'url' )
+				if( !empty( $_REQUEST['options']['sort'] ) && 'url' == $_REQUEST['options']['sort'] )
 					$query .= "ORDER BY 1,2";
+				elseif( !empty( $_REQUEST['options']['sort'] ) && 'count' == $_REQUEST['options']['sort'] )
+					$query .= "ORDER BY 3,1";
 				else
-				$query .= "ORDER BY 2,1";
+					$query .= "ORDER BY 2,1";
 
 				$dofetchData = dbQry($query, 'Fetching specified data set.', true);
 				if( $dofetchData === false ) {

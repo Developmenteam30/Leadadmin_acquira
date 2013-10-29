@@ -20,7 +20,9 @@ if(isset($_REQUEST['a'])){
 
 			if( ( $string = base64_decode( $_REQUEST['field'] ) ) !== FALSE ) {
 				list( $date, $idFeedIn, $urlTrim, $idCompany ) = explode( '|', $string );
-				setRevenueValue( $date, $idFeedIn, $urlTrim, $idCompany, $_REQUEST['value'] );
+				$value = $_REQUEST['value'];
+				if( empty( $value ) ) $value = null;
+				setRevenueValue( $date, $idFeedIn, $urlTrim, $idCompany, $value );
 			}
 			$result['status'] = 1;
 			break;
@@ -209,7 +211,7 @@ else {
 				$companies = getOutgoingCompanies();
 				if( $companies ) {
 					foreach( $companies as $company ) {
-						printf( "\t\t<td>%s</td>\n", htmlspecialchars( $company->name ) );
+						printf( "\t\t<td class=\"rotate\"><div><span>%s</span></div></td>\n", htmlspecialchars( $company->name ) );
 					}
 				}
 				print "\t</tr>\n";
