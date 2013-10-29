@@ -128,9 +128,9 @@ else {
 		case 'dialog_mapping':
 			$feeds = getIncomingFeeds();
 			if( $feeds ) {
-				print "<table class=\"standard\">\n";
+				print "<table id=\"mapping_report\" class=\"standard\">\n";
 				print "\t<thead>\n";
-				print "\t<tr>\n";
+				print "\t<tr class=\"bgGray\">\n";
 				print "\t\t<td>Incoming Company</td>\n";
 				print "\t\t<td>Incoming Feed</td>\n";
 				print "\t\t<td>Incoming URL</td>\n";
@@ -138,6 +138,7 @@ else {
 				print "\t\t<td>Outgoing Feed</td>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
+				print "\t<tbody>\n";
 				foreach( $feeds as $feed ) {
 
 					$urls = getIncomingUrls( $feed->label );
@@ -148,7 +149,7 @@ else {
 							if( $populations ) {
 								foreach( $populations as $population ) {
 									if( $population->enabled && ( empty( $population->filterTypeUrl ) ||  checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
-										print "\t<tr>\n";
+										print "\t<tr class=\"bgGray\">\n";
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->name ) );
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
@@ -160,17 +161,45 @@ else {
 								}
 							}
 							if( !$found ) {
-								print "\t<tr>\n";
+								print "\t<tr class=\"bgGray\">\n";
 								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->name ) );
 								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
 								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
-								printf( "\t\t<td colspan=\"2\">NONE</td>\n" );
+								printf( "\t\t<td>-</td>\n" );
+								printf( "\t\t<td>-</td>\n" );
 								print "\t</tr>\n";
 							}
 						}
 					}
 				}
+				print "\t</tbody>\n";
 				print "</table>\n";
+?>
+<script type="text/javascript">
+    var props = {  
+		base_path: '/leadadmin/js/TableFilter/',
+        filters_row_index: 1,  
+        sort: true,  
+        sort_config: {  
+            sort_types:['String','String','String','String','String']
+        },  
+        remember_grid_values: true,  
+        alternate_rows: true,  
+        btn_reset: true,  
+        btn_reset_text: "Clear",  
+        btn_text: " > ",  
+        loader: true,  
+        loader_text: "Filtering data...",  
+        col_0: "select",  
+        col_1: "select",  
+        col_2: "select",  
+        col_3: "select",  
+        col_4: "select",  
+        display_all_text: "< Show all >"  
+    }  
+    var tf = setFilterGrid("mapping_report",props);  
+</script>
+<?php
 			} else {
 				print "Cannot load list of incoming feeds.";
 			}
@@ -322,5 +351,8 @@ function saveUrls(idListcode, idCompany){
 		<div class='clr'></div>
 	</div>
 </div>
+<script src="/leadadmin/js/TableFilter/tablefilter_all_min.js" language="javascript" type="text/javascript"></script>
+<script src="/leadadmin/js/TableFilter/sortabletable.js" language="javascript" type="text/javascript"></script>
+<script src="/leadadmin/js/TableFilter/tfAdapter.sortabletable.js" language="javascript" type="text/javascript"></script> 
 </body>
 </html>
