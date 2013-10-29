@@ -263,7 +263,7 @@ function getOutgoingUrls( $label ){
 }
 
 function getOutgoingCompanies() {
-	$query  = "SELECT DISTINCT(c.name) name,c.idCompany FROM `".DATABASE_NAME."`.`feedout` f LEFT JOIN `".DATABASE_NAME."`.`companies` c ON f.idCompany = c.idCompany";
+	$query  = "SELECT DISTINCT(c.name) name,c.idCompany FROM `".DATABASE_NAME."`.`feedout` f LEFT JOIN `".DATABASE_NAME."`.`companies` c ON f.idCompany = c.idCompany ORDER BY c.name";
 
 	dbCon();
 	$result = dbQry( $query, 'Getting outgoing company list', true );
