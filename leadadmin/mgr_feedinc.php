@@ -93,6 +93,7 @@ function addFeedIn(
 			."PRIMARY KEY  (`idRecord`), "
 			."KEY `email` (`email`), "
 			."KEY `jobId` (`jobId`), "
+			."KEY `urlTrimDate` (`urlTrim`,`received`), "
 			."KEY `urlTrim` (`urlTrim`) "
 			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
