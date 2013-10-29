@@ -183,6 +183,9 @@ table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top
 table.standard td p { padding: 0 0 3px 0; }
 table.standard thead { font-weight: bold; text-align: center; }
 
+td.revenue { text-align: center; }
+td.revenue input { width: 40px; }
+
 /*Feed Tables Outgoing*/
 table.feedTableOutgoing { width: 100%; border-collapse: collapse; }
 	table.feedTableOutgoing td { border: 1px solid #CCCCCC; }

@@ -33,6 +33,8 @@ function hex2rgb($hex) { //Converts a hex color code to rgb color code for css.
 }
 
 function add_quotes( $str ) {
+	global $GLOBALS;
+	dbCon();
 	return sprintf( "'%s'", $GLOBALS['dbconnx']->escape_string( $str ) );
 }
 
@@ -258,6 +260,50 @@ function getOutgoingUrls( $label ){
 		$values[] = $row;
 	}
 	return $values;
+}
+
+function getOutgoingCompanies() {
+	$query  = "SELECT DISTINCT(c.name) name,c.idCompany FROM `".DATABASE_NAME."`.`feedout` f LEFT JOIN `".DATABASE_NAME."`.`companies` c ON f.idCompany = c.idCompany";
+
+	dbCon();
+	$result = dbQry( $query, 'Getting outgoing company list', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
+}
+
+//Report Functions//
+function getRevenueValue( $date, $idFeedIn, $urlTrim, $idCompany ) {
+	$query =  "SELECT value FROM `".DATABASE_NAME."`.`revenue` ";
+	$query .= "WHERE idCompany = " . add_quotes( $idCompany ) . " AND ";
+	$query .= "idFeedIn = " . add_quotes( $idFeedIn ) . " AND ";
+	$query .= "urlTrim = " . add_quotes( $urlTrim ) . " AND ";
+	$query .= "date = " . add_quotes( $date );
+
+	dbCon();
+	$result = dbQry($query, 'Getting revenue value', true);
+	dbDcon();
+	if($result === false){ return ''; }
+	if($result->num_rows == 0){ return ''; }
+	$temp = $result->fetch_row();
+	return $temp[0];
+}
+
+function setRevenueValue( $date, $idFeedIn, $urlTrim, $idCompany, $value ) {
+	$query =  "REPLACE INTO `".DATABASE_NAME."`.`revenue`( date, idFeedIn, urlTrim, idCompany, value) VALUES(";
+	$query .= add_quotes( $date ) . ",";
+	$query .= add_quotes( $idFeedIn ) . ",";
+	$query .= add_quotes( $urlTrim ) . ",";
+	$query .= add_quotes( $idCompany ) . ",";
+	$query .= valueEmpty( $value ) . ")";
+
+	dbCon();
+	$result = dbQry($query, 'Setting revenue value', true);
 }
 
 //Population Functions//

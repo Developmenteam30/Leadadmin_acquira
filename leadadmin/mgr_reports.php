@@ -16,24 +16,13 @@ if(isset($_REQUEST['a'])){
 	);
 	switch($_REQUEST['a']){
 
-		case 'manageListcode':
-			$c = true;
-			$result['error'] = 'Failed when attempting to add listcode.';
-			$action = $_REQUEST['action'];
-            
-			if( 'new' == $action ){
+		case 'save_revenue':
 
-				$queryResult = addListcode( $_REQUEST['idCompany'], $_REQUEST['description'] );
-
-			} else {
-
-				$queryResult = updateListcode( $_REQUEST['idListcode'], $_REQUEST['idCompany'], $_REQUEST['description'] );
+			if( ( $string = base64_decode( $_REQUEST['field'] ) ) !== FALSE ) {
+				list( $date, $idFeedIn, $urlTrim, $idCompany ) = explode( '|', $string );
+				setRevenueValue( $date, $idFeedIn, $urlTrim, $idCompany, $_REQUEST['value'] );
 			}
-
-			if($c){
-				$result['status'] = 1;
-			}
-
+			$result['status'] = 1;
 			break;
         
 		case 'removeUrl':
@@ -119,12 +108,13 @@ else {
 ?>
 
 <p><a href="#" class="nonLink" onclick="display('dialog_mapping');">Mapping Report</a></p>
+<p><a href="#" class="nonLink" onclick="display('dialog_revenue');">Revenue Report</a></p>
 <div class="hidden" id="dialog_mapping"></div>
+<div class="hidden" id="dialog_revenue"></div>
 
 <?php
 		break;
 
-        
 		case 'dialog_mapping':
 			$feeds = getIncomingFeeds();
 			if( $feeds ) {
@@ -198,6 +188,91 @@ else {
         display_all_text: "< Show all >"  
     }  
     var tf = setFilterGrid("mapping_report",props);  
+</script>
+<?php
+			} else {
+				print "Cannot load list of incoming feeds.";
+			}
+
+		break;
+
+		case 'dialog_revenue':
+			$feeds = getIncomingFeeds();
+			if( $feeds ) {
+				print "<table id=\"mapping_report\" class=\"standard\">\n";
+				print "\t<thead>\n";
+				print "\t<tr class=\"bgGray\">\n";
+				print "\t\t<td>Company</td>\n";
+				print "\t\t<td>Feed</td>\n";
+				print "\t\t<td>URL</td>\n";
+				print "\t\t<td>TOTAL</td>\n";
+				$companies = getOutgoingCompanies();
+				if( $companies ) {
+					foreach( $companies as $company ) {
+						printf( "\t\t<td>%s</td>\n", htmlspecialchars( $company->name ) );
+					}
+				}
+				print "\t</tr>\n";
+				print "\t</thead>\n";
+				print "\t<tbody>\n";
+				foreach( $feeds as $feed ) {
+
+					$urls = getIncomingUrls( $feed->label );
+					if( $urls ) {
+						foreach( $urls as $url ) {
+							print "\t<tr class=\"bgGray\">\n";
+							printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->name ) );
+							printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
+							printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
+							printf( "\t\t<td class=\"revenue calculate\">%s</td>\n", htmlspecialchars( 't' ) );
+							if( $companies ) {
+								foreach( $companies as $company ) {
+									$value = getRevenueValue( '201310', $feed->idFeedIn, $url->urlTrim, $company->idCompany );
+									printf( "\t\t<td class=\"revenue sum\"><input type=\"text\" name=\"%s\" value=\"%s\" /></td>\n", htmlspecialchars( base64_encode( '201310' . '|' . $feed->idFeedIn . '|' . $url->urlTrim . '|' . $company->idCompany ) ), htmlspecialchars( $value ) );
+								}
+							}
+							print "\t</tr>\n";
+						}
+					}
+				}
+				print "\t</tbody>\n";
+				print "</table>\n";
+?>
+<script type="text/javascript">
+$(document).ready(function(){
+    $("input").each(function() {
+        var that = this; // fix a reference to the <input> element selected
+		newSum.call(that);
+        $(this).focusout(function(){
+			$.ajax({
+				url: "mgr_reports.php",
+				type: "POST",
+				async: true,
+				data: ({
+					"a" : "save_revenue",
+					"field" : $(this).attr("name"),
+					"value" : $(this).val()
+				})
+			});
+
+            newSum.call(that); // pass in a context for newsum():
+                               // call() redefines what "this" means
+                               // so newSum() sees 'this' as the <input> element
+        });
+    });
+});
+function newSum() {
+  var sum = 0.00;
+  var thisRow = $(this).closest('tr');
+
+  thisRow.find('td.sum input:text').each( function(){
+	if(this.value != '' && this.value != null && isNaN(this.value) == false) {
+ 	   sum += parseFloat(this.value); // or parseInt(this.value,10) if appropriate
+	}
+  });
+
+  thisRow.find('td.calculate').html('$' + sum); // It is an <input>, right?
+}
 </script>
 <?php
 			} else {
