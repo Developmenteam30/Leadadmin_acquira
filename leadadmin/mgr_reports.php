@@ -204,7 +204,6 @@ else {
 				print "<table id=\"mapping_report\" class=\"standard\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
-				print "\t\t<td>Company</td>\n";
 				print "\t\t<td>Feed</td>\n";
 				print "\t\t<td>URL</td>\n";
 				print "\t\t<td>TOTAL</td>\n";
@@ -217,34 +216,63 @@ else {
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
+				$row = 0;
+				$col = 65;
+				$prevRow = 0;
 				foreach( $feeds as $feed ) {
+
+					if( !isset( $subtotal ) ) $subtotal = $feed->name;
+					if( $feed->name != $subtotal ) {
+						$col = 65;
+						print "\t<tr class=\"bgGray subtotal\">\n";
+						printf( "\t\t<td colspan=\"2\"><strong>%s</strong></td>\n", htmlspecialchars( $subtotal ) );
+						printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . ($prevRow+1), '$' . chr( 65 + sizeOf( $companies ) ) . ($row-1) );
+						for( $i = 0; $i < sizeOf( $companies ); $i++ ) {
+							printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( ++$col ) . $row, '$' . chr( $col ) . ($prevRow+1), '$' . chr( $col ) . ($row-1)  );
+						}
+						print "\t</tr>\n";
+						$subtotal = $feed->name;
+						$prevRow = $row;
+					}
 
 					$urls = getIncomingUrls( $feed->label );
 					if( $urls ) {
 						foreach( $urls as $url ) {
+							$col = 65;
 							print "\t<tr class=\"bgGray\">\n";
-							printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->name ) );
 							printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
 							printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
-							printf( "\t\t<td class=\"revenue calculate\">%s</td>\n", htmlspecialchars( 't' ) );
+							printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . $row, '$' . chr( 65 + sizeOf( $companies ) ) . $row );
 							if( $companies ) {
 								foreach( $companies as $company ) {
 									$value = getRevenueValue( '201310', $feed->idFeedIn, $url->urlTrim, $company->idCompany );
-									printf( "\t\t<td class=\"revenue sum\"><input type=\"text\" name=\"%s\" value=\"%s\" /></td>\n", htmlspecialchars( base64_encode( '201310' . '|' . $feed->idFeedIn . '|' . $url->urlTrim . '|' . $company->idCompany ) ), htmlspecialchars( $value ) );
+									printf( "\t\t<td class=\"revenue\"><input type=\"text\" id=\"%s\" data-format=\"$0,0.00\" name=\"%s\" value=\"%s\" /></td>\n", chr( ++$col ) . $row, htmlspecialchars( base64_encode( '201310' . '|' . $feed->idFeedIn . '|' . $url->urlTrim . '|' . $company->idCompany ) ), htmlspecialchars( $value ) );
 								}
 							}
 							print "\t</tr>\n";
 						}
 					}
 				}
+
+				$col = 65;
+				print "\t<tr class=\"bgGray subtotal\">\n";
+				printf( "\t\t<td colspan=\"2\"><strong>%s</strong></td>\n", htmlspecialchars( $subtotal ) );
+				printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . ($prevRow+1), '$' . chr( 65 + sizeOf( $companies ) ) . ($row-1) );
+				for( $i = 0; $i < sizeOf( $companies ); $i++ ) {
+					printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( ++$col ) . $row, '$' . chr( $col ) . ($prevRow+1), '$' . chr( $col ) . ($row-1)  );
+				}
+				print "\t</tr>\n";
+
 				print "\t</tbody>\n";
 				print "</table>\n";
 ?>
 <script type="text/javascript">
 $(document).ready(function(){
+	$('#mapping_report').calx(); 
+
     $("input").each(function() {
         var that = this; // fix a reference to the <input> element selected
-		newSum.call(that);
+
         $(this).focusout(function(){
 			$.ajax({
 				url: "mgr_reports.php",
@@ -256,25 +284,9 @@ $(document).ready(function(){
 					"value" : $(this).val()
 				})
 			});
-
-            newSum.call(that); // pass in a context for newsum():
-                               // call() redefines what "this" means
-                               // so newSum() sees 'this' as the <input> element
         });
     });
 });
-function newSum() {
-  var sum = 0.00;
-  var thisRow = $(this).closest('tr');
-
-  thisRow.find('td.sum input:text').each( function(){
-	if(this.value != '' && this.value != null && isNaN(this.value) == false) {
- 	   sum += parseFloat(this.value); // or parseInt(this.value,10) if appropriate
-	}
-  });
-
-  thisRow.find('td.calculate').html('$' + sum); // It is an <input>, right?
-}
 </script>
 <?php
 			} else {
@@ -295,129 +307,6 @@ include("c_header.php");
 $(document).ready(function(){
     display('reports');
 });
-
-function manageListcode(action, idListcode){
-        
-	if(action == "new"){ e = "#new_listcode_"; c = 'new'; } else { e = "#edit_"+idListcode+"_listcode_"; c = 'edit'; }
-	idListcode = $(e+'idListcode').val();
-	description = $(e+'description').val();
-	idCompany = $(e+'idCompany').val();
-
-	var response = $.ajax({
-		url: "mgr_listcodes.php",
-		type: "POST",
-		async: true,
-		data: ({
-			"a" : "manageListcode"
-			, "action" : action
-			, "idListcode": idListcode
-			, "description":description
-			, "idCompany":idCompany
-		})
-                
-	}).done(function(responseText){
-                        
-		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-		if(result===null) {
-			alert("JSON Failed: "+responseText);
-		}
-		if(result.status == 1){
-			if(c == 'new'){
-				alert("Successfully created new listcode.");
-				closeContent('dialog_newlistcode');
-			} else {
-				alert("Successfully saved updated listcode settings.");
-				closeContent('dialog_editlistcode');
-			}
-
-			display(
-				'companyList'
-				, {
-					'callbackParams': {
-						'idCompany': idCompany
-					}
-				}
-				, true
-				, function(o) {
-					toggleHidden(
-						'companyListcodes'
-						, {'sub':o.idCompany, 'hiddenText':'Show Listcodes', 'shownText':'Close' }
-					);
-				}
-			);
-
-		} else {
-			alert(result.error);
-		}
-	});
-}
-
-function removeUrl(idUrl, options){
-        var response = $.ajax({
-            url: "mgr_listcodes.php",
-            type: "POST",
-            async: true,
-            data: ({
-                "a" : "removeUrl"
-                , "idUrl": idUrl
-            })
-        }).done(function(responseText){
-            var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-            if(result===null) {
-                alert("JSON Failed: "+responseText);
-            } else {
-                if(result.status == 1){
-					toggleHidden('url_' + idUrl, '');
-                } else {
-                    alert(result.error);
-                }
-            }
-        });
-}
-
-function saveUrls(idListcode, idCompany){
-
-		urls = $('#add_urls_' + idListcode).val();
-
-        var response = $.ajax({
-            url: "mgr_listcodes.php",
-            type: "POST",
-            async: true,
-            data: ({
-                "a" : "saveUrls"
-				, "idListcode": idListcode
-                , "urls": urls
-            })
-        }).done(function(responseText){
-            var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-            if(result===null) {
-                alert("JSON Failed: "+responseText);
-            } else {
-                if(result.status == 1){
-                    display(
-                        'companyList'
-                        , {
-                            'callbackParams': {
-                                'idCompany': idCompany
-                            }
-                        }
-                        , true
-                        , function(o){
-                            toggleHidden(
-                                'companyListcodes'
-                                , {'sub':o.idCompany, 'hiddenText':'Show Listcodes', 'shownText':'Close' }
-                            );
-                        }
-					);
-
-                } else {
-                    alert(result.error);
-                }
-            }
-        });
-}
-
-
 </script>
 <div class='mainContainer'>
 	<?php include('c_nav.php'); ?>
@@ -428,6 +317,7 @@ function saveUrls(idListcode, idCompany){
 		<div class='clr'></div>
 	</div>
 </div>
+<script src="/leadadmin/js/calx-1.1.4/jquery-calx-1.1.4.min.js" language="javascript" type="text/javascript"></script>
 <script src="/leadadmin/js/TableFilter/tablefilter_all_min.js" language="javascript" type="text/javascript"></script>
 <script src="/leadadmin/js/TableFilter/sortabletable.js" language="javascript" type="text/javascript"></script>
 <script src="/leadadmin/js/TableFilter/tfAdapter.sortabletable.js" language="javascript" type="text/javascript"></script> 

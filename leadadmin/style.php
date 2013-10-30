@@ -184,7 +184,9 @@ table.standard td p { padding: 0 0 3px 0; }
 table.standard thead { font-weight: bold; text-align: center; }
 
 td.revenue { text-align: center; }
-td.revenue input { width: 40px; }
+td.revenue span:before { content:'$'; }
+td.revenue input { width: 40px; font-size: 0.95em; }
+tr.subtotal { font-weight: bold; background-color: #dadada; }
 
 /*Feed Tables Outgoing*/
 table.feedTableOutgoing { width: 100%; border-collapse: collapse; }
