@@ -133,11 +133,11 @@ else {
 				print "\t<tbody>\n";
 				foreach( $feeds as $feed ) {
 
+					$populations = getPopulationMappingIn( $feed->idFeedIn );
 					$urls = getIncomingUrls( $feed->label );
 					if( $urls ) {
 						foreach( $urls as $url ) {
 							$found = false;
-							$populations = getPopulationMappingIn( $feed->idFeedIn );
 							if( $populations ) {
 								foreach( $populations as $population ) {
 									if( $population->enabled && ( empty( $population->filterTypeUrl ) ||  checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
@@ -235,21 +235,34 @@ else {
 						$prevRow = $row;
 					}
 
+					$populations = getPopulationMappingIn( $feed->idFeedIn );
 					$urls = getIncomingUrls( $feed->label );
 					if( $urls ) {
 						foreach( $urls as $url ) {
-							$col = 65;
-							print "\t<tr class=\"bgGray\">\n";
-							printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
-							printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
-							printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . $row, '$' . chr( 65 + sizeOf( $companies ) ) . $row );
-							if( $companies ) {
-								foreach( $companies as $company ) {
-									$value = getRevenueValue( '201310', $feed->idFeedIn, $url->urlTrim, $company->idCompany );
-									printf( "\t\t<td class=\"revenue\"><input type=\"text\" id=\"%s\" data-format=\"$0,0.00\" name=\"%s\" value=\"%s\" /></td>\n", chr( ++$col ) . $row, htmlspecialchars( base64_encode( '201310' . '|' . $feed->idFeedIn . '|' . $url->urlTrim . '|' . $company->idCompany ) ), htmlspecialchars( $value ) );
+
+							$found = false;
+							if( $populations ) {
+								foreach( $populations as $population ) {
+									if( $population->enabled && ( empty( $population->filterTypeUrl ) ||  checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
+										$found = true;
+									}
 								}
 							}
-							print "\t</tr>\n";
+
+							if($found) {
+								$col = 65;
+								print "\t<tr class=\"bgGray\">\n";
+								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
+								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
+								printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . $row, '$' . chr( 65 + sizeOf( $companies ) ) . $row );
+								if( $companies ) {
+									foreach( $companies as $company ) {
+										$value = getRevenueValue( '201310', $feed->idFeedIn, $url->urlTrim, $company->idCompany );
+										printf( "\t\t<td class=\"revenue\"><input type=\"text\" id=\"%s\" data-format=\"$0,0.00\" name=\"%s\" value=\"%s\" /></td>\n", chr( ++$col ) . $row, htmlspecialchars( base64_encode( '201310' . '|' . $feed->idFeedIn . '|' . $url->urlTrim . '|' . $company->idCompany ) ), htmlspecialchars( $value ) );
+									}
+								}
+								print "\t</tr>\n";
+							}
 						}
 					}
 				}
