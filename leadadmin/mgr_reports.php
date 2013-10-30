@@ -221,18 +221,21 @@ else {
 				$prevRow = 0;
 				foreach( $feeds as $feed ) {
 
-					if( !isset( $subtotal ) ) $subtotal = $feed->name;
+					if( !isset( $subtotal ) ) { $subtotal = $feed->name; $foundUrl = false; }
 					if( $feed->name != $subtotal ) {
-						$col = 65;
-						print "\t<tr class=\"bgGray subtotal\">\n";
-						printf( "\t\t<td colspan=\"2\"><strong>%s</strong></td>\n", htmlspecialchars( $subtotal ) );
-						printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . ($prevRow+1), '$' . chr( 65 + sizeOf( $companies ) ) . ($row-1) );
-						for( $i = 0; $i < sizeOf( $companies ); $i++ ) {
-							printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( ++$col ) . $row, '$' . chr( $col ) . ($prevRow+1), '$' . chr( $col ) . ($row-1)  );
+						if( $foundUrl ) {
+							$col = 65;
+							print "\t<tr class=\"bgGray subtotal\">\n";
+							printf( "\t\t<td colspan=\"2\"><strong>%s</strong></td>\n", htmlspecialchars( $subtotal ) );
+							printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . ($prevRow+1), '$' . chr( 65 + sizeOf( $companies ) ) . ($row-1) );
+							for( $i = 0; $i < sizeOf( $companies ); $i++ ) {
+								printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( ++$col ) . $row, '$' . chr( $col ) . ($prevRow+1), '$' . chr( $col ) . ($row-1)  );
+							}
+							print "\t</tr>\n";
+							$prevRow = $row;
 						}
-						print "\t</tr>\n";
+						$foundUrl = false;
 						$subtotal = $feed->name;
-						$prevRow = $row;
 					}
 
 					$populations = getPopulationMappingIn( $feed->idFeedIn );
@@ -240,16 +243,16 @@ else {
 					if( $urls ) {
 						foreach( $urls as $url ) {
 
-							$found = false;
+							$foundPopulation = false;
 							if( $populations ) {
 								foreach( $populations as $population ) {
 									if( $population->enabled && ( empty( $population->filterTypeUrl ) ||  checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
-										$found = true;
+										$foundPopulation = true;
 									}
 								}
 							}
 
-							if($found) {
+							if( $foundPopulation ) {
 								$col = 65;
 								print "\t<tr class=\"bgGray\">\n";
 								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
@@ -262,19 +265,22 @@ else {
 									}
 								}
 								print "\t</tr>\n";
+								$foundUrl = true;
 							}
 						}
 					}
 				}
 
-				$col = 65;
-				print "\t<tr class=\"bgGray subtotal\">\n";
-				printf( "\t\t<td colspan=\"2\"><strong>%s</strong></td>\n", htmlspecialchars( $subtotal ) );
-				printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . ($prevRow+1), '$' . chr( 65 + sizeOf( $companies ) ) . ($row-1) );
-				for( $i = 0; $i < sizeOf( $companies ); $i++ ) {
-					printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( ++$col ) . $row, '$' . chr( $col ) . ($prevRow+1), '$' . chr( $col ) . ($row-1)  );
+				if( $foundUrl ) {
+					$col = 65;
+					print "\t<tr class=\"bgGray subtotal\">\n";
+					printf( "\t\t<td colspan=\"2\"><strong>%s</strong></td>\n", htmlspecialchars( $subtotal ) );
+					printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . ($prevRow+1), '$' . chr( 65 + sizeOf( $companies ) ) . ($row-1) );
+					for( $i = 0; $i < sizeOf( $companies ); $i++ ) {
+						printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( ++$col ) . $row, '$' . chr( $col ) . ($prevRow+1), '$' . chr( $col ) . ($row-1)  );
+					}
+					print "\t</tr>\n";
 				}
-				print "\t</tr>\n";
 
 				print "\t</tbody>\n";
 				print "</table>\n";
