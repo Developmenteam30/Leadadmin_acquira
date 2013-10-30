@@ -89,7 +89,7 @@ function addFeedOut(
 			."`cellphone` varchar(20) default NULL, "
 			."`country` varchar(75) default NULL, "
 			."PRIMARY KEY  (`idRecord`), "
-			."KEY `urlTrimDate` (`urlTrim`,`postStamp`), "
+			."KEY `urlTrimDate` (`urlTrim`,`postStamp`) "
 			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateTable = dbQry($createTable, 'Creating table for feed out.', true);
 		if($docreateTable === false){ 
