@@ -39,18 +39,18 @@ if($feedParams === false){
 	exit;
 }
 
-if( !empty( $_FILES['import_file']['error'] ) ) {
-	print '<p class="error">ERROR: Upload error (' .  $_FILES['import_file']['error'] . ')</p>';
-	exit;
-}
-
 if( empty( $_FILES['import_file']['tmp_name'] ) ) {
-	print '<p class="error">ERROR: No file uploaded</p>';
+	print '<p class="error">ERROR: You did not select a file to upload</p>';
 	exit;
 }
 
 if( $_FILES['import_file']['size'] > MAX_UPLOAD_SIZE ) {
 	print '<p class="error">ERROR: File size cannot exceed 10MB</p>';
+	exit;
+}
+
+if( !empty( $_FILES['import_file']['error'] ) ) {
+	print '<p class="error">ERROR: Upload error (' .  $_FILES['import_file']['error'] . ')</p>';
 	exit;
 }
 
