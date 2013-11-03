@@ -26,58 +26,6 @@ if(isset($_REQUEST['a'])){
 			}
 			$result['status'] = 1;
 			break;
-        
-		case 'removeUrl':
-			$c = true;
-			$result['error'] = 'Failed when attempting to remove URL.';
-			$queryResult = removeListcodeURL( $_REQUEST['idUrl'] );
-			if( !$queryResult ) {
-				$c = false;
-			}
-
-			if($c){
-				$result['status'] = 1;
-			}
-			break;
-
-		case 'saveUrls':
-			$c = true;
-			$result['error'] = 'Failed when attempting to add URL.';
-
-			if( empty ( $_REQUEST['idListcode']) || empty( $_REQUEST['urls'] ) ) {
-				$c = false;
-				$result['error'] = 'No values provided';
-			}
-
-			if( $c ) {
-				$urls = explode( "\n", $_REQUEST['urls'] );
-
-				// First pass to validate the data
-				foreach( $urls as $url ) {
-					if( strlen( trim( $url ) ) > 0 && !filter_var( 'http://' . trim( $url ), FILTER_VALIDATE_URL, FILTER_FLAG_HOST_REQUIRED ) ) {
-						$c = false;
-						$result['error'] = "Invalid URL: {$url}";
-						break;
-					}
-				}
-
-				if( $c ) {
-					// If validation passed, try to add the data to the DB
-					foreach( $urls as $url ) {
-						if( strlen( trim( $url ) ) > 0 ) {
-							$queryResult = addListcodeURL( $_REQUEST['idListcode'], trim ( $url ) );
-							if( !$queryResult ) {
-								$c = false;
-							}
-						}
-					}
-				}
-			}
-
-			if( $c ) {
-				$result['status'] = 1;
-			}
-			break;
 	}
 	echo json_encode($result);
 	exit;
@@ -109,8 +57,8 @@ else {
         case 'reports':
 ?>
 
-<p><a href="#" class="nonLink" onclick="display('dialog_mapping');">Mapping Report</a></p>
-<p><a href="#" class="nonLink" onclick="display('dialog_revenue');">Revenue Report</a></p>
+<p><a href="#" class="nonLink" onclick="display('dialog_mapping'); closeContent('dialog_revenue');">Mapping Report</a></p>
+<p><a href="#" class="nonLink" onclick="display('dialog_revenue'); closeContent('dialog_mapping');">Revenue Report</a></p>
 <div class="hidden" id="dialog_mapping"></div>
 <div class="hidden" id="dialog_revenue"></div>
 
@@ -118,6 +66,11 @@ else {
 		break;
 
 		case 'dialog_mapping':
+?>
+<div class="aRight">
+    <a href="#" class="nonLink" onclick="closeContent('dialog_mapping');">Close [X]</a>
+</div>
+<?php
 			$feeds = getIncomingFeeds();
 			if( $feeds ) {
 				print "<table id=\"mapping_report\" class=\"standard\">\n";
@@ -199,6 +152,11 @@ else {
 		break;
 
 		case 'dialog_revenue':
+?>
+<div class="aRight">
+    <a href="#" class="nonLink" onclick="closeContent('dialog_revenue');">Close [X]</a>
+</div>
+<?php
 			$feeds = getIncomingFeeds();
 			if( $feeds ) {
 				print "<table id=\"mapping_report\" class=\"standard\">\n";
@@ -289,9 +247,7 @@ else {
 $(document).ready(function(){
 	$('#mapping_report').calx(); 
 
-    $("input").each(function() {
-        var that = this; // fix a reference to the <input> element selected
-
+    $("#mapping_report input").each(function() {
         $(this).focusout(function(){
 			$.ajax({
 				url: "mgr_reports.php",
