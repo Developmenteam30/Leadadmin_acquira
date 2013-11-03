@@ -1095,7 +1095,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 	</tr>
 	<tr>
 		<td><p>File</p></td>
-		<td><p>Please select the file to upload from your computer.  File must be in CSV format.  Limit 5 MB.</p><p><input type="file" name="import_file" multiple="false" accept="text/csv" /></p></td>
+		<td><p>Please select the file to upload from your computer.  File must be in CSV format.  Limit <?php echo (MAX_UPLOAD_SIZE / 1024000);?>MB.</p><p><input type="file" name="import_file" multiple="false" accept="text/csv" /></p></td>
 	</tr>
 	<tr>
 		<td><p>Field mapping</p></td>

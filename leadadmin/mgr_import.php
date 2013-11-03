@@ -46,7 +46,7 @@ if( empty( $_FILES['import_file']['tmp_name'] ) ) {
 }
 
 if( $_FILES['import_file']['size'] > MAX_UPLOAD_SIZE ) {
-	print '<p class="error">ERROR: File size cannot exceed 10MB</p>';
+	print '<p class="error">ERROR: File size cannot exceed ' . (MAX_UPLOAD_SIZE / 1024000) . 'MB</p>';
 	exit;
 }
 
