@@ -10,6 +10,7 @@ include(LIVE_ROOT."_f_validEmail.php");
 include(LIVE_ROOT."processFunctions.php");
 
 ini_set("auto_detect_line_endings", true);
+set_time_limit(0);
 
 if( empty( $_REQUEST['idFeedIn'] )) {
 	print '<p class="error">ERROR: No incoming feed ID supplied</p>';
