@@ -412,6 +412,14 @@ if(isset($_REQUEST['a'])){
 							}
 						}
 					}
+					if($_REQUEST['retired'] != $feed->retired){ 
+						if($c){
+							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'retired', $_REQUEST['retired']);
+							if(!$alterResult['success']){ 
+								$c = false; $result['error'] = $alterResult['reason'];
+							}
+						}
+					}
 					if($_REQUEST['idCompany'] != $feed->idCompany){ 
 						if($c){ //Validated, change label, change table names.
 							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'idCompany', $_REQUEST['idCompany']);
@@ -577,7 +585,9 @@ else {
 }
 		break;
 		case 'incomingFeeds':
-$incomingFeeds = getIncomingFeeds();
+		if( isset( $_REQUEST['all'] ) ) $all = true;
+		else $all = false;
+$incomingFeeds = getIncomingFeeds($all);
 ?>
 <?php		
 if($incomingFeeds === false){ 
@@ -682,8 +692,8 @@ if($incomingFeeds === false){
 ?>
 	<tr>
 		<td class='fTI_idFeedOut'><p><?php echo $feed->idFeedIn; ?></p></td>
-		<td class='fTI_label'><p><?php echo $feed->label; ?></p></td>
-		<td class='fTI_description'><p><?php echo $feed->description; ?></p></td>
+		<td class='fTI_label<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->label; ?></p></td>
+		<td class='fTI_description<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->description; ?></p></td>
 		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
 		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
@@ -747,7 +757,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		case 'dialog_newfeed':
 			if(!isset($e)){ $e = 'new_'; $d = 'new'; }
 			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl'
+				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'retired'
 			);
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
@@ -1027,6 +1037,15 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
                         </div>
                 </td>
         </tr>
+	<tr>
+		<td><p>Feed Status</p></td>
+		<td>
+			<p>
+				<input type='radio' name='<?php echo $e; ?>feed_retired' id='<?php echo $e; ?>feed_retired_no' value='0' <?php if( $feed_retired != '1' ) { ?>checked='checked'<?php } ?>/> Active
+				<input type='radio' name='<?php echo $e; ?>feed_retired' id='<?php echo $e; ?>feed_retired_yes' value='1' <?php if( '1' == $feed_retired ) { ?>checked='checked'<?php } ?>/> Retired
+			</p>
+		</td>
+	</tr>
 	<tr>
 		<td colspan='2'>
 			<p class='aRight'>
@@ -1604,6 +1623,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 	if($(e+'dedupeEmail').is(":checked")){ dedupeEmail = 1;	} else { dedupeEmail = 0; }
 	if($(e+'dedupeLandline').is(":checked")){ dedupeLandline = 1;	} else { dedupeLandline = 0; }
 	if($(e+'dedupeCellphone').is(":checked")){ dedupeCellphone = 1;	} else { dedupeCellphone = 0; }
+	if($(e+'retired_yes').is(":checked")){ retired = 1; } else { retired = 0; }
 	if(c == 'new'){ 
 		dedupeAcross = $('input[name="'+c+'_feed_dedupeAcross"]:checked').val();
 	} else { 
@@ -1637,6 +1657,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 			, "dedupeAcross": dedupeAcross
 			, "filterTypeUrl": filterTypeUrl
 			, "filterUrl": filterUrl
+			, "retired": retired
 		})
 	}).done(function(responseText){ 
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);

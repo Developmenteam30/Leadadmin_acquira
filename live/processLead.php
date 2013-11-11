@@ -1,6 +1,8 @@
 <?php
 include("../c_config.php");
 
+Header('Content-Type: text/xml');
+
 $c = true; 
 $result = array(
 	'success' => 'false'
@@ -62,6 +64,11 @@ if($c &&(
 		'Feed '.$feedLabel
 		, 'Unauthorized user at '.$_SERVER["REMOTE_ADDR"]
 	);
+}
+
+if( $c && '1' == $feedParams->retired ) {
+	$c = false; 
+	$result['reason'] = 'This feed has been disabled.';
 }
 
 if($c){ //Validation of incoming data.

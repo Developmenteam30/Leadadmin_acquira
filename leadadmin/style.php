@@ -258,6 +258,11 @@ div.dashboardOutgoing { width: 50%; }
 	border: 1px solid #909090;
 }
 
+.retired {
+	color: #800000;
+	text-decoration:line-through;
+}
+
 .error {
 	color: #ff0000;
 	font-weight: bold;
