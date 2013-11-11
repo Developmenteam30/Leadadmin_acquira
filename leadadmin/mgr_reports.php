@@ -81,6 +81,7 @@ else {
 				print "\t\t<td>Incoming URL</td>\n";
 				print "\t\t<td>Outgoing Company</td>\n";
 				print "\t\t<td>Outgoing Feed</td>\n";
+				print "\t\t<td>Active</td>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
@@ -100,6 +101,7 @@ else {
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $population->outName ) );
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $population->outLabel ) );
+										print "\t\t<td>Y</td>\n";
 										print "\t</tr>\n";
 										$found = true;
 									}
@@ -112,6 +114,7 @@ else {
 								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
 								printf( "\t\t<td>-</td>\n" );
 								printf( "\t\t<td>-</td>\n" );
+								print "\t\t<td>N</td>\n";
 								print "\t</tr>\n";
 							}
 						}
@@ -126,7 +129,7 @@ else {
         filters_row_index: 1,  
         sort: true,  
         sort_config: {  
-            sort_types:['String','String','String','String','String']
+            sort_types:['String','String','String','String','String','String']
         },  
         remember_grid_values: true,  
         alternate_rows: true,  
@@ -140,6 +143,7 @@ else {
         col_2: "select",  
         col_3: "select",  
         col_4: "select",  
+        col_5: "select",  
         display_all_text: "< Show all >"  
     }  
     var tf = setFilterGrid("mapping_report",props);  
@@ -152,11 +156,28 @@ else {
 		break;
 
 		case 'dialog_revenue':
+			if( empty( $_REQUEST['options']['report_date'] ) || strlen( $_REQUEST['options']['report_date'] ) != 6 ) $reportDate = date('Ym');
+			else $reportDate = $_REQUEST['options']['report_date'];
 ?>
 <div class="aRight">
     <a href="#" class="nonLink" onclick="closeContent('dialog_revenue');">Close [X]</a>
 </div>
+<p><strong>Report Date:</strong>
+<select name="report_date">
+<?php 
+	for($y = date('Y'); $y >= 2012; $y--) {
+		for($m = 12; $m > 0; $m--) {
+			$format_month = str_pad( $m, 2, '0', STR_PAD_LEFT );
+			printf(' <option onclick="display(\'dialog_revenue\', { \'report_date\': \'%s\' });" value="%s"%s>%s</option>',
+					$y . $format_month, $y . $format_month, ( $y == substr( $reportDate, 0, 4) && $format_month == substr( $reportDate, 4, 2 ) ) ? ' selected="selected"' : '', $y . '-' . $format_month );
+		}
+	}
+?>
+</select>
+</p>
+
 <?php
+
 			$feeds = getIncomingFeeds();
 			if( $feeds ) {
 				print "<table id=\"mapping_report\" class=\"standard\">\n";
@@ -218,8 +239,8 @@ else {
 								printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . $row, '$' . chr( 65 + sizeOf( $companies ) ) . $row );
 								if( $companies ) {
 									foreach( $companies as $company ) {
-										$value = getRevenueValue( '201310', $feed->idFeedIn, $url->urlTrim, $company->idCompany );
-										printf( "\t\t<td class=\"revenue\"><input type=\"text\" id=\"%s\" data-format=\"$0,0.00\" name=\"%s\" value=\"%s\" /></td>\n", chr( ++$col ) . $row, htmlspecialchars( base64_encode( '201310' . '|' . $feed->idFeedIn . '|' . $url->urlTrim . '|' . $company->idCompany ) ), htmlspecialchars( $value ) );
+										$value = getRevenueValue( $reportDate, $feed->idFeedIn, $url->urlTrim, $company->idCompany );
+										printf( "\t\t<td class=\"revenue\"><input type=\"text\" id=\"%s\" data-format=\"$0,0.00\" name=\"%s\" value=\"%s\" /></td>\n", chr( ++$col ) . $row, htmlspecialchars( base64_encode( $reportDate . '|' . $feed->idFeedIn . '|' . $url->urlTrim . '|' . $company->idCompany ) ), htmlspecialchars( $value ) );
 									}
 								}
 								print "\t</tr>\n";
