@@ -269,6 +269,21 @@ function getOutgoingUrls( $label ){
 	return $values;
 }
 
+function isURLActive( $label, $date, $urlTrim ) {
+	$query  = "SELECT idRecord ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedout_" . $label . "` ";
+	$query .= "WHERE processed = '1' ";
+	$query .= "AND urlTrim = " . add_quotes( $urlTrim ) . " ";
+	$query .= "AND poststamp >= '" . substr( $date, 0, 4 ) . "-" . substr( $date, 4, 2 ) . "-01' ";
+	$query .= "AND poststamp <= LAST_DAY('" . substr( $date, 0, 4 ) . "-" . substr( $date, 4, 2 ) . "-01') ";
+	$query .= "LIMIT 1";
+	$result = dbQry($query, 'Checking status of URL by date', true);
+	dbDcon();
+	if($result === false){ return false; }
+	if($result->num_rows == 0){ return false; }
+	return true;
+}
+
 function getOutgoingCompanies() {
 	$query  = "SELECT DISTINCT(c.name) name,c.idCompany FROM `".DATABASE_NAME."`.`feedout` f LEFT JOIN `".DATABASE_NAME."`.`companies` c ON f.idCompany = c.idCompany ORDER BY c.name";
 

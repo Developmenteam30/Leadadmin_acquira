@@ -101,7 +101,10 @@ else {
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $population->outName ) );
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $population->outLabel ) );
-										print "\t\t<td>Y</td>\n";
+										if( isURLActive( $population->outLabel, date('Ym'), $url->urlTrim ) )
+											print "\t\t<td>Y</td>\n";
+										else
+											print "\t\t<td>N</td>\n";
 										print "\t</tr>\n";
 										$found = true;
 									}
@@ -226,13 +229,15 @@ else {
 							if( $populations ) {
 								foreach( $populations as $population ) {
 									if( $population->enabled && ( empty( $population->filterTypeUrl ) ||  checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
-										$foundPopulation = true;
+										if( isURLActive( $population->outLabel, $reportDate, $url->urlTrim ) )
+											$foundPopulation = true;
 									}
 								}
 							}
 
 							if( $foundPopulation ) {
 								$col = 65;
+
 								print "\t<tr class=\"bgGray\">\n";
 								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
 								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
