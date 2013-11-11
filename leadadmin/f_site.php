@@ -136,12 +136,14 @@ function getCompany($idCompany){
 
 //Incoming Feed Functions//
 
-function getIncomingFeeds($all=false){
+function getIncomingFeeds($retired=false){
 	//Fetches all incoming feeds into an array of objects.
 	$getFeeds  = "SELECT f.*,c.name ";
 	$getFeeds .= "FROM `".DATABASE_NAME."`.`feedinc` f ";
 	$getFeeds .= "LEFT JOIN `".DATABASE_NAME."`.`companies` c ON f.idCompany = c.idCompany ";
-	if(!$all)
+	if($retired)
+		$getFeeds .= "WHERE f.retired = '1' ";
+	else
 		$getFeeds .= "WHERE f.retired = '0' ";
 	$getFeeds .= "ORDER BY c.name";
 	dbCon();

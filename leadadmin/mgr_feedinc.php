@@ -585,9 +585,9 @@ else {
 }
 		break;
 		case 'incomingFeeds':
-		if( isset( $_REQUEST['all'] ) ) $all = true;
-		else $all = false;
-$incomingFeeds = getIncomingFeeds($all);
+		if( isset( $_REQUEST['retired'] ) ) $retired = true;
+		else $retired = false;
+$incomingFeeds = getIncomingFeeds($retired);
 ?>
 <?php		
 if($incomingFeeds === false){ 
