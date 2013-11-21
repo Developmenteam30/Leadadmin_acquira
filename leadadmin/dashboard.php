@@ -344,7 +344,7 @@ if($outgoingFeeds === false){
 		<td class='fTO_feedOverview'><p>Total Feeds</p></td>
 		<td class='fTO_accepted'><p class='aCenter'>Total Accepted</p></td>
 		<td class='fTO_rejected'><p class='aCenter'>Total Rejected</p></td>
-		<td class='fTO_rejected'><p class='aCenter'>Queued</p></td>
+		<td class='fTO_rejected'><p class='aCenter'>Total Queued</p></td>
 		<td class='fTO_options'><p>Options</p></td>
 	</tr>
 	</thead>
