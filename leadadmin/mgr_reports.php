@@ -94,7 +94,10 @@ else {
 							$found = false;
 							if( $populations ) {
 								foreach( $populations as $population ) {
-									if( $population->enabled && ( empty( $population->filterTypeUrl ) ||  checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
+									// Manually override checking of these filters for the report
+									$population->filterTypeListcode = $population->filterTypeEmail = null;
+
+									if( $population->enabled && ( empty( $population->filterTypeUrl ) || checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
 										print "\t<tr class=\"bgGray\">\n";
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->name ) );
 										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
@@ -228,7 +231,10 @@ else {
 							$foundPopulation = false;
 							if( $populations ) {
 								foreach( $populations as $population ) {
-									if( $population->enabled && ( empty( $population->filterTypeUrl ) ||  checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
+									// Manually override checking of these filters for the report
+									$population->filterTypeListcode = $population->filterTypeEmail = null;
+
+									if( $population->enabled && ( empty( $population->filterTypeUrl ) || checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
 										if( isURLActive( $population->outLabel, $reportDate, $url->urlTrim ) )
 											$foundPopulation = true;
 									}
