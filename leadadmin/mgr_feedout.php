@@ -902,6 +902,7 @@ if($outgoingFeeds === false){
 		<td class='fTO_statusCron'><p>Processing</p></td>
 		<td class='fTO_accepted'><p class='aCenter'>Accepted</p></td>
 		<td class='fTO_rejected'><p class='aCenter'>Rejected</p></td>
+		<td class='fTO_rejected'><p class='aCenter'>Queued</p></td>
 		<td class='fTO_options'><p>Options</p></td>
 	</tr>
 <?php
