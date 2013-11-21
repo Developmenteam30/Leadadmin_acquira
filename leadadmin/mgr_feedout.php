@@ -840,6 +840,7 @@ if($outgoingFeeds === false){
 		<td class='fTO_feedOverview' colspan='4'><p>Total Feeds</p></td>
 		<td class='fTO_accepted'><p class='aCenter'>Total Accepted</p></td>
 		<td class='fTO_rejected'><p class='aCenter'>Total Rejected</p></td>
+		<td class='fTO_rejected'><p class='aCenter'>Queued</p></td>
 		<td class='fTO_options'><p>Options</p></td>
 	</tr>
 	</thead>
@@ -848,6 +849,8 @@ if($outgoingFeeds === false){
 		$totalAccepted = 0;
 		$totalRejected = 0;
 		$totalActive = 0;
+		$totalQueued = 0;
+
 		foreach($companyFeedList as $keyFeed => $feed){ 
 			$companyFeedList[$keyFeed]->statusFeed = ($feed->enabled)?'Processable':'Deactivated';
 			if($feed->enabled) { $totalActive++; }
@@ -863,6 +866,11 @@ if($outgoingFeeds === false){
 			if($companyFeedList[$keyFeed]->rejected === false){ $companyFeedList[$keyFeed]->rejected = 'Error'; }
 			elseif(is_null($companyFeedList[$keyFeed]->rejected)){ $companyFeedList[$keyFeed]->rejected = 0; }
 			else { $totalRejected += $companyFeedList[$keyFeed]->rejected; }
+            
+			$companyFeedList[$keyFeed]->queued = getQueueCount( $feed->label );
+			if($companyFeedList[$keyFeed]->queued === false){ $companyFeedList[$keyFeed]->queued = 'Error'; }
+			elseif(is_null($companyFeedList[$keyFeed]->queued)){ $companyFeedList[$keyFeed]->queued = 0; }
+			else { $totalQueued += $companyFeedList[$keyFeed]->queued; }
 		}
 ?>
 	<tr class='fTORow fTO_Row bgGray'>
@@ -874,6 +882,7 @@ if($outgoingFeeds === false){
 		</td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $totalAccepted; ?></p></td>
 		<td class='fTO_rejected'><p class='aRight'><?php echo $totalRejected; ?></p></td>
+		<td class='fTO_rejected'><p class='aRight'><?php echo $totalQueued; ?></p></td>
 		<td class='fTO_options'>
 			<p>
 				<a href='#' class='nonLink'
@@ -927,6 +936,7 @@ if($outgoingFeeds === false){
 		</td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->accepted; ?></p></td>
 		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></p></td>
+		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->queued; ?></p></td>
 		<td class='fTO_options'>
 			<p>
 				<a href='#' class='nonLink'
