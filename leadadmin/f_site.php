@@ -507,4 +507,17 @@ function getCount($idFeedOut, $type){
 	$totalPosted = $totalPosted['qty'];
 	return $totalPosted;
 }
-?>
+
+function getQueueCount( $label ) { 
+	dbCon();
+	$query = "SELECT COUNT(*) cnt "
+		."FROM `".DATABASE_NAME."`.`feedout_".$label."` "
+		."WHERE processed = '0';";
+
+	$result = dbQry($query, 'Fetching count of queue', true);
+	if($result === false){ return false; }
+	if($result->num_rows == 0){ return 0; }
+	$count = $result->fetch_assoc();
+	$count = $count['cnt'];
+	return $count;
+}
