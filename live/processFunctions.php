@@ -703,16 +703,6 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 		$insertRecord = "INSERT INTO " . $insertTable . " ( `jobId`,`queryString`,`received` ";
 	}
 
-    // Notify if this is the first time we've seen this URL on this feed
-	if( !empty( $data['urlTrim'] ) && empty( $error ) ) {
-		$urlCount = checkExists( 'urlTrim', $data, $feedParams->label );
-		if( $urlCount == 0 ) {
-			notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
-										str_replace( '.', '*', $data['urlTrim'] ) )
-							);
-		}
-	}
-
 	dbCon("insertUpdate");
 
 	foreach( $allowedFields as $allowedField ) { 
@@ -762,6 +752,17 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 		return 'Database failure, please try again later.';
 
 	} else { //Successfully inserted into the data table, now insert into the count table.
+
+	    // Notify if this is the first time we've seen this URL on this feed
+		if( !empty( $data['urlTrim'] ) && empty( $error ) ) {
+			$urlCount = checkExists( 'urlTrim', $data, $feedParams->label );
+			if( $urlCount == 0 ) {
+				notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
+										str_replace( '.', '*', $data['urlTrim'] ) )
+							);
+			}
+		}
+
 		$date = date("Y-m-d");
 		$insertCountChange = "INSERT INTO " . $countTable . "(`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) VALUES ("
 				." '".$feedParams->idFeedIn."' "
