@@ -704,7 +704,7 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 	}
 
     // Notify if this is the first time we've seen this URL on this feed
-	if( !empty( $data['urlTrim'] ) ) {
+	if( !empty( $data['urlTrim'] ) && empty( $error ) ) {
 		$urlCount = checkExists( 'urlTrim', $data, $feedParams->label );
 		if( $urlCount == 0 ) {
 			notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
