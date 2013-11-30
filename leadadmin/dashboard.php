@@ -71,7 +71,7 @@ if(isset($_REQUEST['a'])){
 if(isset($_REQUEST['d'])){ 
 	switch($_REQUEST['d']){
 		case 'incomingFeeds':
-$incomingFeeds = getIncomingFeeds();
+$incomingFeeds = getIncomingFeeds(false);
 ?>
 <p>
 	Incoming Feeds (Last Updated: <?php echo date("m-d g:i:s a"); ?>)

@@ -59,8 +59,11 @@ else {
 
 <p><a href="#" class="nonLink" onclick="display('dialog_mapping'); closeContent('dialog_revenue');">Mapping Report</a></p>
 <p><a href="#" class="nonLink" onclick="display('dialog_revenue'); closeContent('dialog_mapping');">Revenue Report</a></p>
+<p><a href="#" class="nonLink" onclick="display('dialog_search_email'); closeContent('dialog_search_email_results');">Email Search Report</a></p>
 <div class="hidden" id="dialog_mapping"></div>
 <div class="hidden" id="dialog_revenue"></div>
+<div class="hidden" id="dialog_search_email"></div>
+<div class="hidden" id="dialog_search_email_results"></div>
 
 <?php
 		break;
@@ -71,7 +74,7 @@ else {
     <a href="#" class="nonLink" onclick="closeContent('dialog_mapping');">Close [X]</a>
 </div>
 <?php
-			$feeds = getIncomingFeeds();
+			$feeds = getIncomingFeeds( false );
 			if( $feeds ) {
 				print "<table id=\"mapping_report\" class=\"standard\">\n";
 				print "\t<thead>\n";
@@ -184,7 +187,7 @@ else {
 
 <?php
 
-			$feeds = getIncomingFeeds();
+			$feeds = getIncomingFeeds( false );
 			if( $feeds ) {
 				print "<table id=\"mapping_report\" class=\"standard\">\n";
 				print "\t<thead>\n";
@@ -300,6 +303,183 @@ $(document).ready(function(){
 				print "Cannot load list of incoming feeds.";
 			}
 
+		break;
+
+		case 'dialog_search_email':
+?>
+<div class="aRight">
+    <a href="#" class="nonLink" onclick="closeContent('dialog_search_email'); closeContent('dialog_search_email_results');">Close [X]</a>
+</div>
+<table class="feedTable" border="1" cellpadding="0" cellspacing="0">
+	<tr>
+		<td><p>Email Address</p></td>
+		<td>
+			<p><input type="text" name="search_email" id="search_email" value="" /></p>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2">
+			<p class="aRight"><input type="button" value="Search" onclick="display( 'dialog_search_email_results', { 'email': $('#search_email').val() });" /></p>
+		</td>
+	</tr>
+</table>
+<?php
+		break;
+
+		case 'dialog_search_email_results':
+			$email = $_REQUEST['options']['email'];
+			$feeds = getIncomingFeeds( null );
+			if($feeds === false){
+?>
+<p>Error when trying to fetch feeds: database error.</p>
+<?php
+			} else if($feeds == 0){
+?>
+<p>Error when trying to fetch feeds: there are no feeds.</p>
+<?php
+			} else {
+?>
+<p>Searching incoming feeds for <strong><?php echo htmlspecialchars( $email ); ?></strong> ...</p>
+<table class="rejectionsTable">
+    <thead>
+        <tr>
+            <th>Incoming Feed</th>
+            <th>Listcode</th>
+            <th>Timestamp</th>
+            <th>URL</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Lead Timestamp</th>
+            <th>IP Address</th>
+            <th>DOB</th>
+        </tr>
+        <tr>
+            <th>Address 1</th>
+            <th>Address 2</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Zipcode</th>
+            <th>Country</th>
+            <th>Landline</th>
+            <th>Cellphone</th>
+            <th>Gender</th>
+        </tr>
+    </thead>
+    <tbody>
+<?php
+			foreach( $feeds as $feed ) {
+				$records = getIncomingEmails( $feed->label, $email );
+				if( is_array( $records ) ) {
+					foreach( $records as $record ) {
+?>
+    <tr>
+        <td><?php echo htmlspecialchars($feed->label); ?></td>
+        <td><?php echo htmlspecialchars($record->listcode); ?></td>
+        <td><?php echo htmlspecialchars($record->received); ?></td>
+        <td><?php echo htmlspecialchars($record->url); ?></td>
+        <td><?php echo htmlspecialchars($record->fname); ?></td>
+        <td><?php echo htmlspecialchars($record->lname); ?></td>
+        <td><?php echo htmlspecialchars($record->stamp); ?></td>
+        <td><?php echo htmlspecialchars($record->ip); ?></td>
+        <td><?php echo htmlspecialchars($record->dob); ?></td>
+    </tr>
+    <tr>
+        <td><?php echo htmlspecialchars($record->addr); ?></td>
+        <td><?php echo htmlspecialchars($record->addr2); ?></td>
+        <td><?php echo htmlspecialchars($record->city); ?></td>
+        <td><?php echo htmlspecialchars($record->state); ?></td>
+        <td><?php echo htmlspecialchars($record->zip); ?></td>
+        <td><?php echo htmlspecialchars($record->country); ?></td>
+        <td><?php echo htmlspecialchars($record->landline); ?></td>
+        <td><?php echo htmlspecialchars($record->cellphone); ?></td>
+        <td><?php echo htmlspecialchars($record->gender); ?></td>
+    </tr>
+<?php
+					}
+				}
+			}
+
+		}
+?>
+	</tbody>
+</table>
+<?php
+			$feeds = getOutgoingFeeds( );
+			if($feeds === false){
+?>
+<p>Error when trying to fetch feeds: database error.</p>
+<?php
+			} else if($feeds == 0){
+?>
+<p>Error when trying to fetch feeds: there are no feeds.</p>
+<?php
+			} else {
+?>
+<p>Searching outgoing feeds for <strong><?php echo htmlspecialchars( $email ); ?></strong> ...</p>
+<table class="rejectionsTable">
+    <thead>
+        <tr>
+            <th>Outgoing Feed</th>
+            <th>Listcode</th>
+            <th>Timestamp</th>
+            <th>URL</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Lead Timestamp</th>
+            <th>IP Address</th>
+            <th>DOB</th>
+        </tr>
+        <tr>
+            <th>Address 1</th>
+            <th>Address 2</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Zipcode</th>
+            <th>Country</th>
+            <th>Landline</th>
+            <th>Cellphone</th>
+            <th>Gender</th>
+        </tr>
+    </thead>
+    <tbody>
+<?php
+			foreach( $feeds as $feed ) {
+				$records = getOutgoingEmails( $feed->label, $email );
+				if( is_array( $records ) ) {
+					foreach( $records as $record ) {
+?>
+    <tr>
+        <td><?php echo htmlspecialchars($feed->label); ?></td>
+        <td><?php echo htmlspecialchars($record->listcode); ?></td>
+        <td><?php echo htmlspecialchars($record->poststamp); ?></td>
+        <td><?php echo htmlspecialchars($record->url); ?></td>
+        <td><?php echo htmlspecialchars($record->fname); ?></td>
+        <td><?php echo htmlspecialchars($record->lname); ?></td>
+        <td><?php echo htmlspecialchars($record->stamp); ?></td>
+        <td><?php echo htmlspecialchars($record->ip); ?></td>
+        <td><?php echo htmlspecialchars($record->dob); ?></td>
+    </tr>
+    <tr>
+        <td><?php echo htmlspecialchars($record->addr); ?></td>
+        <td><?php echo htmlspecialchars($record->addr2); ?></td>
+        <td><?php echo htmlspecialchars($record->city); ?></td>
+        <td><?php echo htmlspecialchars($record->state); ?></td>
+        <td><?php echo htmlspecialchars($record->zip); ?></td>
+        <td><?php echo htmlspecialchars($record->country); ?></td>
+        <td><?php echo htmlspecialchars($record->landline); ?></td>
+        <td><?php echo htmlspecialchars($record->cellphone); ?></td>
+        <td><?php echo htmlspecialchars($record->gender); ?></td>
+    </tr>
+<?php
+					}
+				}
+			}
+
+		}
+?>
+	</tbody>
+</table>
+<?php
 		break;
 
 	}

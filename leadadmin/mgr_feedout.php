@@ -89,6 +89,7 @@ function addFeedOut(
 			."`cellphone` varchar(20) default NULL, "
 			."`country` varchar(75) default NULL, "
 			."PRIMARY KEY  (`idRecord`), "
+			."KEY `email` (`email`), "
 			."KEY `postStamp` (`postStamp`), "
 			."KEY `processed` (`processed`), "
 			."KEY `urlTrimDate` (`urlTrim`,`postStamp`) "
@@ -1685,7 +1686,7 @@ if($populationSettings === false){
 				}
 			}
 			$feed = getOutgoingFeed($popset_idFeedOut);
-			$feedsIncoming = getIncomingFeeds();
+			$feedsIncoming = getIncomingFeeds( false );
 ?>
 <input type='hidden' name='<?php echo $e; ?>popset_idAssoc'
 	id='<?php echo $e; ?>popset_idAssoc'

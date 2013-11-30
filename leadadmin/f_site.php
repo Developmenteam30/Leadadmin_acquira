@@ -136,14 +136,14 @@ function getCompany($idCompany){
 
 //Incoming Feed Functions//
 
-function getIncomingFeeds($retired=false){
+function getIncomingFeeds($retired=null){
 	//Fetches all incoming feeds into an array of objects.
 	$getFeeds  = "SELECT f.*,c.name ";
 	$getFeeds .= "FROM `".DATABASE_NAME."`.`feedinc` f ";
 	$getFeeds .= "LEFT JOIN `".DATABASE_NAME."`.`companies` c ON f.idCompany = c.idCompany ";
-	if($retired)
+	if($retired == true)
 		$getFeeds .= "WHERE f.retired = '1' ";
-	else
+	else if($retired == false)
 		$getFeeds .= "WHERE f.retired = '0' ";
 	$getFeeds .= "ORDER BY c.name";
 	dbCon();
@@ -209,6 +209,23 @@ function getIncomingUrls( $label ){
 	return $values;
 }
 
+function getIncomingEmails( $label, $email ){
+	$query  = "SELECT * ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedinc_" . $label . "` ";
+	$query .= "WHERE email = " . add_quotes( $email ) . " ";
+
+	dbCon();
+	$result = dbQry( $query, 'Getting incoming feed emails', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
+}
+
 
 //Outgoing Feed Functions//
 
@@ -259,6 +276,23 @@ function getOutgoingUrls( $label ){
 
 	dbCon();
 	$result = dbQry( $query, 'Getting outgoing feed URLs', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
+}
+
+function getOutgoingEmails( $label, $email ){
+	$query  = "SELECT * ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedout_" . $label . "` ";
+	$query .= "WHERE email = " . add_quotes( $email ) . " ";
+
+	dbCon();
+	$result = dbQry( $query, 'Getting outgoinging feed emails', true );
 
 	if( $result === false ) { return false; }
 	if( $result->num_rows == 0 ) { return 0; }
