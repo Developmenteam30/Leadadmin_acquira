@@ -54,6 +54,8 @@ function legacyPopulate( $feedId, $file = false ) {
 			}
 			$query .= "ORDER BY stamp DESC";
 
+	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId = '1385144823'";
+
 			dbCon();
     		$result = dbQry( $query, 'Getting inbound records', true );
 
@@ -120,4 +122,4 @@ print "Records that match population filters: {$cnt}\n";
 
 }
 
-legacyPopulate( 75, false );
+legacyPopulate( 148, false );
