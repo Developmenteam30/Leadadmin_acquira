@@ -242,10 +242,25 @@ function exportData($feedObject, $settings){
 		$fetchData .= "( "; $orFlag = false;
 		foreach($settings['urlList'] as $url){ 
 			if($orFlag){ $fetchData .= "OR "; }
-			$fetchData .= "`url` LIKE '%".$url."%' ";
+			$fetchData .= "`url` LIKE '%".$GLOBALS['dbconnx']->escape_string($url)."%' ";
 			$orFlag = true; 
 		}
 		$fetchData .= ") ";
+	}
+	if($c && count($settings['emailList']) != 0){ 
+		if(!$whereFlag) { $fetchData .= "WHERE "; $whereFlag = true; } else {
+			$fetchData .= "AND ";
+		}
+		$fetchData .= "( "; $orFlag = false;
+		foreach($settings['emailList'] as $email){ 
+			if($orFlag){ $fetchData .= "OR "; }
+			$fetchData .= "`email` LIKE '%@".$GLOBALS['dbconnx']->escape_string($email)."' ";
+			$orFlag = true; 
+		}
+		$fetchData .= ") ";
+	}
+	if( $c && !empty( $settings['limit'] ) ) {
+		$fetchData .= "LIMIT " . intval( $settings['limit'] ) . " ";
 	}
 	if($c){ 
 		$dofetchData = dbQry($fetchData, 'Fetching specified data set.', true);
@@ -537,12 +552,17 @@ if(isset($_REQUEST['a'])){
 			if($c){ 
 				$exportUrlList = explode(";", $_REQUEST['exportUrlList']);
 			}
+			if($c){ 
+				$exportEmailList = explode(";", $_REQUEST['exportEmailList']);
+			}
 			if($c){
 				$settings = array(
 					'columns' => $exportColumns
 					, 'dateStart' => $_REQUEST['exportDateStart']
 					, 'dateEnd' => $_REQUEST['exportDateEnd']
+					, 'limit' => $_REQUEST['exportLimit']
 					, 'urlList' => $exportUrlList
+					, 'emailList' => $exportEmailList
 				);
 				$exportResult = exportData($feed, $settings);
 				if(!$exportResult['success']){ 
@@ -1233,6 +1253,39 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		</td>
 	</tr>
 	<tr>
+		<td>
+			<p>
+				Email domains
+			</p>
+		</td>
+		<td>
+			<p>
+				Email domains to limit the selection by. Leave blank to select all records regardless of email address.  Do not include the @ symbol.
+			</p>
+			<p>
+				<a href='#' class='nonLink' onclick='element("export_<?php echo $idFeedIn; ?>_emails", "emailField", {"idFeedIn": <?php echo $idFeedIn; ?>} );'>Add email domain</a>
+			</p>
+			<div>
+				<div id='export_<?php echo $idFeedIn; ?>_emails' >
+				</div>
+			</div>
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<p>Limit</p>
+		</td>
+		<td>
+			<p>
+				Set a limit on the number of records that are returned.  Leave blank to return ALL records.
+			</p>
+			<p>
+				<input type="text" name="export_<?php echo $idFeedIn; ?>_limit" id="export_<?php echo $idFeedIn; ?>_limit" value="" />
+			</p>
+		</td>
+	</tr>
+	<tr>
 		<td colspan='2'>
 			<p class='aRight'>
 				<a href='#' id='resultExport_<?php echo $idFeedIn; ?>'></a>
@@ -1456,6 +1509,18 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		name='export_<?php echo $idFeedIn; ?>_urlList[]'
 		value=''
 	/> 
+	<a href='#' class='nonLink' onclick='$(this).parent().remove();' >[X]</a>
+</div>
+<?php
+		break;
+		case 'emailField':
+			$idFeedIn = $_REQUEST['options']['idFeedIn'];
+?>
+<div>
+	Email domain: <input type='text' 
+		name='export_<?php echo $idFeedIn; ?>_emailList[]'
+		value=''
+	/> (do not include @ symbol)
 	<a href='#' class='nonLink' onclick='$(this).parent().remove();' >[X]</a>
 </div>
 <?php
@@ -1769,12 +1834,17 @@ function exportFile(idFeedIn){
 	exportDateEnd = $('#export_'+idFeedIn+'_dateEnd').val();
 	exportUrlList = $("input[name='export_"+idFeedIn+"_urlList\\[\\]']")
         .map(function(){return $(this).val();}).get().join(";");
+	exportEmailList = $("input[name='export_"+idFeedIn+"_emailList\\[\\]']")
+        .map(function(){return $(this).val();}).get().join(";");
+	exportLimit = $('#export_'+idFeedIn+'_limit').val();
 	alert(
 		"idFeedIn: "+idFeedIn
 		+"\n"+"exportColumns: "+exportColumns
 		+"\n"+"exportDateStart: "+exportDateStart
 		+"\n"+"exportDateEnd: "+exportDateEnd
 		+"\n"+"exportUrlList: "+exportUrlList
+		+"\n"+"exportEmailList: "+exportEmailList
+		+"\n"+"exportLimit: "+exportLimit
 	);  
 	var response = $.ajax({
 		url: "mgr_feedinc.php",
@@ -1787,6 +1857,8 @@ function exportFile(idFeedIn){
 			, "exportDateStart": exportDateStart
 			, "exportDateEnd": exportDateEnd
 			, "exportUrlList": exportUrlList
+			, "exportEmailList": exportEmailList
+			, "exportLimit": exportLimit
 		})
 	}).done(function(responseText){ 
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
@@ -1796,7 +1868,7 @@ function exportFile(idFeedIn){
 		}
 		if(result.status == 1){ 
 			$('#resultExport_'+idFeedIn).html('Download File');
-			$('#resultQuery_'+idFeedIn).html(result.query);
+			//$('#resultQuery_'+idFeedIn).html(result.query);
 			$('#resultExport_'+idFeedIn).attr('href', result.link);
 		} else { 
 			alert(result.error);
