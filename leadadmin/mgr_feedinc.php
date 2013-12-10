@@ -1143,6 +1143,11 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		$allowedFields = explode(";", $feed->allowedFields);
 		$requiredFields = explode(";", $feed->required);
 
+		// Add a separate time field in case the file uses separate columns
+		if( ( $key = array_search( 'stamp', $allowedFields ) ) !== FALSE ) {
+			array_splice( $allowedFields, $key+1, 0, 'time' );			
+		}
+
 		foreach( $allowedFields as $field) {
 			if( 'listcode' != $field && 'url' != $field) {
 				printf ("<p>%s%s <select name=\"field_%s\">",
@@ -1151,7 +1156,13 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 				for($i = 0; $i < 26; $i++) {
 					print "<option value=\"{$i}\">" . chr(65+$i) . "</option>\n";
 				}
-				print "</select></p>\n";
+				print "</select>";
+				if( 'stamp' == $field ) {
+					print " (Use for either a full date+time stamp or just a date stamp field)";
+				} else if( 'time' == $field ) {
+					print " (Use for just a time stamp field)";
+				}
+				print "</p>\n";
 			}
 		}
 

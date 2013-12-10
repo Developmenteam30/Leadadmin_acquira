@@ -86,15 +86,25 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		if( isset( $_REQUEST['field_' . $field] ) && is_numeric( $_REQUEST['field_' . $field] ) ) {
 			$col = $_REQUEST['field_' . $field];
 			if( !empty( $raw_data[$col] ) ) {
-				if( 'stamp' == $field )
-					$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
-				elseif( 'dob' == $field )
+				if( 'stamp' == $field ) {
+					// Check to see if we're using two separate timestamp columns
+					if( !empty( $_REQUEST['field_time'] ) && is_numeric( $_REQUEST['field_time'] ) ) {
+						$time_col = $_REQUEST['field_time'];
+						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] . ( !empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '' ) ) );
+					} else {
+						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
+					}
+				} elseif( 'dob' == $field ) {
 					$data['dob'] = date( "Y-m-d", strtotime( $raw_data[$col] ) );
-				else
+				} else {
 					$data[$field] = $raw_data[$col];
+				}
 			}
 		}
 	}
+
+print_r($data);
+die();
 
 	if( !empty( $_REQUEST['url'] ) )
 		$data['url'] = $_REQUEST['url'];
