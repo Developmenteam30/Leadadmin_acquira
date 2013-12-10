@@ -6,7 +6,7 @@ include(ADMIN_ROOT."PasswordHash.php");
 $users = array(
 	array(
 		'username' => 'QatalystMedia'
-		, 'password' => '$$Leads##'
+		, 'password' => 'Beer$56'
 	)
 );
 
