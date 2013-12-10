@@ -103,9 +103,6 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		}
 	}
 
-print_r($data);
-die();
-
 	if( !empty( $_REQUEST['url'] ) )
 		$data['url'] = $_REQUEST['url'];
 	if( !empty( $_REQUEST['listcode'] ) )
