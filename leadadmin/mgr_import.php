@@ -90,7 +90,13 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 					// Check to see if we're using two separate timestamp columns
 					if( !empty( $_REQUEST['field_time'] ) && is_numeric( $_REQUEST['field_time'] ) ) {
 						$time_col = $_REQUEST['field_time'];
-						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] . ( !empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '' ) ) );
+						// Remove extraneous data from the date field
+						if( strpos( $raw_data[$col], ' ' ) !== FALSE ) {
+							list( $date, $garbage ) = explode( ' ', $raw_data[$col], 2 );
+						} else {
+							$date = $raw_data[$col];
+						}
+						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $date . ( !empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '' ) ) );
 					} else {
 						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
 					}
