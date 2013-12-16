@@ -220,7 +220,10 @@ td.fTI_options { width: 35%; }
 div.dashboardIncoming { width: 50%; }
 div.dashboardOutgoing { width: 50%; }
 
-#search_email { width: 250px; }
+#search_email,
+#search_url { 
+	width: 250px;
+}
 
 /* Rejections Table */
 .rejectionsTable {

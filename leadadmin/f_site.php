@@ -209,6 +209,24 @@ function getIncomingUrls( $label ){
 	return $values;
 }
 
+function getIncomingUrlSearch( $label, $url ){
+	$query  = "SELECT MAX(received) received,COUNT(*) cnt ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedinc_" . $label . "` ";
+	$query .= "WHERE urlTrim = " . add_quotes( $url ) . " ";
+	$query .= "ORDER BY idRecord DESC LIMIT 1";
+
+	dbCon();
+	$result = dbQry( $query, 'Getting incoming feed url search', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
+}
+
 function getIncomingEmails( $label, $email ){
 	$query  = "SELECT * ";
 	$query .= "FROM `".DATABASE_NAME."`.`feedinc_" . $label . "` ";
@@ -293,6 +311,24 @@ function getOutgoingEmails( $label, $email ){
 
 	dbCon();
 	$result = dbQry( $query, 'Getting outgoinging feed emails', true );
+
+	if( $result === false ) { return false; }
+	if( $result->num_rows == 0 ) { return 0; }
+	$values = array();
+	while( $row = $result->fetch_object() ){
+		$values[] = $row;
+	}
+	return $values;
+}
+
+function getOutgoingUrlSearch( $label, $url ){
+	$query  = "SELECT MAX(poststamp) poststamp,COUNT(*) cnt ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedout_" . $label . "` ";
+	$query .= "WHERE urlTrim = " . add_quotes( $url ) . " ";
+	$query .= "AND processed = '1' ";
+
+	dbCon();
+	$result = dbQry( $query, 'Getting outgoinging feed url search', true );
 
 	if( $result === false ) { return false; }
 	if( $result->num_rows == 0 ) { return 0; }

@@ -60,10 +60,13 @@ else {
 <p><a href="#" class="nonLink" onclick="display('dialog_mapping'); closeContent('dialog_revenue');">Mapping Report</a></p>
 <p><a href="#" class="nonLink" onclick="display('dialog_revenue'); closeContent('dialog_mapping');">Revenue Report</a></p>
 <p><a href="#" class="nonLink" onclick="display('dialog_search_email'); closeContent('dialog_search_email_results');">Email Search Report</a></p>
+<p><a href="#" class="nonLink" onclick="display('dialog_search_url'); closeContent('dialog_search_url_results');">URL Search Report</a></p>
 <div class="hidden" id="dialog_mapping"></div>
 <div class="hidden" id="dialog_revenue"></div>
 <div class="hidden" id="dialog_search_email"></div>
 <div class="hidden" id="dialog_search_email_results"></div>
+<div class="hidden" id="dialog_search_url"></div>
+<div class="hidden" id="dialog_search_url_results"></div>
 
 <?php
 		break;
@@ -471,6 +474,119 @@ $(document).ready(function(){
         <td><?php echo htmlspecialchars($record->gender); ?></td>
     </tr>
 <?php
+					}
+				}
+			}
+
+		}
+?>
+	</tbody>
+</table>
+<?php
+		break;
+
+		case 'dialog_search_url':
+?>
+<div class="aRight">
+    <a href="#" class="nonLink" onclick="closeContent('dialog_search_url'); closeContent('dialog_search_url_results');">Close [X]</a>
+</div>
+<table class="feedTable" border="1" cellpadding="0" cellspacing="0">
+	<tr>
+		<td><p>URL</p></td>
+		<td>
+			<p><input type="text" name="search_email" id="search_url" value="" /></p>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="2">
+			<p class="aRight"><input type="button" value="Search" onclick="display( 'dialog_search_url_results', { 'url': $('#search_url').val() });" /></p>
+		</td>
+	</tr>
+</table>
+<?php
+		break;
+
+		case 'dialog_search_url_results':
+			$url = $_REQUEST['options']['url'];
+			$feeds = getIncomingFeeds( null );
+			if($feeds === false){
+?>
+<p>Error when trying to fetch feeds: database error.</p>
+<?php
+			} else if($feeds == 0){
+?>
+<p>Error when trying to fetch feeds: there are no feeds.</p>
+<?php
+			} else {
+?>
+<p>Searching incoming feeds for <strong><?php echo htmlspecialchars( $url ); ?></strong> ...</p>
+<table class="rejectionsTable">
+    <thead>
+        <tr>
+            <th>Incoming feed</th>
+            <th>Total records</th>
+            <th>Last record received at</th>
+        </tr>
+    </thead>
+    <tbody>
+<?php
+			foreach( $feeds as $feed ) {
+				$records = getIncomingUrlSearch( $feed->label, $url );
+				if( is_array( $records ) ) {
+					foreach( $records as $record ) {
+						if( $record->cnt > 0 ) {
+?>
+    <tr>
+        <td><?php echo htmlspecialchars( $feed->label ); ?></td>
+        <td><?php echo number_format( htmlspecialchars( $record->cnt ) ); ?></td>
+        <td><?php echo htmlspecialchars( $record->received ); ?></td>
+    </tr>
+<?php
+						}
+					}
+				}
+			}
+
+		}
+?>
+	</tbody>
+</table>
+<?php
+			$feeds = getOutgoingFeeds( 'active' );
+			if($feeds === false){
+?>
+<p>Error when trying to fetch feeds: database error.</p>
+<?php
+			} else if($feeds == 0){
+?>
+<p>Error when trying to fetch feeds: there are no feeds.</p>
+<?php
+			} else {
+?>
+<p>Searching outgoing feeds for <strong><?php echo htmlspecialchars( $url ); ?></strong> ...</p>
+<table class="rejectionsTable">
+    <thead>
+        <tr>
+            <th>Outgoing feed</th>
+            <th>Total records</th>
+            <th>Last record sent at</th>
+        </tr>
+    </thead>
+    <tbody>
+<?php
+			foreach( $feeds as $feed ) {
+				$records = getOutgoingUrlSearch( $feed->label, $url );
+				if( is_array( $records ) ) {
+					foreach( $records as $record ) {
+						if( $record->cnt > 0 ) {
+?>
+    <tr>
+        <td><?php echo htmlspecialchars( $feed->label ); ?></td>
+        <td><?php echo number_format( htmlspecialchars( $record->cnt ) ); ?></td>
+        <td><?php echo htmlspecialchars( $record->poststamp ); ?></td>
+    </tr>
+<?php
+						}
 					}
 				}
 			}
