@@ -453,8 +453,10 @@ function checkExists( $column, $requestValues, $feedLabel ){
 
 function checkSuppression( $email, $idCompany ) {
 	dbCon();
+	list( $local, $domain ) = explode( '@', $email, 2 );
 	$query = "SELECT 1 AS cnt FROM `".DATABASE_NAME."`.`suppression_".$idCompany."` "
 			."WHERE `email` = '".$GLOBALS['dbconnx']->escape_string( $email )."' "
+			."OR `email` = '".$GLOBALS['dbconnx']->escape_string( $domain )."' "
 			."LIMIT 1";
 	$result = dbQry($query, 'Checking if email is suppressed.', true);
 	dbDcon();

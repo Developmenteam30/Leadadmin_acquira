@@ -107,20 +107,6 @@ function getActiveFeeds(){
 	return $dogetFeed;
 }
 
-function isSuppressedInDB($email, $idCompany){
-	dbCon();
-	$getSuppressed = "SELECT * FROM `".DATABASE_NAME."`.`suppression_".$idCompany."` "
-		."WHERE `email` = '".$GLOBALS['dbconnx']->escape_string($email)."';";
-	$dogetSuppressed = dbQry($getSuppressed, 'Checking email against suppression.', true);
-	dbDcon();
-	if($dogetSuppressed === false){ return false; }
-	if($dogetSuppressed->num_rows != 0){ 
-		return true;
-	} else { 
-		return false;
-	}
-}
-
 function storeFeedOutgoingAttribute($idFeedOut, $attribute, $value){ 
 	dbCon("insertUpdate");
 	$updateFeed = "UPDATE `".DATABASE_NAME."`.`feedout` "
@@ -323,14 +309,14 @@ function process($leadset)
 			'url' => '',
 			'idFeedOut' => $settings['feedParams']->idFeedOut
 		);
-		if($leaddata['email'] != '' && isSuppressedInDB($leaddata['email'], 'global')){
+		if($leaddata['email'] != '' && checkSuppression($leaddata['email'], 'global')){
 			$response = array(
 				'text' => 'Email is suppressed (global).'
 				, 'status' => 2
 				, 'url' => $leaddata['url']
 				, 'idFeedOut' => $settings['feedParams']->idFeedOut
 			);
-		} elseif($leaddata['email'] != '' && isSuppressedInDB($leaddata['email'], $settings['feedParams']->idCompany)) {
+		} elseif($leaddata['email'] != '' && checkSuppression($leaddata['email'], $settings['feedParams']->idCompany)) {
 			$response = array(
 				'text' => 'Email is suppressed (company).'
 				, 'status' => 2
