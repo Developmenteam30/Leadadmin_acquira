@@ -356,6 +356,14 @@ if($c){
 						$p = false;
 					}
 				}
+				// Ensure we haven't reached our daily limit of records
+				if($p && !is_null($feed->dailyLimit)) {
+					$cnt = getOutboundDailyCount( $feed->label );
+					if( $cnt && $cnt > $feed->dailyLimit ) {
+						logError( 'Feed '.$feed->label, 'Daily feed limit of ' . $feed->dailyLimit . ' reached', false );
+						$p = false;
+					}
+				}
 				if($p){ 
 					$insertToFeedOut = 
 						"INSERT INTO `".DATABASE_NAME."`.`feedout_".$feed->label."` ( `processed` ";

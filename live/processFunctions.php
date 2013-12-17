@@ -364,7 +364,7 @@ function validate($fieldType, $value, $feedParams){
 function getIncomingPopulationSettings($idFeedIn){ 
 	dbCon();
 	$getSettings = 
-		"SELECT fp.*, fo.label "
+		"SELECT fp.*, fo.label, fo.dailyLimit "
 		."FROM "
 			."`".DATABASE_NAME."`.`feedPopulation` fp "
 			.", `".DATABASE_NAME."`.`feedout` fo "
@@ -506,6 +506,19 @@ function getOutboundStamp( $label ) {
     if( $result->num_rows == 0 ) { return null; }
     $stamp = $result->fetch_assoc();
     return $stamp['stamp'];
+}
+
+function getOutboundDailyCount( $label ) {
+	$query  = "SELECT COUNT(*) cnt ";
+	$query .= "FROM `".DATABASE_NAME."`.`feedout_".$label."` ";
+	$query .= "WHERE poststamp >= DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00')";
+    
+	dbCon();
+    $result = dbQry($query, 'Getting outbound record count.', true);
+    if( $result === false ) { return null; }
+    if( $result->num_rows == 0 ) { return null; }
+    $cnt = $result->fetch_assoc();
+    return $cnt['cnt'];
 }
 
 function addOutboundRecord( $label, $listcode, $urlTrim, $url, $ip, $stamp, $email, $fname, $lname, $addr, $addr2, $city, $state, $zip, $country, $dob, $gender, $landline, $cellphone, $processed = '0', $poststamp = null, $postrequest = null, $postresponse = null ) {
