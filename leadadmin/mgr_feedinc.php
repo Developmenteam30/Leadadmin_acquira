@@ -235,7 +235,7 @@ function exportData($feedObject, $settings){
 		if(!$whereFlag) { $fetchData .= "WHERE "; $whereFlag = true; }
 		$fetchData .= "`received` >= '".$dateStart."' AND `received` < '".$dateEnd."' ";
 	}
-	if($c && count($settings['urlList']) != 0){ 
+	if($c && count($settings['urlList']) != 0 && !empty($settings['urlList'][0]) ){ 
 		if(!$whereFlag) { $fetchData .= "WHERE "; $whereFlag = true; } else {
 			$fetchData .= "AND ";
 		}
@@ -247,7 +247,7 @@ function exportData($feedObject, $settings){
 		}
 		$fetchData .= ") ";
 	}
-	if($c && count($settings['emailList']) != 0){ 
+	if($c && count($settings['emailList']) != 0 && !empty($settings['emailList'][0])){ 
 		if(!$whereFlag) { $fetchData .= "WHERE "; $whereFlag = true; } else {
 			$fetchData .= "AND ";
 		}
