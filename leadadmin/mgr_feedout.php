@@ -151,7 +151,7 @@ function alterFeedOut($idFeedOut, $property, $newVal){
 			dbCon("insertUpdate");
 			if($c){ //Updated feedinc entry.
 				$updateProperty = "UPDATE `".DATABASE_NAME."`.`feedout` "
-					."SET `".$property."` = '".$newVal."' "
+					."SET `".$property."` = ". valueEmpty( $newVal ) ." "
 					."WHERE `idFeedOut` = '".$idFeedOut."'; ";
 				$doupdateProperty = dbQry($updateProperty, 'Updating feed property '.$property, true);
 				if($doupdateProperty === false){ $c = false; $result['reason'] = 'Database failure - could not update '
