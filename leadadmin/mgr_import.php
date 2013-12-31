@@ -119,7 +119,10 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT);
 	}
 
-	print "{$data['email']}";
+	if( isset( $data['email'] ) ) 
+		print "{$data['email']}";
+	else
+		print " ";
 
 	$result = validateIncomingData( $feedParams, &$data );
 
