@@ -600,6 +600,14 @@ function validateIncomingData( $feedParams, &$data ) {
 		$data['url'] = 'www.5minutemoney.co.uk';
 	}
 
+	// Remove non-numeric characters from phone numbers
+	if( !empty( $data['landline'] ) ) {
+		$data['landline'] = preg_replace( '/[^0-9]/', '', $data['landline'] );
+	}
+	if( !empty( $data['cellphone'] ) ) {
+		$data['cellphone'] = preg_replace( '/[^0-9]/', '', $data['cellphone'] );
+	}
+
 	foreach( $requiredFields as $requiredKey ) {
 		switch( $requiredKey ) {
 			case "phone":
