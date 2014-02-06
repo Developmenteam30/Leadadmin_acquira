@@ -435,6 +435,14 @@ if(isset($_REQUEST['a'])){
 							}
 						}
 					}
+					if($_REQUEST['siftlogic'] != $feed->siftlogic){ 
+						if($c){
+							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'siftlogic', $_REQUEST['siftlogic']);
+							if(!$alterResult['success']){ 
+								$c = false; $result['error'] = $alterResult['reason'];
+							}
+						}
+					}
 					if($_REQUEST['idCompany'] != $feed->idCompany){ 
 						if($c){ //Validated, change label, change table names.
 							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'idCompany', $_REQUEST['idCompany']);
@@ -777,7 +785,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		case 'dialog_newfeed':
 			if(!isset($e)){ $e = 'new_'; $d = 'new'; }
 			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'retired'
+				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'retired', 'siftlogic'
 			);
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
@@ -1057,6 +1065,17 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
                         </div>
                 </td>
         </tr>
+<?php  if( defined( 'SIFTLOGIC_APIKEY' ) ) { ?>
+	<tr>
+		<td><p>Sift Logic Verification</p></td>
+		<td>
+			<p>
+				<input type='radio' name='<?php echo $e; ?>feed_siftlogic' id='<?php echo $e; ?>feed_siftlogic_yes' value='1' <?php if( '1' == $feed_siftlogic ) { ?>checked='checked'<?php } ?>/> Enabled
+				<input type='radio' name='<?php echo $e; ?>feed_siftlogic' id='<?php echo $e; ?>feed_siftlogic_no' value='0' <?php if( '1' != $feed_siftlogic ) { ?>checked='checked'<?php } ?>/> Disabled
+			</p>
+		</td>
+	</tr>
+<?php  } ?>
 	<tr>
 		<td><p>Feed Status</p></td>
 		<td>
@@ -1700,6 +1719,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 	if($(e+'dedupeLandline').is(":checked")){ dedupeLandline = 1;	} else { dedupeLandline = 0; }
 	if($(e+'dedupeCellphone').is(":checked")){ dedupeCellphone = 1;	} else { dedupeCellphone = 0; }
 	if($(e+'retired_yes').is(":checked")){ retired = 1; } else { retired = 0; }
+	if($(e+'siftlogic_yes').is(":checked")){ siftlogic = 1; } else { siftlogic = 0; }
 	if(c == 'new'){ 
 		dedupeAcross = $('input[name="'+c+'_feed_dedupeAcross"]:checked').val();
 	} else { 
@@ -1733,6 +1753,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 			, "dedupeAcross": dedupeAcross
 			, "filterTypeUrl": filterTypeUrl
 			, "filterUrl": filterUrl
+			, "siftlogic": siftlogic
 			, "retired": retired
 		})
 	}).done(function(responseText){ 

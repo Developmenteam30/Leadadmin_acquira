@@ -167,6 +167,14 @@ if($c && $feedParams->dedupeCellphone && isset($_REQUEST['cellphone']) && $_REQU
 		$c = false; $result['reason'] = 'Duplicate Phone (cellphone)';
 	}
 }
+if( $c && defined( 'SIFTLOGIC_APIKEY' ) && $feedParams->siftlogic ) {
+	require 'siftLogic.php';
+	$sl = new SiftLogic;
+	if( $sl->check( $_REQUEST['email'] ) === false ) {
+		$c = false;
+		$result['reason'] = 'Email address was rejected by our third-party filters [SL]';
+	}
+}
 if($c){ //Inputted information is validated, go ahead and insert the record into the database.
 
     // Notify if this is the first time we've seen this URL on this feed
