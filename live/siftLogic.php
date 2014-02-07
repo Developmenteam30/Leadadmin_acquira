@@ -2,7 +2,7 @@
 
 class SiftLogic {
 
-	function check( $email )
+	function check( $email, $ip, $first, $last, $addr1, $addr2, $city, $state, $zip, $country, $verbose = false )
 	{
 		if( !defined( 'SIFTLOGIC_APIKEY' ) ) {
 			return null;
@@ -11,10 +11,46 @@ class SiftLogic {
 		$ch = curl_init();
 
 		$postData = array(
-			'auth' => '14c38003-cbb6-4709-acb4-f7ef1ff8e83a',
+			'auth' => SIFTLOGIC_APIKEY,
 			'format' => 'json',
 			'subscriber_email' => $email,
 		);
+
+		if( !empty( $ip ) ) {
+			$postData['subscriber_signup_ip'] = $ip;
+		}
+
+		if( !empty( $first ) ) {
+			$postData['subscriber_fname'] = $first;
+		}
+
+		if( !empty( $last ) ) {
+			$postData['subscriber_lname'] = $last;
+		}
+
+		if( !empty( $addr1 ) ) {
+			$postData['subscriber_addr1'] = $addr1;
+		}
+
+		if( !empty( $addr2 ) ) {
+			$postData['subscriber_addr2'] = $addr2;
+		}
+
+		if( !empty( $city ) ) {
+			$postData['subscriber_city'] = $city;
+		}
+
+		if( !empty( $state ) ) {
+			$postData['subscriber_state'] = $state;
+		}
+
+		if( !empty( $zip ) ) {
+			$postData['subscriber_zip'] = $zip;
+		}
+
+		if( !empty( $country ) ) {
+			$postData['subscriber_country'] = $country;
+		}
 
 		curl_setopt( $ch, CURLOPT_URL, 'http://api.tempaccess.pw:8080/api/live/verify' );
 		curl_setopt( $ch, CURLOPT_POST, 1 );
@@ -28,14 +64,29 @@ class SiftLogic {
 			return null;    
 		}
 
-		if( !isset( $values->mailable ) ) {
-			return null;    
+		if( $verbose ) { 
+			print_r( $values );
 		}
 
-		if( true == $values->mailable ) {
-			return true;
+		if( !isset( $values->status ) ) {
+			return null;
 		}
 
-		return false;
+		if( ( isset( $values->results->subscriber_email_is_blacklisted ) && '1' == $values->results->subscriber_email_is_blacklisted ) || 'trap' == $values->status ) {
+
+			require_once( '../_connx.php' );
+			dbCon();
+			$insert = "INSERT INTO `".DATABASE_NAME."`.`suppression_global` (`email`) VALUES ('".$GLOBALS['dbconnx']->escape_string($email)."');";
+			$doinsert = dbQry($insert, 'Inserting email into suppression', true, true, true); //Verbose result turned on.
+			dbDcon();
+			return false;
+
+		}
+
+		if( isset( $values->results->subscriber_score_bucket ) && !in_array( $values->results->subscriber_score_bucket, array( 'high', 'medium' ) ) ) {
+			return false;
+		}
+
+		return true;
 	}
 }
