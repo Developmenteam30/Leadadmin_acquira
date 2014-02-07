@@ -87,6 +87,10 @@ class SiftLogic {
 			return false;
 		}
 
+		if( isset( $values->mailable ) && false == $values->mailable ) {
+			return false;
+		}
+
 		return true;
 	}
 }
