@@ -2279,9 +2279,9 @@ function manageFeed(action, idFeedOut){
 	postUrl = $(e+'postUrl').val();
 	if(c == 'new'){
 		staticFields_labels = $("input[name='"+c+"_feed_staticFields_field\\[\\]']")
-			.map(function(){return $(this).val();});
+			.map(function(){return $(this).val().trim();});
 		staticFields_values = $("input[name='"+c+"_feed_staticFields_value\\[\\]']")
-			.map(function(){return $(this).val();});
+			.map(function(){return $(this).val().trim();});
 		staticFields = ''; colonFlag = false;
 		for(count = 0; count < staticFields_labels.length; count++){ 
 			if(colonFlag) staticFields += ';';
@@ -2290,9 +2290,9 @@ function manageFeed(action, idFeedOut){
 		}
 		
 		urlassignments_urls = $("input[name='"+c+"_feed_urlassignments_url\\[\\]']")
-			.map(function(){return $(this).val();});
+			.map(function(){return $(this).val().trim();});
 		urlassignments_ids = $("input[name='"+c+"_feed_urlassignments_id\\[\\]']")
-			.map(function(){return $(this).val();});
+			.map(function(){return $(this).val().trim();});
 		urlassignments = ''; colonFlag = false;
 		for(count = 0; count < urlassignments_urls.length; count++){ 
 			if(colonFlag) urlassignments += ';';
@@ -2301,14 +2301,14 @@ function manageFeed(action, idFeedOut){
 		}
 		
 		varFields = $("input[name='"+c+"_feed_varFields\\[\\]']")
-			.map(function(){return $(this).val();}).get().join(";");
+			.map(function(){return $(this).val().trim();}).get().join(";");
 		fieldMap = $("select[name='"+c+"_feed_fieldMap\\[\\]']")
-			.map(function(){return $(this).val();}).get().join(";");
+			.map(function(){return $(this).val().trim();}).get().join(";");
 	} else {
 		staticFields_labels = $("input[name='edit_"+idFeedOut+"_feed_staticFields_field\\[\\]']")
-			.map(function(){return $(this).val();});
+			.map(function(){return $(this).val().trim();});
 		staticFields_values = $("input[name='edit_"+idFeedOut+"_feed_staticFields_value\\[\\]']")
-			.map(function(){return $(this).val();});
+			.map(function(){return $(this).val().trim();});
 		staticFields = ''; colonFlag = false;
 		for(count = 0; count < staticFields_labels.length; count++){ 
 			if(colonFlag) staticFields += ';';
@@ -2316,9 +2316,9 @@ function manageFeed(action, idFeedOut){
 			colonFlag = true;
 		}
 		urlassignments_urls = $("input[name='edit_"+idFeedOut+"_feed_urlassignments_url\\[\\]']")
-			.map(function(){return $(this).val();});
+			.map(function(){return $(this).val().trim();});
 		urlassignments_ids = $("input[name='edit_"+idFeedOut+"_feed_urlassignments_id\\[\\]']")
-			.map(function(){return $(this).val();});
+			.map(function(){return $(this).val().trim();});
 		urlassignments = ''; colonFlag = false;
 		for(count = 0; count < urlassignments_urls.length; count++){ 
 			if(colonFlag) urlassignments += ';';
@@ -2326,9 +2326,9 @@ function manageFeed(action, idFeedOut){
 			colonFlag = true;
 		}
 		varFields = $("input[name='edit_"+idFeedOut+"_feed_varFields\\[\\]']")
-			.map(function(){return $(this).val();}).get().join(";");
+			.map(function(){return $(this).val().trim();}).get().join(";");
 		fieldMap = $("select[name='edit_"+idFeedOut+"_feed_fieldMap\\[\\]']")
-			.map(function(){return $(this).val();}).get().join(";");
+			.map(function(){return $(this).val().trim();}).get().join(";");
 	}
 	successString = $(e+'successString').val();
 	dailyLimit = $(e+'dailyLimit').val();
@@ -2543,18 +2543,18 @@ function managePopulation(action, options){
 		filterTypeListcode = 'reject';
 	}
 	filterUrl = $("input[name='"+c+"_popset_filterUrl\\[\\]']")
-        .map(function(){return $(this).val();}).get().join(";");
+        .map(function(){return $(this).val().trim();}).get().join(";");
 	filterEmail = $("input[name='"+c+"_popset_filterEmail\\[\\]']")
-        .map(function(){return $(this).val();}).get().join(";");
+        .map(function(){return $(this).val().trim();}).get().join(";");
 	filterListcode = $("input[name='"+c+"_popset_filterListcode\\[\\]']")
-        .map(function(){return $(this).val();}).get().join(";");
+        .map(function(){return $(this).val().trim();}).get().join(";");
 	
 	if($(e+'forceUrl_disabled').is(":checked")){ forceUrl = '0'; }
 	else { forceUrl = '1'; }	
 	forceUrlList_originals = $("input[name='"+c+"_popset_forceUrlList_original\\[\\]']")
-        .map(function(){return $(this).val();});
+        .map(function(){return $(this).val().trim();});
 	forceUrlList_altereds = $("input[name='"+c+"_popset_forceUrlList_altered\\[\\]']")
-        .map(function(){return $(this).val();});
+        .map(function(){return $(this).val().trim();});
 	forceUrlList = ''; colonFlag = false;
 	for(count = 0; count < forceUrlList_originals.length; count++){ 
 		if(colonFlag) forceUrlList += ';';

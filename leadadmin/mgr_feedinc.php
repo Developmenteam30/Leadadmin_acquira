@@ -1788,7 +1788,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
         filterTypeUrl = 'reject';
     }
     filterUrl = $("input[name='"+c+"_"+idFeedIn+"_feed_filterUrl\\[\\]']")
-        .map(function(){return $(this).val();}).get().join(";");
+        .map(function(){return $(this).val().trim();}).get().join(";");
 
     if($(e+'filterTypeSiftLogic_disabled').is(":checked")){
         filterTypeSiftLogic = 'null';
@@ -1798,7 +1798,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
         filterTypeSiftLogic = 'reject';
     }
     filterSiftLogic = $("input[name='"+c+"_"+idFeedIn+"_feed_filterSiftLogic\\[\\]']")
-        .map(function(){return $(this).val();}).get().join(";");
+        .map(function(){return $(this).val().trim();}).get().join(";");
 
 	if($(e+'dedupeEmail').is(":checked")){ dedupeEmail = 1;	} else { dedupeEmail = 0; }
 	if($(e+'dedupeLandline').is(":checked")){ dedupeLandline = 1;	} else { dedupeLandline = 0; }
@@ -1952,9 +1952,9 @@ function exportFile(idFeedIn){
 	exportDateStart = $('#export_'+idFeedIn+'_dateStart').val();
 	exportDateEnd = $('#export_'+idFeedIn+'_dateEnd').val();
 	exportUrlList = $("input[name='export_"+idFeedIn+"_urlList\\[\\]']")
-        .map(function(){return $(this).val();}).get().join(";");
+        .map(function(){return $(this).val().trim();}).get().join(";");
 	exportEmailList = $("input[name='export_"+idFeedIn+"_emailList\\[\\]']")
-        .map(function(){return $(this).val();}).get().join(";");
+        .map(function(){return $(this).val().trim();}).get().join(";");
 	exportLimit = $('#export_'+idFeedIn+'_limit').val();
 	alert(
 		"idFeedIn: "+idFeedIn
