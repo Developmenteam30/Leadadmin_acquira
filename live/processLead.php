@@ -167,22 +167,25 @@ if($c && $feedParams->dedupeCellphone && isset($_REQUEST['cellphone']) && $_REQU
 		$c = false; $result['reason'] = 'Duplicate Phone (cellphone)';
 	}
 }
-if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && $feedParams->siftlogic ) {
-	require 'siftLogic.php';
-	$sl = new SiftLogic;
-	if( $sl->check( $_REQUEST['email'], 
-					!empty( $_REQUEST['ip'] ) ? $_REQUEST['ip'] : null, 
-					!empty( $_REQUEST['fname'] ) ? $_REQUEST['fname'] : null, 
-					!empty( $_REQUEST['lname'] ) ? $_REQUEST['lname'] : null, 
-					!empty( $_REQUEST['addr'] ) ? $_REQUEST['addr'] : null, 
-					!empty( $_REQUEST['addr2'] ) ? $_REQUEST['addr2'] : null, 
-					!empty( $_REQUEST['city'] ) ? $_REQUEST['city'] : null, 
-					!empty( $_REQUEST['state'] ) ? $_REQUEST['state'] : null, 
-					!empty( $_REQUEST['zip'] ) ? $_REQUEST['zip'] : null, 
-					!empty( $_REQUEST['country'] ) ? $_REQUEST['country'] : null, 
-				false ) === false ) {
-		$c = false;
-		$result['reason'] = 'Email address was rejected by our third-party filters [SL]';
+if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_null( $feedParams->filterTypeSiftLogic ) ) {
+	$filter = filterValue($feedParams->filterTypeSiftLogic, $_REQUEST['url'], $feedParams->filterSiftLogic);
+	if( $filter ) {
+		require 'siftLogic.php';
+		$sl = new SiftLogic;
+		if( $sl->check( $_REQUEST['email'], 
+						!empty( $_REQUEST['ip'] ) ? $_REQUEST['ip'] : null, 
+						!empty( $_REQUEST['fname'] ) ? $_REQUEST['fname'] : null, 
+						!empty( $_REQUEST['lname'] ) ? $_REQUEST['lname'] : null, 
+						!empty( $_REQUEST['addr'] ) ? $_REQUEST['addr'] : null, 
+						!empty( $_REQUEST['addr2'] ) ? $_REQUEST['addr2'] : null, 
+						!empty( $_REQUEST['city'] ) ? $_REQUEST['city'] : null, 
+						!empty( $_REQUEST['state'] ) ? $_REQUEST['state'] : null, 
+						!empty( $_REQUEST['zip'] ) ? $_REQUEST['zip'] : null, 
+						!empty( $_REQUEST['country'] ) ? $_REQUEST['country'] : null, 
+					false ) === false ) {
+			$c = false;
+			$result['reason'] = 'Email address was rejected by our third-party filters [SL]';
+		}
 	}
 }
 if($c){ //Inputted information is validated, go ahead and insert the record into the database.

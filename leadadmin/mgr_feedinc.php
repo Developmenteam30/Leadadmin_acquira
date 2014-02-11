@@ -37,6 +37,8 @@ function addFeedIn(
 	, $dedupeAcross
 	, $filterTypeUrl
 	, $filterUrl
+	, $filterTypeSiftLogic
+	, $filterSiftLogic
 ){ 
 	$result = array(
 		'success' => false
@@ -47,7 +49,7 @@ function addFeedIn(
 	if($c){ //Add feed.
 		$addFeed = "INSERT INTO `".DATABASE_NAME."`.`feedinc` "
 			."(`label`,`description`,`idCompany`,`required`,`allowedFields`,`password`, "
-			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`, `filterTypeUrl`, `filterUrl`) VALUES ( "
+			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`, `filterTypeUrl`, `filterUrl`, `filterTypeSiftLogic`, `filterSiftLogic`) VALUES ( "
 			."  '".$GLOBALS['dbconnx']->escape_string($label)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($description)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($idCompany)."' "
@@ -60,6 +62,8 @@ function addFeedIn(
 			.", '".$GLOBALS['dbconnx']->escape_string($dedupeAcross)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($filterTypeUrl)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($filterUrl)."' "
+			.", '".$GLOBALS['dbconnx']->escape_string($filterTypeSiftLogic)."' "
+			.", '".$GLOBALS['dbconnx']->escape_string($filterSiftLogic)."' "
 			.");";
 		$doaddFeed = dbQry($addFeed, 'Adding new feed.', true);
 		if($doaddFeed === false){ 
@@ -378,6 +382,8 @@ if(isset($_REQUEST['a'])){
 						, $_REQUEST['dedupeAcross']
 						, $_REQUEST['filterTypeUrl']
 						, $_REQUEST['filterUrl']
+						, $_REQUEST['filterTypeSiftLogic']
+						, $_REQUEST['filterSiftLogic']
 					);
 					if(!$addResult['success']){ 
 						$c = false; $result['error'] = $addResult['reason'];
@@ -430,14 +436,6 @@ if(isset($_REQUEST['a'])){
 					if($_REQUEST['retired'] != $feed->retired){ 
 						if($c){
 							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'retired', $_REQUEST['retired']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['siftlogic'] != $feed->siftlogic){ 
-						if($c){
-							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'siftlogic', $_REQUEST['siftlogic']);
 							if(!$alterResult['success']){ 
 								$c = false; $result['error'] = $alterResult['reason'];
 							}
@@ -530,6 +528,30 @@ if(isset($_REQUEST['a'])){
                             if(!$alterResult){
                                 $c = false; $result['error'] = 'Database failure, could not update incoming feed '
                                     .'parameter (filterUrl)';
+                            }
+                        }
+                    }
+                    if($_REQUEST['filterTypeSiftLogic'] != $feed->filterTypeSiftLogic){
+                        if($c){
+                            if($_REQUEST['filterTypeSiftLogic'] == 'null'){ $filterTypeSiftLogic = "NULL"; }
+                            else { $filterTypeSiftLogic = $_REQUEST['filterTypeSiftLogic']; }
+                            $alterResult = alterFeedIn(
+                                $_REQUEST['idFeedIn'], 'filterTypeSiftLogic', $filterTypeSiftLogic
+                            );
+                            if(!$alterResult){
+                                $c = false; $result['error'] = 'Database failure, could not update incoming feed '
+                                    .'parameter (filterTypeSiftLogic)';
+                            }
+                        }
+                    }
+                    if($_REQUEST['filterSiftLogic'] != $feed->filterSiftLogic){
+                        if($c){
+                            $alterResult = alterFeedIn(
+                                $_REQUEST['idFeedIn'], 'filterSiftLogic', $_REQUEST['filterSiftLogic']
+                            );
+                            if(!$alterResult){
+                                $c = false; $result['error'] = 'Database failure, could not update incoming feed '
+                                    .'parameter (filterSiftLogic)';
                             }
                         }
                     }
@@ -785,7 +807,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		case 'dialog_newfeed':
 			if(!isset($e)){ $e = 'new_'; $d = 'new'; }
 			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'retired', 'siftlogic'
+				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'retired', 
 			);
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
@@ -802,6 +824,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			}
             $explodableProperties = array(
                 'filterUrl',
+                'filterSiftLogic',
             );
             foreach($explodableProperties as $eP){
                 if( !isset($_REQUEST['options'][$eP]) ){
@@ -1066,15 +1089,67 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
                 </td>
         </tr>
 <?php  if( defined( 'SIFTLOGIC_APIKEY' ) ) { ?>
-	<tr>
-		<td><p>Sift Logic Verification</p></td>
-		<td>
-			<p>
-				<input type='radio' name='<?php echo $e; ?>feed_siftlogic' id='<?php echo $e; ?>feed_siftlogic_yes' value='1' <?php if( '1' == $feed_siftlogic ) { ?>checked='checked'<?php } ?>/> Enabled
-				<input type='radio' name='<?php echo $e; ?>feed_siftlogic' id='<?php echo $e; ?>feed_siftlogic_no' value='0' <?php if( '1' != $feed_siftlogic ) { ?>checked='checked'<?php } ?>/> Disabled
-			</p>
-		</td>
-	</tr>
+        <tr>
+                <td><p>SiftLogic Filter Options</p></td>
+                <td>
+                        <p>
+                                Using the 'Enabled' option, urls that are listed here will be filtered through SiftLogic.
+                        </p>
+                        <p>
+                                <input type='radio'
+                                        name='<?php echo $e; ?>feed_filterTypeSiftLogic'
+                                        id='<?php echo $e; ?>feed_filterTypeSiftLogic_disabled'
+                                        value='true'
+                                        <?php if(
+                                                empty($feed_filterTypeSiftLogic)
+                                        ){ ?>
+                                        checked='checked'
+                                        <?php } ?>
+                                        onclick="$('#<?php echo $e; ?>feed_toggler_filterTypeSiftLogic').hide();"
+                                /> Disabled<br />
+                                <input type='radio'
+                                        name='<?php echo $e; ?>feed_filterTypeSiftLogic'
+                                        id='<?php echo $e; ?>feed_filterTypeSiftLogic_accept'
+                                        value='true'
+                                        <?php if($feed_filterTypeSiftLogic == 'accept'){ ?>
+                                        checked='checked'
+                                        <?php } ?>
+                                        onclick="$('#<?php echo $e; ?>feed_toggler_filterTypeSiftLogic').show();"
+                                /> Enabled<br />
+                        </p>
+                        <div id='<?php echo $e; ?>feed_toggler_filterTypeSiftLogic'
+                                style='display:<?php
+                                        if(empty($feed_filterTypeSiftLogic)){ echo "none"; }
+                                        else { echo "block"; }
+                                ?>;'
+                        >
+                                <p>The following urls:</p>
+                                <p>
+                                        <a href='#' class='nonLink'
+                onclick='element("<?php echo $e; ?>feed_filterSiftLogic_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "SiftLogic" });'
+                                        >Add New URL to filter</a>
+                                        | <a href='#' class='nonLink'
+                                                onclick='element("<?php echo $e; ?>feed_filterSiftLogic_multipleInsert"<?php
+                                                ?>, "element_multifilter"<?php
+                                                ?>, { "e": "<?php echo $e; ?>"<?php
+                                                ?>, "type": "SiftLogic" });'
+                                        >Add Multiple</a>
+                                </p>
+                                <div id='<?php echo $e; ?>feed_filterSiftLogic_multipleInsert'></div>
+                                <div id='<?php echo $e; ?>feed_filterSiftLogic_container'>
+                                <?php foreach($feed_filterSiftLogic as $filterSiftLogic){ ?>
+                                        <div>
+                                                <input type='text'
+                                                        name='<?php echo $e; ?>feed_filterSiftLogic[]'
+                                                        value='<?php echo $filterSiftLogic; ?>'
+                                                />
+                                                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
+                                        </div>
+                                <?php } ?>
+                                </div>
+                        </div>
+                </td>
+        </tr>
 <?php  } ?>
 	<tr>
 		<td><p>Feed Status</p></td>
@@ -1715,11 +1790,20 @@ foreach($incomingAdditionalRequirementSettings as $f){
     filterUrl = $("input[name='"+c+"_"+idFeedIn+"_feed_filterUrl\\[\\]']")
         .map(function(){return $(this).val();}).get().join(";");
 
+    if($(e+'filterTypeSiftLogic_disabled').is(":checked")){
+        filterTypeSiftLogic = 'null';
+    }else if($(e+'filterTypeSiftLogic_accept').is(":checked")){
+        filterTypeSiftLogic = 'accept';
+    }else if($(e+'filterTypeSiftLogic_reject').is(":checked")){
+        filterTypeSiftLogic = 'reject';
+    }
+    filterSiftLogic = $("input[name='"+c+"_"+idFeedIn+"_feed_filterSiftLogic\\[\\]']")
+        .map(function(){return $(this).val();}).get().join(";");
+
 	if($(e+'dedupeEmail').is(":checked")){ dedupeEmail = 1;	} else { dedupeEmail = 0; }
 	if($(e+'dedupeLandline').is(":checked")){ dedupeLandline = 1;	} else { dedupeLandline = 0; }
 	if($(e+'dedupeCellphone').is(":checked")){ dedupeCellphone = 1;	} else { dedupeCellphone = 0; }
 	if($(e+'retired_yes').is(":checked")){ retired = 1; } else { retired = 0; }
-	if($(e+'siftlogic_yes').is(":checked")){ siftlogic = 1; } else { siftlogic = 0; }
 	if(c == 'new'){ 
 		dedupeAcross = $('input[name="'+c+'_feed_dedupeAcross"]:checked').val();
 	} else { 
@@ -1732,6 +1816,8 @@ foreach($incomingAdditionalRequirementSettings as $f){
 		+"\n"+"required: "+required
 		+"\n"+"allowedFields: "+allowedFields
 		+"\n"+"dedupeAcross: "+dedupeAcross
+		+"\n"+"filterUrl: "+filterUrl
+		+"\n"+"filterSiftLogic: "+filterSiftLogic
 	);  
 	return false; */
 	var response = $.ajax({
@@ -1753,7 +1839,8 @@ foreach($incomingAdditionalRequirementSettings as $f){
 			, "dedupeAcross": dedupeAcross
 			, "filterTypeUrl": filterTypeUrl
 			, "filterUrl": filterUrl
-			, "siftlogic": siftlogic
+			, "filterTypeSiftLogic": filterTypeSiftLogic
+			, "filterSiftLogic": filterSiftLogic
 			, "retired": retired
 		})
 	}).done(function(responseText){ 
