@@ -13,12 +13,12 @@ include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
 $title = 'Rejection Log';
 include("c_header.php");
 
-function getInboundRejections( $label ) {
+function getInboundRejections( $label, $offset = 0 ) {
 	dbCon();
 	$query = "SELECT received as timestamp,error,stamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip ";
 	$query.= "FROM `" . DATABASE_NAME . "`.`feedinc_" . $GLOBALS['dbconnx']->escape_string( $label ) . "_invalid` ";
 	$query.= "ORDER BY received DESC ";
-	$query.= "LIMIT 100";
+	$query.= "LIMIT " . intval( $offset ) . ",100";
 
 	$result = dbQry( $query, 'Getting inbound rejections', true );
 	dbDcon();
@@ -31,7 +31,7 @@ function getInboundRejections( $label ) {
 	return $values;
 }
 
-function getOutboundRejections( $label ) {
+function getOutboundRejections( $label, $offset = 0 ) {
 	dbCon();
 	$query = "SELECT o.poststamp as timestamp,o.postresponse as error,o.stamp,o.listcode,o.url,o.fname,o.lname,o.addr,o.addr2,o.city,o.state,o.zip,o.country,o.dob,o.gender,o.landline,o.cellphone,o.email,o.ip ";
 	$query.= "FROM `" . DATABASE_NAME . "`.`feedout_" . $GLOBALS['dbconnx']->escape_string( $label ) . "` o, `" . DATABASE_NAME . "`.feedout f ";
@@ -39,7 +39,7 @@ function getOutboundRejections( $label ) {
 	$query.= "AND o.processed = '1' ";
 	$query.= "AND o.postresponse NOT LIKE CONCAT('%',f.successString,'%') ";
 	$query.= "ORDER BY o.poststamp DESC ";
-	$query.= "LIMIT 100";
+	$query.= "LIMIT " . intval( $offset ) . ",100";
 
 	$result = dbQry($query, 'Getting outbound rejections', true);
 	dbDcon();
@@ -61,15 +61,16 @@ function getOutboundRejections( $label ) {
 
 $label = isset($_REQUEST['label']) ? $_REQUEST['label'] : '';
 $type = isset($_REQUEST['type']) ? $_REQUEST['type'] : '';
+$offset = isset($_REQUEST['offset']) ? $_REQUEST['offset'] : 0;
 
 if(empty($label) || empty($type)) {
 	print "<p>ERROR: Invalid parameters specified.</p>\n";
 } else {
 
 	if( $type == 'inbound' ) {
-		$records = getInboundRejections( $label );
+		$records = getInboundRejections( $label, $offset );
 	} else if( $type == 'outbound' ) {
-		$records = getOutboundRejections( $label );
+		$records = getOutboundRejections( $label, $offset );
 	} else {
 		print "<p>ERROR: Invalid type specified</p>\n";
 	}
@@ -135,6 +136,9 @@ if(empty($label) || empty($type)) {
 <?php		} //foreach ?>
 	</tbody>
 </table>
+
+<p><?php   printf('<a href="mgr_rejections.php?type=%s&amp;label=%s&amp;offset=%d">Next page</a>', urlencode( $type ), urlencode( $label ), intval( $offset + 100 ) ); ?></p>
+<br/>
 
 <?php }  ?>
 <?php }  ?>
