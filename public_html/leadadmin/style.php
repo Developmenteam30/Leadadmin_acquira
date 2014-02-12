@@ -1,8 +1,8 @@
 <?php
 header("Content-type: text/css; charset: UTF-8");
-include("../c_config.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_sitecustom.php");
+include("../../includes/c_config.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_sitecustom.php");
 ?>html { 	
 	margin: 0px; padding: 0px;
 	height: 100%;

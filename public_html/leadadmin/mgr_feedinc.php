@@ -4,12 +4,12 @@
 //ES20130722 Version 1.0: Company manager created.
 session_start();
 $mysqlErrorSource = 'Manager - Incoming Feeds';
-include("../c_config.php");
+include("../../includes/c_config.php");
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_feedinc"; 
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 
 function checkExistsLabelFeedIn($label){ 
 	//Returns quantity of matching records, or false if it fails.
@@ -1724,7 +1724,7 @@ id='<?php echo $e; ?>feed_filter<?php echo $t; ?>Multi' ></textarea>
 }
 
 $title = 'Incoming Feed Manager';
-include("c_header.php");
+include(INCLUDES."c_header.php");
 ?>
 <script type="text/javascript">
 function splitMultiFilter(e, t){
@@ -2006,7 +2006,7 @@ table.feedTable th, table.feedTable td { padding: 3px; }
 </style>
 <body>
 <div class='mainContainer'>
-	<?php include('c_nav.php'); ?>
+	<?php include(INCLUDES.'c_nav.php'); ?>
 	<div style='margin: auto;'>
 		<div id='controls'>
 			<a href='#' class='nonLink' onclick="display('dialog_newfeed');" 

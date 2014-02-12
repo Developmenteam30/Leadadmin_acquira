@@ -4,11 +4,11 @@
 //ES20130726 Version 1.0: Outgoing Feed Manager created.
 session_start();
 $mysqlErrorSource = 'Manager - Outgoing Feeds';
-include("../c_config.php");
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
+include("../../includes/c_config.php");
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 
 function checkExistsLabelFeedOut($label){ 
 	//Returns quantity of matching records, or false if it fails.
@@ -2266,7 +2266,7 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 }
 
 $title = 'Outgoing Feed Manager';
-include("c_header.php");
+include(INCLUDES."c_header.php");
 ?>
 <script>
 function manageFeed(action, idFeedOut){ 
@@ -2895,7 +2895,7 @@ $(document).ready(function(){
 </script>
 <body>
 <div class='mainContainer'>
-	<?php include('c_nav.php'); ?>
+	<?php include(INCLUDES.'c_nav.php'); ?>
 	<div style='margin: auto;'>
 		<div id='controls'>
 			<a href='#' class='nonLink' onclick="display('dialog_newfeedout');" 

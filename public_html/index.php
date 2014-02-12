@@ -1,5 +1,5 @@
 <?php
-	include("c_config.php");
+	include("../includes/c_config.php");
 ?>
 <html>
 

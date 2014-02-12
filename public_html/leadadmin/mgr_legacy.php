@@ -4,12 +4,12 @@
 //ES20130726 Version 1.0: Outgoing Feed Manager created.
 session_start();
 $mysqlErrorSource = 'Manager - Suppression';
-include("../c_config.php");
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
-include(LIVE_ROOT."processFunctions.php");
+include("../../includes/c_config.php");
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
+include(INCLUDES."processFunctions.php");
 
 function legacyPopulate( $feedId, $file = false ) {
 
@@ -54,7 +54,8 @@ function legacyPopulate( $feedId, $file = false ) {
 			}
 			$query .= "ORDER BY stamp DESC";
 
-	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId = '1385144823'";
+	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId = '1392144291'";
+	  		//$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE urlTrim = 'http://www.rewardcorporation.com'";
 
 			dbCon();
     		$result = dbQry( $query, 'Getting inbound records', true );
@@ -122,4 +123,4 @@ print "Records that match population filters: {$cnt}\n";
 
 }
 
-legacyPopulate( 148, false );
+legacyPopulate( 194, false );

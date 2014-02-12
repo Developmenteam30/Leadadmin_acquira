@@ -1,12 +1,12 @@
 <?php 
 session_start();
 $mysqlErrorSource = 'Manager - Listcodes';
-include("../c_config.php");
+include("../../includes/c_config.php");
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_listcodes"; 
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 
 function addListcode( $companyId, $description ) {
 	dbCon();
@@ -410,7 +410,7 @@ else {
 }
 
 $title = 'Listcode Manager';
-include("c_header.php");
+include(INCLUDES."c_header.php");
 ?>
 <body>
 <script type="text/javascript">
@@ -542,7 +542,7 @@ function saveUrls(idListcode, idCompany){
 
 </script>
 <div class='mainContainer'>
-	<?php include('c_nav.php'); ?>
+	<?php include(INCLUDES.'c_nav.php'); ?>
 	<div style='margin: auto;'>
         <div id='controls'>
             <a href='#' class='nonLink' onclick="display('dialog_newlistcode');">Add New Listcode</a>

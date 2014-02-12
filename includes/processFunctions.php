@@ -1,9 +1,9 @@
 <?php //live/processFunctions.php
 //Version 1.6
 //ES 20130820 1.6: Updated this script to utilize c_config constants.
-include("Array2XML.php");
-include("_f_validEmail.php");
-include("_f_validation.php");
+include(INCLUDES."Array2XML.php");
+include(INCLUDES."_f_validEmail.php");
+include(INCLUDES."_f_validation.php");
 
 function formaturl($url)
 {	
@@ -131,7 +131,7 @@ function logError($origination, $description, $notify = false){
 	$doinsertError = dbQry($insertError, 'Inserting log of script error.', true);
 	if($doinsertError === false){ 
 		//Store the error in a log file if the database fails.
-		$logFile = fopen(SITE_ROOT.".errorLog", "a");
+		$logFile = fopen(SITE_ROOT."error".FD."mysql", "a");
 		fwrite($logFile, $stamp.":(".$origination.") ".$description);
 		fclose($logFile);
 	}	
@@ -467,7 +467,7 @@ function checkSuppression( $email, $idCompany ) {
 
 function lockTables($feedLabel){
 	dbCon();
-	$lockQuery = "LOCK TABLE `".DATABASE_NAME."`.`feedinc_".$feedLabel."` WRITE, `".DATABASE_NAME."`.`feedinc_".$feedLabel."_invalid` WRITE, `".DATABASE_NAME."`.urlcount WRITE, `".DATABASE_NAME."`.urlcount_invalid WRITE, `".DATABASE_NAME."`.suppression_global READ, `".DATABASE_NAME."`.errorlog WRITE ";
+	$lockQuery = "LOCK TABLE `".DATABASE_NAME."`.`feedinc_".$feedLabel."` WRITE, `".DATABASE_NAME."`.`feedinc_".$feedLabel."_invalid` WRITE, `".DATABASE_NAME."`.urlcount WRITE, `".DATABASE_NAME."`.urlcount_invalid WRITE, `".DATABASE_NAME."`.suppression_global READ, `".DATABASE_NAME."`.errorlog WRITE, `".DATABASE_NAME."`.notifications WRITE ";
 	dbQry($lockQuery, 'Locking tables.', true);
 	dbDcon();
 }
@@ -558,6 +558,17 @@ function addOutboundRecord( $label, $listcode, $urlTrim, $url, $ip, $stamp, $ema
 			, true
 		);
 	}
+}
+
+function addNotification( $idFeedIn, $url ) {
+
+	$query  = "REPLACE INTO `".DATABASE_NAME."`.`notifications` (lastTime, notifyTime, idFeedIn, url) ";
+	$query .= "VALUES(NOW(), 0, ";
+    $query .= "'" . $GLOBALS['dbconnx']->escape_string( $idFeedIn ) . "', ";
+    $query .= "'" . $GLOBALS['dbconnx']->escape_string( $url ) . "' ";
+	$query .= " )";
+
+	$result = dbQry( $query, 'Populating notifications', true);
 }
 
 function checkPopulationFilters( $feed, $url, $email, $listcode ) {

@@ -1,13 +1,13 @@
 <?php 
 session_start();
 $mysqlErrorSource = 'Manager - Reports';
-include("../c_config.php");
+include("../../includes/c_config.php");
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_reports"; 
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
-include(LIVE_ROOT."processFunctions.php");
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
+include(INCLUDES."processFunctions.php");
 
 if(isset($_REQUEST['a'])){ 
 	$result = array(
@@ -603,7 +603,7 @@ $(document).ready(function(){
 }
 
 $title = 'Reports';
-include("c_header.php");
+include(INCLUDES."c_header.php");
 ?>
 <body>
 <script type="text/javascript">
@@ -612,7 +612,7 @@ $(document).ready(function(){
 });
 </script>
 <div class='mainContainer'>
-	<?php include('c_nav.php'); ?>
+	<?php include(INCLUDES.'c_nav.php'); ?>
 	<div style='margin: auto;'>
 		<div class='fl' style='width: 100%;'>
 			<div id='reports'></div>

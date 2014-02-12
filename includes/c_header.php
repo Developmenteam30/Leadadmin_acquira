@@ -14,6 +14,6 @@ if(!isset($title)){
 <link rel="stylesheet" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
 <script src='//code.jquery.com/jquery-2.0.3.js'></script>
 <script src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
-<script src='default.js'></script>
+<script src='./js/default.js'></script>
 
 </head>

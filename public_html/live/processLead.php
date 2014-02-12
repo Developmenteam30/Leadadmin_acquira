@@ -1,5 +1,5 @@
 <?php
-include("../c_config.php");
+include("../../includes/c_config.php");
 
 Header('Content-Type: text/xml');
 
@@ -27,8 +27,8 @@ if( $c ) {
 } else {
 	$mysqlErrorSource = 'Incoming Feed';
 }
-include(SITE_ROOT."_connx.php");
-include("processFunctions.php");
+include(INCLUDES."_connx.php");
+include(INCLUDES."processFunctions.php");
 
 if($c) { 
 	$feedParams = loadParameters($feedLabel);
@@ -170,7 +170,7 @@ if($c && $feedParams->dedupeCellphone && isset($_REQUEST['cellphone']) && $_REQU
 if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_null( $feedParams->filterTypeSiftLogic ) ) {
 	$filter = filterValue($feedParams->filterTypeSiftLogic, $_REQUEST['url'], $feedParams->filterSiftLogic);
 	if( $filter ) {
-		require 'siftLogic.php';
+		require INCLUDES.'siftLogic.php';
 		$sl = new SiftLogic;
 		if( $sl->check( $_REQUEST['email'], 
 						!empty( $_REQUEST['ip'] ) ? $_REQUEST['ip'] : null, 
@@ -199,6 +199,9 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 							);
 		}
 	}
+
+	if( !empty( $_REQUEST['urlTrim'] ) )
+		addNotification( $feedParams->idFeedIn, $_REQUEST['urlTrim'] );
 
 
 	$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."` ( `queryString`, `received` ";

@@ -4,14 +4,14 @@
 //ES20130722 Version 1.0: Company manager created.
 session_start();
 $mysqlErrorSource = 'Manager - Rejections';
-include("../c_config.php");
+include("../../includes/c_config.php");
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_companies"; 
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 $title = 'Rejection Log';
-include("c_header.php");
+include(INCLUDES."c_header.php");
 
 function getInboundRejections( $label, $offset = 0 ) {
 	dbCon();

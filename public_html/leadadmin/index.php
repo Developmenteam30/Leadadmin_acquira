@@ -2,10 +2,10 @@
 //ADMIN_ROOT/index.php
 session_start();
 $mysqlErrorSource = 'Index/Login';
-include("../c_config.php");
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
+include("../../includes/c_config.php");
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
 
 if(isset($_REQUEST['a'])){ 
 	$result = array(
@@ -32,7 +32,7 @@ if(isset($_REQUEST['a'])){
 				$username = $GLOBALS['dbconnx']->escape_string($username);
 				$password = $GLOBALS['dbconnx']->escape_string($password);
 				
-				include("PasswordHash.php");
+				include(INCLUDES."PasswordHash.php");
 				$pHasher = new PasswordHash(12, false);
 				$getUser = "SELECT * FROM `".DATABASE_NAME."`.`users` "
 					."WHERE `username` = '". $username ."';";
@@ -82,7 +82,7 @@ if($adminLoggedIn){
 }
 
 $title = CONFIG_COMPANY_NAME." Admin Panel";
-include("c_header.php");
+include(INCLUDES."c_header.php");
 ?>
 <script>
 function logIn(){ 

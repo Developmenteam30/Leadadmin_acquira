@@ -1,13 +1,13 @@
 <?php
 session_start();
 $mysqlErrorSource = 'Manager - File Import';
-include("../c_config.php");
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
-include(LIVE_ROOT."_f_validEmail.php");
-include(LIVE_ROOT."processFunctions.php");
+include("../../includes/c_config.php");
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
+include(INCLUDES."_f_validEmail.php");
+include(INCLUDES."processFunctions.php");
 
 ini_set("auto_detect_line_endings", true);
 set_time_limit(0);

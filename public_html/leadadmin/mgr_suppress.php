@@ -4,12 +4,12 @@
 //ES20130726 Version 1.0: Outgoing Feed Manager created.
 session_start();
 $mysqlErrorSource = 'Manager - Suppression';
-include("../c_config.php");
-include(SITE_ROOT."_connx.php");
-include(ADMIN_ROOT."loginCheck.php");
-include(ADMIN_ROOT."f_site.php");
-include(ADMIN_ROOT."c_loginRequired.php"); //Login is required for this page.
-include(LIVE_ROOT."_f_validEmail.php");
+include("../../includes/c_config.php");
+include(INCLUDES."_connx.php");
+include(INCLUDES."loginCheck.php");
+include(INCLUDES."f_site.php");
+include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
+include(INCLUDES."_f_validEmail.php");
 
 function getSuppressionCount($idCompany){
 	$getCount = "SELECT COUNT(*) FROM `".DATABASE_NAME."`.`suppression_".$idCompany."`;";
@@ -314,7 +314,7 @@ if(isset($_REQUEST['a'])){
 }
 
 if(isset($_REQUEST['d'])){ 
-	include("d_shared.php");
+	include(INCLUDES."d_shared.php");
 	switch($_REQUEST['d']){
 		case 'suppressionCounts':
 			$lists = array('global');
@@ -503,7 +503,7 @@ if(isset($_REQUEST['d'])){
 }
 
 $title = 'Suppressions Manager';
-include("c_header.php");
+include(INCLUDES."c_header.php");
 ?>
 <body>
 <script type="text/javascript">
@@ -656,7 +656,7 @@ $(document).ready(function(){
 });
 </script>
 <div class='mainContainer'>
-	<?php include('c_nav.php'); ?>
+	<?php include(INCLUDES.'c_nav.php'); ?>
 	<div style='margin: auto;'>
 		<div id='controls' class='fl50'>
 			<p>Suppression Manager</p>
