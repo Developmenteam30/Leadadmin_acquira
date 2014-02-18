@@ -95,7 +95,7 @@ function addFeedOut(
 			."KEY `postStamp` (`postStamp`), "
 			."KEY `processed` (`processed`), "
 			."KEY `urlTrimDate` (`urlTrim`,`postStamp`) "
-			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
+			.") AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateTable = dbQry($createTable, 'Creating table for feed out.', true);
 		if($docreateTable === false){ 
 			$c = false; $result['reason'] = 'Database failure - could not create feed out table.';

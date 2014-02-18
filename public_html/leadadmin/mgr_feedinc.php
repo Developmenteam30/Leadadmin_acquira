@@ -99,7 +99,7 @@ function addFeedIn(
 			."KEY `jobId` (`jobId`), "
 			."KEY `urlTrimDate` (`urlTrim`,`received`), "
 			."KEY `urlTrim` (`urlTrim`) "
-			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
+			.") AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
 		if($docreateValidsTable === false){ 
 			$c = false; $result['reason'] = 'Database failure - could not create valids table.';
@@ -132,7 +132,7 @@ function addFeedIn(
 			."`jobId` INT(6) default NULL, "
 			."PRIMARY KEY  (`idRecord`), "
 			."KEY `jobId` (`jobId`) "
-			.") ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
+			.") AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
 		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
 		if($docreateValidsTable === false){ 
 			$c = false; $result['reason'] = 'Database failure - could not create valids table.';
