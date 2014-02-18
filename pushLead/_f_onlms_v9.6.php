@@ -172,11 +172,6 @@ function lockfile()
 	if(!flock($results['lock'], LOCK_EX | LOCK_NB))
 	{
 		$settings['end'] = true;
-		logError(
-			'Outgoing Feed '.$settings['feedParams']->label
-			, 'Script already running. Script overlap.'
-			, false
-		);
 		echo "Script already running. Ending script.\n";
 	}
 	
