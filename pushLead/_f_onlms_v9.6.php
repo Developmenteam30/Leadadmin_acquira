@@ -149,7 +149,7 @@ function lockfile()
 	$locktime = microtime(true); //Record how long it takes to run this function
 	
 	$filename = $settings['feedParams']->label;	
-	$results['lockfile'] = ADMIN_ROOT."pushLead".FD."lockfiles".FD.$filename;
+	$results['lockfile'] = SITE_ROOT."pushLead".FD."lockfiles".FD.$filename;
 	if (!file_exists($results['lockfile']))
 	{
 		echo "Creating lockfile ".$results['lockfile']."\n"; @ob_flush(); flush();
