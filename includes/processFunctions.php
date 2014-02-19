@@ -136,6 +136,15 @@ function logError($origination, $description, $notify = false){
 		fclose($logFile);
 	}	
 	if($notify){ 
+
+		// Limit notification emails to one per minute to prevent flooding
+		$time = @file_get_contents( SITE_ROOT."error".FD."email-stamp" );
+		if( $time === FALSE || ( $time < ( time() - 60 ) ) ) {
+			file_put_contents( SITE_ROOT."error".FD."email-stamp", time() );
+		} else {
+			return;			
+		}
+
 		$from = 'lmsalerts@'.SITE_URL;
 		$body = 
 			"Error Report<br />"
