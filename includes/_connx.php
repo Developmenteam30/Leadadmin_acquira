@@ -28,6 +28,7 @@ function dbCon($level = 'selectOnly', $keepAlive = false)
 			DATABASE_HOST
 			, $GLOBALS['connxSettings'][$level]['u']
 			, $GLOBALS['connxSettings'][$level]['p']
+			, DATABASE_NAME
 		);
 	if(MIGRATING){ 
 		$GLOBALS['dbmigration'] = 
@@ -35,6 +36,7 @@ function dbCon($level = 'selectOnly', $keepAlive = false)
 				DATABASE_HOST_MIGRATION
 				, $GLOBALS['connxSettings'][$level]['u']
 				, $GLOBALS['connxSettings'][$level]['p']
+				, DATABASE_NAME
 			);
 	}
 	if(
