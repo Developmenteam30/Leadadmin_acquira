@@ -577,7 +577,8 @@ function addNotification( $idFeedIn, $url ) {
     $query .= "'" . $GLOBALS['dbconnx']->escape_string( $url ) . "' ";
 	$query .= " )";
 
-	$result = dbQry( $query, 'Populating notifications', true);
+	dbQry( $query, 'Populating notifications', true);
+	return $GLOBALS['dbconnx']->affected_rows;
 }
 
 function checkPopulationFilters( $feed, $url, $email, $listcode ) {

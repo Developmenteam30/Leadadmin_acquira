@@ -190,18 +190,16 @@ if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_n
 }
 if($c){ //Inputted information is validated, go ahead and insert the record into the database.
 
-    // Notify if this is the first time we've seen this URL on this feed
 	if( !empty( $_REQUEST['urlTrim'] ) ) {
-		$urlCount = checkExists( 'urlTrim', $_REQUEST, $feedParams->label );
-		if( $urlCount == 0 ) {
+		$rows = addNotification( $feedParams->idFeedIn, $_REQUEST['urlTrim'] );
+
+	    // Notify if this is the first time we've seen this URL on this feed
+		if( 1 === $rows ) {
 			notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
 										str_replace( '.', '*', $_REQUEST['urlTrim'] ) )
 							);
 		}
 	}
-
-	if( !empty( $_REQUEST['urlTrim'] ) )
-		addNotification( $feedParams->idFeedIn, $_REQUEST['urlTrim'] );
 
 
 	$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."` ( `queryString`, `received` ";
