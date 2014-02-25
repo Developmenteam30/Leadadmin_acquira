@@ -1,5 +1,7 @@
 <?php
 
+chdir(__DIR__);
+
 require( '../includes/c_config.php' );
 
 $mysqlErrorSource = 'Notification script';
