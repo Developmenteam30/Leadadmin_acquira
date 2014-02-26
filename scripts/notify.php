@@ -11,7 +11,7 @@ require( INCLUDES."processFunctions.php" );
 function sendNotification( $label, $feedId, $url, $time ) {
 	$to         = MANAGER_EMAIL;
 	$subject    = 'Dormant URL notification';
-	$body  = "\nThe following URL has gone dormant for more than 90 minutes:\n\n";
+	$body  = "\nThe following URL has gone dormant for more than 4 hours:\n\n";
 	$body .= "URL: {$url}\n\n";
 	$body .= "Feed: {$label} ({$feedId})\n\n";
 	$body .= "Last seen time: {$time}\n\n";
@@ -31,7 +31,7 @@ function sendNotification( $label, $feedId, $url, $time ) {
 
 dbCon();
 
-$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL 90 MINUTE) AND notifyTime = 0";
+$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL 4 HOUR) AND notifyTime = 0";
 
 if( $result = dbQry( $query, 'Getting notification URLs', true ) ) {
 	while ($obj = $result->fetch_object()) {
