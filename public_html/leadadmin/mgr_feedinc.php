@@ -1088,7 +1088,6 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
                         </div>
                 </td>
         </tr>
-<?php  if( defined( 'SIFTLOGIC_APIKEY' ) ) { ?>
         <tr>
                 <td><p>SiftLogic Filter Options</p></td>
                 <td>
@@ -1150,7 +1149,6 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
                         </div>
                 </td>
         </tr>
-<?php  } ?>
 	<tr>
 		<td><p>Feed Status</p></td>
 		<td>
@@ -1425,7 +1423,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 ?>
 <p>URL Report from Feed (ID:<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
 <input type='hidden' id='urlreport_idFeedIn' value='<?php echo $feed->idFeedIn; ?>' />
-<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+<table class='feedTable table-striped' border='1' cellpadding='0' cellspacing='0'>
 	<tr>
 		<td colspan='2'><p class='aCenter'>Report Settings</p></td>
 	</tr>
@@ -2024,3 +2022,4 @@ table.feedTable th, table.feedTable td { padding: 3px; }
 </div>
 </body>
 </html>
+
