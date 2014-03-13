@@ -124,7 +124,7 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 	else
 		print " ";
 
-	$result = validateIncomingData( $feedParams, &$data );
+	$result = validateIncomingData( $feedParams, $data );
 
 	if( $result['valid'] ) {
 

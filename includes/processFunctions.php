@@ -1,9 +1,9 @@
 <?php //live/processFunctions.php
 //Version 1.6
 //ES 20130820 1.6: Updated this script to utilize c_config constants.
-include(INCLUDES."Array2XML.php");
-include(INCLUDES."_f_validEmail.php");
-include(INCLUDES."_f_validation.php");
+include_once(INCLUDES."Array2XML.php");
+include_once(INCLUDES."_f_validEmail.php");
+include_once(INCLUDES."_f_validation.php");
 
 function formaturl($url)
 {	
