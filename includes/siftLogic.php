@@ -74,7 +74,7 @@ class SiftLogic {
 
 		if( ( isset( $values->results->subscriber_email_is_blacklisted ) && '1' == $values->results->subscriber_email_is_blacklisted ) || 'trap' == $values->status ) {
 
-			require_once( INCLUDES.'connx.php' );
+			require_once( INCLUDES.'_connx.php' );
 			dbCon();
 			$insert = "INSERT INTO `".DATABASE_NAME."`.`suppression_global` (`email`) VALUES ('".$GLOBALS['dbconnx']->escape_string($email)."');";
 			$doinsert = dbQry($insert, 'Inserting email into suppression', true, true, true); //Verbose result turned on.
