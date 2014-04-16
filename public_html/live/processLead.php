@@ -1,5 +1,5 @@
 <?php
-include("../../includes/c_config.php");
+require_once("../../includes/c_config.php");
 
 Header('Content-Type: text/xml');
 
@@ -118,7 +118,7 @@ if($c){ //Validation of incoming data.
 		}
 	}
 }
-if(in_array('url', $allowedFields)){ //URL is expected so trim it and store in the database.
+if( $c && in_array('url', $allowedFields)){ //URL is expected so trim it and store in the database.
 	if( !empty( $_REQUEST['url'] ) ){ 
 		$_REQUEST['urlTrim'] = url_reformat($_REQUEST['url']);
 	} else { 
@@ -296,8 +296,12 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 				$insertRecord .= ", ''";
 			}
 		}
-		if($allowedField == 'url'){ 
-			$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+		if($allowedField == 'url') {
+ 			if ( !empty( $_REQUEST['urlTrim'] ) ){ 
+				$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+			} else { 
+				$insertRecord .= ", ''";
+			}
 		}
 	}
 	$insertRecord .= ");";
@@ -309,7 +313,7 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 			, 'Database failure when attempting to insert invalid record. Check MySQL log file.'
 			, true
 		);
-	} else { //Successfully inserted into the data table, now insert into the count table.
+	} else if( !empty( $_REQUEST['url'] ) && !empty( $_REQUEST['urlTrim'] ) ) { //Successfully inserted into the data table, now insert into the count table.
 		$date = date("Y-m-d");
 		$insertCountChange = "INSERT INTO "
 			."`".DATABASE_NAME."`.`urlcount_invalid` (`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) "
@@ -333,13 +337,6 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 	}
 	dbDcon();
 }
-if($c){ 
-	$result['success'] = 'true';
-	$result['reason'] = 'Successfully inserted new record.';
-}
-$xml = Array2XML::createXML('response', $result);
-
-echo $xml->saveXML();
 
 unlockTables();
 
@@ -427,6 +424,51 @@ if($c){
 							, 'Database failure when populate outgoing feed '.$feed->label.'. Check MySQL log file.'
 							, true
 						);
+					} else {
+						$lastRecord = $GLOBALS['dbconnx']->insert_id;
+					}
+				}
+
+				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
+				if( $p && !empty( $lastRecord ) && !empty( $feed->livedata ) ) {
+					require_once SITE_ROOT . FD . 'pushLead/_f_onlms_v9.6.php';
+    
+					$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label."` "
+								."WHERE `processed` = '0' AND idRecord = " . $lastRecord ;
+					$dogetLead = dbQry($getLead, 'Fetching live lead to process', true);
+					if($dogetLead === false){
+						logError(
+							'Outgoing Feed '.$settings['feedParams']->label
+							, 'Database failure when trying to select leads for processing. View MySQL log.'
+							, true
+						);
+					} else if( $dogetLead->num_rows > 0 ) {
+
+						$feedOut = getOutgoingFeed( $feed->idFeedOut );
+						while( $row = $dogetLead->fetch_array( MYSQLI_ASSOC ) ) {
+
+							$status = runlead( $row, $feedOut );
+							if( isset( $status ) ) {
+
+								$update  = "UPDATE `".DATABASE_NAME."`.`feedout_".$feed->label."` ";
+								$update .= "SET processed = '1', poststamp = NOW(), postresponse = " . valueSet( $status['text'] ) . " ";
+								$update .= "WHERE idRecord = " . $lastRecord;
+								dbQry( $update, 'Update processed status of live record' );
+
+								if( isset( $status['status'] ) && $status['status'] != true ) {
+
+									$c = false;
+									$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
+									$xml = Array2XML::createXML('response', $result);
+									echo $xml->saveXML();
+									// Stop processing on error
+									return;
+
+								}
+
+							}
+						}
+
 					}
 				}
 			}
@@ -434,3 +476,10 @@ if($c){
 	}
 }
 
+if($c){ 
+	$result['success'] = 'true';
+	$result['reason'] = 'Successfully inserted new record.';
+}
+$xml = Array2XML::createXML('response', $result);
+
+echo $xml->saveXML();
