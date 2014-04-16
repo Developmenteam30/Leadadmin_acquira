@@ -2,11 +2,11 @@
 //Version 9.5
 //ES 2013 08 23 v9.5: Updated to add urlAssign field as a mappable, and compiled from the urlassignments parameter.
 chdir(dirname(__FILE__));
-include("../includes/c_config.php");
+require_once("../includes/c_config.php");
 $mysqlErrorSource = 'Outgoing Feed Process Script';
-include(INCLUDES."_connx.php");
-include(INCLUDES."processFunctions.php"); //Validation Functions
-include("_f_curl.php"); //Easy to use curl function
+require_once(INCLUDES."_connx.php");
+require_once(INCLUDES."processFunctions.php"); //Validation Functions
+require_once("_f_curl.php"); //Easy to use curl function
 //Constants for Script running
 define("MAX_RUNTIME_POST_QUERY", 15);
 define("MAX_RUNTIME_PROCESS", 35);
