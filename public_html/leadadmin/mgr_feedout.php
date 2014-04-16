@@ -175,6 +175,7 @@ function addPopulationParameter(
 	, $filterEmail
 	, $filterTypeListcode
 	, $filterListcode
+	, $livedata
 	, $forceUrl
 	, $forceUrlList
 ){ 
@@ -182,7 +183,7 @@ function addPopulationParameter(
 	$addParameter = "INSERT INTO `".DATABASE_NAME."`.`feedPopulation` "
 		."( "
 			."`enabled`,`idFeedIn`,`idFeedOut`,`filterTypeUrl`,`filterUrl`,`filterTypeEmail`,`filterEmail` "
-			.", `filterTypeListcode`,`filterListcode`, `forceUrl`, `forceUrlList` "
+			.", `filterTypeListcode`,`filterListcode`, `livedata`, `forceUrl`, `forceUrlList` "
 		.") VALUES ('1', "
 		."  ".$idFeedIn." "
 		.", ".$idFeedOut." "
@@ -192,6 +193,7 @@ function addPopulationParameter(
 		.", '".$GLOBALS['dbconnx']->escape_string($filterEmail)."' "
 		.", ".$filterTypeListcode." "
 		.", '".$GLOBALS['dbconnx']->escape_string($filterListcode)."' "
+		.", ".$livedata." "
 		.", ".$forceUrl." "
 		.", '".$GLOBALS['dbconnx']->escape_string($forceUrlList)."' "
 		.");";
@@ -490,6 +492,7 @@ if(isset($_REQUEST['a'])){
 						, $_REQUEST['filterEmail']
 						, $filterTypeListcode
 						, $_REQUEST['filterListcode']
+						, $_REQUEST['livedata']
 						, $_REQUEST['forceUrl']
 						, $_REQUEST['forceUrlList']
 					);
@@ -628,6 +631,17 @@ if(isset($_REQUEST['a'])){
 							if(!$alterResult){ 
 								$c = false; $result['error'] = 'Database failure, could not update population '
 									.'parameter (forceUrl)';
+							}
+						}
+					}
+					if($_REQUEST['livedata'] != $feed->livedata){ 
+						if($c){ 
+							$alterResult = alterPopulationParameter(
+								$_REQUEST['idAssoc'], 'livedata', $_REQUEST['livedata']
+							);
+							if(!$alterResult){ 
+								$c = false; $result['error'] = 'Database failure, could not update population '
+									.'parameter (livedata)';
 							}
 						}
 					}
@@ -1680,7 +1694,7 @@ if($populationSettings === false){
 			if(!isset($e)){ $e = 'new_'; }
 			$populationProperties = array(
 				'idAssoc', 'idFeedOut', 'idFeedIn', 'filterTypeUrl', 'filterTypeEmail'
-				, 'filterTypeListcode', 'forceUrl'
+				, 'filterTypeListcode', 'forceUrl', 'livedata'
 			);
 			foreach($populationProperties as $pP){ 
 				if(isset($popset)){ 
@@ -2011,6 +2025,20 @@ onclick='element("<?php echo $e; ?>popset_filterUrlList_container", "element_for
 					</div>
 				</div>
 			</div>
+		</td>
+	</tr>
+	<tr>
+		<td><p>Live data feed</p></td>
+		<td>
+			<p>
+				Incoming records will be sent to this provider in REAL TIME as they come in.  Do not use this option unless authorized.  Most feeds have this option disabled.
+			</p>
+			<p>
+				<input type='radio' name='<?php echo $e; ?>popset_livedata' id='<?php echo $e; ?>popset_livedata_disabled' value='true'
+					<?php if($popset_livedata != '1'){ ?> checked='checked' <?php } ?>/> Disabled (DEFAULT)<br />
+				<input type='radio' name='<?php echo $e; ?>popset_livedata' id='<?php echo $e; ?>popset_livedata_enabled' value='true'
+					<?php if($popset_livedata == '1'){ ?> checked='checked' <?php } ?>/> Enabled
+			</p>
 		</td>
 	</tr>
 	<tr>
@@ -2561,6 +2589,9 @@ function managePopulation(action, options){
 		forceUrlList += forceUrlList_originals[count]+"="+forceUrlList_altereds[count];
 		colonFlag = true;
 	}
+	if($(e+'livedata_disabled').is(":checked")){ livedata = '0'; }
+	else { livedata = '1'; }	
+
 	/* alert(
 		"idAssoc:"+idAssoc
 		+"\n"+"idFeedOut: "+idFeedOut
@@ -2608,6 +2639,7 @@ function managePopulation(action, options){
 				, "filterEmail":filterEmail
 				, "filterTypeListcode":filterTypeListcode
 				, "filterListcode":filterListcode
+				, "livedata":livedata
 				, "forceUrl":forceUrl
 				, "forceUrlList":forceUrlList
 			})
@@ -2627,6 +2659,7 @@ function managePopulation(action, options){
 						, "filterEmail":filterEmail
 						, "filterTypeListcode":filterTypeListcode
 						, "filterListcode":filterListcode
+						, "livedata":livedata
 						, "forceUrl":forceUrl
 						, "forceUrlList":forceUrlList
 					} 
@@ -2668,6 +2701,7 @@ function managePopulation(action, options){
 						, "filterEmail":filterEmail
 						, "filterTypeListcode":filterTypeListcode
 						, "filterListcode":filterListcode
+						, "livedata":livedata
 						, "forceUrl":forceUrl
 						, "forceUrlList":forceUrlList
 					} 
