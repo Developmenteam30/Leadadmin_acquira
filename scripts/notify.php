@@ -8,10 +8,10 @@ $mysqlErrorSource = 'Notification script';
 require( INCLUDES."_connx.php" );
 require( INCLUDES."processFunctions.php" );
 
-function sendNotification( $label, $feedId, $url, $time ) {
+function sendNotification( $label, $feedId, $url, $time, $hours ) {
 	$to         = MANAGER_EMAIL;
 	$subject    = 'Dormant URL notification';
-	$body  = "\nThe following URL has gone dormant for more than 6 hours:\n\n";
+	$body  = "\nThe following URL has gone dormant for more than {$hours} hours:\n\n";
 	$body .= "URL: {$url}\n\n";
 	$body .= "Feed: {$label} ({$feedId})\n\n";
 	$body .= "Last seen time: {$time}\n\n";
@@ -31,11 +31,23 @@ function sendNotification( $label, $feedId, $url, $time ) {
 
 dbCon();
 
-$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL 6 HOUR) AND notifyTime = 0";
+$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL 12 HOUR) AND notifyTime = 0";
 
 if( $result = dbQry( $query, 'Getting notification URLs', true ) ) {
 	while ($obj = $result->fetch_object()) {
-		sendNotification( $obj->label, $obj->idFeedIn, $obj->url, $obj->lastTime );
+		sendNotification( $obj->label, $obj->idFeedIn, $obj->url, $obj->lastTime, 12 );
+		$obj->url = $GLOBALS['dbconnx']->escape_string( $obj->url );
+		$obj->idFeedIn = $GLOBALS['dbconnx']->escape_string( $obj->idFeedIn );
+		dbQry( "UPDATE notifications SET notifyTime = NOW() WHERE url = '{$obj->url}' AND idFeedIn = '{$obj->idFeedIn}'", 'Update URL notification time', true );
+	}
+	$result->close();
+}
+
+$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL 24 HOUR) AND notifyTime < DATE_ADD(lastTime, INTERVAL 24 HOUR)";
+
+if( $result = dbQry( $query, 'Getting notification URLs', true ) ) {
+	while ($obj = $result->fetch_object()) {
+		sendNotification( $obj->label, $obj->idFeedIn, $obj->url, $obj->lastTime, 24 );
 		$obj->url = $GLOBALS['dbconnx']->escape_string( $obj->url );
 		$obj->idFeedIn = $GLOBALS['dbconnx']->escape_string( $obj->idFeedIn );
 		dbQry( "UPDATE notifications SET notifyTime = NOW() WHERE url = '{$obj->url}' AND idFeedIn = '{$obj->idFeedIn}'", 'Update URL notification time', true );
