@@ -3,6 +3,38 @@ require_once("../../includes/c_config.php");
 
 Header('Content-Type: text/xml');
 
+function updateStats( $idFeedOut, $url, $win, $fail, $skip ) {
+
+	$statsDate = date( 'Ym' );
+	$updateStats =
+                "INSERT INTO `".DATABASE_NAME."`.`statistics_".$statsDate."` "
+                ."( "
+                    ." `idFeedOut` "
+                    .", `url` "
+                    .", `urlRef` "
+                    .", `stamp` "
+                    .", `win` "
+                    .", `fail` "
+                    .", `skip` "
+                .") "
+                ."VALUES "
+                ."( "
+                    ."'".$idFeedOut."' "
+                    .", '".$url."' "
+                    .", '".url_reformat($url)."' "
+                    .", '".date('Y-m-d')."' "
+                    .", '".$win."' "
+                    .", '".$fail."' "
+                    .", '".$skip."' "
+                .") "
+                ."ON DUPLICATE KEY UPDATE "
+                ."`win` = `win`+".$win." "
+                .", `fail` = `fail`+".$fail." "
+                .", `skip` = `skip`+".$skip." "
+                .";";
+            $doupdateStats = dbQry($updateStats, 'Updating statistics.', true);
+}
+
 $c = true; 
 $result = array(
 	'success' => 'false'
@@ -118,7 +150,7 @@ if($c){ //Validation of incoming data.
 		}
 	}
 }
-if( $c && in_array('url', $allowedFields)){ //URL is expected so trim it and store in the database.
+if( in_array('url', $allowedFields ) ) { //URL is expected so trim it and store in the database.
 	if( !empty( $_REQUEST['url'] ) ){ 
 		$_REQUEST['urlTrim'] = url_reformat($_REQUEST['url']);
 	} else { 
@@ -188,6 +220,149 @@ if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_n
 		}
 	}
 }
+
+unlockTables();
+
+//Population Portion of the script. 
+if($c){ 
+	$feedsOut = getIncomingPopulationSettings($feedParams->idFeedIn);
+	if($feedsOut === false){ 
+		logError(
+			'Feed '.$feedLabel
+			, 'Database failure when attempting to load outgoing feed population parameters. Check MySQL log file.'
+			, true
+		);
+	} elseif(count($feedsOut) != 0 && $feedsOut != 0) { 
+		/*
+		logError(
+			'Feed '.$feedLabel
+			, 'Capturing information from feeds.'.print_r($feedsOut, true)
+			, false
+		);
+		*/
+		foreach($feedsOut as $feed){ 
+			if($feed->enabled){ 
+				$p = true;
+				if($p && !is_null($feed->filterTypeUrl)){
+					$urlAcceptable = filterValue($feed->filterTypeUrl, $_REQUEST['url'], $feed->filterUrl);
+					if(!$urlAcceptable){ 
+						$p = false;
+					}
+				}
+				if($p && !is_null($feed->filterTypeEmail)){
+					$domainAcceptable = filterValue($feed->filterTypeEmail, $_REQUEST['email'], $feed->filterEmail);
+					if(!$domainAcceptable){ 
+						$p = false;
+					}
+				}
+				if($p && !is_null($feed->filterTypeListcode)){
+					$listcodeAcceptable = filterValue($feed->filterTypeListcode, $_REQUEST['listcode'], $feed->filterListcode);
+					if(!$listcodeAcceptable){ 
+						$p = false;
+					}
+				}
+				// Ensure we haven't reached our daily limit of records
+				if($p && !is_null($feed->dailyLimit) && intval($feed->dailyLimit) > 0) {
+					$cnt = getOutboundDailyCount( $feed->label );
+					if( $cnt && $cnt > $feed->dailyLimit ) {
+						logError( 'Feed '.$feed->label, 'Daily feed limit of ' . $feed->dailyLimit . ' reached', false );
+						$p = false;
+					}
+				}
+				if($p){ 
+					$insertToFeedOut = 
+						"INSERT INTO `".DATABASE_NAME."`.`feedout_".$feed->label."` ( `processed` ";
+					foreach($allowedFields as $allowedField){ 
+						$insertToFeedOut .= ", `".$allowedField."` ";
+						if($allowedField == 'url'){ 
+							$insertToFeedOut .= ", `urlTrim` ";
+						}
+					}
+					$insertToFeedOut .= ") VALUES ( '0' ";
+					foreach($allowedFields as $allowedField){ 
+						if(isset($_REQUEST[$allowedField])){ 
+							if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
+								$insertToFeedOut .= ", 'No listcode'";
+							} elseif($allowedField == 'stamp'){ 
+								$insertToFeedOut .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
+							} else { 
+								$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
+							}
+						} else { 
+							if($allowedField == 'listcode'){ 
+								$insertToFeedOut .= ", 'No listcode'";
+							} else { 
+								$insertToFeedOut .= ", ''";
+							}
+						}
+						if($allowedField == 'url'){ 
+							$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+						}
+					}
+					$insertToFeedOut .= ");";
+					$doinsertRecord = dbQry($insertToFeedOut, 'Populating '.$feed->label, true);
+					if($doinsertRecord === false){ 
+						logError(
+							'Feed '.$feedLabel
+							, 'Database failure when populate outgoing feed '.$feed->label.'. Check MySQL log file.'
+							, true
+						);
+					} else {
+						$lastRecord = $GLOBALS['dbconnx']->insert_id;
+					}
+				}
+
+				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
+				if( $p && !empty( $lastRecord ) && !empty( $feed->livedata ) ) {
+					require_once SITE_ROOT . FD . 'pushLead/_f_onlms_v9.6.php';
+    
+					$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label."` "
+								."WHERE `processed` = '0' AND idRecord = " . $lastRecord ;
+					$dogetLead = dbQry($getLead, 'Fetching live lead to process', true);
+					if($dogetLead === false){
+						logError(
+							'Outgoing Feed '.$settings['feedParams']->label
+							, 'Database failure when trying to select leads for processing. View MySQL log.'
+							, true
+						);
+					} else if( $dogetLead->num_rows > 0 ) {
+
+						$feedOut = getOutgoingFeed( $feed->idFeedOut );
+						while( $c && ( $row = $dogetLead->fetch_array( MYSQLI_ASSOC ) ) ) {
+
+							$status = runlead( $row, $feedOut );
+							if( isset( $status ) ) {
+
+								$update  = "UPDATE `".DATABASE_NAME."`.`feedout_".$feed->label."` ";
+								$update .= "SET processed = '1', poststamp = NOW(), postresponse = " . valueSet( $status['text'] ) . " ";
+								$update .= "WHERE idRecord = " . $lastRecord;
+								dbQry( $update, 'Update processed status of live record' );
+
+								if( isset( $status['status'] ) && $status['status'] != true ) {
+
+									if( !empty( $_REQUEST['url'] ) )
+										updateStats( $feed->idFeedOut, $_REQUEST['url'], 0, 1, 0 );
+
+									$c = false;
+									$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
+
+								} else {
+
+									if( !empty( $_REQUEST['url'] ) )
+										updateStats( $feed->idFeedOut, $_REQUEST['url'], 1, 0, 0 );
+
+								}
+
+							}
+						}
+
+					}
+				}
+			}
+		}
+	}
+}
+
 if($c){ //Inputted information is validated, go ahead and insert the record into the database.
 
 	if( !empty( $_REQUEST['urlTrim'] ) ) {
@@ -338,148 +513,10 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 	dbDcon();
 }
 
-unlockTables();
-
-//Population Portion of the script. 
-if($c){ 
-	$feedsOut = getIncomingPopulationSettings($feedParams->idFeedIn);
-	if($feedsOut === false){ 
-		logError(
-			'Feed '.$feedLabel
-			, 'Database failure when attempting to load outgoing feed population parameters. Check MySQL log file.'
-			, true
-		);
-	} elseif(count($feedsOut) != 0 && $feedsOut != 0) { 
-		/*
-		logError(
-			'Feed '.$feedLabel
-			, 'Capturing information from feeds.'.print_r($feedsOut, true)
-			, false
-		);
-		*/
-		foreach($feedsOut as $feed){ 
-			if($feed->enabled){ 
-				$p = true;
-				if($p && !is_null($feed->filterTypeUrl)){
-					$urlAcceptable = filterValue($feed->filterTypeUrl, $_REQUEST['url'], $feed->filterUrl);
-					if(!$urlAcceptable){ 
-						$p = false;
-					}
-				}
-				if($p && !is_null($feed->filterTypeEmail)){
-					$domainAcceptable = filterValue($feed->filterTypeEmail, $_REQUEST['email'], $feed->filterEmail);
-					if(!$domainAcceptable){ 
-						$p = false;
-					}
-				}
-				if($p && !is_null($feed->filterTypeListcode)){
-					$listcodeAcceptable = filterValue($feed->filterTypeListcode, $_REQUEST['listcode'], $feed->filterListcode);
-					if(!$listcodeAcceptable){ 
-						$p = false;
-					}
-				}
-				// Ensure we haven't reached our daily limit of records
-				if($p && !is_null($feed->dailyLimit) && intval($feed->dailyLimit) > 0) {
-					$cnt = getOutboundDailyCount( $feed->label );
-					if( $cnt && $cnt > $feed->dailyLimit ) {
-						logError( 'Feed '.$feed->label, 'Daily feed limit of ' . $feed->dailyLimit . ' reached', false );
-						$p = false;
-					}
-				}
-				if($p){ 
-					$insertToFeedOut = 
-						"INSERT INTO `".DATABASE_NAME."`.`feedout_".$feed->label."` ( `processed` ";
-					foreach($allowedFields as $allowedField){ 
-						$insertToFeedOut .= ", `".$allowedField."` ";
-						if($allowedField == 'url'){ 
-							$insertToFeedOut .= ", `urlTrim` ";
-						}
-					}
-					$insertToFeedOut .= ") VALUES ( '0' ";
-					foreach($allowedFields as $allowedField){ 
-						if(isset($_REQUEST[$allowedField])){ 
-							if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
-								$insertToFeedOut .= ", 'No listcode'";
-							} elseif($allowedField == 'stamp'){ 
-								$insertToFeedOut .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
-							} else { 
-								$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
-							}
-						} else { 
-							if($allowedField == 'listcode'){ 
-								$insertToFeedOut .= ", 'No listcode'";
-							} else { 
-								$insertToFeedOut .= ", ''";
-							}
-						}
-						if($allowedField == 'url'){ 
-							$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
-						}
-					}
-					$insertToFeedOut .= ");";
-					$doinsertRecord = dbQry($insertToFeedOut, 'Populating '.$feed->label, true);
-					if($doinsertRecord === false){ 
-						logError(
-							'Feed '.$feedLabel
-							, 'Database failure when populate outgoing feed '.$feed->label.'. Check MySQL log file.'
-							, true
-						);
-					} else {
-						$lastRecord = $GLOBALS['dbconnx']->insert_id;
-					}
-				}
-
-				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
-				if( $p && !empty( $lastRecord ) && !empty( $feed->livedata ) ) {
-					require_once SITE_ROOT . FD . 'pushLead/_f_onlms_v9.6.php';
-    
-					$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label."` "
-								."WHERE `processed` = '0' AND idRecord = " . $lastRecord ;
-					$dogetLead = dbQry($getLead, 'Fetching live lead to process', true);
-					if($dogetLead === false){
-						logError(
-							'Outgoing Feed '.$settings['feedParams']->label
-							, 'Database failure when trying to select leads for processing. View MySQL log.'
-							, true
-						);
-					} else if( $dogetLead->num_rows > 0 ) {
-
-						$feedOut = getOutgoingFeed( $feed->idFeedOut );
-						while( $row = $dogetLead->fetch_array( MYSQLI_ASSOC ) ) {
-
-							$status = runlead( $row, $feedOut );
-							if( isset( $status ) ) {
-
-								$update  = "UPDATE `".DATABASE_NAME."`.`feedout_".$feed->label."` ";
-								$update .= "SET processed = '1', poststamp = NOW(), postresponse = " . valueSet( $status['text'] ) . " ";
-								$update .= "WHERE idRecord = " . $lastRecord;
-								dbQry( $update, 'Update processed status of live record' );
-
-								if( isset( $status['status'] ) && $status['status'] != true ) {
-
-									$c = false;
-									$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
-									$xml = Array2XML::createXML('response', $result);
-									echo $xml->saveXML();
-									// Stop processing on error
-									return;
-
-								}
-
-							}
-						}
-
-					}
-				}
-			}
-		}
-	}
-}
-
 if($c){ 
 	$result['success'] = 'true';
 	$result['reason'] = 'Successfully inserted new record.';
 }
-$xml = Array2XML::createXML('response', $result);
 
+$xml = Array2XML::createXML('response', $result);
 echo $xml->saveXML();
