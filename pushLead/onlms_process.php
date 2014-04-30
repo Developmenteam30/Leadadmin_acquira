@@ -10,7 +10,7 @@ if(!isset($_GET['v'])){
 }
 
 $version = $_GET['v'];
-include("_f_onlms_v".$version.".php");//all the functions necessary to run the script are included first.
+include("_f_onlms.php");//all the functions necessary to run the script are included first.
 //Versioning will allow for testing of new scripts parallel to actual operation
 
 main_pre();//all the functions taht occur before the settings variable is set.
