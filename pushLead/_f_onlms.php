@@ -12,6 +12,16 @@ define("MAX_RUNTIME_POST_QUERY", 15);
 define("MAX_RUNTIME_PROCESS", 35);
 define("MAX_SLAVE_LAG_ALLOWED", 1);
 
+function assignValue( $key, $value, &$requestdata ) {
+
+    if( strpos( $key, '|' ) !== FALSE ) {
+        $vars = explode('|', $key );
+        $requestdata[$vars[0]][$vars[1]] = $value;
+    } else {
+        $requestdata[$key] = $value;
+    }
+}
+
 function main_pre()
 { //main_pre VER 1.1	
 	global $runtime;
@@ -407,25 +417,25 @@ function runlead($leaddata, $fP)
 							}
 						}
 					}
-					$requestdata[$varFields[$count]] = $urlassignment;
+					assignValue( $varFields[$count], $urlassignment, $requestdata );
 				break;
 				case 'dobUS':
-					$requestdata[$varFields[$count]] = date("m-d-Y", strtotime($leaddata['dob']));
+					assignValue( $varFields[$count], date("m-d-Y", strtotime($leaddata['dob'])), $requestdata );
 				break;
 				case 'stampUS':
-					$requestdata[$varFields[$count]] = date("m-d-Y H:i:s", strtotime($leaddata['stamp']));
+					assignValue( $varFields[$count], date("m-d-Y H:i:s", strtotime($leaddata['stamp'])), $requestdata );
 				break;
 				case 'stampUS_dateOnly':
-					$requestdata[$varFields[$count]] = date("m-d-Y", strtotime($leaddata['stamp']));
+					assignValue( $varFields[$count], date("m-d-Y", strtotime($leaddata['stamp'])), $requestdata );
 				break;
 				case 'stampUSAMPM':
-					$requestdata[$varFields[$count]] = date("m-d-Y H:i:sA", strtotime($leaddata['stamp']));
+					assignValue( $varFields[$count], date("m-d-Y H:i:sA", strtotime($leaddata['stamp'])), $requestdata );
 				break;
 				case 'stampUS+AMPM':
-					$requestdata[$varFields[$count]] = date("m-d-Y H:i:s A", strtotime($leaddata['stamp']));
+					assignValue( $varFields[$count], date("m-d-Y H:i:s A", strtotime($leaddata['stamp'])), $requestdata );
 				break;
 				default: 
-					$requestdata[$varFields[$count]] = $leaddata[$fieldMap[$count]];
+					assignValue( $varFields[$count], $leaddata[$fieldMap[$count]], $requestdata );
 				break;
 			}
 		}
@@ -458,8 +468,22 @@ function runlead($leaddata, $fP)
 			)
 		);
 		
-	}
-	else { //Method is post
+	} else if( 'JSON' == $fP->feedType ) { //Method is JSON
+		if($settings['testing'] == 1) { 
+			echo "Posting data.\n"; @ob_flush(); flush();
+		}
+		$response['text'] = addslashes(
+			PushLead(
+				json_encode( $requestdata ),
+				$posturl, 
+				true,
+				false,
+				true,
+				false,
+				array( 'Content-Type: application/json' )
+			)
+		);
+	} else { //Method is post
 		if($settings['testing'] == 1) { 
 			echo "Posting data.\n"; @ob_flush(); flush();
 		}

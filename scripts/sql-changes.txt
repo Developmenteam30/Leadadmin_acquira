@@ -1,1 +1,2 @@
 ALTER TABLE feedPopulation ADD COLUMN livedata boolean NOT NULL DEFAULT 0;
+ALTER TABLE feedout MODIFY feedType ENUM('curlPOST','curlGET','JSON');

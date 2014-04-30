@@ -1242,14 +1242,9 @@ if($populationSettings === false){
 				<select name='<?php echo $e; ?>feed_feedType' 
 					id='<?php echo $e; ?>feed_feedType'
 				>
-					<option value='curlGET'
-					<?php if($feed_feedType == 'curlGET'){ 
-					?>selected='selected'<?php } ?>
-					>HTTP GET</option>
-					<option value='curlPOST'
-					<?php if($feed_feedType == 'curlPOST'){ 
-					?>selected='selected'<?php } ?>
-					>HTTP POST</option>
+					<option value='curlGET'<?php if($feed_feedType == 'curlGET'){ ?>selected='selected'<?php } ?>>HTTP GET</option>
+					<option value='curlPOST'<?php if($feed_feedType == 'curlPOST'){ ?>selected='selected'<?php } ?>>HTTP POST</option>
+					<option value='JSON'<?php if($feed_feedType == 'JSON'){ ?>selected='selected'<?php } ?>>JSON</option>
 				</select>
 			</p>
 		</td>

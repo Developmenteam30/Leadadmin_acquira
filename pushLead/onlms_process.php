@@ -4,12 +4,6 @@ include("_f_parseArgs.php");
 //Accepting argv into $_GET when running from PHP Bin.
 if(isset($argv) && is_array($argv)) { $_GET = array_merge($_GET, parseArgs($argv)); }
 
-//Version of functions to use
-if(!isset($_GET['v'])){ 
-	echo 'Failure to specify what version of the process script to use.'; exit;
-}
-
-$version = $_GET['v'];
 include("_f_onlms.php");//all the functions necessary to run the script are included first.
 //Versioning will allow for testing of new scripts parallel to actual operation
 
