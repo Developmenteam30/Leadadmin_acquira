@@ -2,8 +2,7 @@
 
 chdir(__DIR__);
 
-$cron_version = '9.6';
-include("_f_onlms_v".$cron_version.".php");//all the functions necessary to run the script are included first.
+include("_f_onlms.php");//all the functions necessary to run the script are included first.
 
 // Loop through the list of active feeds
 if ( ( $result = getActiveFeeds() ) ) {
