@@ -397,7 +397,7 @@ function runlead($leaddata, $fP)
 	foreach($staticFields as $sF) { //Compile Static Fields into the post array.
 		if($sF != '') { 
 			$fieldValuePair = explode("=", $sF);
-			$requestdata[$fieldValuePair[0]] = $fieldValuePair[1];
+			assignValue( $fieldValuePair[0], $fieldValuePair[1], $requestdata );
 		}
 	}
 	for($count = 0; $count < count($varFields); $count++) { //Compile mapped fields into the post array.
