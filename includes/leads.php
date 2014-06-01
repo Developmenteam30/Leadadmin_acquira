@@ -170,6 +170,27 @@ class Leads
 		}
 	}
 
+	public function addNotification( $idFeedIn, $url ) {
+
+		try {
+			$query = $this->db->prepare( "REPLACE INTO notifications (lastTime, notifyTime, idFeedIn, url) VALUES(NOW(), 0, ?, ?)" );
+			$query->execute( array( $idFeedIn, $this->parseUrl( $url ) ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to add notification record: ' . $e->getMessage() );
+			return;
+		}
+	}
+
+	public function deleteNotifications( $idFeedIn ) {
+		try {
+			$query = $this->db->prepare( "DELETE FROM notifications WHERE idFeedIn = ?" );
+			$query->execute( array( $idFeedIn ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete notification records: ' . $e->getMessage() );
+			return;
+		}
+	}
+
 	public function logError( $message ) {
 
 		$stamp = date('Y-m-d H:i:s');

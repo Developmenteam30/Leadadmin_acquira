@@ -10,6 +10,7 @@ include(INCLUDES."_connx.php");
 include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
 include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
+require_once( INCLUDES . 'leads.php' );
 
 function checkExistsLabelFeedIn($label){ 
 	//Returns quantity of matching records, or false if it fails.
@@ -39,6 +40,7 @@ function addFeedIn(
 	, $filterUrl
 	, $filterTypeSiftLogic
 	, $filterSiftLogic
+	, $notifications
 ){ 
 	$result = array(
 		'success' => false
@@ -49,7 +51,7 @@ function addFeedIn(
 	if($c){ //Add feed.
 		$addFeed = "INSERT INTO `".DATABASE_NAME."`.`feedinc` "
 			."(`label`,`description`,`idCompany`,`required`,`allowedFields`,`password`, "
-			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`, `filterTypeUrl`, `filterUrl`, `filterTypeSiftLogic`, `filterSiftLogic`) VALUES ( "
+			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`, `filterTypeUrl`, `filterUrl`, `filterTypeSiftLogic`, `filterSiftLogic`, `notifications`) VALUES ( "
 			."  '".$GLOBALS['dbconnx']->escape_string($label)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($description)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($idCompany)."' "
@@ -64,6 +66,7 @@ function addFeedIn(
 			.", '".$GLOBALS['dbconnx']->escape_string($filterUrl)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($filterTypeSiftLogic)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($filterSiftLogic)."' "
+			.", '".$GLOBALS['dbconnx']->escape_string($notifications)."' "
 			.");";
 		$doaddFeed = dbQry($addFeed, 'Adding new feed.', true);
 		if($doaddFeed === false){ 
@@ -384,6 +387,7 @@ if(isset($_REQUEST['a'])){
 						, $_REQUEST['filterUrl']
 						, $_REQUEST['filterTypeSiftLogic']
 						, $_REQUEST['filterSiftLogic']
+						, $_REQUEST['notifications']
 					);
 					if(!$addResult['success']){ 
 						$c = false; $result['error'] = $addResult['reason'];
@@ -497,10 +501,10 @@ if(isset($_REQUEST['a'])){
 							}
 						}
 					}
-					if($_REQUEST['dedupeAcross'] != $feed->dedupeAcross){ 
+					if( empty( $_REQUEST['dedupeAcross'] ) || $_REQUEST['dedupeAcross'] != $feed->dedupeAcross){ 
 						if($c){ //Validated, change label, change table names.
 							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'dedupeAcross', $_REQUEST['dedupeAcross']
+								$_REQUEST['idFeedIn'], 'dedupeAcross', empty( $_REQUEST['dedupeAcross'] ) ? '' : $_REQUEST['dedupeAcross']
 							);
 							if(!$alterResult['success']){ 
 								$c = false; $result['error'] = $alterResult['reason'];
@@ -553,6 +557,24 @@ if(isset($_REQUEST['a'])){
                                 $c = false; $result['error'] = 'Database failure, could not update incoming feed '
                                     .'parameter (filterSiftLogic)';
                             }
+                        }
+                    }
+                    if( $_REQUEST['notifications'] != $feed->notifications ){
+                        if($c){
+                            $alterResult = alterFeedIn(
+                                $_REQUEST['idFeedIn'], 'notifications', $_REQUEST['notifications']
+                            );
+                            if(!$alterResult){
+                                $c = false; $result['error'] = 'Database failure, could not update incoming feed '
+                                    .'parameter (notifications)';
+                            }
+
+							// Remove old notifications from the database if we've now disabled them
+							if( '0' == $_REQUEST['notifications'] ) {
+								$leads = Leads::getInstance();
+								$leads->deleteNotifications( $_REQUEST['idFeedIn'] );
+							}
+
                         }
                     }
 				}		
@@ -807,7 +829,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		case 'dialog_newfeed':
 			if(!isset($e)){ $e = 'new_'; $d = 'new'; }
 			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'retired', 
+				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'notifications', 'retired', 
 			);
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
@@ -817,6 +839,8 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 				}else { 
 					if(in_array($feedProp, array('dedupeEmail', 'dedupeLandline', 'dedupeCellphone'))){ 
 						${"feed_".$feedProp} = '0';
+					} else if(in_array($feedProp, array('notifications'))) {
+						${"feed_".$feedProp} = '1';
 					} else { 
 						${"feed_".$feedProp} = '';
 					}
@@ -1149,6 +1173,16 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
                         </div>
                 </td>
         </tr>
+	<tr>
+		<td><p>Notifications</p></td>
+		<td>
+			<p>Should we send dormant URL notifications for URLs in this feed?</p>
+			<p>
+				<input type='radio' name='<?php echo $e; ?>feed_notifications' id='<?php echo $e; ?>feed_notifications_yes' value='1' <?php if( '1' == $feed_notifications ) { ?>checked='checked'<?php } ?>/> Enabled
+				<input type='radio' name='<?php echo $e; ?>feed_notifications' id='<?php echo $e; ?>feed_notifications_no' value='0' <?php if( $feed_notifications != '1' ) { ?>checked='checked'<?php } ?>/> Disabled
+			</p>
+		</td>
+	</tr>
 	<tr>
 		<td><p>Feed Status</p></td>
 		<td>
@@ -1802,6 +1836,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 	if($(e+'dedupeLandline').is(":checked")){ dedupeLandline = 1;	} else { dedupeLandline = 0; }
 	if($(e+'dedupeCellphone').is(":checked")){ dedupeCellphone = 1;	} else { dedupeCellphone = 0; }
 	if($(e+'retired_yes').is(":checked")){ retired = 1; } else { retired = 0; }
+	if($(e+'notifications_yes').is(":checked")){ notifications = 1; } else { notifications = 0; }
 	if(c == 'new'){ 
 		dedupeAcross = $('input[name="'+c+'_feed_dedupeAcross"]:checked').val();
 	} else { 
@@ -1840,6 +1875,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 			, "filterTypeSiftLogic": filterTypeSiftLogic
 			, "filterSiftLogic": filterSiftLogic
 			, "retired": retired
+			, "notifications": notifications
 		})
 	}).done(function(responseText){ 
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);

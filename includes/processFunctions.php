@@ -569,18 +569,6 @@ function addOutboundRecord( $label, $listcode, $urlTrim, $url, $ip, $stamp, $ema
 	}
 }
 
-function addNotification( $idFeedIn, $url ) {
-
-	$query  = "REPLACE INTO `".DATABASE_NAME."`.`notifications` (lastTime, notifyTime, idFeedIn, url) ";
-	$query .= "VALUES(NOW(), 0, ";
-    $query .= "'" . $GLOBALS['dbconnx']->escape_string( $idFeedIn ) . "', ";
-    $query .= "'" . $GLOBALS['dbconnx']->escape_string( $url ) . "' ";
-	$query .= " )";
-
-	dbQry( $query, 'Populating notifications', true);
-	return $GLOBALS['dbconnx']->affected_rows;
-}
-
 function checkPopulationFilters( $feed, $url, $email, $listcode ) {
 
 	if( !is_null( $feed->filterTypeUrl ) ) {

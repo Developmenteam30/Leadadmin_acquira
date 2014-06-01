@@ -392,7 +392,10 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 		}
 
 		// Add an entry to the notification table to see if this feed goes dormant
-		addNotification( $feedParams->idFeedIn, $_REQUEST['urlTrim'] );
+		if( !empty( $feedParams->notifications ) ) {
+			$leads = Leads::getInstance();
+			$leads->addNotification( $feedParams->idFeedIn, $_REQUEST['url'] );
+		}
 	}
 
 
