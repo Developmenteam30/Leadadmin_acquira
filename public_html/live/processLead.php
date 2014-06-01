@@ -1,5 +1,6 @@
 <?php
 require_once("../../includes/c_config.php");
+require_once( INCLUDES . 'leads.php' );
 
 Header('Content-Type: text/xml');
 
@@ -223,6 +224,11 @@ if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_n
 
 unlockTables();
 
+if( !empty( $feedParams ) ) {
+	$leads = Leads::getInstance();
+	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $c ? null : $result['reason'], null );
+}
+
 //Population Portion of the script. 
 if($c){ 
 	$feedsOut = getIncomingPopulationSettings($feedParams->idFeedIn);
@@ -310,6 +316,9 @@ if($c){
 					} else {
 						$lastRecord = $GLOBALS['dbconnx']->insert_id;
 					}
+
+					$leads = Leads::getInstance();
+					$leads->outboundAdd( $inboundId, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['urlTrim'] );
 				}
 
 				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
@@ -338,18 +347,25 @@ if($c){
 								$update .= "WHERE idRecord = " . $lastRecord;
 								dbQry( $update, 'Update processed status of live record' );
 
-								if( isset( $status['status'] ) && $status['status'] != true ) {
+								$leads = Leads::getInstance();
 
-									if( !empty( $_REQUEST['url'] ) )
-										updateStats( $feed->idFeedOut, $_REQUEST['url'], 0, 1, 0 );
+								if( isset( $status['status'] ) && $status['status'] != true ) {
 
 									$c = false;
 									$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
 
+									if( !empty( $_REQUEST['url'] ) ) {
+										updateStats( $feed->idFeedOut, $_REQUEST['url'], 0, 1, 0 );
+										$leads->outboundProcess( $inboundId, $feed->idFeedOut, $_REQUEST['url'], $status['text'] );
+										$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $result['reason'] );
+									}
+
 								} else {
 
-									if( !empty( $_REQUEST['url'] ) )
+									if( !empty( $_REQUEST['url'] ) ) {
 										updateStats( $feed->idFeedOut, $_REQUEST['url'], 1, 0, 0 );
+										$leads->outboundProcess( $inboundId, $feed->idFeedOut, $_REQUEST['url'], null );
+									}
 
 								}
 
