@@ -41,6 +41,7 @@ function addFeedIn(
 	, $filterTypeSiftLogic
 	, $filterSiftLogic
 	, $notifications
+	, $rejectOldLeadsMaxAge
 ){ 
 	$result = array(
 		'success' => false
@@ -51,7 +52,7 @@ function addFeedIn(
 	if($c){ //Add feed.
 		$addFeed = "INSERT INTO `".DATABASE_NAME."`.`feedinc` "
 			."(`label`,`description`,`idCompany`,`required`,`allowedFields`,`password`, "
-			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`, `filterTypeUrl`, `filterUrl`, `filterTypeSiftLogic`, `filterSiftLogic`, `notifications`) VALUES ( "
+			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`, `filterTypeUrl`, `filterUrl`, `filterTypeSiftLogic`, `filterSiftLogic`, `notifications`, `rejectOldLeadsMaxAge`) VALUES ( "
 			."  '".$GLOBALS['dbconnx']->escape_string($label)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($description)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($idCompany)."' "
@@ -67,6 +68,7 @@ function addFeedIn(
 			.", '".$GLOBALS['dbconnx']->escape_string($filterTypeSiftLogic)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($filterSiftLogic)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($notifications)."' "
+			.", '".$GLOBALS['dbconnx']->escape_string($rejectOldLeadsMaxAge)."' "
 			.");";
 		$doaddFeed = dbQry($addFeed, 'Adding new feed.', true);
 		if($doaddFeed === false){ 
@@ -388,6 +390,7 @@ if(isset($_REQUEST['a'])){
 						, $_REQUEST['filterTypeSiftLogic']
 						, $_REQUEST['filterSiftLogic']
 						, $_REQUEST['notifications']
+						, $_REQUEST['rejectOldLeadsMaxAge']
 					);
 					if(!$addResult['success']){ 
 						$c = false; $result['error'] = $addResult['reason'];
@@ -574,6 +577,18 @@ if(isset($_REQUEST['a'])){
 								$leads = Leads::getInstance();
 								$leads->deleteNotifications( $_REQUEST['idFeedIn'] );
 							}
+
+                        }
+                    }
+                    if( $_REQUEST['rejectOldLeadsMaxAge'] != $feed->rejectOldLeadsMaxAge ){
+                        if($c){
+                            $alterResult = alterFeedIn(
+                                $_REQUEST['idFeedIn'], 'rejectOldLeadsMaxAge', $_REQUEST['rejectOldLeadsMaxAge']
+                            );
+                            if(!$alterResult){
+                                $c = false; $result['error'] = 'Database failure, could not update incoming feed '
+                                    .'parameter (rejectOldLeadsMaxAge)';
+                            }
 
                         }
                     }
@@ -829,7 +844,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		case 'dialog_newfeed':
 			if(!isset($e)){ $e = 'new_'; $d = 'new'; }
 			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'notifications', 'retired', 
+				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'notifications', 'retired', 'rejectOldLeadsMaxAge', 
 			);
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
@@ -841,6 +856,8 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 						${"feed_".$feedProp} = '0';
 					} else if(in_array($feedProp, array('notifications'))) {
 						${"feed_".$feedProp} = '1';
+					} else if(in_array($feedProp, array('rejectOldLeadsMaxAge'))) {
+						${"feed_".$feedProp} = '7 Days Ago';
 					} else { 
 						${"feed_".$feedProp} = '';
 					}
@@ -1173,6 +1190,15 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
                         </div>
                 </td>
         </tr>
+	<tr>
+		<td><p>Lead Rejections</p></td>
+		<td>
+			<p>How old are leads allowed to be before we reject them?  This should be a text string like "7 Days Ago" or "30 Days Ago".  Do not enter just a number.</p>
+			<p>
+				<input type='text' name='<?php echo $e; ?>feed_rejectOldLeadsMaxAge' id='<?php echo $e; ?>feed_rejectOldLeadsMaxAge' value='<?php echo $feed_rejectOldLeadsMaxAge; ?>' class='long' />
+			</p>
+		</td>
+	</tr>
 	<tr>
 		<td><p>Notifications</p></td>
 		<td>
@@ -1783,6 +1809,7 @@ function manageFeed(action, idFeedIn){
 	idFeedIn = $(e+'idFeedIn').val();
 	label = $(e+'label').val();
 	description = $(e+'description').val();
+	rejectOldLeadsMaxAge = $(e+'rejectOldLeadsMaxAge').val();
 	idCompany = $(e+'idCompany').val();
 	required = '';
 	allowedFields = '';
@@ -1842,6 +1869,12 @@ foreach($incomingAdditionalRequirementSettings as $f){
 	} else { 
 		dedupeAcross = $('input[name="'+c+'_'+idFeedIn+'_feed_dedupeAcross"]:checked').val();
 	}
+
+	var rejectFilter = /^\d+ Days Ago$/i;
+	if( !rejectFilter.test( rejectOldLeadsMaxAge ) ) {
+		alert( 'Invalid Lead Rejection Age' );
+		return false;
+	}
 	/* alert(
 		"label: "+label
 		+"\n"+"description: "+description
@@ -1876,6 +1909,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 			, "filterSiftLogic": filterSiftLogic
 			, "retired": retired
 			, "notifications": notifications
+			, "rejectOldLeadsMaxAge": rejectOldLeadsMaxAge
 		})
 	}).done(function(responseText){ 
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
