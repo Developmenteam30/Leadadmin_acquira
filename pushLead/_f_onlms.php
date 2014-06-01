@@ -509,6 +509,11 @@ function runlead($leaddata, $fP)
 		echo "Response information: \n";
 		print_r($response);
 	}
+
+	require_once( INCLUDES . 'leads.php' );
+	$leads = Leads::getInstance();
+	$leads->outboundProcess( $leaddata['idRecord'], $fP->idFeedOut, $leaddata['urlTrim'], ( $response['status'] ? null : trim( $response['text'] ) ) );
+
 	unset($requestdata);
 	return $response;
 }

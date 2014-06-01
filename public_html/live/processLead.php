@@ -318,7 +318,7 @@ if($c){
 					}
 
 					$leads = Leads::getInstance();
-					$leads->outboundAdd( $inboundId, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['urlTrim'] );
+					$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['urlTrim'] );
 				}
 
 				// If this is a "livedata" population, immediately try to send the record through to the receiving feed

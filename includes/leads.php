@@ -140,9 +140,10 @@ class Leads
 		}
 	}
 
-	public function outboundAdd( $idRecord, $idFeedIn, $idFeedOut, $url ) {
+	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url ) {
 		return $this->insertRow( 'data_outbound', array(
 			'idRecord' => $idRecord,
+			'idRecordLegacy' => $idRecordLegacy,
 			'idFeedIn' => $idFeedIn,
 			'idFeedOut' => $idFeedOut,
 		) );
@@ -150,7 +151,8 @@ class Leads
 
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
 		try {
-			$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecord = ? AND idFeedOut = ?' );
+			//$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecord = ?' );
+			$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
 			$query->execute( array( $error, $idRecord, $idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to update data_outbound record: ' . $e->getMessage() );
