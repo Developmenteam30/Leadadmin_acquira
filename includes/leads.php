@@ -180,7 +180,7 @@ class Leads
 			$query->execute( array( $idFeedIn ) );
 			$results = $query->fetch( );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to add notification record: ' . $e->getMessage() );
+			$this->logError( 'Unable to get inbound stats: ' . $e->getMessage() );
 		}
 
 		return $results;
@@ -194,7 +194,75 @@ class Leads
 			$query->execute( array( $idFeedIn ) );
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to add notification record: ' . $e->getMessage() );
+			$this->logError( 'Unable to get inbound URL stats: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getInboundURLDates( $idFeedIn ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT url,MIN(stamp) AS date FROM stats_inbound WHERE idFeedIn = ? GROUP BY url" );
+			$query->execute( array( $idFeedIn ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound URL dates: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getInboundURLStatsReport( $idFeedIn, $urlList, $breakdown, $dateStart, $dateEnd, $sort ) {
+		$results = array();
+
+		if( !empty( $urlList ) && is_array( $urlList ) ) {
+			$urlList =  implode(',', array_map( 'add_quotes', $urlList ) );
+		}
+
+		if( !empty( $breakdown ) && $breakdown == 'month' ) {
+			$query  = "SELECT url,LEFT(stamp,7) date,SUM(accepted) accepted,SUM(rejected) rejected ";
+		} else if( !empty( $breakdown ) && $breakdown == 'year' ) {
+			$query  = "SELECT url,LEFT(stamp,4) date,SUM(accepted) accepted,SUM(rejected) rejected ";
+		} else if( !empty( $breakdown ) && $breakdown == 'total' ) {
+			$query  = "SELECT url,'TOTAL' as date,SUM(accepted) accepted,SUM(rejected) rejected ";
+		} else {
+			$query  = "SELECT url,stamp AS date,SUM(accepted) accepted,SUM(rejected) rejected ";
+		}
+
+		$query .= "FROM stats_inbound ";
+		$query .= "WHERE idFeedIn = ? ";
+		if( !empty( $urlList ) ) {
+			$query .= "AND url IN (" . $urlList . ") ";
+		}
+
+		if( !empty( $dateStart ) && !empty( $dateEnd ) ) {
+			if( strtotime($dateStart) > strtotime($dateEnd) ) {
+				$dateStart = date("Y-m-d", strtotime($dateEnd));
+				$dateEnd = date("Y-m-d", strtotime($dateStart));
+			} else {
+				$dateStart = date("Y-m-d", strtotime($dateStart));
+				$dateEnd = date("Y-m-d", strtotime($dateEnd));
+			}
+			$query .= "AND stamp >= '".$dateStart."' AND stamp < '".$dateEnd."' ";
+		}
+			
+		$query .= "GROUP BY 1,2 ";
+		if( !empty( $sort ) && 'url' == $sort ) {
+			$query .= "ORDER BY 1,2";
+		} elseif( !empty( $sort ) && 'count' == $sort ) {
+			$query .= "ORDER BY 3,1";
+		} else {
+			$query .= "ORDER BY 2,1";
+		}
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $idFeedIn ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound URL dates: ' . $e->getMessage() );
 		}
 
 		return $results;

@@ -1515,11 +1515,12 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			</p>
 			<p>
 <?php
-				$urls = getIncomingUrlsWithDate( $feed->label );
+				$leads = Leads::getInstance();
+				$urls = $leads->getInboundURLDates( $idFeedIn );
 				if( $urls && is_array( $urls ) ) {
 					printf( "<select multiple=\"multiple\" id=\"urlreport_%s_urls\" size=\"%d\">\n", $idFeedIn, sizeOf( $urls ) );
 					foreach( $urls as $url ) {
-						printf( "<option value=\"%s\">%s (%s)</option>\n", htmlspecialchars( $url->urlTrim ), htmlspecialchars( $url->urlTrim ), $url->start );
+						printf( "<option value=\"%s\">%s (%s)</option>\n", htmlspecialchars( $url['url'] ), htmlspecialchars( $url['url'] ), $url['date'] );
 					}
 					print "</select>\n";
 				}
@@ -1577,47 +1578,12 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 <?php 
 			} else {
 
-				$urlList = '';
-				if( !empty( $_REQUEST['options']['urlList'] ) && is_array( $_REQUEST['options']['urlList'] ) ) {
-					$urlList =  implode(',', array_map( 'add_quotes', $_REQUEST['options']['urlList'] ) );
-				}
+				$leads = Leads::getInstance();
+				$stats = $leads->getInboundURLStatsReport( $_REQUEST['options']['idFeedIn'], $_REQUEST['options']['urlList'], $_REQUEST['options']['breakdown'], $_REQUEST['options']['dateStart'], $_REQUEST['options']['dateEnd'], $_REQUEST['options']['sort'] );
 
-				if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'month' )
-					$query  = "SELECT urlTrim,LEFT(received,7) date,COUNT(*) cnt ";
-				else if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'year' )
-					$query  = "SELECT urlTrim,LEFT(received,4) date,COUNT(*) cnt ";
-				else if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'total' )
-					$query  = "SELECT urlTrim,'TOTAL' as date,COUNT(*) cnt ";
-				else
-					$query  = "SELECT urlTrim,LEFT(received,10) date,COUNT(*) cnt ";
-
-				$query .= "FROM `".DATABASE_NAME."`.`feedinc_".$feed->label."` ";
-				$query .= "WHERE urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
-				if( !empty( $urlList ) ) {
-					$query .= "AND urlTrim IN (" . $urlList . ") ";
-				}
-				if( !empty( $_REQUEST['options']['dateStart'] ) && !empty( $_REQUEST['options']['dateEnd'] ) ) { 
-					if( strtotime($_REQUEST['options']['dateStart']) > strtotime($_REQUEST['options']['dateEnd']) ) { 
-						$dateStart = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateEnd']));
-						$dateEnd = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateStart']));
-					} else { 
-						$dateStart = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateStart']));
-						$dateEnd = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateEnd']));
-					}
-					$query .= "AND `received` >= '".$dateStart."' AND `received` < '".$dateEnd."' ";
-				}
-				$query .= "GROUP BY 1,2 ";
-				if( !empty( $_REQUEST['options']['sort'] ) && 'url' == $_REQUEST['options']['sort'] )
-					$query .= "ORDER BY 1,2";
-				elseif( !empty( $_REQUEST['options']['sort'] ) && 'count' == $_REQUEST['options']['sort'] )
-					$query .= "ORDER BY 3,1";
-				else
-					$query .= "ORDER BY 2,1";
-
-				$dofetchData = dbQry($query, 'Fetching specified data set.', true);
-				if( $dofetchData === false ) {
+				if( empty( $stats ) ) {
 ?>
-<p>Database failure - failed to run URL report query.</p>
+<p>No records found.</p>
 <?php 
 				} else {
 
@@ -1629,23 +1595,26 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 <p>Failed to create CSV report file.</p>
 <?php 
 					} else {
+						fputcsv( $file, array( 'URL', 'Date', 'Accepted', 'Rejected' ) );
 						print "<table class='urlTable'>\n";
 						print "<thead>\n";
 						print "\t<tr>\n";
 						print "\t<td>URL</td>\n";
 						print "\t<td>Date</td>\n";
-						print "\t<td>Count</td>\n";
+						print "\t<td>Accepted</td>\n";
+						print "\t<td>Rejected</td>\n";
 						print "\t</tr>\n";
 						print "</thead>\n";
 						print "<tbody>\n";
 						print "\t<tr>\n";
-						while($row = $dofetchData->fetch_object()) {
+						foreach( $stats as $stat ) {
 							print "\t<tr>\n";
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->urlTrim ) );
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->date ) );
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->cnt ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['url'] ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['date'] ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['accepted'] ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['rejected'] ) );
 							print "\t</tr>\n";
-							fputcsv( $file, array( $row->urlTrim, $row->date, $row->cnt ) );
+							fputcsv( $file, array( $stat['url'], $stat['date'], $stat['accepted'], $stat['rejected'] ) );
 						}
 						fclose($file);
 						print "</tbody>\n";
