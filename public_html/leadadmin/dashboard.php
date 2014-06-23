@@ -10,6 +10,7 @@ include(INCLUDES."_connx.php");
 include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
 include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
+require_once( INCLUDES . 'leads.php' );
 
 function storeFeedOutgoingAttribute($idFeedOut, $attribute, $value){ 
 	dbCon("insertUpdate");
@@ -125,26 +126,19 @@ if($incomingFeeds === false){
 	foreach($companyFeedLists as $idCompany => $companyFeedList){ 
 		$totalAccepted = 0;
 		$totalRejected = 0;
-		foreach($companyFeedList as $keyFeed => $feed){ 
-			$dailyCount = getDailyCount($feed->idFeedIn, date("Y-m-d"));
-			if($dailyCount === false){ 
-				$dailyCount = 'E';
-			} elseif(empty($dailyCount)){ 
-				$dailyCount = 0; 
-			} 			
-			$companyFeedList[$keyFeed]->dailyCount = $dailyCount;
-			if($dailyCount != 'E'){
-				$totalAccepted += $dailyCount;
-			}
-			
-			$dailyCountInvalid = getDailyCountInvalid($feed->idFeedIn, date("Y-m-d"));
-			if($dailyCountInvalid === false){ 
-				$dailyCountInvalid = 'E';
-			} elseif(empty($dailyCountInvalid)){ $dailyCountInvalid = 0; }
-			$companyFeedList[$keyFeed]->dailyCountInvalid = $dailyCountInvalid;
-			if($dailyCountInvalid != 'E'){
-				$totalRejected += $dailyCountInvalid;
-			}
+        
+		$leads = Leads::getInstance();
+        
+		foreach($companyFeedList as $keyFeed => $feed){
+
+			$stats = $leads->getInboundStats( $feed->idFeedIn );
+
+			$companyFeedList[$keyFeed]->dailyCount = $stats['accepted'];
+			$totalAccepted += $stats['accepted'];
+
+			$companyFeedList[$keyFeed]->dailyCountInvalid = $stats['rejected'];
+			$totalRejected += $stats['rejected'];
+
 		}
 ?>
 	<tr class='bgGray'>

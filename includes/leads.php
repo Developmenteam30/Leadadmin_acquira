@@ -172,8 +172,21 @@ class Leads
 		}
 	}
 
-	public function addNotification( $idFeedIn, $url ) {
+	public function getInboundStats( $idFeedIn ) {
+		$results = array( 'accepted' => 0, 'rejected' => 0 );
 
+		try {
+			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp = DATE_FORMAT(NOW(), '%Y-%m-%d') AND idFeedIn = ?" );
+			$query->execute( array( $idFeedIn ) );
+			$results = $query->fetch( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to add notification record: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function addNotification( $idFeedIn, $url ) {
 		try {
 			$query = $this->db->prepare( "REPLACE INTO notifications (lastTime, notifyTime, idFeedIn, url) VALUES(NOW(), 0, ?, ?)" );
 			$query->execute( array( $idFeedIn, $this->parseUrl( $url ) ) );
