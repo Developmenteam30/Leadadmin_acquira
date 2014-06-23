@@ -199,46 +199,37 @@ if($incomingFeeds === false){
 		break;
 		case 'feedinc':
 		
-		
-$idFeedIn = $_REQUEST['options']['sub'];		
-$feed = getIncomingFeed($idFeedIn);
-$date = date("Y-m-d");
-$urlBreakdown = getUrlsForDay($idFeedIn, $date);
-$urlBreakdown_invalid = getUrlsForDayInvalid($idFeedIn, $date);
+$idFeedIn = intval( $_REQUEST['options']['sub'] );
+$leads = Leads::getInstance();
+$urls = $leads->getInboundURLStats( $idFeedIn );
 ?>
-<hr />
 <div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("feedinc", { "sub":"<?php echo $idFeedIn; ?>"});' 
-	>Close [X]</a>
+	<a href='#' class='nonLink' onclick='closeContent("feedinc", { "sub":"<?php echo $idFeedIn; ?>"});' >Close [X]</a>
 </div>
-<p>URL Breakdown for <?php echo $feed->label; ?> (ID: <?php echo $feed->idFeedIn; ?>) : </p>
+<p>URL Breakdown</p>
 <?php
-if($urlBreakdown === false){ 
+if( empty( $urls ) ) {
 ?>
-<p>Database error when fetching URL list.</p>
-<?php
-} elseif($urlBreakdown == 0){ 
-?>
-<p>No URLs received for <?php echo $date; ?>.</p>
+<p>No URLs received today.</p>
 <?php
 } else { 
 ?>
 <table class='urlTable' cellpadding='0' cellspacing='0' border='1' style='width: 100%;'>
 	<thead>
 		<tr>
-			<th>Base URL</th>
-			<th>Full URL</th>
-			<th>Quantity</th>
+			<th>URL</th>
+			<th>Accepted</th>
+			<th>Rejected</th>
 		</tr>
 	</thead>
 	<tbody>
 <?php 
-	foreach($urlBreakdown as $urlEntry){ 
+	foreach( $urls as $url ){ 
 ?>
 		<tr>
-			<td><?php echo $urlEntry->urlTrim; ?></td>
-			<td><?php echo $urlEntry->urlFull; ?></td>
-			<td class='aRight'><?php echo $urlEntry->quantity; ?></td>
+			<td><?php echo $url['url']; ?></td>
+			<td class="aRight"><?php echo $url['accepted']; ?></td>
+			<td class="aRight"><?php echo $url['rejected']; ?></td>
 		</tr>
 <?php
 	}
@@ -248,44 +239,6 @@ if($urlBreakdown === false){
 <?php
 }
 ?>
-<p>URL Breakdown for rejected leads: </p>
-<?php
-if($urlBreakdown_invalid === false){ 
-?>
-<p>Database error when fetching URL list.</p>
-<?php
-} elseif($urlBreakdown_invalid == 0){ 
-?>
-<p>No URLs received for <?php echo $date; ?>.</p>
-<?php
-} else { 
-?>
-<table class='urlTable' cellpadding='0' cellspacing='0' border='1' style='width: 100%;'>
-	<thead>
-		<tr>
-			<th>Base URL</th>
-			<th>Full URL</th>
-			<th>Quantity</th>
-		</tr>
-	</thead>
-	<tbody>
-<?php 
-	foreach($urlBreakdown_invalid as $urlEntry){ 
-?>
-		<tr>
-			<td><?php echo $urlEntry->urlTrim; ?></td>
-			<td><?php echo $urlEntry->urlFull; ?></td>
-			<td class='aRight'><?php echo $urlEntry->quantity; ?></td>
-		</tr>
-<?php
-	}
-?>
-	</tbody>
-</table>
-<?php
-}
-?>
-<hr />
 <?php
 		
 		break;

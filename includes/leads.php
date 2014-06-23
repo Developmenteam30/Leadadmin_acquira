@@ -186,6 +186,20 @@ class Leads
 		return $results;
 	}
 
+	public function getInboundURLStats( $idFeedIn ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT url,IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp = DATE_FORMAT(NOW(), '%Y-%m-%d') AND idFeedIn = ? GROUP BY url" );
+			$query->execute( array( $idFeedIn ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to add notification record: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function addNotification( $idFeedIn, $url ) {
 		try {
 			$query = $this->db->prepare( "REPLACE INTO notifications (lastTime, notifyTime, idFeedIn, url) VALUES(NOW(), 0, ?, ?)" );
