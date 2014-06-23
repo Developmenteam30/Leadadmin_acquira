@@ -193,6 +193,90 @@ class Leads
 		}
 	}
 
+	public function archiveErrors() {
+		try {
+			$query = $this->db->prepare( "DELETE FROM errorlog WHERE stamp <= DATE_SUB(NOW(), INTERVAL 15 DAY)" );
+			$query->execute( );
+			return $query->rowCount();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete old errorlog entries: ' . $e->getMessage() );
+		}
+
+		return -1;
+	}
+
+	public function archiveInbound( ) {
+		try {
+			$query = $this->db->prepare( "DELETE FROM data_inbound WHERE result IS NOT NULL" );
+			$query->execute( );
+			return $query->rowCount();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete old data_inbound entries: ' . $e->getMessage() );
+		}
+
+		return -1;
+	}
+
+	public function getLegacyInboundTables() {
+		try {
+			$query = $this->db->prepare( "SHOW TABLES LIKE 'feedinc_%_invalid'" );
+			$query->execute( );
+			return $query->fetchAll();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get old legacy inbound tables: ' . $e->getMessage() );
+		}
+
+		return null;
+	}
+
+	public function archiveLegacyInbound( $table ) {
+		try {
+			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( $table ) . " WHERE received <= DATE_SUB(NOW(), INTERVAL 15 DAY)" );
+			$query->execute( );
+			return $query->rowCount();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete old legacy inbound entries: ' . $e->getMessage() );
+		}
+
+		return -1;
+	}
+
+	public function archiveOutbound( $idFeedOut, $success ) {
+		try {
+			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND timestamp IS NOT NULL AND timestamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND result NOT LIKE ?" );
+			$query->execute( array( $idFeedOut, $success ) );
+			return $query->rowCount();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete old data_outbound entries: ' . $e->getMessage() );
+		}
+
+		return -1;
+	}
+
+	public function getOutboundTables() {
+		try {
+			$query = $this->db->prepare( "SELECT label,successString,idFeedOut FROM feedout" );
+			$query->execute( );
+			return $query->fetchAll();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get old legacy outbound tables: ' . $e->getMessage() );
+		}
+
+		return null;
+	}
+
+	public function archiveLegacyOutbound( $table, $success ) {
+		try {
+			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $table ) . " WHERE poststamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND processed = '1' AND postresponse NOT LIKE ?" );
+			$query->execute( array( '%' . $success . '%' ) );
+			return $query->rowCount();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete old legacy outbound entries: ' . $e->getMessage() );
+		}
+
+		return -1;
+	}
+
 	public function logError( $message ) {
 
 		$stamp = date('Y-m-d H:i:s');
