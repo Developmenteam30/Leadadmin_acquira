@@ -176,7 +176,7 @@ if($incomingFeeds === false){
 		<td class='fTI_label'><p><?php echo $feed->label; ?></p></td>
 		<td class='fTI_description'><p><?php echo $feed->description; ?></p></td>
 		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
-		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
+		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
 			<p>
 				<a href='#' class='nonLink' 
@@ -361,7 +361,7 @@ if($outgoingFeeds === false){
 		<td class='fTO_label'><p><?php echo $feed->label; ?></p></td>
 		<td class='fTO_description'><p><?php echo $feed->description; ?></p></td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->accepted; ?></p></td>
-		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></p></td>
+		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></p></td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->queued; ?></p></td>
 		<td class='fTO_options'>
 			<p>&nbsp;</p>

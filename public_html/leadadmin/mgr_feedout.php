@@ -964,7 +964,7 @@ if($outgoingFeeds === false){
 			</p>
 		</td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->accepted; ?></p></td>
-		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></p></td>
+		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></p></td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->queued; ?></p></td>
 		<td class='fTO_options'>
 			<p>

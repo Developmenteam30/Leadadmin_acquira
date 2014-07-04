@@ -13,44 +13,8 @@ include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 $title = 'Rejection Log';
 include(INCLUDES."c_header.php");
 
-function getInboundRejections( $label, $offset = 0 ) {
-	dbCon();
-	$query = "SELECT received as timestamp,error,stamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip ";
-	$query.= "FROM `" . DATABASE_NAME . "`.`feedinc_" . $GLOBALS['dbconnx']->escape_string( $label ) . "_invalid` ";
-	$query.= "ORDER BY received DESC ";
-	$query.= "LIMIT " . intval( $offset ) . ",100";
-
-	$result = dbQry( $query, 'Getting inbound rejections', true );
-	dbDcon();
-	if( $result === false ) { return false; }
-	if( $result->num_rows == 0 ) { return 0; }
-	$values = array();
-	while( $row = $result->fetch_object() ){
-		$values[] = $row;
-	}
-	return $values;
-}
-
-function getOutboundRejections( $label, $offset = 0 ) {
-	dbCon();
-	$query = "SELECT o.poststamp as timestamp,o.postresponse as error,o.stamp,o.listcode,o.url,o.fname,o.lname,o.addr,o.addr2,o.city,o.state,o.zip,o.country,o.dob,o.gender,o.landline,o.cellphone,o.email,o.ip ";
-	$query.= "FROM `" . DATABASE_NAME . "`.`feedout_" . $GLOBALS['dbconnx']->escape_string( $label ) . "` o, `" . DATABASE_NAME . "`.feedout f ";
-	$query.= "WHERE f.label = '" . $GLOBALS['dbconnx']->escape_string( $label ) . "' ";
-	$query.= "AND o.processed = '1' ";
-	$query.= "AND o.postresponse NOT LIKE CONCAT('%',f.successString,'%') ";
-	$query.= "ORDER BY o.poststamp DESC ";
-	$query.= "LIMIT " . intval( $offset ) . ",100";
-
-	$result = dbQry($query, 'Getting outbound rejections', true);
-	dbDcon();
-	if( $result === false ) { return false; }
-	if( $result->num_rows == 0 ) { return 0; }
-	$values = array();
-	while( $row = $result->fetch_object() ){
-		$values[] = $row;
-	}
-	return $values;
-}
+require_once( INCLUDES . 'leads.php' );
+$leads = Leads::getInstance();
 
 ?>
 
@@ -62,22 +26,23 @@ function getOutboundRejections( $label, $offset = 0 ) {
 $label = isset($_REQUEST['label']) ? $_REQUEST['label'] : '';
 $type = isset($_REQUEST['type']) ? $_REQUEST['type'] : '';
 $offset = isset($_REQUEST['offset']) ? $_REQUEST['offset'] : 0;
+$id = isset($_REQUEST['id']) ? $_REQUEST['id'] : 0;
 
-if(empty($label) || empty($type)) {
+if(empty($id) || empty($type)) {
 	print "<p>ERROR: Invalid parameters specified.</p>\n";
 } else {
 
 	if( $type == 'inbound' ) {
-		$records = getInboundRejections( $label, $offset );
+		$records = $leads->getInboundRejections( $id, $offset );
 	} else if( $type == 'outbound' ) {
-		$records = getOutboundRejections( $label, $offset );
+		$records = $leads->getOutboundRejections( $id, $offset );
 	} else {
 		print "<p>ERROR: Invalid type specified</p>\n";
 	}
 
 	if( $records === false ) {
 		print "<p>ERROR: Cannot get records from database</p>\n";
-	} else if ( $records == 0 ) {
+	} else if ( sizeOf( $records ) == 0 ) {
 		print "<p>ERROR: No rejections exist for this feed</p>\n";
 	} else {
 ?>
@@ -112,32 +77,32 @@ if(empty($label) || empty($type)) {
 	<tbody>
 <?php		foreach($records as $record) {  ?>
 	<tr>
-		<td><?php echo htmlspecialchars($record->timestamp); ?></td>
-		<td class="error" colspan="9"><?php echo htmlspecialchars($record->error); ?></td>
-		<td><?php echo htmlspecialchars($record->url); ?></td>
-		<td><?php echo htmlspecialchars($record->email); ?></td>
-		<td><?php echo htmlspecialchars($record->stamp); ?></td>
+		<td><?php echo htmlspecialchars($record['timestamp']); ?></td>
+		<td class="error" colspan="9"><?php echo htmlspecialchars($record['result']); ?></td>
+		<td><?php echo htmlspecialchars($record['url']); ?></td>
+		<td><?php echo htmlspecialchars($record['email']); ?></td>
+		<td><?php echo htmlspecialchars($record['leadstamp']); ?></td>
 	</tr>
 	<tr>
-		<td><?php echo htmlspecialchars($record->fname); ?></td>
-		<td><?php echo htmlspecialchars($record->lname); ?></td>
-		<td><?php echo htmlspecialchars($record->addr); ?></td>
-		<td><?php echo htmlspecialchars($record->addr2); ?></td>
-		<td><?php echo htmlspecialchars($record->city); ?></td>
-		<td><?php echo htmlspecialchars($record->state); ?></td>
-		<td><?php echo htmlspecialchars($record->zip); ?></td>
-		<td><?php echo htmlspecialchars($record->country); ?></td>
-		<td><?php echo htmlspecialchars($record->dob); ?></td>
-		<td><?php echo htmlspecialchars($record->gender); ?></td>
-		<td><?php echo htmlspecialchars($record->landline); ?></td>
-		<td><?php echo htmlspecialchars($record->cellphone); ?></td>
-		<td><?php echo htmlspecialchars($record->ip); ?></td>
+		<td><?php echo htmlspecialchars($record['fname']); ?></td>
+		<td><?php echo htmlspecialchars($record['lname']); ?></td>
+		<td><?php echo htmlspecialchars($record['addr']); ?></td>
+		<td><?php echo htmlspecialchars($record['addr2']); ?></td>
+		<td><?php echo htmlspecialchars($record['city']); ?></td>
+		<td><?php echo htmlspecialchars($record['state']); ?></td>
+		<td><?php echo htmlspecialchars($record['zip']); ?></td>
+		<td><?php echo htmlspecialchars($record['country']); ?></td>
+		<td><?php echo htmlspecialchars($record['dob']); ?></td>
+		<td><?php echo htmlspecialchars($record['gender']); ?></td>
+		<td><?php echo htmlspecialchars($record['landline']); ?></td>
+		<td><?php echo htmlspecialchars($record['cellphone']); ?></td>
+		<td><?php echo htmlspecialchars($record['ip']); ?></td>
 	</tr>
 <?php		} //foreach ?>
 	</tbody>
 </table>
 
-<p><?php   printf('<a href="mgr_rejections.php?type=%s&amp;label=%s&amp;offset=%d">Next page</a>', urlencode( $type ), urlencode( $label ), intval( $offset + 100 ) ); ?></p>
+<p><?php   printf('<a href="mgr_rejections.php?type=%s&amp;id=%s&amp;label=%s&amp;offset=%d">Next page</a>', urlencode( $type ), urlencode( $id ), urlencode( $label ), intval( $offset + 100 ) ); ?></p>
 <br/>
 
 <?php }  ?>

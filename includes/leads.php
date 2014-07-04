@@ -172,6 +172,34 @@ class Leads
 		}
 	}
 
+	public function getInboundRejections( $idFeedIn, $offset = 0 ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT timestamp,result,leadstamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL ORDER BY timestamp DESC LIMIT " . intval( $offset ) . ",100" );
+			$query->execute( array( $idFeedIn ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound rejections: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getOutboundRejections( $idFeedOut, $offset = 0 ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT o.timestamp,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.timestamp IS NOT NULL AND o.result NOT LIKE CONCAT('%',f.successString,'%') ORDER BY o.timestamp DESC LIMIT " . intval( $offset ) . ",100" );
+			$query->execute( array( $idFeedOut ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound rejections: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function getInboundStats( $idFeedIn ) {
 		$results = array( 'accepted' => 0, 'rejected' => 0 );
 
