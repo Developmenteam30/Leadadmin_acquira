@@ -141,12 +141,51 @@ class Leads
 	}
 
 	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url ) {
-		return $this->insertRow( 'data_outbound', array(
+		$status = $this->insertRow( 'data_outbound', array(
 			'idRecord' => $idRecord,
 			'idRecordLegacy' => $idRecordLegacy,
 			'idFeedIn' => $idFeedIn,
 			'idFeedOut' => $idFeedOut,
 		) );
+
+		if( $status !== null ) {
+			try {
+				$query = $this->db->prepare( "REPLACE INTO url_mapping(timestamp,idFeedIn,idFeedOut,url) VALUES(NOW(), ?, ?, ?)" );
+				$query->execute( array( $idFeedIn, $idFeedOut, $this->parseUrl( $url ) ) );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
+				return $status;
+			}
+		}
+
+		return $status;
+	}
+
+//REMOVE
+	public function getLastTime( $label, $url ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT MAX(stamp) FROM feedout_{$label} WHERE urlTrim = ?" );
+			$query->execute( array( $url ) );
+			$results = $query->fetch( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get last URL time: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+//REMOVE
+	public function addMapping( $idFeedIn, $idFeedOut, $url, $time ) {
+			try {
+				$query = $this->db->prepare( "REPLACE INTO url_mapping(timestamp,idFeedIn,idFeedOut,url) VALUES(?, ?, ?, ?)" );
+				$query->execute( array( $time, $idFeedIn, $idFeedOut, $this->parseUrl( $url ) ) );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
+				return $status;
+			}
+
 	}
 
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
@@ -170,6 +209,39 @@ class Leads
 			$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
 			return;
 		}
+	}
+
+	public function getUrlMappings() {
+		$results = array();
+
+		$query  = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ) ";
+
+		$query .= "UNION ALL ";
+
+		$query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
+		$query .= "FROM stats_inbound s ";
+		$query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
+		$query .= "WHERE m.url IS NULL ";
+		$query .= "GROUP BY 4 ) ";
+
+		$query .= "ORDER BY 1,2,4,5,6 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get URL mappings: ' . $e->getMessage() );
+		}
+
+		return $results;
 	}
 
 	public function getInboundRejections( $idFeedIn, $offset = 0 ) {

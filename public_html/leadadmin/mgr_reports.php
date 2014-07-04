@@ -8,6 +8,8 @@ include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
 include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 include(INCLUDES."processFunctions.php");
+require_once( INCLUDES . 'leads.php' );
+$leads = Leads::getInstance();
 
 if(isset($_REQUEST['a'])){ 
 	$result = array(
@@ -77,8 +79,9 @@ else {
     <a href="#" class="nonLink" onclick="closeContent('dialog_mapping');">Close [X]</a>
 </div>
 <?php
-			$feeds = getIncomingFeeds( false );
-			if( $feeds ) {
+
+			$mappings = $leads->getUrlMappings();
+			if( $mappings ) {
 				print "<table id=\"mapping_report\" class=\"standard\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
@@ -91,46 +94,20 @@ else {
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
-				foreach( $feeds as $feed ) {
-
-					$populations = getPopulationMappingIn( $feed->idFeedIn );
-					$urls = getIncomingUrls( $feed->label );
-					if( $urls ) {
-						foreach( $urls as $url ) {
-							$found = false;
-							if( $populations ) {
-								foreach( $populations as $population ) {
-									// Manually override checking of these filters for the report
-									$population->filterTypeListcode = $population->filterTypeEmail = null;
-
-									if( $population->enabled && ( empty( $population->filterTypeUrl ) || checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
-										print "\t<tr class=\"bgGray\">\n";
-										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->name ) );
-										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
-										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
-										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $population->outName ) );
-										printf( "\t\t<td>%s</td>\n", htmlspecialchars( $population->outLabel ) );
-										if( isURLActive( $population->outLabel, date('Ym'), $url->urlTrim ) )
-											print "\t\t<td>Y</td>\n";
-										else
-											print "\t\t<td>N</td>\n";
-										print "\t</tr>\n";
-										$found = true;
-									}
-								}
-							}
-							if( !$found ) {
-								print "\t<tr class=\"bgGray\">\n";
-								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->name ) );
-								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
-								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
-								printf( "\t\t<td>-</td>\n" );
-								printf( "\t\t<td>-</td>\n" );
-								print "\t\t<td>N</td>\n";
-								print "\t</tr>\n";
-							}
-						}
+				foreach( $mappings as $mapping ) {
+					print "\t<tr class=\"bgGray\">\n";
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
+					if( '1' == $mapping['active'] ) {
+						print "\t\t<td>Y</td>\n";
+					} else {
+						print "\t\t<td>N</td>\n";
 					}
+					print "\t</tr>\n";
+
 				}
 				print "\t</tbody>\n";
 				print "</table>\n";
