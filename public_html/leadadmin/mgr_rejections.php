@@ -1,17 +1,11 @@
 <?php 
-//ADMIN_ROOT/mgr_companies.php
-//Version 1.0
-//ES20130722 Version 1.0: Company manager created.
-session_start();
-$mysqlErrorSource = 'Manager - Rejections';
+
 include("../../includes/c_config.php");
-$forceMysqlLogFile = SITE_ROOT."error".FD."log_companies"; 
-include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
-include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 $title = 'Rejection Log';
 include(INCLUDES."c_header.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();

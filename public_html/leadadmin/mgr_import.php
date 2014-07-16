@@ -1,11 +1,13 @@
 <?php
-session_start();
-$mysqlErrorSource = 'Manager - File Import';
+
 include("../../includes/c_config.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+
+$mysqlErrorSource = 'Manager - File Import';
 include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 include(INCLUDES."_f_validEmail.php");
 include(INCLUDES."processFunctions.php");
 
