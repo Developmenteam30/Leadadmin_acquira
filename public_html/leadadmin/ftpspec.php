@@ -1,27 +1,14 @@
 <?php
-//ADMINROOT/apispec.php
-//Version 1.0
-//ES20130808 Version 1.0: API Spec automatic generation.
-session_start();
-$mysqlErrorSource = 'API Spec Page';
+
 include("../../includes/c_config.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+
+$mysqlErrorSource = 'API Spec Page';
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_apispec"; 
 include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
-
-if(!$adminLoggedIn){ 
-	if(isset($_REQUEST['a'])){
-		$result = array('status' => 0, 'error'=> 'You are no longer logged in. Log back in and try again.');
-		echo json_encode($result); exit;
-	}
-	elseif(isset($_REQUEST['d'])){
-		echo "You are no longer logged in. Log back in and try again.";	exit;
-	} else { 
-		header("Location: index.php"); exit;
-	}
-}
 
 if(isset($_REQUEST['idFeedIn'])){ 
 	$feed = getIncomingFeed($_REQUEST['idFeedIn']);

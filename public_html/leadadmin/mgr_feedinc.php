@@ -1,16 +1,17 @@
-<?php 
-//ADMIN_ROOT/mgr_companies.php
-//Version 1.0
-//ES20130722 Version 1.0: Company manager created.
-session_start();
-$mysqlErrorSource = 'Manager - Incoming Feeds';
+<?php
+
 include("../../includes/c_config.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+
+require_once( INCLUDES . 'leads.php' );
+
+$mysqlErrorSource = 'Manager - Incoming Feeds';
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_feedinc"; 
 include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
-require_once( INCLUDES . 'leads.php' );
+
 
 function checkExistsLabelFeedIn($label){ 
 	//Returns quantity of matching records, or false if it fails.

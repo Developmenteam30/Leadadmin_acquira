@@ -1,15 +1,14 @@
 <?php 
-//ADMIN_ROOT/mgr_companies.php
-//Version 1.0
-//ES20130722 Version 1.0: Company manager created.
-session_start();
-$mysqlErrorSource = 'Manager - Companies';
+
 include("../../includes/c_config.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+
+$mysqlErrorSource = 'Manager - Companies';
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_companies"; 
 include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 
 function checkExistsCompanyName($name){ 
 	//Returns quantity of matching records, or false if it fails.

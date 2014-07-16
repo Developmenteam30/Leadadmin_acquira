@@ -1,12 +1,14 @@
-<?php 
-session_start();
-$mysqlErrorSource = 'Manager - Listcodes';
+<?php
+
 include("../../includes/c_config.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+
+$mysqlErrorSource = 'Manager - Listcodes';
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_listcodes"; 
 include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 
 function addListcode( $companyId, $description ) {
 	dbCon();

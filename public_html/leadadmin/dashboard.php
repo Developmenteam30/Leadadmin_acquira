@@ -1,16 +1,16 @@
 <?php 
-//ADMIN_ROOT/loginCheck.php
-//Version 1.0
-//ES20130706 Version 1.0: Admin login script.
-session_start();
-$mysqlErrorSource = 'Dashboard';
+
 include("../../includes/c_config.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+
+require_once( INCLUDES . 'leads.php' );
+
+$mysqlErrorSource = 'Dashboard';
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_dashboard"; 
 include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
-require_once( INCLUDES . 'leads.php' );
 
 function storeFeedOutgoingAttribute($idFeedOut, $attribute, $value){ 
 	dbCon("insertUpdate");

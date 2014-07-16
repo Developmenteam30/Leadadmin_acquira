@@ -1,14 +1,13 @@
-<?php 
-//ADMIN_ROOT/mgr_feedout.php
-//Version 1.0
-//ES20130726 Version 1.0: Outgoing Feed Manager created.
-session_start();
-$mysqlErrorSource = 'Manager - Outgoing Feeds';
+<?php
+
 include("../../includes/c_config.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+
+$mysqlErrorSource = 'Manager - Outgoing Feeds';
 include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
 
 function checkExistsLabelFeedOut($label){ 
 	//Returns quantity of matching records, or false if it fails.

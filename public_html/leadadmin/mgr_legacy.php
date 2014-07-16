@@ -56,6 +56,8 @@ function legacyPopulate( $feedId, $file = false ) {
 
 	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId = '1392144291'";
 	  		//$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE urlTrim = 'http://www.rewardcorporation.com'";
+	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE received >= '2014-04-28' AND listcode = '1346'";
+			$query = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE stamp >= '2014-06-16 22:59' AND urlTrim = 'http://www.instantcheckmate.com'";
 
 			dbCon();
     		$result = dbQry( $query, 'Getting inbound records', true );
@@ -123,4 +125,4 @@ print "Records that match population filters: {$cnt}\n";
 
 }
 
-legacyPopulate( 194, false );
+legacyPopulate( 139, false );

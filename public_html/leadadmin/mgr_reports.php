@@ -1,15 +1,18 @@
-<?php 
-session_start();
-$mysqlErrorSource = 'Manager - Reports';
+<?php
+
 include("../../includes/c_config.php");
-$forceMysqlLogFile = SITE_ROOT."error".FD."log_reports"; 
-include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
-include(INCLUDES."f_site.php");
-include(INCLUDES."c_loginRequired.php"); //Login is required for this page.
-include(INCLUDES."processFunctions.php");
+
+require_once( INCLUDES . 'session.php' );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
+
+$mysqlErrorSource = 'Manager - Reports';
+$forceMysqlLogFile = SITE_ROOT."error".FD."log_reports"; 
+include(INCLUDES."_connx.php");
+include(INCLUDES."f_site.php");
+require_once(INCLUDES."processFunctions.php");
 
 if(isset($_REQUEST['a'])){ 
 	$result = array(

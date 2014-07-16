@@ -4,8 +4,8 @@ session_start();
 $mysqlErrorSource = 'Index/Login';
 include("../../includes/c_config.php");
 include(INCLUDES."_connx.php");
-include(INCLUDES."loginCheck.php");
 include(INCLUDES."f_site.php");
+include( INCLUDES . 'session.php' );
 
 if(isset($_REQUEST['a'])){ 
 	$result = array(
@@ -61,9 +61,7 @@ if(isset($_REQUEST['a'])){
 			if($c){ 
 				$result['status'] = 1;
 				$result['error'] = 'Successfully logged in.';
-				$_SESSION['idAdmin'] = $user->idUser;
-				$_SESSION['token_admin'] = md5(session_id().$_SERVER['REMOTE_ADDR']);
-				$_SESSION['tokenTime_admin'] = microtime(true); //Start token time in seconds.					
+				LeadsSession::login( $user->idUser, LEADS_SESSION_LEVEL_ADMIN );
 			}
 		break;
 	}
@@ -77,7 +75,7 @@ if(isset($_REQUEST['d'])){
 	exit;
 }
 
-if($adminLoggedIn){ 
+if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT ) ) {
 	header("location: dashboard.php"); exit;
 }
 
