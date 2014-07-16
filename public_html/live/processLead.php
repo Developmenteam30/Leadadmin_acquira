@@ -61,7 +61,6 @@ if( $c ) {
 	$mysqlErrorSource = 'Incoming Feed';
 }
 include(INCLUDES."_connx.php");
-include(INCLUDES."processFunctions.php");
 
 if($c) { 
 	$feedParams = loadParameters($feedLabel);
@@ -203,7 +202,7 @@ if($c && $feedParams->dedupeCellphone && isset($_REQUEST['cellphone']) && $_REQU
 if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_null( $feedParams->filterTypeSiftLogic ) ) {
 	$filter = filterValue($feedParams->filterTypeSiftLogic, $_REQUEST['url'], $feedParams->filterSiftLogic);
 	if( $filter ) {
-		require INCLUDES.'siftLogic.php';
+		require_once( INCLUDES . 'siftLogic.php' );
 		$sl = new SiftLogic;
 		if( $sl->check( $_REQUEST['email'], 
 						!empty( $_REQUEST['ip'] ) ? $_REQUEST['ip'] : null, 
@@ -323,7 +322,7 @@ if($c){
 
 				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
 				if( $p && !empty( $lastRecord ) && !empty( $feed->livedata ) ) {
-					require_once SITE_ROOT . FD . 'pushLead/_f_onlms.php';
+					require_once( SITE_ROOT . FD . 'pushLead/_f_onlms.php' );
     
 					$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label."` "
 								."WHERE `processed` = '0' AND idRecord = " . $lastRecord ;
