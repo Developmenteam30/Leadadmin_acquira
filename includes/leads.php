@@ -75,6 +75,118 @@ class Leads
 		return null;
 	}
 
+	public function verifyUser( $username, $password ) {
+		try {
+			$query = $this->db->prepare( "SELECT idUser,username,password FROM users WHERE username = ?" );
+			$query->execute( array( $username ) );
+			$results = $query->fetch( );
+
+			if( $results ) {
+
+				if( password_verify( $password, $results['password'] ) ) {
+            
+					// If the password hash is outdated, rehash and save to the database
+					if( password_needs_rehash( $results['password'], PASSWORD_DEFAULT, array( 'cost' => 11 ) ) ) {
+						$hash = password_hash( $password, PASSWORD_DEFAULT, array( 'cost' => 11 ) );
+
+						$query = $this->db->prepare( "UPDATE users SET password = ? WHERE username = ?" );
+						$query->execute( array( $username, $hash ) );
+            
+					}
+
+					return true;
+				}
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to verify user password: ' . $e->getMessage() );
+		}
+
+		$this->logError( 'Failed login for user [' . $username . '] from [' . $_SERVER['REMOTE_ADDR'] . ']', true );
+
+		return false;
+	}
+
+	public function getCompany( $idCompany ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM companies WHERE idCompany = ?" );
+			$query->execute( array( $idCompany ) );
+			$results = $query->fetch( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company info: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getInboundFeed( $idFeedIn ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM feedinc WHERE idFeedIn = ?" );
+			$query->execute( array( $idFeedIn ) );
+			$results = $query->fetch( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound feed info: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getInboundFeeds( $retired = null ) {
+		$results = array();
+
+		try {
+			if( $retired === null ) {
+				$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany ORDER BY c.name,f.idFeedIn" );
+				$query->execute( );
+			} else {
+				$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.retired = ? ORDER BY c.name,f.idFeedIn" );
+				$query->execute( array( $retired ? '1' : '0' ) );
+			}
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound feed list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getOutboundFeeds( $retired = null ) {
+		$results = array();
+
+		try {
+			if( $retired === null ) {
+				$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany ORDER BY c.name,f.idFeedOut" );
+				$query->execute( );
+			} else {
+				$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.retired = ? ORDER BY c.name,f.idFeedOut" );
+				$query->execute( array( $retired ? '1' : '0' ) );
+			}
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound feed list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getOutboundStats( $idFeedOut ) {
+		$results = array( 'accepted' => 0, 'rejected' => 0 );
+
+		try {
+			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_outbound WHERE stamp = DATE_FORMAT(NOW(), '%Y-%m-%d') AND idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+			$results = $query->fetch( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound stats: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function inboundAdd( $idFeedIn, $fields, $error = null, $jobId = null ) {
 
 		$idRecord = $this->insertRow( 'data_inbound', array(
@@ -156,6 +268,14 @@ class Leads
 				$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
 				return $status;
 			}
+
+			try {
+				$query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
+				$query->execute( array( $idFeedOut ) );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
+				return $status;
+			}
 		}
 
 		return $status;
@@ -208,6 +328,14 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
 			return;
+		}
+
+		try {
+			$query = $this->db->prepare( "UPDATE feedout SET queued = queued - 1 WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to subtract from queue count: ' . $e->getMessage() );
+			return $status;
 		}
 	}
 
@@ -472,13 +600,45 @@ class Leads
 		return -1;
 	}
 
-	public function logError( $message ) {
+	public function resetQueuedStats() {
+		try {
+			$this->db->query( "LOCK TABLES feedout WRITE, data_outbound WRITE" );
+
+			$this->db->query( "UPDATE feedout SET queued = 0" );
+
+			$query = $this->db->prepare( "SELECT idFeedOut,COUNT(*) AS cnt FROM data_outbound WHERE timestamp IS NULL GROUP BY idFeedOut" );
+			$query->execute( );
+			$rows = $query->fetchAll();
+
+			foreach( $rows as $row ) {
+				print "Setting queued to {$row['cnt']} for ID: {$row['idFeedOut']}\n";
+				$query = $this->db->prepare( "UPDATE feedout SET queued = ? WHERE idFeedOut = ?" );
+				$query->execute( array( $row['cnt'], $row['idFeedOut'] ) );
+			}
+
+			$this->db->query( "UNLOCK TABLES" );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to reset queued stats: ' . $e->getMessage() );
+		}
+
+		return null;
+	}
+
+	public function logError( $message, $db = false ) {
 
 		$stamp = date('Y-m-d H:i:s');
 		$errfile = fopen( SITE_ROOT . 'error' . FD . 'leads-log', 'a' );
 		if( $errfile ) {
 			fwrite( $errfile, $stamp . ' ' . $message . PHP_EOL );
 			fclose( $errfile );
+		}
+
+		if( $db ) {
+			$this->insertRow( 'errorlog', array( 
+				'origination' => 'LEADS',
+				'description' => $message,
+				'stamp' => date( 'c' ),
+			) );
 		}
 
 		// Limit notification emails to one per minute to prevent flooding
@@ -502,5 +662,29 @@ class Leads
 		$header .= "X-Priority: 3\n";
 		$header .= "Return-Path: <" . $from . ">\n";
 		$sent = @mail( $to, $subject, $body, $header );
+	}
+
+	public function getErrorCount() {
+		try {
+			$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM errorlog WHERE stamp LIKE ?" );
+			$query->execute( array( date( 'Y-m-d' ) . '%' ) );
+			return $query->fetchColumn( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get error count: ' . $e->getMessage() );
+		}
+
+		return null;
+	}
+
+	public function getErrors() {
+		try {
+			$query = $this->db->prepare( "SELECT * FROM errorlog WHERE stamp LIKE ? ORDER BY stamp DESC" );
+			$query->execute( array( date( 'Y-m-d' ) . '%' ) );
+			return $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get error log: ' . $e->getMessage() );
+		}
+
+		return null;
 	}
 }
