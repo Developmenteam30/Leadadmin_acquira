@@ -1,14 +1,9 @@
 <?php
 
 require( '../includes/c_config.php' );
-
-$mysqlErrorSource = 'Archive script';
-require( INCLUDES."_connx.php" );
 require_once( INCLUDES."leads.php" );
 
 $leads = Leads::getInstance();
-
-dbCon();
 
 print "Deleting old errorLog entries: ";
 print $leads->archiveErrors() . PHP_EOL;
