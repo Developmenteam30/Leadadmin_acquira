@@ -42,7 +42,7 @@ function toggleHidden(contentLabel, options){
 		content = $('#'+contentLabel);
 		link = $('#'+contentLabel);
 	}
-	content.toggle()
+	content.toggle();
 	if(content.css('display') == 'none'){ 
 		link.html(options.hiddenText);
 	} else { 
