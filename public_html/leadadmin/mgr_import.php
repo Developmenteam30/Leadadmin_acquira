@@ -5,11 +5,13 @@ include("../../includes/c_config.php");
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
+require_once( INCLUDES . 'leads.php' );
+
 $mysqlErrorSource = 'Manager - File Import';
-include(INCLUDES."_connx.php");
-include(INCLUDES."f_site.php");
-include(INCLUDES."_f_validEmail.php");
-include(INCLUDES."processFunctions.php");
+require_once(INCLUDES."_connx.php");
+require_once(INCLUDES."f_site.php");
+require_once(INCLUDES."_f_validEmail.php");
+require_once(INCLUDES."processFunctions.php");
 
 ini_set("auto_detect_line_endings", true);
 set_time_limit(0);
@@ -127,13 +129,17 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		print " ";
 
 	$result = validateIncomingData( $feedParams, $data );
+	$leads = Leads::getInstance();
 
 	if( $result['valid'] ) {
 
 		print " - VALID\n";
 
-		if( insertIncomingData( $feedParams, $data, $jobId ) === true ) {
-			pushIncomingData( $idFeedIn, $data );
+		if( ( $lastRecord = insertIncomingData( $feedParams, $data, $jobId ) ) !== null ) {
+
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, null, $jobId );
+
+			pushIncomingData( $idFeedIn, $data, $inboundId, $lastRecord );
 			$counts['success']++;
 		} else {
 			$counts['failures']++;
@@ -152,6 +158,7 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 		insertIncomingData( $feedParams, $data, $jobId, $result['errors'][0] );
 
+		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, $result['errors'][0], $jobId );
 	}
 
 	print "<br/>\n";

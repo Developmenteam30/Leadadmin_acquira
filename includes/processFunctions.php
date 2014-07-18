@@ -5,6 +5,8 @@ include_once(INCLUDES."Array2XML.php");
 include_once(INCLUDES."_f_validEmail.php");
 include_once(INCLUDES."_f_validation.php");
 
+require_once( INCLUDES . 'leads.php' );
+
 function formaturl($url)
 {	
 	//VER 1.1
@@ -721,6 +723,7 @@ function validateIncomingData( $feedParams, &$data ) {
 
 function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 
+	$lastRecord = null;
 	$requiredFields = explode(';', $feedParams->required);
 	$allowedFields = explode(';', $feedParams->allowedFields);
 
@@ -781,9 +784,11 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 			, 'Database failure when attempting to insert record. Check MySQL log file.'
 			, true
 		);
-		return 'Database failure, please try again later.';
+		return null;
 
 	} else { //Successfully inserted into the data table, now insert into the count table.
+
+		$lastRecord = $GLOBALS['dbconnx']->insert_id;
 
 	    // Notify if this is the first time we've seen this URL on this feed
 		if( !empty( $data['urlTrim'] ) && empty( $error ) ) {
@@ -814,10 +819,10 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 		}
 	}
 
-	return true;
+	return $lastRecord;
 }
 
-function pushIncomingData( $idFeedIn, $data ) {
+function pushIncomingData( $idFeedIn, $data, $inboundId, $legacyId ) {
 
 	$populations = getIncomingPopulationSettings( $idFeedIn );
     if( $populations === false ) {
@@ -853,6 +858,9 @@ function pushIncomingData( $idFeedIn, $data ) {
 					isset($data['landline']) ? $data['landline'] : null,
 					isset($data['cellphone']) ? $data['cellphone'] : null, 
 					'0', null, null, null );
+
+				$leads = Leads::getInstance();
+				$leads->outboundAdd( $inboundId, $legacyId, $idFeedIn, $population->idFeedOut, $data['url'] );
 
 			}
 		}
