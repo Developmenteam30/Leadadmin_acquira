@@ -355,7 +355,6 @@ if($c){
 
 									if( !empty( $_REQUEST['url'] ) ) {
 										updateStats( $feed->idFeedOut, $_REQUEST['url'], 0, 1, 0 );
-										$leads->outboundProcess( $inboundId, $feed->idFeedOut, $_REQUEST['url'], $status['text'] );
 										$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $result['reason'] );
 									}
 
@@ -363,7 +362,6 @@ if($c){
 
 									if( !empty( $_REQUEST['url'] ) ) {
 										updateStats( $feed->idFeedOut, $_REQUEST['url'], 1, 0, 0 );
-										$leads->outboundProcess( $inboundId, $feed->idFeedOut, $_REQUEST['url'], null );
 									}
 
 								}
