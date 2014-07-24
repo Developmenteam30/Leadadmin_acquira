@@ -139,7 +139,7 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, null, $jobId );
 
-			pushIncomingData( $idFeedIn, $data, $inboundId, $lastRecord );
+			pushIncomingData( $idFeedIn, $data, $inboundId );
 			$counts['success']++;
 		} else {
 			$counts['failures']++;

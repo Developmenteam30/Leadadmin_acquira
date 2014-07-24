@@ -568,7 +568,10 @@ function addOutboundRecord( $label, $listcode, $urlTrim, $url, $ip, $stamp, $ema
 			, 'Database failure when populate outgoing feed '.$label.'. Check MySQL log file.'
 			, true
 		);
+		return null;
 	}
+
+	return $GLOBALS['dbconnx']->insert_id;
 }
 
 function checkPopulationFilters( $feed, $url, $email, $listcode ) {
@@ -822,7 +825,7 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 	return $lastRecord;
 }
 
-function pushIncomingData( $idFeedIn, $data, $inboundId, $legacyId ) {
+function pushIncomingData( $idFeedIn, $data, $inboundId ) {
 
 	$populations = getIncomingPopulationSettings( $idFeedIn );
     if( $populations === false ) {
@@ -838,7 +841,7 @@ function pushIncomingData( $idFeedIn, $data, $inboundId, $legacyId ) {
 						isset( $data['email'] ) ? $data['email'] : null,
 						isset( $data['listcode'] ) ? $data['listcode'] : null ) ) {
 
-				addOutboundRecord( $population->label, 
+				$legacyId = addOutboundRecord( $population->label, 
 					isset($data['listcode']) ? $data['listcode'] : null,
 					isset($data['urlTrim']) ? $data['urlTrim'] : null,
 					isset($data['url']) ? $data['url'] : null,
@@ -859,8 +862,10 @@ function pushIncomingData( $idFeedIn, $data, $inboundId, $legacyId ) {
 					isset($data['cellphone']) ? $data['cellphone'] : null, 
 					'0', null, null, null );
 
-				$leads = Leads::getInstance();
-				$leads->outboundAdd( $inboundId, $legacyId, $idFeedIn, $population->idFeedOut, $data['url'] );
+				if( !empty( $legacyId ) ) {
+					$leads = Leads::getInstance();
+					$leads->outboundAdd( $inboundId, $legacyId, $idFeedIn, $population->idFeedOut, $data['url'] );
+				}
 
 			}
 		}
