@@ -23,13 +23,17 @@ if(isset($_REQUEST['a'])){
 
 		case 'save_revenue':
 
+			$result['status'] = 0;
+			$result['error'] = 'Invalid revenue value.';
+
 			if( ( $string = base64_decode( $_REQUEST['field'] ) ) !== FALSE ) {
-				list( $date, $idFeedIn, $urlTrim, $idCompany ) = explode( '|', $string );
+				list( $date, $idFeedIn, $idFeedOut, $url ) = explode( '|', $string );
 				$value = $_REQUEST['value'];
-				if( empty( $value ) ) $value = null;
-				setRevenueValue( $date, $idFeedIn, $urlTrim, $idCompany, $value );
+				if( empty( $value ) || !is_numeric( $value ) ) $value = null;
+				$leads->setRevenueValue( $date, $idFeedIn, $idFeedOut, $url, $value );
+				$result['status'] = 1;
+				$result['error'] = 'Saved';
 			}
-			$result['status'] = 1;
 			break;
 	}
 	echo json_encode($result);
@@ -150,6 +154,10 @@ else {
 		case 'dialog_revenue':
 			if( empty( $_REQUEST['options']['report_date'] ) || strlen( $_REQUEST['options']['report_date'] ) != 6 ) $reportDate = date('Ym');
 			else $reportDate = $_REQUEST['options']['report_date'];
+
+			if( empty( $_REQUEST['options']['idCompany'] ) ) $idCompany = null;
+			else $idCompany = $_REQUEST['options']['idCompany'];
+
 ?>
 <div class="aRight">
     <a href="#" class="nonLink" onclick="closeContent('dialog_revenue');">Close [X]</a>
@@ -160,8 +168,21 @@ else {
 	for($y = date('Y'); $y >= 2012; $y--) {
 		for($m = 12; $m > 0; $m--) {
 			$format_month = str_pad( $m, 2, '0', STR_PAD_LEFT );
-			printf(' <option onclick="display(\'dialog_revenue\', { \'report_date\': \'%s\' });" value="%s"%s>%s</option>',
-					$y . $format_month, $y . $format_month, ( $y == substr( $reportDate, 0, 4) && $format_month == substr( $reportDate, 4, 2 ) ) ? ' selected="selected"' : '', $y . '-' . $format_month );
+			printf(' <option onclick="display(\'dialog_revenue\', { \'report_date\': \'%s\', \'idCompany\': \'%s\' });" value="%s"%s>%s</option>',
+					$y . $format_month, $y . $format_month, $idCompany, ( $y == substr( $reportDate, 0, 4) && $format_month == substr( $reportDate, 4, 2 ) ) ? ' selected="selected"' : '', $y . '-' . $format_month );
+		}
+	}
+?>
+</select>
+<select name="idCompany">
+<?php 
+	printf( '<option onclick="display(\'dialog_revenue\', { \'report_date\': \'%s\', \'idCompany\': \'\' });" value=""%s>SHOW ALL COMPANIES</option>',
+					$reportDate, ( empty( $idCompany ) ? ' selected="selected"' : '' ) );
+	$companies = $leads->getRevenueCompanies();
+	if( $companies ) {
+		foreach( $companies as $company ) {
+			printf(' <option onclick="display(\'dialog_revenue\', { \'report_date\': \'%s\', \'idCompany\': \'%s\' });" value="%s"%s>%s</option>',
+					$reportDate, $company['idCompany'], $company['idCompany'], ( $idCompany == $company['idCompany'] ? ' selected="selected"' : '' ), $company['name'] );
 		}
 	}
 ?>
@@ -169,103 +190,37 @@ else {
 </p>
 
 <?php
-
-			$feeds = getIncomingFeeds( false );
-			if( $feeds ) {
-				print "<table id=\"mapping_report\" class=\"standard\">\n";
+			$mappings = $leads->getRevenueMappings( $idCompany, $reportDate );
+			if( $mappings ) {
+				print "<table id=\"revenue_report\" class=\"standard\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
-				print "\t\t<td>Feed</td>\n";
-				print "\t\t<td>URL</td>\n";
-				print "\t\t<td>TOTAL</td>\n";
-				$companies = getOutgoingCompanies();
-				if( $companies ) {
-					foreach( $companies as $company ) {
-						printf( "\t\t<td class=\"rotate\"><div><span>%s</span></div></td>\n", htmlspecialchars( $company->name ) );
-					}
-				}
+				print "\t\t<td>Incoming Feed</td>\n";
+				print "\t\t<td>Incoming URL</td>\n";
+				print "\t\t<td>Outgoing Company</td>\n";
+				print "\t\t<td>Outgoing Feed</td>\n";
+				print "\t\t<td>Amount</td>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
-				$row = 0;
-				$col = 65;
-				$prevRow = 0;
-				foreach( $feeds as $feed ) {
-
-					if( !isset( $subtotal ) ) { $subtotal = $feed->name; $foundUrl = false; }
-					if( $feed->name != $subtotal ) {
-						if( $foundUrl ) {
-							$col = 65;
-							print "\t<tr class=\"bgGray subtotal\">\n";
-							printf( "\t\t<td colspan=\"2\"><strong>%s</strong></td>\n", htmlspecialchars( $subtotal ) );
-							printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . ($prevRow+1), '$' . chr( 65 + sizeOf( $companies ) ) . ($row-1) );
-							for( $i = 0; $i < sizeOf( $companies ); $i++ ) {
-								printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( ++$col ) . $row, '$' . chr( $col ) . ($prevRow+1), '$' . chr( $col ) . ($row-1)  );
-							}
-							print "\t</tr>\n";
-							$prevRow = $row;
-						}
-						$foundUrl = false;
-						$subtotal = $feed->name;
-					}
-
-					$populations = getPopulationMappingIn( $feed->idFeedIn );
-					$urls = getIncomingUrls( $feed->label );
-					if( $urls ) {
-						foreach( $urls as $url ) {
-
-							$foundPopulation = false;
-							if( $populations ) {
-								foreach( $populations as $population ) {
-									// Manually override checking of these filters for the report
-									$population->filterTypeListcode = $population->filterTypeEmail = null;
-
-									if( $population->enabled && ( empty( $population->filterTypeUrl ) || checkPopulationFilters( $population, $url->urlTrim, '', '' ) ) ) {
-										if( isURLActive( $population->outLabel, $reportDate, $url->urlTrim ) )
-											$foundPopulation = true;
-									}
-								}
-							}
-
-							if( $foundPopulation ) {
-								$col = 65;
-
-								print "\t<tr class=\"bgGray\">\n";
-								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $feed->description ) );
-								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $url->urlTrim ) );
-								printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . $row, '$' . chr( 65 + sizeOf( $companies ) ) . $row );
-								if( $companies ) {
-									foreach( $companies as $company ) {
-										$value = getRevenueValue( $reportDate, $feed->idFeedIn, $url->urlTrim, $company->idCompany );
-										printf( "\t\t<td class=\"revenue\"><input type=\"text\" id=\"%s\" data-format=\"$0,0.00\" name=\"%s\" value=\"%s\" /></td>\n", chr( ++$col ) . $row, htmlspecialchars( base64_encode( $reportDate . '|' . $feed->idFeedIn . '|' . $url->urlTrim . '|' . $company->idCompany ) ), htmlspecialchars( $value ) );
-									}
-								}
-								print "\t</tr>\n";
-								$foundUrl = true;
-							}
-						}
-					}
-				}
-
-				if( $foundUrl ) {
-					$col = 65;
-					print "\t<tr class=\"bgGray subtotal\">\n";
-					printf( "\t\t<td colspan=\"2\"><strong>%s</strong></td>\n", htmlspecialchars( $subtotal ) );
-					printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( $col ) . ++$row, '$B' . ($prevRow+1), '$' . chr( 65 + sizeOf( $companies ) ) . ($row-1) );
-					for( $i = 0; $i < sizeOf( $companies ); $i++ ) {
-						printf( "\t\t<td class=\"revenue\" id=\"%s\" data-format=\"$0,0.00\" data-formula=\"SUM(%s,%s)\"></td>\n", chr( ++$col ) . $row, '$' . chr( $col ) . ($prevRow+1), '$' . chr( $col ) . ($row-1)  );
-					}
+				foreach( $mappings as $mapping ) {
+					print "\t<tr class=\"bgGray\">\n";
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
+					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
+					printf( "\t\t<td class=\"revenue\"><input type=\"number\" min=\"0\" max=\"9999\" step=\"0.01\" name=\"%s\" value=\"%s\" /></td>\n", htmlspecialchars( base64_encode( $reportDate . '|' . $mapping['idFeedIn'] . '|' . $mapping['idFeedOut'] . '|' . $mapping['url'] ) ), ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
 					print "\t</tr>\n";
-				}
 
+				}
 				print "\t</tbody>\n";
 				print "</table>\n";
+			}
+
 ?>
 <script type="text/javascript">
 $(document).ready(function(){
-	$('#mapping_report').calx(); 
-
-    $("#mapping_report input").each(function() {
+    $("#revenue_report input").each(function() {
         $(this).focusout(function(){
 			$.ajax({
 				url: "mgr_reports.php",
@@ -281,11 +236,8 @@ $(document).ready(function(){
     });
 });
 </script>
-<?php
-			} else {
-				print "Cannot load list of incoming feeds.";
-			}
 
+<?php
 		break;
 
 		case 'dialog_search_email':

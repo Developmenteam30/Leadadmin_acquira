@@ -121,6 +121,20 @@ class Leads
 		return $results;
 	}
 
+	public function getCompanies( ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM companies ORDER BY name" );
+			$query->execute( );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function getInboundFeed( $idFeedIn ) {
 		$results = array();
 
@@ -370,6 +384,67 @@ class Leads
 		}
 
 		return $results;
+	}
+
+	public function getRevenueMappings( $idCompany, $date ) {
+		$results = array();
+
+		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
+		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
+		$query .= "AND m.url = r.url ";
+		$query .= "AND m.idFeedOut = r.idFeedOut ";
+		if( !empty( $idCompany ) ) {
+			$query .= "WHERE i.idCompany = ? ";
+		}
+		$query .= "ORDER BY 1,2,4,5,6 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $idCompany ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get revenue mappings: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueCompanies( ) {
+		$results = array();
+
+		$query  = "SELECT ci.name AS name,ci.idCompany AS idCompany ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "GROUP BY 2 ";
+		$query .= "ORDER BY 1 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get revenue companies: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function setRevenueValue( $date, $idFeedIn, $idFeedOut, $url, $value ) {
+
+		try {
+			$query = $this->db->prepare( "REPLACE INTO revenue( date, idFeedIn, idFeedOut, url, value ) VALUES( ?, ?, ?, ?, ? )" );
+			$query->execute( array( $date, $idFeedIn, $idFeedOut, $url, $value ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to update revenue value: ' . $e->getMessage() );
+			return;
+		}
+
 	}
 
 	public function getInboundRejections( $idFeedIn, $offset = 0 ) {
