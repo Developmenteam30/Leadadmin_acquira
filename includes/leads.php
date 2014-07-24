@@ -398,6 +398,7 @@ class Leads
 		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
 		$query .= "AND m.url = r.url ";
 		$query .= "AND m.idFeedOut = r.idFeedOut ";
+		$query .= "AND r.date = ? ";
 		if( !empty( $idCompany ) ) {
 			$query .= "WHERE i.idCompany = ? ";
 		}
@@ -405,7 +406,11 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( $query );
-			$query->execute( array( $idCompany ) );
+			if( !empty( $idCompany ) ) {
+				$query->execute( array( $date, $idCompany ) );
+			} else {
+				$query->execute( array( $date ) );
+			}
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get revenue mappings: ' . $e->getMessage() );

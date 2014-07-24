@@ -169,7 +169,7 @@ else {
 		for($m = 12; $m > 0; $m--) {
 			$format_month = str_pad( $m, 2, '0', STR_PAD_LEFT );
 			printf(' <option onclick="display(\'dialog_revenue\', { \'report_date\': \'%s\', \'idCompany\': \'%s\' });" value="%s"%s>%s</option>',
-					$y . $format_month, $y . $format_month, $idCompany, ( $y == substr( $reportDate, 0, 4) && $format_month == substr( $reportDate, 4, 2 ) ) ? ' selected="selected"' : '', $y . '-' . $format_month );
+					$y . $format_month, $idCompany, $y . $format_month, ( $y == substr( $reportDate, 0, 4) && $format_month == substr( $reportDate, 4, 2 ) ) ? ' selected="selected"' : '', $y . '-' . $format_month );
 		}
 	}
 ?>
