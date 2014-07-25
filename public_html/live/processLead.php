@@ -110,6 +110,11 @@ if($c){ //Validation of incoming data.
 		$_REQUEST['url'] = 'www.5minutemoney.co.uk';
 	}
 
+	// Special handling for Digital Bulldogs feed that contains an invalid URL
+	if( !empty( $_REQUEST['url'] ) && 'https//www.instantcheckmate.com/register' == $_REQUEST['url'] ) {
+		$_REQUEST['url'] = 'https://www.instantcheckmate.com/register';
+	}
+
 	// Fix cases where gender is set to a blank value
 	if( !empty( $_REQUEST['gender'] ) && ' ' == $_REQUEST['gender'] ) {
 		unset( $_REQUEST['gender'] );

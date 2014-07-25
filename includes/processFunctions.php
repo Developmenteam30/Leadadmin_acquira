@@ -614,6 +614,11 @@ function validateIncomingData( $feedParams, &$data ) {
 		$data['url'] = 'www.5minutemoney.co.uk';
 	}
 
+	// Special handling for Digital Bulldogs feed that contains an invalid URL
+	if( !empty( $data['url'] ) && 'https//www.instantcheckmate.com/register' == $data['url'] ) {
+		$data['url'] = 'https://www.instantcheckmate.com/register';
+	}
+
 	// Remove non-numeric characters from phone numbers
 	if( !empty( $data['landline'] ) ) {
 		$data['landline'] = preg_replace( '/[^0-9]/', '', $data['landline'] );
