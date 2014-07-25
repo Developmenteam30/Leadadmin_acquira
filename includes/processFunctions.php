@@ -51,6 +51,7 @@ function url_reformat($urlstring)
 	$secure = false;
 	$new = strtolower($urlstring);
 	$new = str_replace("http://", "", $new);
+	$new = str_replace("https://", "", $new);
 	$new = str_replace("www.", "", $new);
 	$new = str_replace("www/", "", $new);
 	if(strpos($new, "?") !== false)
