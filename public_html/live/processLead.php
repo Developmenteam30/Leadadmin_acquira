@@ -110,6 +110,11 @@ if($c){ //Validation of incoming data.
 		$_REQUEST['url'] = 'www.5minutemoney.co.uk';
 	}
 
+	// Fix cases where gender is set to a blank value
+	if( !empty( $_REQUEST['gender'] ) && ' ' == $_REQUEST['gender'] ) {
+		unset( $_REQUEST['gender'] );
+	}
+
 	if($c){ 
 		foreach($required as $requiredKey){ 
 			switch($requiredKey){
