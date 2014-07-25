@@ -216,15 +216,15 @@ function validate($fieldType, $value, $feedParams){
 			if($c && strlen($value) > 500){ 
 				$c = false; $result['reason'] = 'URL (url) exceeds maximum allowed length.'; 			
 			}
-			if($c && hasinvalidurlchars($value)){ 
-				$c = false; $result['reason'] = 'URL (url) contains invalid characters.'; 			
+			if($c && !filter_var( $value, FILTER_VALIDATE_URL ) ) {
+				$c = false; $result['reason'] = 'URL (url) is invalid.';
 			}
 		break;
 		case 'ip':
 			if($c && strlen($value) > 16){ 
 				$c = false; $result['reason'] = 'IP (ip) exceeds maximum allowed length.';
 			}
-			if($c && !valid_ip($value)){ 
+			if($c && !filter_var( $value, FILTER_VALIDATE_IP ) ) {
 				$c = false; $result['reason'] = 'IP (ip) is invalid.';
 			}
 		break;
@@ -252,7 +252,7 @@ function validate($fieldType, $value, $feedParams){
 			if($c && strlen($value) > 150){ 
 				$c = false; $result['reason'] = 'Email (email) exceeds maximum allowed length.'; 
 			}
-			if($c && !valid_email($value)){ 
+			if($c && !filter_var( $value, FILTER_VALIDATE_EMAIL ) ) {
 				$c = false; $result['reason'] = 'Email (email) is invalid.';
 			}
 		break;

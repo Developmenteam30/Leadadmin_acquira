@@ -127,7 +127,7 @@ if(isset($_REQUEST['a'])){
 
 						$buffer = trim ( $buffer );
 
-						if( strpos( $buffer, '@' ) !== FALSE && !valid_email( $buffer ) ) {
+						if( strpos( $buffer, '@' ) !== FALSE && !filter_var( $buffer, FILTER_VALIDATE_EMAIL ) ) {
 							$counts['invalid']++;
 						} else {
 							foreach($lists as $list){
@@ -225,7 +225,7 @@ if(isset($_REQUEST['a'])){
 							$c = false; $result['error'] = 'Email field cannot be empty.';
 						}
 						if($c){ //Passed initial validation
-							if( strpos( $_REQUEST['email'], '@' ) !== FALSE && !valid_email($_REQUEST['email'])){
+							if( strpos( $_REQUEST['email'], '@' ) !== FALSE && !filter_var( $_REQUEST['email'], FILTER_VALIDATE_EMAIL ) ) {
 								$counts['invalid']++;
 							} else {
 								if($_REQUEST['list'] == 'multiple'){
@@ -264,7 +264,7 @@ if(isset($_REQUEST['a'])){
 						}
 						if($c){ //Passed initial validation
 							foreach($_REQUEST['emails'] as $email){
-								if( strpos( $email, '@' ) !== FALSE && !valid_email($email)){
+								if( strpos( $email, '@' ) !== FALSE && !filter_var( $email, FILTER_VALIDATE_EMAIL ) ) {
 									$counts['invalid']++;
 								} else {
 									if($_REQUEST['list'] == 'multiple'){
