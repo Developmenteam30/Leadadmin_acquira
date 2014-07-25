@@ -115,6 +115,11 @@ if($c){ //Validation of incoming data.
 		$_REQUEST['url'] = 'https://www.instantcheckmate.com/register';
 	}
 
+	// Fix incoming URLs missing a protocol so they validate properly
+	if( !empty( $_REQUEST['url'] ) && strpos( $_REQUEST['url'], 'http' ) !== 0 ) {
+		$_REQUEST['url'] = 'http://' . $_REQUEST['url'];
+	}
+
 	// Fix cases where gender is set to a blank value
 	if( !empty( $_REQUEST['gender'] ) && ' ' == $_REQUEST['gender'] ) {
 		unset( $_REQUEST['gender'] );

@@ -619,6 +619,11 @@ function validateIncomingData( $feedParams, &$data ) {
 		$data['url'] = 'https://www.instantcheckmate.com/register';
 	}
 
+	// Fix incoming URLs missing a protocol so they validate properly
+	if( !empty( $data['url'] ) && strpos( $data['url'], 'http' ) !== 0 ) {
+		$data['url'] = 'http://' . $data['url'];
+	}
+
 	// Remove non-numeric characters from phone numbers
 	if( !empty( $data['landline'] ) ) {
 		$data['landline'] = preg_replace( '/[^0-9]/', '', $data['landline'] );
