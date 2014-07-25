@@ -271,7 +271,7 @@ function validate($fieldType, $value, $feedParams){
 			if($c && strlen($value) > 50){ 
 				$c = false; $result['reason'] = 'Last Name (lname) exceeds maximum allowed length.'; 
 			}
-			if($c && strlen($value) < 2){ 
+			if($c && strlen($value) < 1){ 
 				$c = false; $result['reason'] = 'Last Name (lname) does not meet required length.'; 
 			}
 			if($c && hasinvalidchars($value)){ 
