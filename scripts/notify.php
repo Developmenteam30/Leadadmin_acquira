@@ -19,7 +19,7 @@ function sendNotification( $label, $feedId, $url, $time, $hours ) {
 	$from       = 'lmsalerts@'.SITE_URL;
 	$fromName   = CONFIG_COMPANY_NAME.' List Management System';
 	$header     = "From: " . $fromName . " <" . $from . ">\r\n";
-	$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+	//$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
 	$header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
 
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
