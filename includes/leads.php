@@ -54,7 +54,7 @@ class Leads
 		return ( $q . str_replace( "$q", "$q$q", $value ) . $q );
 	}
 
-	public function insertRow( $table, array $data ) {
+	public function insertRow( $table, array $data, $logError = true ) {
 		$cols = array();
 		$vals = array();
 
@@ -68,7 +68,9 @@ class Leads
 			$query->execute( array_values( $data ) );
 			return $this->db->lastInsertId();
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to insert record: ' . $e->getMessage() );
+			if( $logError ) {
+				$this->logError( 'Unable to insert record: ' . $e->getMessage() );
+			}
 			return null;
 		}
 
@@ -267,6 +269,8 @@ class Leads
 	}
 
 	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url ) {
+		$this->db->query( "LOCK TABLES data_outbound WRITE, url_mapping WRITE, feedout WRITE, errorlog WRITE" );
+
 		$status = $this->insertRow( 'data_outbound', array(
 			'idRecord' => $idRecord,
 			'idRecordLegacy' => $idRecordLegacy,
@@ -280,6 +284,7 @@ class Leads
 				$query->execute( array( $idFeedIn, $idFeedOut, $this->parseUrl( $url ) ) );
 			} catch( PDOException $e ) {
 				$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
+				$this->db->query( "UNLOCK TABLES" );
 				return $status;
 			}
 
@@ -288,11 +293,29 @@ class Leads
 				$query->execute( array( $idFeedOut ) );
 			} catch( PDOException $e ) {
 				$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
+				$this->db->query( "UNLOCK TABLES" );
 				return $status;
 			}
 		}
 
+		$this->db->query( "UNLOCK TABLES" );
+
 		return $status;
+	}
+
+//REMOVE
+	public function getQueued( $idFeedOut ) {
+		$queued = -9999;
+
+		try {
+			$query = $this->db->prepare( "SELECT queued FROM feedout WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+			$queued = $query->fetchColumn( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get queued stats: ' . $e->getMessage() );
+		}
+
+		return $queued;
 	}
 
 //REMOVE
@@ -323,12 +346,15 @@ class Leads
 	}
 
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
+		$this->db->query( "LOCK TABLES data_outbound WRITE, stats_outbound WRITE, feedout WRITE, errorlog WRITE" );
+
 		try {
 			//$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecord = ?' );
 			$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
 			$query->execute( array( $error, $idRecord, $idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to update data_outbound record: ' . $e->getMessage() );
+			$this->db->query( "UNLOCK TABLES" );
 			return;
 		}
 
@@ -341,6 +367,7 @@ class Leads
 			$query->execute( array( $idFeedOut, $this->parseUrl( $url ), date('Y-m-d') ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
+			$this->db->query( "UNLOCK TABLES" );
 			return;
 		}
 
@@ -349,8 +376,11 @@ class Leads
 			$query->execute( array( $idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to subtract from queue count: ' . $e->getMessage() );
+			$this->db->query( "UNLOCK TABLES" );
 			return $status;
 		}
+
+		$this->db->query( "UNLOCK TABLES" );
 	}
 
 	public function getUrlMappings() {
@@ -596,6 +626,83 @@ class Leads
 		}
 	}
 
+	public function checkURLNotifications( $idFeedIn, $url ) {
+		$cnt = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT COUNT(*) FROM notifications WHERE idFeedIn = ? AND url = ?" );
+			$query->execute( array( $idFeedIn, $this->parseUrl( $url ) ) );
+			$cnt = $query->fetchColumn();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check URL notification records: ' . $e->getMessage() );
+			return $cnt;
+		}
+
+		return $cnt;
+	}
+
+	public function inboundEmailSearch( $email ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT i.*,f.label FROM data_inbound i INNER JOIN feedinc f ON i.idFeedIn = f.idFeedIn WHERE email = ?" );
+			$query->execute( array( $email ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound email search results: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function outboundEmailSearch( $email ) {
+		$results = array();
+
+		$query  = "SELECT i.*,o.idFeedOut,f.label ";
+		$query .= "FROM data_inbound i ";
+		$query .= "INNER JOIN data_outbound o ON o.idRecord = i.idRecord ";
+		$query .= "LEFT JOIN feedout f ON o.idFeedOut = f.idFeedOut ";
+		$query .= "WHERE i.email = ? ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $email ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound email search results: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function inboundURLSearch( $url ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT f.label,s.idFeedIn,MAX(s.stamp) AS timestamp, SUM(s.accepted) AS cnt FROM stats_inbound s LEFT JOIN feedinc f ON f.idFeedIn = s.idFeedIn WHERE url = ? GROUP BY idFeedIn" );
+			$query->execute( array( $url ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound URL search results: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function outboundURLSearch( $url ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT f.label,s.idFeedOut,MAX(s.stamp) AS timestamp,SUM(s.accepted) AS cnt FROM stats_outbound s LEFT JOIN feedout f ON f.idFeedOut = s.idFeedOut WHERE url = ? GROUP BY idFeedOut" );
+			$query->execute( array( $url ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound URL search results: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function archiveErrors() {
 		try {
 			$query = $this->db->prepare( "DELETE FROM errorlog WHERE stamp <= DATE_SUB(NOW(), INTERVAL 15 DAY)" );
@@ -718,7 +825,7 @@ class Leads
 				'origination' => 'LEADS',
 				'description' => $message,
 				'stamp' => date( 'c' ),
-			) );
+			), false );
 		}
 
 		// Limit notification emails to one per minute to prevent flooding
