@@ -330,48 +330,6 @@ class Leads
 		return $status;
 	}
 
-//REMOVE
-	public function getQueued( $idFeedOut ) {
-		$queued = -9999;
-
-		try {
-			$query = $this->db->prepare( "SELECT queued FROM feedout WHERE idFeedOut = ?" );
-			$query->execute( array( $idFeedOut ) );
-			$queued = $query->fetchColumn( );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get queued stats: ' . $e->getMessage() );
-		}
-
-		return $queued;
-	}
-
-//REMOVE
-	public function getLastTime( $label, $url ) {
-		$results = array();
-
-		try {
-			$query = $this->db->prepare( "SELECT MAX(stamp) FROM feedout_{$label} WHERE urlTrim = ?" );
-			$query->execute( array( $url ) );
-			$results = $query->fetch( );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get last URL time: ' . $e->getMessage() );
-		}
-
-		return $results;
-	}
-
-//REMOVE
-	public function addMapping( $idFeedIn, $idFeedOut, $url, $time ) {
-			try {
-				$query = $this->db->prepare( "REPLACE INTO url_mapping(timestamp,idFeedIn,idFeedOut,url) VALUES(?, ?, ?, ?)" );
-				$query->execute( array( $time, $idFeedIn, $idFeedOut, $this->parseUrl( $url ) ) );
-			} catch( PDOException $e ) {
-				$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
-				return $status;
-			}
-
-	}
-
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
 		$this->lockTables( "data_outbound WRITE, stats_outbound WRITE, feedout WRITE, errorlog WRITE" );
 
