@@ -5,6 +5,8 @@ include("../../includes/c_config.php");
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
+require_once( INCLUDES . 'display.php' );
+
 $mysqlErrorSource = 'Manager - Outgoing Feeds';
 include(INCLUDES."_connx.php");
 include(INCLUDES."f_site.php");
@@ -783,11 +785,11 @@ if(isset($_REQUEST['a'])){
 			}
 		break;
 		case 'sendTestRecord':
-        	system( sprintf( 'php -f %s/pushLead/onlms_process.php -- --v=9.6 --testing=1 --idFeedOut=%d >/dev/null 2>&1 &',
+			system( sprintf( 'php -f %s/pushLead/onlms_process.php -- --v=9.6 --testing=1 --idFeedOut=%d >/dev/null 2>&1 &',
 							ADMIN_ROOT,
-                            intval($_REQUEST['idFeedOut'])
-                  )
-            );
+							intval($_REQUEST['idFeedOut'])
+				  )
+			);
 
 			$result['status'] = 1;
 		break;
@@ -798,27 +800,15 @@ if(isset($_REQUEST['a'])){
 
 if(isset($_REQUEST['d'])){ 
 	switch($_REQUEST['d']){
-		case 'errorCount':		
-			$errorCount = getErrorCount();
-			if($errorCount === false){ echo "X"; } else { echo $errorCount; }
+
+		case 'errorCount':
+			Display::errorCount();
 		break;
+
 		case 'errorList':
-			$errorList = getErrors();
-?>
-<div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("errorList");' >Close [X]</a>
-</div>
-<?php
-if($errorList === false){ echo "Error fetching errors list."; } 
-elseif($errorList == 0){ echo "No errors listed for today."; } 
-else { 
-	foreach($errorList as $error){ 
-?>
-<p>(<?php echo $error->stamp; ?>) [<?php echo $error->origination; ?>] : <?php echo $error->description; ?></p>
-<?php
-	}
-}
+			Display::errorList();
 		break;
+
 		case 'outgoingFeeds':
 		
 $outgoingFeeds = getOutgoingFeeds('active');
@@ -893,7 +883,7 @@ if($outgoingFeeds === false){
 			if($companyFeedList[$keyFeed]->rejected === false){ $companyFeedList[$keyFeed]->rejected = 'Error'; }
 			elseif(is_null($companyFeedList[$keyFeed]->rejected)){ $companyFeedList[$keyFeed]->rejected = 0; }
 			else { $totalRejected += $companyFeedList[$keyFeed]->rejected; }
-            
+			
 			$companyFeedList[$keyFeed]->queued = getQueueCount( $feed->label );
 			if($companyFeedList[$keyFeed]->queued === false){ $companyFeedList[$keyFeed]->queued = 'Error'; }
 			elseif(is_null($companyFeedList[$keyFeed]->queued)){ $companyFeedList[$keyFeed]->queued = 0; }
@@ -2366,7 +2356,7 @@ function manageFeed(action, idFeedOut){
 		+"\n"+"varFields: "+varFields
 		+"\n"+"fieldMap: "+fieldMap
 		+"\n"+"successString: "+successString
-	);      */
+	);	  */
 	v = true;
 	if(v && staticFields.length > 1000){ 
 		v = false; alert("Maximum length reached for staticFields.");	
@@ -2565,18 +2555,18 @@ function managePopulation(action, options){
 		filterTypeListcode = 'reject';
 	}
 	filterUrl = $("input[name='"+c+"_popset_filterUrl\\[\\]']")
-        .map(function(){return $(this).val().trim();}).get().join(";");
+		.map(function(){return $(this).val().trim();}).get().join(";");
 	filterEmail = $("input[name='"+c+"_popset_filterEmail\\[\\]']")
-        .map(function(){return $(this).val().trim();}).get().join(";");
+		.map(function(){return $(this).val().trim();}).get().join(";");
 	filterListcode = $("input[name='"+c+"_popset_filterListcode\\[\\]']")
-        .map(function(){return $(this).val().trim();}).get().join(";");
+		.map(function(){return $(this).val().trim();}).get().join(";");
 	
 	if($(e+'forceUrl_disabled').is(":checked")){ forceUrl = '0'; }
 	else { forceUrl = '1'; }	
 	forceUrlList_originals = $("input[name='"+c+"_popset_forceUrlList_original\\[\\]']")
-        .map(function(){return $(this).val().trim();});
+		.map(function(){return $(this).val().trim();});
 	forceUrlList_altereds = $("input[name='"+c+"_popset_forceUrlList_altered\\[\\]']")
-        .map(function(){return $(this).val().trim();});
+		.map(function(){return $(this).val().trim();});
 	forceUrlList = ''; colonFlag = false;
 	for(count = 0; count < forceUrlList_originals.length; count++){ 
 		if(colonFlag) forceUrlList += ';';
@@ -2598,7 +2588,7 @@ function managePopulation(action, options){
 		+"\n"+"filterListcode: "+filterListcode
 		+"\n"+"forceUrl: "+forceUrl
 		+"\n"+"forceUrlList: "+forceUrlList
-	);     */
+	);	 */
 	c = true;
 	if(c && filterUrl.length > 5000){ alert("Maximum length reached for url filters, remove some <?php
 		?>filters and consider creating a new feed, or consider changing the filtering type.");
@@ -2907,14 +2897,14 @@ function sendTestRecord(idFeedOut, options){
 }
 
 function equalHeight(group) {
-    tallest = 0;
-    group.each(function() {
-        thisHeight = $(this).height();
-        if(thisHeight > tallest) {
-            tallest = thisHeight;
-        }
-    });
-    group.height(tallest);
+	tallest = 0;
+	group.each(function() {
+		thisHeight = $(this).height();
+		if(thisHeight > tallest) {
+			tallest = thisHeight;
+		}
+	});
+	group.height(tallest);
 }
 
 $(document).ready(function(){ 

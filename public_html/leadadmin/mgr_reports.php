@@ -8,6 +8,8 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
+require_once( INCLUDES . 'display.php' );
+
 if( isset( $_REQUEST['a'] ) ) {
 	$result = array(
 		'status' => 0,
@@ -42,33 +44,15 @@ if( isset( $_REQUEST['a'] ) ) {
 
 if( isset( $_REQUEST['d'] ) ) {
 	switch( $_REQUEST['d'] ) {
-		case 'errorCount':		
-			$errorCount = getErrorCount();
-			if( $errorCount === false ) {
-				echo "X";
-			} else {
-				echo $errorCount;
-			}
+
+		case 'errorCount':
+			Display::errorCount();
 		break;
+
 		case 'errorList':
-			$errorList = getErrors();
-?>
-<div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("errorList");' >Close [X]</a>
-</div>
-<?php
-if( $errorList === false ) {
-	echo "Error fetching errors list.";
-} elseif( $errorList == 0 ) {
-	echo "No errors listed for today.";
-} else {
-	foreach( $errorList as $error ) {
-?>
-<p>(<?php echo $error->stamp; ?>) [<?php echo $error->origination; ?>] : <?php echo $error->description; ?></p>
-<?php
-	}
-}
+			Display::errorList();
 		break;
+
 		case 'reports':
 ?>
 
