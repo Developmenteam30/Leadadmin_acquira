@@ -2,6 +2,8 @@
 require_once("../../includes/c_config.php");
 require_once( INCLUDES . 'leads.php' );
 
+$statsDay = date('Y-m-d');
+
 Header('Content-Type: text/xml');
 
 function updateStats( $idFeedOut, $url, $win, $fail, $skip ) {
@@ -240,7 +242,7 @@ unlockTables();
 
 if( !empty( $feedParams ) ) {
 	$leads = Leads::getInstance();
-	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $c ? null : $result['reason'], null );
+	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $c ? null : $result['reason'], null );
 }
 
 //Population Portion of the script. 
@@ -373,7 +375,7 @@ if($c){
 
 									if( !empty( $_REQUEST['url'] ) ) {
 										updateStats( $feed->idFeedOut, $_REQUEST['url'], 0, 1, 0 );
-										$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $result['reason'] );
+										$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $statsDay, $result['reason'] );
 									}
 
 								} else {

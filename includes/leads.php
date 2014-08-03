@@ -77,6 +77,24 @@ class Leads
 		return null;
 	}
 
+	public function lockTables( $tables ) {
+		if( !empty( $tables ) ) {
+			try {
+				$this->db->query( "LOCK TABLES " . $tables );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to lock tables: ' . $e->getMessage() );
+			}
+		}
+	}
+
+	public function unlockTables() {
+		try {
+			$this->db->query( "UNLOCK TABLES" );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to unlock tables: ' . $e->getMessage() );
+		}
+	}
+
 	public function verifyUser( $username, $password ) {
 		try {
 			$query = $this->db->prepare( "SELECT idUser,username,password FROM users WHERE username = ?" );
@@ -203,9 +221,10 @@ class Leads
 		return $results;
 	}
 
-	public function inboundAdd( $idFeedIn, $fields, $error = null, $jobId = null ) {
+	public function inboundAdd( $idFeedIn, $fields, $statsDay, $error = null, $jobId = null ) {
+		$this->lockTables( "data_inbound WRITE, stats_inbound WRITE, errorlog WRITE" );
 
-		$idRecord = $this->insertRow( 'data_inbound', array(
+		$status = $idRecord = $this->insertRow( 'data_inbound', array(
 			'timestamp' => date( 'c' ),
 			'idFeedIn' => $idFeedIn,
 			'listcode' => empty( $fields['listcode'] ) ? null : $fields['listcode'],
@@ -229,47 +248,55 @@ class Leads
 			'jobId' => empty( $jobId ) ? null : $jobId,
 		) );
 
-		try {
-			if( !empty( $fields['url'] ) ) {
-				if( empty( $error ) ) {
-					$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
-				} else {
-					$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
+		if( $status !== null ) {
+			try {
+				if( !empty( $fields['url'] ) ) {
+					if( empty( $error ) ) {
+						$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
+					} else {
+						$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
+					}
+					$query->execute( array( $idFeedIn, $this->parseUrl( $fields['url'] ) , $statsDay ) );
 				}
-				$query->execute( array( $idFeedIn, $this->parseUrl( $fields['url'] ) , date('Y-m-d') ) );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to insert stats_inbound record: ' . $e->getMessage() );
+				$this->unlockTables();
+				return $idRecord;
 			}
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to insert stats_inbound record: ' . $e->getMessage() );
-			return $idRecord;
 		}
 
+		$this->unlockTables();
 		return $idRecord;
 	}
 
-	public function inboundProcess( $idRecord, $idFeedIn, $url, $error = null ) {
+	public function inboundProcess( $idRecord, $idFeedIn, $url, $statsDay, $error = null ) {
+		$this->lockTables( "data_inbound WRITE, stats_inbound WRITE, errorlog WRITE" );
+
 		try {
 			$query = $this->db->prepare( 'UPDATE data_inbound SET result = ? WHERE idRecord = ?' );
 			$query->execute( array( $error, $idRecord ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to update data_inbound record: ' . $e->getMessage() );
+			$this->unlockTables();
 			return;
 		}
 
 		try {
-			if( empty( $error ) ) {
-				$query = $this->db->prepare( 'UPDATE stats_inbound SET accepted = accepted + 1, rejected = rejected - 1 WHERE idFeedIn = ? AND url = ?' );
-			} else {
-				$query = $this->db->prepare( 'UPDATE stats_inbound SET accepted = accepted - 1, rejected = rejected + 1 WHERE idFeedIn = ? AND url = ?' );
+			if( !empty( $error ) ) {
+				$query = $this->db->prepare( 'UPDATE stats_inbound SET accepted = accepted - 1, rejected = rejected + 1 WHERE idFeedIn = ? AND url = ? AND stamp = ?' );
 			}
-			$query->execute( array( $idFeedIn, $this->parseUrl( $url ) ) );
+			$query->execute( array( $idFeedIn, $this->parseUrl( $url ), $statsDay ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to update stats_inbound record: ' . $e->getMessage() );
+			$this->unlockTables();
 			return;
 		}
+
+		$this->unlockTables();
 	}
 
 	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url ) {
-		$this->db->query( "LOCK TABLES data_outbound WRITE, url_mapping WRITE, feedout WRITE, errorlog WRITE" );
+		$this->lockTables( "data_outbound WRITE, url_mapping WRITE, feedout WRITE, errorlog WRITE" );
 
 		$status = $this->insertRow( 'data_outbound', array(
 			'idRecord' => $idRecord,
@@ -284,7 +311,7 @@ class Leads
 				$query->execute( array( $idFeedIn, $idFeedOut, $this->parseUrl( $url ) ) );
 			} catch( PDOException $e ) {
 				$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
-				$this->db->query( "UNLOCK TABLES" );
+				$this->unlockTables();
 				return $status;
 			}
 
@@ -293,12 +320,12 @@ class Leads
 				$query->execute( array( $idFeedOut ) );
 			} catch( PDOException $e ) {
 				$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
-				$this->db->query( "UNLOCK TABLES" );
+				$this->unlockTables();
 				return $status;
 			}
 		}
 
-		$this->db->query( "UNLOCK TABLES" );
+		$this->unlockTables();
 
 		return $status;
 	}
@@ -346,7 +373,7 @@ class Leads
 	}
 
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
-		$this->db->query( "LOCK TABLES data_outbound WRITE, stats_outbound WRITE, feedout WRITE, errorlog WRITE" );
+		$this->lockTables( "data_outbound WRITE, stats_outbound WRITE, feedout WRITE, errorlog WRITE" );
 
 		try {
 			//$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecord = ?' );
@@ -354,7 +381,7 @@ class Leads
 			$query->execute( array( $error, $idRecord, $idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to update data_outbound record: ' . $e->getMessage() );
-			$this->db->query( "UNLOCK TABLES" );
+			$this->unlockTables();
 			return;
 		}
 
@@ -367,7 +394,7 @@ class Leads
 			$query->execute( array( $idFeedOut, $this->parseUrl( $url ), date('Y-m-d') ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
-			$this->db->query( "UNLOCK TABLES" );
+			$this->unlockTables();
 			return;
 		}
 
@@ -376,11 +403,11 @@ class Leads
 			$query->execute( array( $idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to subtract from queue count: ' . $e->getMessage() );
-			$this->db->query( "UNLOCK TABLES" );
+			$this->unlockTables();
 			return $status;
 		}
 
-		$this->db->query( "UNLOCK TABLES" );
+		$this->unlockTables();
 	}
 
 	public function getUrlMappings() {
@@ -789,7 +816,7 @@ class Leads
 
 	public function resetQueuedStats() {
 		try {
-			$this->db->query( "LOCK TABLES feedout WRITE, data_outbound WRITE" );
+			$this->lockTables( "feedout WRITE, data_outbound WRITE" );
 
 			$this->db->query( "UPDATE feedout SET queued = 0" );
 
@@ -803,7 +830,7 @@ class Leads
 				$query->execute( array( $row['cnt'], $row['idFeedOut'] ) );
 			}
 
-			$this->db->query( "UNLOCK TABLES" );
+			$this->unlockTables();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to reset queued stats: ' . $e->getMessage() );
 		}

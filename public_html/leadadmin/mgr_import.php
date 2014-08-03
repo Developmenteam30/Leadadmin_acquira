@@ -137,7 +137,7 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 		if( ( $lastRecord = insertIncomingData( $feedParams, $data, $jobId ) ) !== null ) {
 
-			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, null, $jobId );
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $jobId );
 
 			pushIncomingData( $idFeedIn, $data, $inboundId );
 			$counts['success']++;
@@ -158,7 +158,7 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 		insertIncomingData( $feedParams, $data, $jobId, $result['errors'][0] );
 
-		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, $result['errors'][0], $jobId );
+		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $jobId );
 	}
 
 	print "<br/>\n";
