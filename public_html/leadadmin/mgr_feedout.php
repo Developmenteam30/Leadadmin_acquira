@@ -67,7 +67,7 @@ function addFeedOut(
 	if($c){ //Create feedout table..
 		$createTable = "CREATE TABLE `".DATABASE_NAME."`.`feedout_".$label."` ( "
 			."`idRecord` bigint(20) NOT NULL auto_increment, "
-			."`processed` enum('0','1') default '0', "
+			."`processed` enum('-1','0','1') default '0', "
 			."`poststamp` datetime default NULL, "
 			."`postrequest` varchar(1000) default NULL, "
 			."`postresponse` varchar(1000) default NULL, "
