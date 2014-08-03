@@ -298,7 +298,11 @@ if($c){
 							$insertToFeedOut .= ", `urlTrim` ";
 						}
 					}
-					$insertToFeedOut .= ") VALUES ( '0' ";
+					if( !empty( $feed->livedata ) ) {
+						$insertToFeedOut .= ") VALUES ( '-1' ";
+					} else {
+						$insertToFeedOut .= ") VALUES ( '0' ";
+					}
 					foreach($allowedFields as $allowedField){ 
 						if(isset($_REQUEST[$allowedField])){ 
 							if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
@@ -339,8 +343,7 @@ if($c){
 				if( $p && !empty( $lastRecord ) && !empty( $feed->livedata ) ) {
 					require_once( SITE_ROOT . FD . 'pushLead/_f_onlms.php' );
     
-					$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label."` "
-								."WHERE `processed` = '0' AND idRecord = " . $lastRecord ;
+					$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label. "` WHERE `processed` = '-1' AND idRecord = " . $lastRecord;
 					$dogetLead = dbQry($getLead, 'Fetching live lead to process', true);
 					if($dogetLead === false){
 						logError(
