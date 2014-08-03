@@ -184,7 +184,7 @@ function notifyManagers($body)
 		$subject	= 'List Management - New URL Alert';
 		$messages 	= $body;
 		$header 	= "From:" . $fromName . " <" . $from . ">\r\n";
-		$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+		//$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
 		$header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
 		$header .= "Reply-To: <" . $from . ">\r\n";
 		$header .= "X-Sender: <" . $from . ">\r\n";
@@ -805,9 +805,11 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 		$lastRecord = $GLOBALS['dbconnx']->insert_id;
 
 	    // Notify if this is the first time we've seen this URL on this feed
-		if( !empty( $data['urlTrim'] ) && empty( $error ) ) {
-			$urlCount = checkExists( 'urlTrim', $data, $feedParams->label );
-			if( $urlCount == 0 ) {
+		if( !empty( $data['url'] ) && empty( $error ) ) {
+
+			$leads = Leads::getInstance();
+			$urlCount = $leads->checkURLNotifications( $feedParams->idFeedIn, $data['url'] );
+			if( $urlCount === 0 ) {
 				notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
 										str_replace( '.', '*', $data['urlTrim'] ) )
 							);
