@@ -10,11 +10,13 @@ $leads = Leads::getInstance();
 
 if(isset($_REQUEST['a'])){ 
 	$result = array(
-		'status' => 0
-		, 'error' => 'Action does not exist.'
+		'status' => 0,
+		'error' => 'Action does not exist.',
 	);
+
 	switch($_REQUEST['a']){
 	}
+
 	echo json_encode($result);
 	exit;
 }
