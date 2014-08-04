@@ -5,8 +5,8 @@ require_once( 'processFunctions.php' );
 
 class Leads
 {
-	private $db;
-	private static $instance;
+	protected $db;
+	protected static $instance;
 
 	public static function getInstance() {
 
@@ -17,7 +17,7 @@ class Leads
 		return self::$instance;
 	}
 
-	private function __construct() {
+	protected function __construct() {
 
 		// Connect to the database
 		try {
@@ -49,7 +49,7 @@ class Leads
 		return $url;
 	}
 
-	private function quoteIdentifier( $value ) {
+	protected function quoteIdentifier( $value ) {
 		$q = '`';
 		return ( $q . str_replace( "$q", "$q$q", $value ) . $q );
 	}
