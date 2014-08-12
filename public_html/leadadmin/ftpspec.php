@@ -17,7 +17,7 @@ if( empty( $feed ) ) {
         die('ERROR: Feed not found.');
 }
 
-$company = $leads->getCompany( $feed['idCompany'] );
+$company = $leads->getCompany( $feed->idCompany );
 
 $fields = array(
         'listcode' => array( 'type' => 'varchar(20)', 'format' => '', 'notes' => 'Campaign ID or List Descriptor' ),
@@ -39,14 +39,14 @@ $fields = array(
         'cellphone' => array( 'type' => 'varchar(20)', 'format' => '##########', 'notes' => 'Alternate phone' ),
 );
 
-$requiredArray = explode( ';', $feed['required'] );
-$allowedArray = explode( ';', $feed['allowedFields'] );
+$requiredArray = explode( ';', $feed->required );
+$allowedArray = explode( ';', $feed->allowedFields );
 
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-<title>FTP Specifications - <?php echo $company['name']; ?></title>
+<title>FTP Specifications - <?php echo $company->name; ?></title>
 	<style type="text/css">
 	<!--
 		body { font-family: Verdana, sans-serif; padding-bottom: 50px; }
@@ -64,14 +64,14 @@ $allowedArray = explode( ';', $feed['allowedFields'] );
 
 <h2>Lead Submission FTP Specifications</h2>
 
-<h3>Company: <?php echo $company['name']; ?> (Feed: <?php echo $feed['idFeedIn'] ?>)</h3>
+<h3>Company: <?php echo $company->name; ?> (Feed: <?php echo $feed->idFeedIn ?>)</h3>
 
 <hr/>
 
 <h3>Server Information</h3>
 <p>FTP Hostname: <strong><?php echo SITE_URL; ?></strong></p>
-<p>FTP Username: <strong><?php echo $feed['label']; ?></strong></p>
-<p>FTP Password: <strong><?php echo $feed['password']; ?></strong></p>
+<p>FTP Username: <strong><?php echo $feed->label; ?></strong></p>
+<p>FTP Password: <strong><?php echo $feed->password; ?></strong></p>
 
 <hr/>
 

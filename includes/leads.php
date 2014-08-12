@@ -54,7 +54,7 @@ class Leads
 		return ( $q . str_replace( "$q", "$q$q", $value ) . $q );
 	}
 
-	public function insertRow( $table, array $data, $logError = true ) {
+	private function insertRow( $table, array $data, $logError = true ) {
 		$cols = array();
 		$vals = array();
 
@@ -70,6 +70,42 @@ class Leads
 		} catch( PDOException $e ) {
 			if( $logError ) {
 				$this->logError( 'Unable to insert record: ' . $e->getMessage() );
+			}
+			return null;
+		}
+
+		return null;
+	}
+
+	private function update( $table, array $data, array $where = array() ) {
+		$cols = array();
+		$where_cols = array();
+
+		if( empty( $data ) ) {
+			return null;
+		}
+		foreach ( $data as $col => $val ) {
+			$cols[] = $this->quoteIdentifier( $col ) . ' = ?';
+		}
+
+		if( !empty( $where ) ) {
+			foreach ( $where as $col => $val ) {
+				$where_cols[] = $this->quoteIdentifier( $col ) . ' = ?';
+			}
+		}
+
+		try {
+			$sql = 'UPDATE ' . $this->quoteIdentifier( $table ) . ' SET ' . implode( ', ', $cols );
+			if( !empty( $where_cols ) ) {
+				$sql .= ' WHERE ' . implode(' AND ', $where_cols );
+			}
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( array_merge( array_values( $data ), array_values( $where ) ) );
+			return true;
+		} catch( PDOException $e ) {
+			if( $logError ) {
+				$this->logError( 'Unable to update table: ' . $e->getMessage() );
 			}
 			return null;
 		}
@@ -104,14 +140,14 @@ class Leads
 			if( $results ) {
 
 				if( password_verify( $password, $results['password'] ) ) {
-            
+
 					// If the password hash is outdated, rehash and save to the database
 					if( password_needs_rehash( $results['password'], PASSWORD_DEFAULT, array( 'cost' => 11 ) ) ) {
 						$hash = password_hash( $password, PASSWORD_DEFAULT, array( 'cost' => 11 ) );
 
 						$query = $this->db->prepare( "UPDATE users SET password = ? WHERE username = ?" );
 						$query->execute( array( $username, $hash ) );
-            
+
 					}
 
 					return true;
@@ -133,7 +169,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT * FROM companies WHERE idCompany = ?" );
 			$query->execute( array( $idCompany ) );
-			$results = $query->fetch( );
+			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get company info: ' . $e->getMessage() );
 		}
@@ -147,12 +183,86 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT * FROM companies ORDER BY name" );
 			$query->execute( );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get company list: ' . $e->getMessage() );
 		}
 
 		return $results;
+	}
+
+	public function addInboundFeed( $fields ) {
+
+		if( empty( $fields['label'] ) ) {
+			return null;
+		}
+
+		$idFeedIn = $this->insertRow( 'feedinc', array(
+			'label' => $fields['label'],
+			'description' => empty( $fields['description'] ) ? null : $fields['description'],
+			'idCompany' => $fields['idCompany'],
+			'required' => empty( $fields['required'] ) ? null : $fields['required'],
+			'allowedFields' => empty( $fields['allowedFields'] ) ? null : $fields['allowedFields'],
+			'password' => empty( $fields['password'] ) ? null : $fields['password'],
+			'dedupeEmail' => empty( $fields['dedupeEmail'] ) ? 0 : 1,
+			'dedupeLandline' => empty( $fields['dedupeLandline'] ) ? 0 : 1,
+			'dedupeCellphone' => empty( $fields['dedupeCellphone'] ) ? 0 : 1,
+			'rejectOldLeads' => empty( $fields['rejectOldLeads'] ) ? null : $fields['rejectOldLeads'],
+			'rejectOldLeadsMaxAge' => empty( $fields['rejectOldLeadsMaxAge'] ) ? null : $fields['rejectOldLeadsMaxAge'],
+			'retired' => empty( $fields['retired'] ) ? 0 : 1,
+			'dedupeAcross' => empty( $fields['dedupeAcross'] ) ? null : $fields['dedupeAcross'],
+			'filterTypeUrl' => empty( $fields['filterTypeUrl'] ) ? null : $fields['filterTypeUrl'],
+			'filterTypeSiftLogic' => empty( $fields['filterTypeSiftLogic'] ) ? null : $fields['filterTypeSiftLogic'],
+			'notifications' => empty( $fields['notifications'] ) ? 0 : 1,
+		) );
+
+		if( null === $idFeedIn ) {
+			return null;
+		}
+
+		try {
+			$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] ) . " LIKE feedinc_empty" );
+			$query->execute( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to create new inbound table: ' . $e->getMessage() );
+			return null;
+		}
+
+		try {
+			$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] . "_invalid" ) . " LIKE feedinc_empty_invalid" );
+			$query->execute( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to create new inbound invalid table: ' . $e->getMessage() );
+			return null;
+		}
+
+		return $idFeedIn;
+	}
+
+	public function updateInboundFeed( $idFeedIn, $fields ) {
+		return $this->update( 'feedinc', $fields, array(
+			'idFeedIn' => $idFeedIn,
+		) );
+	}
+
+	public function renameInboundTables( $old, $new ) {
+		try {
+			$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new ) );
+			$query->execute( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to rename inbound table: ' . $e->getMessage() );
+			return null;
+		}
+
+		try {
+			$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old . "_invalid" ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new . "_invalid" ) );
+			$query->execute( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to rename inbound invalid table: ' . $e->getMessage() );
+			return null;
+		}
+
+		return true;
 	}
 
 	public function getInboundFeed( $idFeedIn ) {
@@ -161,7 +271,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT * FROM feedinc WHERE idFeedIn = ?" );
 			$query->execute( array( $idFeedIn ) );
-			$results = $query->fetch( );
+			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound feed info: ' . $e->getMessage() );
 		}
@@ -186,6 +296,22 @@ class Leads
 		}
 
 		return $results;
+	}
+
+	public function checkInboundFeedLabelExists( $label ) {
+		$result = false;
+
+		try {
+			$query = $this->db->prepare( "SELECT 1 FROM feedinc WHERE label = ?" );
+			$query->execute( array( $label ) );
+			if( '1' == $query->fetchColumn( ) ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check inbound feed label: ' . $e->getMessage() );
+		}
+
+		return $result;
 	}
 
 	public function getOutboundFeeds( $retired = null ) {

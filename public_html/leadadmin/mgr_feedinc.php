@@ -6,211 +6,14 @@ require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
 require_once( INCLUDES . 'leads.php' );
+$leads = Leads::getInstance();
+
 require_once( INCLUDES . 'display.php' );
 
 $mysqlErrorSource = 'Manager - Incoming Feeds';
 $forceMysqlLogFile = SITE_ROOT."error".FD."log_feedinc"; 
 include(INCLUDES."_connx.php");
 include(INCLUDES."f_site.php");
-
-
-function checkExistsLabelFeedIn($label){ 
-	//Returns quantity of matching records, or false if it fails.
-	dbCon();
-	$checkFeed = "SELECT * FROM `".DATABASE_NAME."`.`feedinc` "
-		."WHERE "
-			."`label` = '".$GLOBALS['dbconnx']->escape_string($label)."' "
-		.";";
-	$docheckFeed = dbQry($checkFeed, 'Checking if label exists', true);
-	dbDcon();
-	if($docheckFeed === false){ return false; }
-	return $docheckFeed->num_rows;
-}
-
-function addFeedIn(
-	$label
-	, $description
-	, $idCompany
-	, $required
-	, $allowedFields
-	, $password
-	, $dedupeEmail
-	, $dedupeLandline
-	, $dedupeCellphone
-	, $dedupeAcross
-	, $filterTypeUrl
-	, $filterUrl
-	, $filterTypeSiftLogic
-	, $filterSiftLogic
-	, $notifications
-	, $rejectOldLeadsMaxAge
-){ 
-	$result = array(
-		'success' => false
-		, 'reason' => 'None.'
-	);
-	$c = true;
-	dbCon("insertUpdate");
-	if($c){ //Add feed.
-		$addFeed = "INSERT INTO `".DATABASE_NAME."`.`feedinc` "
-			."(`label`,`description`,`idCompany`,`required`,`allowedFields`,`password`, "
-			."`dedupeEmail`,`dedupeLandline`, `dedupeCellphone`, `dedupeAcross`, `filterTypeUrl`, `filterUrl`, `filterTypeSiftLogic`, `filterSiftLogic`, `notifications`, `rejectOldLeadsMaxAge`) VALUES ( "
-			."  '".$GLOBALS['dbconnx']->escape_string($label)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($description)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($idCompany)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($required)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($allowedFields)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($password)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($dedupeEmail)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($dedupeLandline)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($dedupeCellphone)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($dedupeAcross)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($filterTypeUrl)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($filterUrl)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($filterTypeSiftLogic)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($filterSiftLogic)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($notifications)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($rejectOldLeadsMaxAge)."' "
-			.");";
-		$doaddFeed = dbQry($addFeed, 'Adding new feed.', true);
-		if($doaddFeed === false){ 
-			$c = false; $result['reason'] = 'Database failure - could not add feed.';
-		} 
-	}
-	if($c){ //Create valids table.
-		$createValidsTable = "CREATE TABLE `".DATABASE_NAME."`.`feedinc_".$label."` ( "
-			."`idRecord` int(11) NOT NULL auto_increment, "
-			."`queryString` varchar(1000) default NULL, "
-			."`listcode` varchar(20) default NULL, "
-			."`urlTrim` varchar(100) default NULL, "
-			."`url` varchar(500) default NULL, "
-			."`ip` varchar(16) default NULL, "
-			."`received` datetime default NULL, "
-			."`stamp` datetime default NULL, "
-			."`email` varchar(150) default NULL, "
-			."`fname` varchar(50) default NULL, "
-			."`lname` varchar(50) default NULL, "
-			."`addr` varchar(150) default NULL, "
-			."`addr2` varchar(150) default NULL, "
-			."`city` varchar(75) default NULL, "
-			."`state` varchar(25) default NULL, "
-			."`zip` varchar(20) default NULL, "
-			."`dob` date default NULL, "
-			."`gender` varchar(10) default NULL, "
-			."`landline` varchar(20) default NULL, "
-			."`cellphone` varchar(20) default NULL, "
-			."`country` varchar(75) default NULL, "
-			."`jobId` INT(6) default NULL, "
-			."PRIMARY KEY  (`idRecord`), "
-			."KEY `email` (`email`), "
-			."KEY `jobId` (`jobId`), "
-			."KEY `urlTrimDate` (`urlTrim`,`received`), "
-			."KEY `urlTrim` (`urlTrim`) "
-			.") AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
-		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
-		if($docreateValidsTable === false){ 
-			$c = false; $result['reason'] = 'Database failure - could not create valids table.';
-		}
-	}
-	if($c){ //Create invalids table.
-		$createValidsTable = "CREATE TABLE `".DATABASE_NAME."`.`feedinc_".$label."_invalid` ( "
-			."`idRecord` int(11) NOT NULL auto_increment, "
-			."`queryString` varchar(2500) default NULL, "
-			."`error` varchar(500) default NULL, "
-			."`listcode` varchar(20) default NULL, "
-			."`urlTrim` varchar(100) default NULL, "
-			."`url` varchar(500) default NULL, "
-			."`ip` varchar(16) default NULL, "
-			."`received` datetime default NULL, "
-			."`stamp` datetime default NULL, "
-			."`email` varchar(150) default NULL, "
-			."`fname` varchar(50) default NULL, "
-			."`lname` varchar(50) default NULL, "
-			."`addr` varchar(150) default NULL, "
-			."`addr2` varchar(150) default NULL, "
-			."`city` varchar(75) default NULL, "
-			."`state` varchar(25) default NULL, "
-			."`zip` varchar(20) default NULL, "
-			."`dob` date default NULL, "
-			."`gender` varchar(10) default NULL, "
-			."`landline` varchar(20) default NULL, "
-			."`cellphone` varchar(20) default NULL, "
-			."`country` varchar(75) default NULL, "
-			."`jobId` INT(6) default NULL, "
-			."PRIMARY KEY  (`idRecord`), "
-			."KEY `jobId` (`jobId`) "
-			.") AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
-		$docreateValidsTable = dbQry($createValidsTable, 'Creating table for valid records.', true);
-		if($docreateValidsTable === false){ 
-			$c = false; $result['reason'] = 'Database failure - could not create valids table.';
-		}
-	}
-	dbDcon();
-	if($c){ 
-		$result['success'] = true;
-		$result['reason'] = 'Successfully added feed and created feed tables.';
-	}
-	return $result;
-}
-
-function alterFeedIn($idFeedIn, $property, $newVal){ 
-	$result = array(
-		'success' => false
-		, 'reason' => 'None.'
-	);
-	$c = true;
-	switch($property){
-		case 'label':
-			//Change label in database.
-			if($c){ 
-				$feed = getIncomingFeed($idFeedIn);
-				if($feed === false){ 
-					$c = false; $result['reason'] = 'Database failure - could not fetch feed to alter.';
-				}
-			}
-			dbCon("insertUpdate");
-			if($c){ //Updated feedinc entry.
-				$updateLabel = "UPDATE `".DATABASE_NAME."`.`feedinc` "
-					."SET `label` = '".$newVal."' "
-					."WHERE `idFeedIn` = '".$idFeedIn."'; ";
-				$doupdateLabel = dbQry($updateLabel, 'Updating feed label', true);
-				if($doupdateLabel === false){ $c = false; $result['reason'] = 'Database failure - could not update '
-					.'label name.';
-				}
-			}
-			if($c){ //Updating table names.
-				$updateTableNames = 
-					"RENAME TABLE "
-						."`".DATABASE_NAME."`.`feedinc_".$feed->label."` "
-							."TO `".DATABASE_NAME."`.`feedinc_".$newVal."`, "
-						."`".DATABASE_NAME."`.`feedinc_".$feed->label."_invalid` "
-							."TO `".DATABASE_NAME."`.`feedinc_".$newVal."_invalid`; ";
-				$doupdateTableNames = dbQry($updateTableNames, 'Updating table names', true);
-				if($doupdateTableNames === false){ 
-					$c = false; $result['reason'] = 'Database failure - could not update table names.';
-				}
-			}
-			dbDcon();
-			if($c){ $result['success'] = true; $result['reason'] = 'Successfully updated label for incoming feed.'; }
-		break;
-		default: 
-			dbCon("insertUpdate");
-			if($c){ //Updated feedinc entry.
-				$updateProperty = "UPDATE `".DATABASE_NAME."`.`feedinc` "
-					."SET `".$property."` = '".$newVal."' "
-					."WHERE `idFeedIn` = '".$idFeedIn."'; ";
-				$doupdateProperty = dbQry($updateProperty, 'Updating incoming feed properties', true);
-				if($doupdateProperty === false){ $c = false; $result['reason'] = 'Database failure - could not update '
-					.$property.'.';
-				}
-			}
-			if($c){ $result['success'] = true; $result['reason'] = 'Successfully updated '.$property.' for incoming '
-				.'feed.';
-			}
-		break;
-	}
-	return $result;
-}
 
 function exportData($feedObject, $settings){
 	$result = array(
@@ -317,285 +120,167 @@ if(isset($_REQUEST['a'])){
 	);
 	switch($_REQUEST['a']){
 		case "manageFeed":
-			$c = true; $result['error'] = 'Failed when attempting to manage feeds.';
+			$c = true;
+			$result['error'] = 'Failed when attempting to manage feeds.';
 			$action = $_REQUEST['action'];
-			if($action == 'new'){
-				$result['error'] = 'Failed when adding a new feed.';
-				//Validate Input
-				if($c && ( //Label Cannot be empty.
-					$_REQUEST['label'] == ''
-				)){ $c = false; $result['error'] = 'Label cannot be empty.'; }
-				if($c //Label cannot have invalid characters
-				){
-					$pattern = '/^[a-z][a-z0-9_]*$/';
-					if(!preg_match($pattern, $_REQUEST['label'])){ 
-						$c = false; $result['error'] = 'Label must start with a letter, can contain lowercase letters, '
-							.'numbers, and underscore only.';
+
+			//Validate Input
+			if( empty( $_REQUEST['label'] ) ) {
+				$c = false;
+				$result['error'] = 'Label cannot be empty.';
+			}
+
+			if( empty( $_REQUEST['idCompany'] ) ) {
+				$c = false;
+				$result['error'] = 'Company cannot be empty.';
+			}
+
+			if( $c ) {
+				//Label cannot have invalid characters
+				$pattern = '/^[a-z][a-z0-9_]*$/';
+				if(!preg_match($pattern, $_REQUEST['label'])){ 
+					$c = false;
+					$result['error'] = 'Labels must start with a letter, can contain lowercase letters, numbers, and underscore only.';
+				}
+			}
+
+			if( $c && empty( $_REQUEST['allowedFields'] ) ) {
+				// Must allow some fields, or the feed is worthless isn't it
+				$c = false;
+				$result['error'] = 'You must allow at least one field to be processed.'; 
+			}
+
+			if( $c ) {
+				//Make sure that any required fields are also allowed
+				$selectedRequired = explode( ";", $_REQUEST['required'] );
+				$selectedAllowedFields = explode( ";", $_REQUEST['allowedFields'] );
+				foreach( $selectedRequired as $f ) {
+
+					switch( $f ) {
+						case "phone":
+							if( !in_array( 'landline', $selectedAllowedFields ) || !in_array( 'cellphone', $selectedAllowedFields ) ) {
+								$c = false;
+								$result['error'] = 'If phone is selected, both landline and cellphone must be allowed fields.';
+							}
+							break;
+
+						default: 
+							if( !in_array( $f, $selectedAllowedFields ) ) {
+								$c = false;
+								$result['error'] = "If {$f} is a required field, then that field must be allowed as well.";
+							}
+					}
+					if( !$c ) {
+						break; 
 					}
 				}
-				if($c && ( //Must allow some fields, or the feed is worthless isn't it
-					$_REQUEST['allowedFields'] == ''
-				)){ 
-					$c = false; $result['error'] = 'You must allow fields to be processed.'; 
-				}
-				//Special Validation of Inputs
-				if($c){  //Label can not be already used
-					$checkResult = checkExistsLabelFeedIn($_REQUEST['label']);
-					if($checkResult === false){ 
-						$c = false; $result['error'] = 'Database failure - could not '
-							.'check if label is already in use.'; 
-					}
-					if($c && $checkResult > 0){ 
-						$c = false; $result['error'] = 'Label is already in use.'; 
+			}
+
+			if( 'new' == $action ) {
+
+				if( $c ) {
+					//Label can not be already used
+					$checkResult = $leads->checkInboundFeedLabelExists( $_REQUEST['label'] );
+					if( true === $checkResult ) {
+						$c = false;
+						$result['error'] = 'Label is already in use.'; 
 					}					
 				}
-				if($c){ //Make sure that any required fields are also allowed
-					$selectedRequired = explode(";", $_REQUEST['required']);
-					$selectedAllowedFields = explode(";", $_REQUEST['allowedFields']);
-					foreach($selectedRequired as $f){ 
-						switch($f){ 
-							case "phone":
-								if(
-									!in_array('landline', $selectedAllowedFields) 
-									|| !in_array('cellphone', $selectedAllowedFields)
-								){
-									$c = false; $result['error'] = 'If phone is selected, both landline and cellphone '
-										.'must be allowed fields.';
-								}
-							break;
-							default: 
-								if(!in_array($f, $selectedAllowedFields)){ 
-									$c = false; $result['error'] = $f.' is a required field, '
-										.'and must be allowed as well.';
-								}
-						}
-						if(!$c){ break; }
+
+				if( $c ) { //Add entry to the database.
+					$idFeedIn = $leads->addInboundFeed( array(
+						'label' => empty( $_REQUEST['label'] ) ? null : $_REQUEST['label'],
+						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
+						'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
+						'required' => empty( $_REQUEST['required'] ) ? null : $_REQUEST['required'],
+						'allowedFields' => empty( $_REQUEST['allowedFields'] ) ? null : $_REQUEST['allowedFields'],
+						'password' => genFeedPass(),
+						'dedupeEmail' => empty( $_REQUEST['dedupeEmail'] ) ? null : $_REQUEST['dedupeEmail'],
+						'dedupeLandline' => empty( $_REQUEST['dedupeLandline'] ) ? null : $_REQUEST['dedupeLandline'],
+						'dedupeCellphone' => empty( $_REQUEST['dedupeCellphone'] ) ? null : $_REQUEST['dedupeCellphone'],
+						'dedupeAcross' => empty( $_REQUEST['dedupeAcross'] ) ? null : $_REQUEST['dedupeAcross'],
+						'filterTypeUrl' => empty( $_REQUEST['filterTypeUrl'] ) ? null : $_REQUEST['filterTypeUrl'],
+						'filterUrl' => empty( $_REQUEST['filterUrl'] ) ? null : $_REQUEST['filterUrl'],
+						'filterTypeSiftLogic' => empty( $_REQUEST['filterTypeSiftLogic'] ) ? null : $_REQUEST['filterTypeSiftLogic'],
+						'filterSiftLogic' => empty( $_REQUEST['filterSiftLogic'] ) ? null : $_REQUEST['filterSiftLogic'],
+						'notifications' => empty( $_REQUEST['notifications'] ) ? null : $_REQUEST['notifications'],
+						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
+					) );
+
+					if( null === $idFeedIn ) {
+						$c = false;
+						$result['status'] = 0;
+						$result['error'] = 'Failed to create new feed.';
+					} else {
+						$result['status'] = 1;
+						$result['error'] = 'Successfully created new feed #{$idFeedIn}.';
 					}
-				}
-				if($c){ //Completed Validation, go ahead and create the feed.
-					$password = genFeedPass();
-				}
-				if($c){ //Add entry to the database.
-					$addResult = addFeedIn(
-						$_REQUEST['label']
-						, $_REQUEST['description']
-						, $_REQUEST['idCompany']
-						, $_REQUEST['required']
-						, $_REQUEST['allowedFields']
-						, $password
-						, $_REQUEST['dedupeEmail']
-						, $_REQUEST['dedupeLandline']
-						, $_REQUEST['dedupeCellphone']
-						, $_REQUEST['dedupeAcross']
-						, $_REQUEST['filterTypeUrl']
-						, $_REQUEST['filterUrl']
-						, $_REQUEST['filterTypeSiftLogic']
-						, $_REQUEST['filterSiftLogic']
-						, $_REQUEST['notifications']
-						, $_REQUEST['rejectOldLeadsMaxAge']
-					);
-					if(!$addResult['success']){ 
-						$c = false; $result['error'] = $addResult['reason'];
-					}
-				}
-				if($c){ 
-					$result['status'] = 1;
-					$result['error'] = 'Successfully created new feed.';
+
 				}
 			} else {			
-				$result['error'] = 'Failed when editing feed.';
-				if($c){ 
-					$feed = getIncomingFeed($_REQUEST['idFeedIn']);
-					if($feed === false){ 
-						$c = false; $result['error'] = 'Database failure - could not fetch feed information for '
-							.'editing.';
+
+				if( $c ) {
+					$feed = $leads->getInboundFeed( $_REQUEST['idFeedIn'] );
+
+					if( $feed === false ) {
+						$c = false;
+						$result['error'] = 'Database failure - could not fetch feed information for editing.';
 					}				
-					if($c && !is_object($feed) && $feed == 0){ 
-						$c = false; $result['error'] = 'Could not alter feed - feed does not exist.';
+				}
+				if( $c && $_REQUEST['label'] != $feed->label ) { //Label is being altered. 
+
+					if( $c ) {
+						//Label can not be already used
+						$checkResult = $leads->checkInboundFeedLabelExists( $_REQUEST['label'] );
+						if( true === $checkResult ) {
+							$c = false;
+							$result['error'] = 'Label is already in use.'; 
+						}					
+					}
+
+					if( $c ) {
+						$alterResult = $leads->renameInboundTables( $feed->label, $_REQUEST['label'] );
+						if( null === $alterResult ) {
+							$c = false;
+							$result['error'] = "Error renaming database tables to new label.";
+						}
 					}
 				}
-				if($c){ 
-					if($_REQUEST['label'] != $feed->label){ //Label is being altered. 
-						if($c && ( //Label Cannot be empty.
-							$_REQUEST['label'] == ''
-						)){ $c = false; $result['error'] = 'Label cannot be empty.'; }
-						if($c //Label cannot have invalid characters
-						){
-							$pattern = '/^[a-z][a-z1-9_]*$/';
-							if(!preg_match($pattern, $_REQUEST['label'])){ 
-								$c = false; $result['error'] = 'Label must start with a letter, can can contain '
-								.'letters, numbers, and underscore only.';
-							}
-						}
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'label', $_REQUEST['label']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['description'] != $feed->description){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'description', $_REQUEST['description']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['retired'] != $feed->retired){ 
-						if($c){
-							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'retired', $_REQUEST['retired']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['idCompany'] != $feed->idCompany){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'idCompany', $_REQUEST['idCompany']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['required'] != $feed->required){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn($_REQUEST['idFeedIn'], 'required', $_REQUEST['required']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['allowedFields'] != $feed->allowedFields){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'allowedFields', $_REQUEST['allowedFields']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['dedupeEmail'] != $feed->dedupeEmail){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'dedupeEmail', $_REQUEST['dedupeEmail']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['dedupeLandline'] != $feed->dedupeLandline){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'dedupeLandline', $_REQUEST['dedupeLandline']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['dedupeCellphone'] != $feed->dedupeCellphone){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'dedupeCellphone', $_REQUEST['dedupeCellphone']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if( empty( $_REQUEST['dedupeAcross'] ) || $_REQUEST['dedupeAcross'] != $feed->dedupeAcross){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'dedupeAcross', empty( $_REQUEST['dedupeAcross'] ) ? '' : $_REQUEST['dedupeAcross']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['filterTypeUrl'] != $feed->filterTypeUrl){
-						if($c){
-							if($_REQUEST['filterTypeUrl'] == 'null'){ $filterTypeUrl = "NULL"; }
-							else { $filterTypeUrl = $_REQUEST['filterTypeUrl']; }
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'filterTypeUrl', $filterTypeUrl
-							);
-							if(!$alterResult){
-								$c = false; $result['error'] = 'Database failure, could not update incoming feed '
-									.'parameter (filterTypeUrl)';
-							}
-						}
-					}
-					if($_REQUEST['filterUrl'] != $feed->filterUrl){
-						if($c){
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'filterUrl', $_REQUEST['filterUrl']
-							);
-							if(!$alterResult){
-								$c = false; $result['error'] = 'Database failure, could not update incoming feed '
-									.'parameter (filterUrl)';
-							}
-						}
-					}
-					if($_REQUEST['filterTypeSiftLogic'] != $feed->filterTypeSiftLogic){
-						if($c){
-							if($_REQUEST['filterTypeSiftLogic'] == 'null'){ $filterTypeSiftLogic = "NULL"; }
-							else { $filterTypeSiftLogic = $_REQUEST['filterTypeSiftLogic']; }
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'filterTypeSiftLogic', $filterTypeSiftLogic
-							);
-							if(!$alterResult){
-								$c = false; $result['error'] = 'Database failure, could not update incoming feed '
-									.'parameter (filterTypeSiftLogic)';
-							}
-						}
-					}
-					if($_REQUEST['filterSiftLogic'] != $feed->filterSiftLogic){
-						if($c){
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'filterSiftLogic', $_REQUEST['filterSiftLogic']
-							);
-							if(!$alterResult){
-								$c = false; $result['error'] = 'Database failure, could not update incoming feed '
-									.'parameter (filterSiftLogic)';
-							}
-						}
-					}
-					if( $_REQUEST['notifications'] != $feed->notifications ){
-						if($c){
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'notifications', $_REQUEST['notifications']
-							);
-							if(!$alterResult){
-								$c = false; $result['error'] = 'Database failure, could not update incoming feed '
-									.'parameter (notifications)';
-							}
 
-							// Remove old notifications from the database if we've now disabled them
-							if( '0' == $_REQUEST['notifications'] ) {
-								$leads = Leads::getInstance();
-								$leads->deleteNotifications( $_REQUEST['idFeedIn'] );
-							}
-
-						}
+				if( $c ) {
+					// Remove old notifications from the database if we've now disabled them
+					if( empty( $_REQUEST['notifications'] ) ) {
+						$leads->deleteNotifications( $_REQUEST['idFeedIn'] );
 					}
-					if( $_REQUEST['rejectOldLeadsMaxAge'] != $feed->rejectOldLeadsMaxAge ){
-						if($c){
-							$alterResult = alterFeedIn(
-								$_REQUEST['idFeedIn'], 'rejectOldLeadsMaxAge', $_REQUEST['rejectOldLeadsMaxAge']
-							);
-							if(!$alterResult){
-								$c = false; $result['error'] = 'Database failure, could not update incoming feed '
-									.'parameter (rejectOldLeadsMaxAge)';
-							}
+				}
 
-						}
+				if( $c ) {
+					$status = $leads->updateInboundFeed( $_REQUEST['idFeedIn'], array(
+						'label' => empty( $_REQUEST['label'] ) ? null : $_REQUEST['label'],
+						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
+						'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
+						'required' => empty( $_REQUEST['required'] ) ? null : $_REQUEST['required'],
+						'allowedFields' => empty( $_REQUEST['allowedFields'] ) ? null : $_REQUEST['allowedFields'],
+						'dedupeEmail' => empty( $_REQUEST['dedupeEmail'] ) ? null : $_REQUEST['dedupeEmail'],
+						'dedupeLandline' => empty( $_REQUEST['dedupeLandline'] ) ? null : $_REQUEST['dedupeLandline'],
+						'dedupeCellphone' => empty( $_REQUEST['dedupeCellphone'] ) ? null : $_REQUEST['dedupeCellphone'],
+						'dedupeAcross' => empty( $_REQUEST['dedupeAcross'] ) ? null : $_REQUEST['dedupeAcross'],
+						'filterTypeUrl' => empty( $_REQUEST['filterTypeUrl'] ) ? null : $_REQUEST['filterTypeUrl'],
+						'filterUrl' => empty( $_REQUEST['filterUrl'] ) ? null : $_REQUEST['filterUrl'],
+						'filterTypeSiftLogic' => empty( $_REQUEST['filterTypeSiftLogic'] ) ? null : $_REQUEST['filterTypeSiftLogic'],
+						'filterSiftLogic' => empty( $_REQUEST['filterSiftLogic'] ) ? null : $_REQUEST['filterSiftLogic'],
+						'notifications' => empty( $_REQUEST['notifications'] ) ? null : $_REQUEST['notifications'],
+						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
+					) );
+
+					if( null === $status ) {
+						$c = false;
+						$result['error'] = 'Error updating feed settings.';
 					}
-				}		
-				if($c){ 
+
+				}
+
+				if( $c ) {
 					$result['status'] = 1;
 					$result['error'] = 'Successfully updated feed.';
 				}		
@@ -604,7 +289,7 @@ if(isset($_REQUEST['a'])){
 		case 'exportData':
 			$c = true; $result['error'] = 'Failed when trying to export data.';
 			if($c){ 
-				$feed = getIncomingFeed($_REQUEST['idFeedIn']);
+				$feed = $leads->getInboundFeed( $_REQUEST['idFeedIn'] );
 				if($feed === false){ 
 					$c = false; $result['error'] = 'Database failure - could not fetch feed information.';
 				}
@@ -663,7 +348,7 @@ if(isset($_REQUEST['d'])){
 		case 'incomingFeeds':
 		if( isset( $_REQUEST['retired'] ) ) $retired = true;
 		else $retired = false;
-$incomingFeeds = getIncomingFeeds($retired);
+$incomingFeeds = $leads->getInboundFeeds( $retired );
 ?>
 <?php		
 if($incomingFeeds === false){ 
@@ -680,7 +365,7 @@ if($incomingFeeds === false){
 	foreach($incomingFeeds as $feed){ 
 		//Add company to the cache list of companies.
 		if(!isset($companyCache[$feed->idCompany])){
-			$company = getCompany($feed->idCompany);
+			$company = $leads->getCompany( $feed->idCompany );
 			if(	is_object($company) ){
 				$companyCache[$feed->idCompany] = $company;
 				$companyFeedLists[$feed->idCompany] = array();
@@ -714,7 +399,6 @@ if($incomingFeeds === false){
 	foreach($companyFeedLists as $idCompany => $companyFeedList){ 
 		$totalAccepted = 0;
 		$totalRejected = 0;
-		$leads = Leads::getInstance();
 		foreach($companyFeedList as $keyFeed => $feed){ 
 
 			$stats = $leads->getInboundStats( $feed->idFeedIn );
@@ -807,7 +491,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		case 'dialog_editfeed':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
 			$e = 'edit_'.$idFeedIn.'_'; $d = 'edit';
-			$feed = getIncomingFeed($idFeedIn);
+			$feed = $leads->getInboundFeed( $idFeedIn );
 			if($feed === false){ 
 ?>
 <p>Database failure - could not fetch requested feed information.</p>
@@ -869,7 +553,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			if(!isset($selectedAllowedFields)){ 
 				$selectedAllowedFields = $recordFields;
 			}
-			$companies = getCompanies();
+			$companies = $leads->getCompanies();
 ?>
 <div class='fr'>
 	<a href='#' class='nonLink' onclick='<?php
@@ -1232,7 +916,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		break;
 		case 'dialog_import':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
-			$feed = getIncomingFeed($idFeedIn);
+			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <div class='fr'>
 	<a href='#' class='nonLink' onclick='closeContent("dialog_import", {"sub": <?php echo $idFeedIn; ?>});'>Close [X]</a>
@@ -1311,7 +995,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		break;
 		case 'dialog_export':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
-			$feed = getIncomingFeed($idFeedIn);
+			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <div class='fr'>
 	<a href='#' class='nonLink' onclick='closeContent("dialog_export", {"sub": <?php echo $idFeedIn; ?>});' 
@@ -1444,7 +1128,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		break;
 		case 'dialog_urlreport':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
-			$feed = getIncomingFeed($idFeedIn);
+			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <div class='fr'>
 	<a href='#' class='nonLink' onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedIn; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedIn; ?>});' 
@@ -1504,7 +1188,6 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			</p>
 			<p>
 <?php
-				$leads = Leads::getInstance();
 				$urls = $leads->getInboundURLDates( $idFeedIn );
 				if( $urls && is_array( $urls ) ) {
 					printf( "<select multiple=\"multiple\" id=\"urlreport_%s_urls\" size=\"%d\">\n", $idFeedIn, sizeOf( $urls ) );
@@ -1555,7 +1238,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 			}
 		break;
 		case 'dialog_urlreportdetails':
-			$feed = getIncomingFeed($_REQUEST['options']['idFeedIn']);
+			$feed = $leads->getInboundFeed( $_REQUEST['options']['idFeedIn'] );
 			if($feed === false){ 
 ?>
 <p>Database failure - could not fetch feed information.</p>
@@ -1567,7 +1250,6 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 <?php 
 			} else {
 
-				$leads = Leads::getInstance();
 				$stats = $leads->getInboundURLStatsReport( $_REQUEST['options']['idFeedIn'], $_REQUEST['options']['urlList'], $_REQUEST['options']['breakdown'], $_REQUEST['options']['dateStart'], $_REQUEST['options']['dateEnd'], $_REQUEST['options']['sort'] );
 
 				if( empty( $stats ) ) {
@@ -1639,7 +1321,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		break;
 		case 'dialog_listcodes':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
-			$feed = getIncomingFeed($idFeedIn);
+			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <p>Generate New Listcode for (<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
 <p>

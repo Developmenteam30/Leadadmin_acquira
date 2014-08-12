@@ -17,10 +17,10 @@ if( empty( $feed ) ) {
 	die('ERROR: Feed not found.');
 }
 
-$company = $leads->getCompany( $feed['idCompany'] );
+$company = $leads->getCompany( $feed->idCompany );
 
 $fields = array(
-	'pswd' => array( 'type' => 'varchar(16)', 'format' => '', 'notes' => $feed['password'] ),
+	'pswd' => array( 'type' => 'varchar(16)', 'format' => '', 'notes' => $feed->password ),
 	'listcode' => array( 'type' => 'varchar(20)', 'format' => '', 'notes' => 'Campaign ID or List Descriptor' ),
 	'url' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Source of the lead' ),
 	'ip' => array( 'type' => 'varchar(16)', 'format' => '', 'notes' => 'IP Address' ),
@@ -40,8 +40,8 @@ $fields = array(
 	'cellphone' => array( 'type' => 'varchar(20)', 'format' => '##########', 'notes' => 'Alternate phone' ),
 );
 
-$requiredArray = explode( ';', 'pswd;' . $feed['required'] );
-$allowedArray = explode( ';', 'pswd;' . $feed['allowedFields'] );
+$requiredArray = explode( ';', 'pswd;' . $feed->required );
+$allowedArray = explode( ';', 'pswd;' . $feed->allowedFields );
 
 ?>
 <!DOCTYPE html>
@@ -49,7 +49,7 @@ $allowedArray = explode( ';', 'pswd;' . $feed['allowedFields'] );
 
 <head>
 <meta charset="UTF-8" />
-<title>API Specifications - <?php echo $company['name']; ?></title>
+<title>API Specifications - <?php echo $company->name; ?></title>
 <style type="text/css">
 body {
 	font-family: Verdana, sans-serif;
@@ -78,13 +78,13 @@ thead td {
 
 <h2>Lead Submission API Specifications</h2>
 
-<h3>Company: <?php echo $company['name']; ?> (Feed: <?php echo $feed['idFeedIn'] ?>)</h3>
+<h3>Company: <?php echo $company->name; ?> (Feed: <?php echo $feed->idFeedIn ?>)</h3>
 
 <p>The lead submission system works on a key-value pair submission via HTTP POST or HTTP GET. An XML response is produced after an attempt to post a lead to the system.  All submissions must use SSL over HTTPS.</p>
 
 <h4>API Field Definitions</h4>
 
-<p><strong>API URL:</strong> https://www.<?php echo SITE_URL; ?>/<?php echo LIVE_FOLDER; ?>/<?php echo $feed['label']; ?>/livefeed.php</p>
+<p><strong>API URL:</strong> https://www.<?php echo SITE_URL; ?>/<?php echo LIVE_FOLDER; ?>/<?php echo $feed->label; ?>/livefeed.php</p>
 
 <table>
 	<thead>
