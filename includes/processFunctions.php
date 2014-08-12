@@ -427,19 +427,19 @@ function checkDuplicate($column, $requestValues, $feedLabel, $dedupeAcross){
 		case 'global':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL 90 DAY)";
+			."AND received >= DATE_SUB(NOW(), INTERVAL 120 DAY)";
 		break;
 		case 'url':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
 			."AND `urlTrim` = '".$GLOBALS['dbconnx']->escape_string($requestValues['urlTrim'])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL 90 DAY)";
+			."AND received >= DATE_SUB(NOW(), INTERVAL 120 DAY)";
 		break;
 		case 'listcode':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($value)."' "
 			."AND `listcode` = '".$GLOBALS['dbconnx']->escape_string($requestValues['listcode'])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL 90 DAY)";
+			."AND received >= DATE_SUB(NOW(), INTERVAL 120 DAY)";
 		break;
 	}	
 	$docheckDupe = dbQry($checkDupe, 'Checking if value is duplicate.', true);
