@@ -766,6 +766,21 @@ class Leads
 		return $results;
 	}
 
+	public function globalEmailSearch( $email ) {
+		$results = null;
+
+		try {
+// XXX Change me to use the data_inbound table instead
+			$query = $this->db->prepare( "SELECT MIN(d.received) FROM (SELECT received FROM feedinc_simint WHERE email = ? UNION SELECT received FROM feedinc_turntwo WHERE email = ? UNION SELECT received FROM feedinc_digitalbulldogs WHERE email = ? ) AS d ");
+			$query->execute( array( $email, $email, $email ) );
+			$results = $query->fetchColumn( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound email search results: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function outboundEmailSearch( $email ) {
 		$results = array();
 

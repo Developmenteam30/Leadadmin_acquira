@@ -424,9 +424,14 @@ function filterValue($filterType, $value, $filters){
 function checkDuplicate($column, $requestValues, $feedLabel, $dedupeAcross){
 	$days = 120;
 
-	// Override duplicate time check period for SimlplyWise, ICM feed
-	if( 'simint' == $feedLabel && 'email' == $column && !empty( $requestValues['urlTrim'] ) && strpos( $requestValues['urlTrim'], 'instantcheckmate.com' ) !== false ) {
-		$days = 7;
+	// Override duplicate time check period for InstantCheckMate.com feeds
+	if( 'email' == $column && !empty( $requestValues['email'] ) && !empty( $requestValues['urlTrim'] ) && strpos( $requestValues['urlTrim'], 'instantcheckmate.com' ) !== false ) {
+
+		$leads = Leads::getInstance();
+		$status = $leads->globalEmailSearch( $requestValues['email'] );
+		if( !empty( $status ) ) {
+			return 1;
+		}
 	}
 
 	dbCon();
