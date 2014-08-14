@@ -422,24 +422,31 @@ function filterValue($filterType, $value, $filters){
 }
 
 function checkDuplicate($column, $requestValues, $feedLabel, $dedupeAcross){
+	$days = 120;
+
+	// Override duplicate time check period for SimlplyWise, ICM feed
+	if( 'simint' == $feedLabel && 'email' == $column && !empty( $requestValues['urlTrim'] ) && strpos( $requestValues['urlTrim'], 'instantcheckmate.com' ) !== false ) {
+		$days = 7;
+	}
+
 	dbCon();
 	switch($dedupeAcross){
 		case 'global':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL 120 DAY)";
+			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
 		break;
 		case 'url':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
 			."AND `urlTrim` = '".$GLOBALS['dbconnx']->escape_string($requestValues['urlTrim'])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL 120 DAY)";
+			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
 		break;
 		case 'listcode':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($value)."' "
 			."AND `listcode` = '".$GLOBALS['dbconnx']->escape_string($requestValues['listcode'])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL 120 DAY)";
+			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
 		break;
 	}	
 	$docheckDupe = dbQry($checkDupe, 'Checking if value is duplicate.', true);
