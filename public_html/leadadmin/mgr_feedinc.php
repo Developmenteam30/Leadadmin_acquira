@@ -260,6 +260,7 @@ if(isset($_REQUEST['a'])){
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
 						'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
 						'required' => empty( $_REQUEST['required'] ) ? null : $_REQUEST['required'],
+						'retired' => !empty( $_REQUEST['retired'] ) ? 1 : 0,
 						'allowedFields' => empty( $_REQUEST['allowedFields'] ) ? null : $_REQUEST['allowedFields'],
 						'dedupeEmail' => empty( $_REQUEST['dedupeEmail'] ) ? null : $_REQUEST['dedupeEmail'],
 						'dedupeLandline' => empty( $_REQUEST['dedupeLandline'] ) ? null : $_REQUEST['dedupeLandline'],
