@@ -889,6 +889,36 @@ class Leads
 		return -1;
 	}
 
+	public function clearOutboundQueue( $idFeedOut, $label ) {
+		$this->lockTables( "feedout WRITE, data_outbound WRITE, " . $this->quoteIdentifier( 'feedout_' . $label ) . " WRITE" );
+
+		try {
+			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND timestamp IS NULL" );
+			$query->execute( array( $idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
+			return;
+		}
+
+		try {
+			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $label ) . " WHERE processed = '0'" );
+			$query->execute( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
+			return;
+		}
+
+		try {
+			$this->db->query( "UPDATE feedout SET queued = 0 WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
+			return;
+		}
+
+		$this->unlockTables();
+	}
+
 	public function getOutboundTables() {
 		try {
 			$query = $this->db->prepare( "SELECT label,successString,idFeedOut FROM feedout" );
