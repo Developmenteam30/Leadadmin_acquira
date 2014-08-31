@@ -5,6 +5,9 @@ include("../../includes/c_config.php");
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
+require_once( INCLUDES . 'leads.php' );
+$leads = Leads::getInstance();
+
 require_once( INCLUDES . 'display.php' );
 
 $mysqlErrorSource = 'Manager - Outgoing Feeds';
@@ -120,7 +123,7 @@ function alterFeedOut($idFeedOut, $property, $newVal){
 		case 'label':
 			//Change label in database.
 			if($c){ 
-				$feed = getOutgoingFeed($idFeedOut);
+				$feed = $leads->getOutboundFeed( $idFeedOut );
 				if($feed === false){ 
 					$c = false; $result['reason'] = 'Database failure - could not fetch feed to alter.';
 				}
@@ -332,7 +335,7 @@ if(isset($_REQUEST['a'])){
 			} else {			
 				$result['error'] = 'Failed when editing feed.';
 				if($c){ 
-					$feed = getOutgoingFeed($_REQUEST['idFeedOut']);
+					$feed = $leads->getOutboundFeed( $_REQUEST['idFeedOut'] );
 					if($feed === false){ 
 						$c = false; $result['error'] = 'Database failure - could not fetch feed information for '
 							.'editing.';
@@ -718,7 +721,7 @@ if(isset($_REQUEST['a'])){
 			switch($_REQUEST['action']){ 
 				case "toggle":
 					if($c){ 
-						$feed = getOutgoingFeed($_REQUEST['idFeedOut']);
+						$feed = $leads->getOutboundFeed( $_REQUEST['idFeedOut'] );
 						if($feed === false){ 
 							$c = false; $result['error'] = 'Database failure - could not fetch feed for editing.';
 						}				
@@ -810,8 +813,8 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'outgoingFeeds':
-		
-$outgoingFeeds = getOutgoingFeeds('active');
+
+$outgoingFeeds = $leads->getOutboundFeeds( false );
 ?>
 <p>
 	Outgoing Feeds
@@ -868,11 +871,28 @@ if($outgoingFeeds === false){
 		$totalActive = 0;
 		$totalQueued = 0;
 
-		foreach($companyFeedList as $keyFeed => $feed){ 
-			$companyFeedList[$keyFeed]->statusFeed = ($feed->enabled)?'Processable':'Deactivated';
+		foreach($companyFeedList as $keyFeed => $feed){
+
+			$stats = $leads->getOutboundStats( $feed->idFeedOut );
+
+			$companyFeedList[$keyFeed]->accepted = $stats['accepted'];
+			$totalAccepted += $stats['accepted'];
+
+			$companyFeedList[$keyFeed]->rejected = $stats['rejected'];
+			$totalRejected += $stats['rejected'];
+
+			$companyFeedList[$keyFeed]->queued = $feed->queued;
+			$totalQueued += $feed->queued;
+
 			if($feed->enabled) { $totalActive++; }
+			$companyFeedList[$keyFeed]->statusFeed = ($feed->enabled)?'Processable':'Deactivated';
 			$companyFeedList[$keyFeed]->statusCron = ($feed->cron)?'Running':'Paused';
 			$companyFeedList[$keyFeed]->statusPop = getPopulationStatus($feed->idFeedOut);
+		}
+
+/*
+		foreach($companyFeedList as $keyFeed => $feed){ 
+			if($feed->enabled) { $totalActive++; }
 			
 			$companyFeedList[$keyFeed]->accepted = getCount($feed->idFeedOut, 'win');
 			if($companyFeedList[$keyFeed]->accepted === false){ $companyFeedList[$keyFeed]->accepted = 'Error'; }
@@ -889,6 +909,7 @@ if($outgoingFeeds === false){
 			elseif(is_null($companyFeedList[$keyFeed]->queued)){ $companyFeedList[$keyFeed]->queued = 0; }
 			else { $totalQueued += $companyFeedList[$keyFeed]->queued; }
 		}
+*/
 ?>
 	<tr class='fTORow fTO_Row bgGray'>
 		<td class='fTO_companyName' colspan='2'><p><?php echo $companyCache[$idCompany]->name; ?></p></td>
@@ -1009,7 +1030,7 @@ if($outgoingFeeds === false){
 		break;
 		case 'feedout':
 			$idFeedOut = $_REQUEST['options']['idFeedOut'];	
-			$feed = getOutgoingFeed($idFeedOut);
+			$feed = $leads->getOutboundFeed( $idFeedOut );
 			$populationSettings = getPopulationSettings($idFeedOut);	
 			$cacheFeedIn = array();
 ?>
@@ -1100,7 +1121,7 @@ if($populationSettings === false){
 		case 'dialog_editfeedout':
 			$idFeedOut = $_REQUEST['options']['idFeedOut'];
 			$e = 'edit_'.$idFeedOut.'_';
-			$feed = getOutgoingFeed($idFeedOut);
+			$feed = $leads->getOutboundFeed( $idFeedOut );
 			if($feed === false){ 
 ?>
 <p>Database failure - could not fetch requested feed information.</p>
@@ -1123,7 +1144,7 @@ if($populationSettings === false){
 				if(isset($_REQUEST['options']['idFeedOut'])){
 					if($_REQUEST['options']['idFeedOut'] != ''){
 						$idFeedOut = $_REQUEST['options']['idFeedOut'];
-						$feed = getOutgoingFeed($idFeedOut);
+						$feed = $leads->getOutboundFeed( $idFeedOut );
 						if($feed === false){ 
 							$feed->label = 'Error! Could not copy.';
 						} elseif(!is_object($feed) && $feed == 0){ 
@@ -1403,7 +1424,7 @@ if($populationSettings === false){
 
 		case 'dialog_urlreport':
 			$idFeedOut = $_REQUEST['options']['idFeedOut'];
-			$feed = getOutgoingFeed($idFeedOut);
+			$feed = $leads->getOutboundFeed( $idFeedOut );
 ?>
 <div class='fr'>
 	<a href='#' class='nonLink' onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedOut; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedOut; ?>});' 
@@ -1463,11 +1484,11 @@ if($populationSettings === false){
 			</p>
 			<p>
 <?php
-				$urls = getOutgoingUrls( $feed->label );
+				$urls = $leads->getOutboundURLDates( $idFeedOut );
 				if( $urls && is_array( $urls ) ) {
 					printf( "<select multiple=\"multiple\" id=\"urlreport_%s_urls\" size=\"%d\">\n", $idFeedOut, sizeOf( $urls ) );
 					foreach( $urls as $url ) {
-						printf( "<option value=\"%s\">%s (%s)</option>\n", htmlspecialchars( $url->urlTrim ), htmlspecialchars( $url->urlTrim ), $url->start );
+						printf( "<option value=\"%s\">%s (%s)</option>\n", htmlspecialchars( $url['url'] ), htmlspecialchars( $url['url'] ), $url['date'] );
 					}
 					print "</select>\n";
 				}
@@ -1513,7 +1534,7 @@ if($populationSettings === false){
 			}
 		break;
 		case 'dialog_urlreportdetails':
-			$feed = getOutgoingFeed($_REQUEST['options']['idFeedOut']);
+			$feed = $leads->getOutboundFeed( $_REQUEST['options']['idFeedOut'] );
 			if($feed === false){ 
 ?>
 <p>Database failure - could not fetch feed information.</p>
@@ -1525,75 +1546,42 @@ if($populationSettings === false){
 <?php 
 			} else {
 
-				$urlList = '';
-				if( !empty( $_REQUEST['options']['urlList'] ) && is_array( $_REQUEST['options']['urlList'] ) ) {
-					$urlList =  implode(',', array_map( 'add_quotes', $_REQUEST['options']['urlList'] ) );
-				}
+				$stats = $leads->getOutboundURLStatsReport( $_REQUEST['options']['idFeedOut'], $_REQUEST['options']['urlList'], $_REQUEST['options']['breakdown'], $_REQUEST['options']['dateStart'], $_REQUEST['options']['dateEnd'], $_REQUEST['options']['sort'] );
 
-				if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'month' )
-					$query  = "SELECT urlTrim,LEFT(postStamp,7) date,COUNT(*) cnt ";
-				else if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'year' )
-					$query  = "SELECT urlTrim,LEFT(postStamp,4) date,COUNT(*) cnt ";
-				else if( !empty( $_REQUEST['options']['breakdown'] ) && $_REQUEST['options']['breakdown'] == 'total' )
-					$query  = "SELECT urlTrim,'TOTAL' as date,COUNT(*) cnt ";
-				else
-					$query  = "SELECT urlTrim,LEFT(postStamp,10) date,COUNT(*) cnt ";
-
-				$query .= "FROM `".DATABASE_NAME."`.`feedout_".$feed->label."` ";
-				$query .= "WHERE processed = '1' AND urlTrim != '' AND urlTrim IS NOT NULL AND urlTrim NOT LIKE 'INVALID:%' ";
-				if( !empty( $urlList ) ) {
-					$query .= "AND urlTrim IN (" . $urlList . ") ";
-				}
-				if( !empty( $_REQUEST['options']['dateStart'] ) && !empty( $_REQUEST['options']['dateEnd'] ) ) { 
-					if( strtotime($_REQUEST['options']['dateStart']) > strtotime($_REQUEST['options']['dateEnd']) ) { 
-						$dateStart = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateEnd']));
-						$dateEnd = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateStart']));
-					} else { 
-						$dateStart = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateStart']));
-						$dateEnd = date("Y-m-d H:i:s", strtotime($_REQUEST['options']['dateEnd']));
-					}
-					$query .= "AND `postStamp` >= '".$dateStart."' AND `postStamp` < '".$dateEnd."' ";
-				}
-				$query .= "GROUP BY 1,2 ";
-				if( !empty( $_REQUEST['options']['sort'] ) && 'url' == $_REQUEST['options']['sort'] )
-					$query .= "ORDER BY 1,2";
-				elseif( !empty( $_REQUEST['options']['sort'] ) && 'count' == $_REQUEST['options']['sort'] )
-					$query .= "ORDER BY 3,1";
-				else
-					$query .= "ORDER BY 2,1";
-
-				$dofetchData = dbQry($query, 'Fetching specified data set.', true);
-				if( $dofetchData === false ) {
+				if( empty( $stats ) ) {
 ?>
-<p>Database failure - failed to run URL report query.</p>
-<?php 
+<p>No records found.</p>
+<?php
 				} else {
 
 					$fileLink = 'exports/' . $feed->label."_".time().".csv";
 					$filePath = ADMIN_ROOT.$fileLink;
 					$file = fopen($filePath, "w");
-					if(!file_exists($filePath)){ 
+					if(!file_exists($filePath)){
 ?>
 <p>Failed to create CSV report file.</p>
-<?php 
+<?php
 					} else {
+						fputcsv( $file, array( 'URL', 'Date', 'Accepted', 'Rejected' ) );
 						print "<table class='urlTable'>\n";
 						print "<thead>\n";
 						print "\t<tr>\n";
 						print "\t<td>URL</td>\n";
 						print "\t<td>Date</td>\n";
-						print "\t<td>Count</td>\n";
+						print "\t<td>Accepted</td>\n";
+						print "\t<td>Rejected</td>\n";
 						print "\t</tr>\n";
 						print "</thead>\n";
 						print "<tbody>\n";
 						print "\t<tr>\n";
-						while($row = $dofetchData->fetch_object()) {
+						foreach( $stats as $stat ) {
 							print "\t<tr>\n";
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->urlTrim ) );
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->date ) );
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $row->cnt ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['url'] ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['date'] ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['accepted'] ) );
+							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['rejected'] ) );
 							print "\t</tr>\n";
-							fputcsv( $file, array( $row->urlTrim, $row->date, $row->cnt ) );
+							fputcsv( $file, array( $stat['url'], $stat['date'], $stat['accepted'], $stat['rejected'] ) );
 						}
 						fclose($file);
 						print "</tbody>\n";
@@ -1707,7 +1695,7 @@ if($populationSettings === false){
 					}
 				}
 			}
-			$feed = getOutgoingFeed($popset_idFeedOut);
+			$feed = $leads->getOutboundFeed( $popset_idFeedOut );
 			$feedsIncoming = getIncomingFeeds( false );
 ?>
 <input type='hidden' name='<?php echo $e; ?>popset_idAssoc'
@@ -2097,7 +2085,7 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 	<a href='#' class='nonLink' onclick='closeContent("dialog_editpopulation", {"sub":  <?php echo $idFeedOut; ?>} );' >Close [X]</a>
 </div>
 <?php
-			$feed = getOutgoingFeed($idFeedOut);
+			$feed = $leads->getOutboundFeed( $idFeedOut );
 			$populationSettings = getPopulationSettings($idFeedOut);	
 			$cacheFeedIn = array();
 ?>
