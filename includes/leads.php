@@ -1001,6 +1001,80 @@ class Leads
 		$this->unlockTables();
 	}
 
+	public function getOutboundQueue( $idFeedOut ) {
+
+		$feed = $this->getOutboundFeed( $idFeedOut );
+		if( !$feed ) {
+			return;
+		}
+
+		$jobId = time();
+
+        $fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+        $filePath = ADMIN_ROOT . $fileLink;
+        $file = fopen( $filePath, 'w' );
+		if( !$file ) {
+			return;
+		}
+
+		fputcsv( $file, array(
+			'url',
+			'ip',
+			'lead timestamp',
+			'first name',
+			'last name',
+			'address',
+			'addr2',
+			'city',
+			'state',
+			'zip',
+			'country',
+			'dob',
+			'gender',
+			'landline',
+			'cellphone',
+		) );
+
+		try {
+
+			$query = $this->db->prepare( "SELECT * FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '0'" );
+			$query->execute( );
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fputcsv( $file, array(
+					$row['urlTrim'],
+					$row['ip'],
+					$row['stamp'],
+					$row['fname'],
+					$row['lname'],
+					$row['addr'],
+					$row['addr2'],
+					$row['city'],
+					$row['state'],
+					$row['zip'],
+					$row['country'],
+					$row['dob'],
+					$row['gender'],
+					$row['landline'],
+					$row['cellphone'],
+				) );
+
+				$this->update( 'feedout_' . $feed->label, array(
+					'processed' => '1',
+					'poststamp' => date('Y-m-d H:i:s'),
+					'postresponse' => $feed->successString . ':EXPORT:' . $jobId,
+				), array(
+					'idRecord' => $row['idRecord'],
+				) );
+
+				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['urlTrim'], null );
+
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get queued records: ' . $e->getMessage() );
+			return;
+		}
+	}
+
 	public function getOutboundTables() {
 		try {
 			$query = $this->db->prepare( "SELECT label,successString,idFeedOut FROM feedout" );
