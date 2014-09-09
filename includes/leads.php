@@ -143,11 +143,7 @@ class Leads
 
 					// If the password hash is outdated, rehash and save to the database
 					if( password_needs_rehash( $results['password'], PASSWORD_DEFAULT, array( 'cost' => 11 ) ) ) {
-						$hash = password_hash( $password, PASSWORD_DEFAULT, array( 'cost' => 11 ) );
-
-						$query = $this->db->prepare( "UPDATE users SET password = ? WHERE username = ?" );
-						$query->execute( array( $hash, $username ) );
-
+						$this->setPasswordHash( $username, $password );
 					}
 
 					return $results['idUser'];
@@ -161,6 +157,17 @@ class Leads
 		$this->logError( 'Failed login for user [' . $username . '] from [' . $_SERVER['REMOTE_ADDR'] . ']', true );
 
 		return null;
+	}
+
+	public function setPasswordHash( $username, $password ) {
+		try {
+			$hash = password_hash( $password, PASSWORD_DEFAULT, array( 'cost' => 11 ) );
+
+			$query = $this->db->prepare( "UPDATE users SET password = ? WHERE username = ?" );
+			$query->execute( array( $hash, $username ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company info: ' . $e->getMessage() );
+		}
 	}
 
 	public function auditLog( $action, $notes = null ) {
