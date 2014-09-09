@@ -5,10 +5,12 @@ include("../../includes/c_config.php");
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
+require_once( INCLUDES . 'leads.php' );
+$leads = Leads::getInstance();
+
 $mysqlErrorSource = 'Manager - Suppression';
 include(INCLUDES."_connx.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."_f_validEmail.php");
 
 function getSuppressionCount($idCompany){
 	$getCount = "SELECT COUNT(*) FROM `".DATABASE_NAME."`.`suppression_".$idCompany."`;";
@@ -19,23 +21,6 @@ function getSuppressionCount($idCompany){
 	$queryObject = $dogetCount->fetch_assoc();
 	$count = $queryObject['COUNT(*)'];
 	return $count;
-}
-
-function getSuppressions($idCompany){
-    dbCon();
-    $query = "SELECT email ";
-    $query.= "FROM `" . DATABASE_NAME . "`.`suppression_" . $idCompany . "`";
-
-    $result = dbQry( $query, 'Getting suppressions', true );
-    dbDcon();
-
-    if( $result === false ) { return false; }
-    if( $result->num_rows == 0 ) { return 0; }
-    $values = array();
-    while( $row = $result->fetch_object() ){
-        $values[] = $row;
-    }
-    return $values;
 }
 
 function addToSuppressionList($idCompany, $email){
@@ -170,34 +155,15 @@ if(isset($_REQUEST['a'])){
 				$idCompany = intval ( $_REQUEST['idCompany'] );
 			}
 
-            if($c){
-                $records = getSuppressions( $idCompany );
-                if($records === false){
-                    $c = false; $result['error'] = 'Database failure - could not fetch suppression information.';
-                }
-                if($c && $records == 0){
-                    $c = false; $result['error'] = 'Error - no suppression records exist.';
-                }
-            }
-            if($c){
-              $fileLink = 'exports/suppression_'.$idCompany."_".time().".csv";
-              $filePath = ADMIN_ROOT.$fileLink;
-              $file = fopen($filePath, "w");
-              if(!file_exists($filePath)){
-                $c = false; $result['reason'] = 'Failed to create CSV file.';
-              }
-            }
-            if($c){
-              foreach( $records as $record ) {
-				fwrite( $file, $record->email . "\n" );
-              }
-              fclose($file);
-            }
-            if($c){
+			$export = $leads->exportSuppressions( $idCompany );
+			if( isset( $export['reason'] ) && 'Success' == $export['reason'] ) {
                 $result['status'] = 1;
                 $result['error'] = 'Successfully exported file.';
-                $result['link'] = $fileLink;
-            }
+                $result['link'] = $export['file'];
+			} else {
+				$c = false;
+				$result['error'] = isset( $export['reason'] ) ? $export['reason'] : 'Unknown error';
+			}
         break;
 
 		case 'processSuppression':

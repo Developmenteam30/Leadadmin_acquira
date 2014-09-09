@@ -1174,6 +1174,33 @@ class Leads
 		return null;
 	}
 
+	public function exportSuppressions( $idCompany ) {
+		$result = array();
+
+		$result['file'] = 'exports/suppression_'.$idCompany."_".time().".csv";
+		$filePath = ADMIN_ROOT . $result['file'];
+		$fh = fopen( $filePath, 'w' );
+		if( !$fh ) {
+			$result['reason'] = 'Failed to create CSV file.';
+			return $result;
+		}
+
+		try {
+			$query = $this->db->prepare( "SELECT email FROM " . $this->quoteIdentifier( 'suppression_' . $idCompany ) );
+			$query->execute( array( $idCompany ) );
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fwrite( $fh, $row['email'] . PHP_EOL );
+			}
+			$result['reason'] = 'Success';
+		} catch( PDOException $e ) {
+			$result['reason'] = 'DB query error.';
+			$this->logError( 'Unable to get get supression records for export: ' . $e->getMessage() );
+		}
+
+		fclose( $fh );
+		return $result;
+	}
+
 	public function archiveLegacyOutbound( $table, $success ) {
 		try {
 			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $table ) . " WHERE poststamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND processed = '1' AND postresponse NOT LIKE ?" );
