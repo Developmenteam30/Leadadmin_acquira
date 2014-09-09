@@ -109,6 +109,8 @@ function exportData($feedObject, $settings){
 		$result['reason'] = 'Successfully exported data to file.';
 		$result['query'] = $fetchData;
 		$result['fileLink'] = $fileLink;
+		$leads = Leads::getInstance();
+		$leads->auditLog( 'FEEDINC:EXPORT', $feedObject->idFeedIn );
 	}
 	return $result;
 }
@@ -214,6 +216,7 @@ if(isset($_REQUEST['a'])){
 					} else {
 						$result['status'] = 1;
 						$result['error'] = 'Successfully created new feed #{$idFeedIn}.';
+						$leads->auditLog( 'FEEDINC:ADD', $idFeedIn );
 					}
 
 				}
@@ -277,6 +280,8 @@ if(isset($_REQUEST['a'])){
 					if( null === $status ) {
 						$c = false;
 						$result['error'] = 'Error updating feed settings.';
+					} else {
+						$leads->auditLog( 'FEEDINC:EDIT', $_REQUEST['idFeedIn'] );
 					}
 
 				}

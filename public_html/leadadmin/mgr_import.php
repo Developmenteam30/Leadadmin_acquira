@@ -176,3 +176,5 @@ print "<p><strong>Successful: {$counts['success']}</strong></p>\n";
 print "<p><strong>Duplicates: {$counts['dupe']}</strong></p>\n";
 print "<p><strong>Invalid: {$counts['invalid']}</strong></p>\n";
 print "<p><strong>Failures: {$counts['failures']}</strong></p>\n";
+
+$leads->auditLog( 'FEEDINC:IMPORT', $_REQUEST['idFeedIn'] );

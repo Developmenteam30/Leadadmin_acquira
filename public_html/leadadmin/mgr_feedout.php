@@ -123,6 +123,7 @@ function alterFeedOut($idFeedOut, $property, $newVal){
 		case 'label':
 			//Change label in database.
 			if($c){ 
+				$leads = Leads::getInstance();
 				$feed = $leads->getOutboundFeed( $idFeedOut );
 				if($feed === false){ 
 					$c = false; $result['reason'] = 'Database failure - could not fetch feed to alter.';
@@ -167,6 +168,10 @@ function alterFeedOut($idFeedOut, $property, $newVal){
 			}
 		break;
 	}
+	if( $c ) {
+		$leads = Leads::getInstance();
+		$leads->auditLog( 'FEEDOUT:EDIT', $idFeedOut );
+	}
 	return $result;
 }
 
@@ -203,6 +208,8 @@ function addPopulationParameter(
 		.");";
 	$doaddParameter = dbQry($addParameter, 'Adding new feed.', true);
 	if($doaddParameter === false){ return false; }
+	$leads = Leads::getInstance();
+	$leads->auditLog( 'FEEDOUT:POP:ADD', null /* FIXME */ );
 	return true;
 }
 
@@ -221,6 +228,8 @@ function alterPopulationParameter($idAssoc, $property, $newVal){
 		."WHERE `idAssoc` = '".$idAssoc."'; ";
 	$doupdateProperty = dbQry($updateProperty, 'Updating feed property '.$property, true);
 	if($doupdateProperty === false){ return false; }
+	$leads = Leads::getInstance();
+	$leads->auditLog( 'FEEDOUT:POP:EDIT', $idAssoc );
 	return true;
 }
 
@@ -230,6 +239,8 @@ function deletePopulationParam($idAssoc){
 		."WHERE `idAssoc` = '".$idAssoc."'; ";
 	$dodeleteProperty = dbQry($deleteProperty, 'Deleting feed population paramter.', true);
 	if($dodeleteProperty === false){ return false; }
+	$leads = Leads::getInstance();
+	$leads->auditLog( 'FEEDOUT:POP:DEL', $idAssoc );
 	return true;
 }
 
@@ -272,6 +283,8 @@ function retireFeed($idFeedOut){
 	if($c){ 
 		$result['success'] = true;
 		$result['reason'] = 'Successfully retired feed and removed all population parameters.';
+		$leads = Leads::getInstance();
+		$leads->auditLog( 'FEEDOUT:RETIRE', $idFeedOut );
 	}
 	return $result;
 }

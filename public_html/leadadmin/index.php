@@ -34,11 +34,11 @@ if( isset( $_REQUEST['a'] ) ) {
 				}
 			}
 			if($c){
-				if( $leads->verifyUser( $_REQUEST['username'], $_REQUEST['password'] ) ) {
+				if( ( $userId = $leads->verifyUser( $_REQUEST['username'], $_REQUEST['password'] ) ) !== null ) {
 
 					$result['status'] = 1;
 					$result['error'] = 'Successfully logged in.';
-					LeadsSession::login( $_REQUEST['username'], LEADS_SESSION_LEVEL_ADMIN );
+					LeadsSession::login( $userId, LEADS_SESSION_LEVEL_ADMIN );
 
 				} else {
 

@@ -146,11 +146,11 @@ class Leads
 						$hash = password_hash( $password, PASSWORD_DEFAULT, array( 'cost' => 11 ) );
 
 						$query = $this->db->prepare( "UPDATE users SET password = ? WHERE username = ?" );
-						$query->execute( array( $username, $hash ) );
+						$query->execute( array( $hash, $username ) );
 
 					}
 
-					return true;
+					return $results['idUser'];
 				}
 			}
 
@@ -160,7 +160,18 @@ class Leads
 
 		$this->logError( 'Failed login for user [' . $username . '] from [' . $_SERVER['REMOTE_ADDR'] . ']', true );
 
-		return false;
+		return null;
+	}
+
+	public function auditLog( $action, $notes = null ) {
+
+		require_once( INCLUDES . 'session.php' );
+		$this->insertRow( 'auditlog', array(
+			'userId' => LeadsSession::getUserId(),
+			'ipaddress' => $_SERVER['REMOTE_ADDR'], 
+			'action' => $action,
+			'notes' => $notes,
+		) );
 	}
 
 	public function getCompany( $idCompany ) {
@@ -1071,6 +1082,82 @@ class Leads
 			}
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get queued records: ' . $e->getMessage() );
+			return;
+		}
+	}
+
+	public function getRejected( $idFeedOut ) {
+
+		$feed = $this->getOutboundFeed( $idFeedOut );
+		if( !$feed ) {
+			return;
+		}
+
+		$jobId = time();
+
+        $fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+        $filePath = ADMIN_ROOT . $fileLink;
+        $file = fopen( $filePath, 'w' );
+		if( !$file ) {
+			return;
+		}
+
+		fputcsv( $file, array(
+			'url',
+			'ip',
+			'lead timestamp',
+			'first name',
+			'last name',
+			'address',
+			'addr2',
+			'city',
+			'state',
+			'zip',
+			'country',
+			'dob',
+			'gender',
+			'landline',
+			'cellphone',
+		) );
+
+		try {
+
+			$query = $this->db->prepare( "SELECT * FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '1' AND poststamp >= DATE_SUB(NOW(), INTERVAL 3 DAY) AND postresponse NOT LIKE ?" );
+			$query->execute( array( '%' . $feed->successString . '%' ) );
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fputcsv( $file, array(
+					$row['urlTrim'],
+					$row['ip'],
+					$row['stamp'],
+					$row['fname'],
+					$row['lname'],
+					$row['addr'],
+					$row['addr2'],
+					$row['city'],
+					$row['state'],
+					$row['zip'],
+					$row['country'],
+					$row['dob'],
+					$row['gender'],
+					$row['landline'],
+					$row['cellphone'],
+				) );
+
+				$this->update( 'feedout_' . $feed->label, array(
+					'processed' => '1',
+					'poststamp' => date('Y-m-d H:i:s'),
+					'postresponse' => $feed->successString . ':EXPORT:' . $jobId,
+				), array(
+					'idRecord' => $row['idRecord'],
+				) );
+
+				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['urlTrim'], null );
+				$q_query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
+				$q_query->execute( array( $idFeedOut ) );
+
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get rejected records: ' . $e->getMessage() );
 			return;
 		}
 	}

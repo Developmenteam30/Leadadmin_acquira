@@ -1,27 +1,45 @@
 <?php
 
+require_once( INCLUDES . 'leads.php' );
+
 define( 'LEADS_SESSION_LEVEL_ADMIN', 90 );
 define( 'LEADS_SESSION_LEVEL_STAFF', 50 );
 define( 'LEADS_SESSION_LEVEL_CLIENT', 10 );
 
 class LeadsSession
 {
-	public static function login( $username, $level ) {
+	public static function login( $userId, $level ) {
 		LeadsSession::start();
 
-		$_SESSION['username'] = $username;
+		$_SESSION['userId'] = $userId;
 		$_SESSION['level'] = intval( $level );
 
-		session_write_close(); 
+		session_write_close();
+
+		$leads = Leads::getInstance();
+		$leads->auditLog( 'LOGIN', null );
 	}
 
 	public static function logout() {
 		LeadsSession::start();
 
-		unset( $_SESSION['username'] );
+		$leads = Leads::getInstance();
+		$leads->auditLog( 'LOGOUT', null );
+
+		unset( $_SESSION['userId'] );
 		unset( $_SESSION['level'] );
 
-		session_write_close(); 
+		session_write_close();
+	}
+
+	public static function getUserId() {
+		LeadsSession::start();
+
+		if( empty( $_SESSION['userId'] ) ) {
+			return null;
+		}
+
+		return $_SESSION['userId'];
 	}
 
 	public static function isValid( $level ) {
