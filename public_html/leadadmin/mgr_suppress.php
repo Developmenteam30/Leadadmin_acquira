@@ -89,9 +89,9 @@ if(isset($_REQUEST['a'])){
 				$result['error'] = 'Possible file upload attack!';
 			}
 
-			if( $c && $_FILES['suppress_file']['size'] > 2097152 ) {
+			if( $c && $_FILES['suppress_file']['size'] > MAX_UPLOAD_SIZE ) {
 				$c = false;
-				$result['error'] = 'File size cannot exceed 2MB.';
+				$result['error'] = 'File size cannot exceed ' . (MAX_UPLOAD_SIZE / 1024000) . 'MB';
 			}
 
 			$counts = array(
@@ -422,10 +422,9 @@ if(isset($_REQUEST['d'])){
 					} else {
 ?>
 <p>Upload Suppression File</p>
-<p><strong>Suppression file must be saved in CSV format.  Excel format will not work.  There should only be one column in the spreadsheet and that column will contain the list of email addresses to be added.  Maximum file size is 2MB.</strong></p>
+<p><strong>Suppression file must be saved in CSV format.  Excel format will not work.  There should only be one column in the spreadsheet and that column will contain the list of email addresses to be added.  Maximum file size is <?php echo (MAX_UPLOAD_SIZE / 1024000);?>MB.</strong></p>
 <p>
 <form enctype="multipart/form-data" action="mgr_suppress.php" method="post">
-	<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />
 	File: <input type="file" name="suppress_file" multiple="false" accept="text/csv" />
 	to Suppression List 
 	<select id="suppress_list" name="list" onchange="checkIfMulti();">
