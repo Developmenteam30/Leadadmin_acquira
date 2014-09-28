@@ -22,6 +22,7 @@ class Leads
 		// Connect to the database
 		try {
 			$this->db = new PDO( 'mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME, $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p'] );
+			$this->db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
 		} catch( PDOException $e ) {
 
 			$this->logError( 'Database connection error: ' . $e->getMessage() );
