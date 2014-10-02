@@ -1110,10 +1110,10 @@ class Leads
 		try {
 
 			if( LEGACY_DB ) {
-				$query = $this->db->prepare( "SELECT *,urlTrim AS url,stamp AS leadstamp FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '0' ORDER BY stamp DESC" );
+				$query = $this->db->prepare( "SELECT *,urlTrim AS url,stamp AS leadstamp FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '0' ORDER BY stamp DESC LIMIT 500" );
 				$query->execute( );
 			} else {
-				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.timestamp IS NULL AND o.idFeedOut = ? ORDER BY leadstamp DESC" );
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.timestamp IS NULL AND o.idFeedOut = ? ORDER BY leadstamp DESC LIMIT 500" );
 				$query->execute( array( $idFeedOut ) );
 			}
 			return $query;
