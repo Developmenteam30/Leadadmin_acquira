@@ -9,7 +9,7 @@ require_once(INCLUDES."processFunctions.php"); //Validation Functions
 require_once("_f_curl.php"); //Easy to use curl function
 //Constants for Script running
 define("MAX_RUNTIME_POST_QUERY", 15);
-define("MAX_RUNTIME_PROCESS", 35);
+define("MAX_RUNTIME_PROCESS", 200);
 define("MAX_SLAVE_LAG_ALLOWED", 1);
 
 function assignValue( $key, $value, &$requestdata ) {
