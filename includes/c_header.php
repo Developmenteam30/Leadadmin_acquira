@@ -12,6 +12,7 @@ if(!isset($title)){
 <title><?php echo $title; ?></title>
 <link href="style.php" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+<meta name="viewport" content="initial-scale=1, maximum-scale=1" />
 <script src="//code.jquery.com/jquery-2.0.3.js"></script>
 <script src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <script src="./js/default.js"></script>

@@ -101,9 +101,7 @@ if($incomingFeeds === false){
 	</tr>
 	<tbody id='incoming_companyFeedList_<?php echo $idCompany; ?>' class='hidden'>
 	<tr>
-		<td class='fTI_idFeedOut'><p>ID</p></td>
-		<td class='fTI_label'><p>Feed Label</p></td>
-		<td class='fTI_description'><p>Description</p></td>
+		<td colspan="3" class='fTI_description'><p>ID / Label</p></td>
 		<td class='fTI_accepted'><p class='aCenter'>Accepted</p></td>
 		<td class='fTI_rejected'><p class='aCenter'>Rejected</p></td>
 		<td class='fTI_options'><p>Options</p></td>
@@ -112,9 +110,7 @@ if($incomingFeeds === false){
 		foreach($companyFeedList as $feed){ 
 ?>
 	<tr>
-		<td class='fTI_idFeedOut'><p><?php echo $feed->idFeedIn; ?></p></td>
-		<td class='fTI_label'><p><?php echo $feed->label; ?></p></td>
-		<td class='fTI_description'><p><?php echo $feed->description; ?></p></td>
+		<td colspan="3" class='fTI_description'><p><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</p></td>
 		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
 		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
@@ -266,9 +262,7 @@ if($outgoingFeeds === false){
 	</tr>
 	<tbody id='outgoing_companyFeedList_<?php echo $idCompany; ?>' class='fTORow fTO_Row hidden'>
 	<tr>
-		<td class='fTO_idFeedOut'><p>ID</p></td>
-		<td class='fTO_label'><p>Feed Label</p></td>
-		<td class='fTO_description'><p>Description</p></td>
+		<td colspan="3" class='fTO_description'><p>ID / Label</p></td>
 		<td class='fTO_accepted'><p class='aCenter'>Accepted</p></td>
 		<td class='fTO_rejected'><p class='aCenter'>Rejected</p></td>
 		<td class='fTO_rejected'><p class='aCenter'>Queued</p></td>
@@ -278,9 +272,7 @@ if($outgoingFeeds === false){
 		foreach($companyFeedList as $feed){ 
 ?>
 	<tr class='fTORow fTO_Row'>
-		<td class='fTO_idFeedOut'><p><?php echo $feed->idFeedOut; ?></p></td>
-		<td class='fTO_label'><p><?php echo $feed->label; ?></p></td>
-		<td class='fTO_description'><p><?php echo $feed->description; ?></p></td>
+		<td colspan="3" class='fTI_description'><p><?php echo $feed->idFeedOut; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</p></td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
 		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->dailyCountQueued; ?></p></td>

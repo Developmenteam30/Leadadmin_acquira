@@ -273,12 +273,22 @@ div.dashboardOutgoing { width: 50%; }
 	font-weight: bold;
 }
 
+.mobileRow {
+	display: none;
+}
+
 @media (max-width: 1662px){
 	div.navContainer { margin: 20px auto 0; }
 }
 @media (max-width: 800px) {
 	div.dashboardIncoming { width: 100%; }
 	div.dashboardOutgoing { width: 100%; }
+	.mobileRow {
+		display: block;
+	}
+	.desktopRow {
+		display: none;
+	}
 }
 @media (max-width: 600px){
 	div.navContainer { margin-top: 0px; }

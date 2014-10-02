@@ -437,9 +437,7 @@ if($incomingFeeds === false){
 	</tr>
 	<tbody id='companyFeedList_<?php echo $idCompany; ?>' class='hidden'>
 	<tr>
-		<td class='fTI_idFeedOut'><p>ID</p></td>
-		<td class='fTI_label'><p>Feed Label</p></td>
-		<td class='fTI_description'><p>Description</p></td>
+		<td colspan="3" class='fTI_description'><p>ID / Label</p></td>
 		<td class='fTI_accepted'><p class='aCenter'>Accepted</p></td>
 		<td class='fTI_rejected'><p class='aCenter'>Rejected</p></td>
 		<td class='fTI_options'><p>Options</p></td>
@@ -448,9 +446,7 @@ if($incomingFeeds === false){
 		foreach($companyFeedList as $feed){ 
 ?>
 	<tr>
-		<td class='fTI_idFeedOut'><p><?php echo $feed->idFeedIn; ?></p></td>
-		<td class='fTI_label<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->label; ?></p></td>
-		<td class='fTI_description<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->description; ?></p></td>
+        <td colspan="3" class='fTI_description<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</p></td>
 		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
 		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
