@@ -239,20 +239,22 @@ class Leads
 			return null;
 		}
 
-		try {
-			$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] ) . " LIKE feedinc_empty" );
-			$query->execute( );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to create new inbound table: ' . $e->getMessage() );
-			return null;
-		}
+		if( LEGACY_DB ) {
+			try {
+				$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] ) . " LIKE feedinc_empty" );
+				$query->execute( );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to create new inbound table: ' . $e->getMessage() );
+				return null;
+			}
 
-		try {
-			$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] . "_invalid" ) . " LIKE feedinc_empty_invalid" );
-			$query->execute( );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to create new inbound invalid table: ' . $e->getMessage() );
-			return null;
+			try {
+				$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] . "_invalid" ) . " LIKE feedinc_empty_invalid" );
+				$query->execute( );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to create new inbound invalid table: ' . $e->getMessage() );
+				return null;
+			}
 		}
 
 		return $idFeedIn;
@@ -265,20 +267,23 @@ class Leads
 	}
 
 	public function renameInboundTables( $old, $new ) {
-		try {
-			$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new ) );
-			$query->execute( );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to rename inbound table: ' . $e->getMessage() );
-			return null;
-		}
 
-		try {
-			$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old . "_invalid" ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new . "_invalid" ) );
-			$query->execute( );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to rename inbound invalid table: ' . $e->getMessage() );
-			return null;
+		if( LEGACY_DB ) {
+			try {
+				$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new ) );
+				$query->execute( );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to rename inbound table: ' . $e->getMessage() );
+				return null;
+			}
+
+			try {
+				$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old . "_invalid" ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new . "_invalid" ) );
+				$query->execute( );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to rename inbound invalid table: ' . $e->getMessage() );
+				return null;
+			}
 		}
 
 		return true;
@@ -384,10 +389,10 @@ class Leads
 		$this->lockTables( "data_inbound WRITE, stats_inbound WRITE, errorlog WRITE" );
 
 		$status = $idRecord = $this->insertRow( 'data_inbound', array(
-			'timestamp' => date( 'c' ),
+			'timestamp' => date( 'Y-m-d H:i:s' ),
 			'idFeedIn' => $idFeedIn,
 			'listcode' => empty( $fields['listcode'] ) ? null : $fields['listcode'],
-			'leadstamp' => empty( $fields['stamp'] ) ? null : date( 'c', strtotime( $fields['stamp'] ) ),
+			'leadstamp' => empty( $fields['stamp'] ) ? null : date( 'Y-m-d H:i:s', strtotime( $fields['stamp'] ) ),
 			'url' => empty( $fields['url'] ) ? null : $this->parseUrl( $fields['url'] ),
 			'ip' => empty( $fields['ip'] ) ? null : $fields['ip'],
 			'email' => empty( $fields['email'] ) ? null : $fields['email'],
@@ -493,9 +498,13 @@ class Leads
 		$this->lockTables( "data_outbound WRITE, stats_outbound WRITE, feedout WRITE, errorlog WRITE" );
 
 		try {
-			//$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecord = ?' );
-			$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
-			$query->execute( array( $error, $idRecord, $idFeedOut ) );
+			if( LEGACY_DB ) {
+				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
+				$query->execute( array( $error, $idRecord, $idFeedOut ) );
+			} else {
+				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecord = ? AND idFeedOut = ?' );
+				$query->execute( array( $error, $idRecord, $idFeedOut ) );
+			}
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to update data_outbound record: ' . $e->getMessage() );
 			$this->unlockTables();
@@ -871,9 +880,8 @@ class Leads
 		$results = null;
 
 		try {
-// XXX Change me to use the data_inbound table instead
-			$query = $this->db->prepare( "SELECT MIN(d.received) FROM (SELECT received FROM feedinc_simint WHERE email = ? UNION SELECT received FROM feedinc_turntwo WHERE email = ? UNION SELECT received FROM feedinc_digitalbulldogs WHERE email = ? ) AS d ");
-			$query->execute( array( $email, $email, $email ) );
+			$query = $this->db->prepare( "SELECT MIN(timestamp) FROM data_inbound WHERE email = ?" );
+			$query->execute( array( $email ) );
 			$results = $query->fetchColumn( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound email search results: ' . $e->getMessage() );
@@ -991,7 +999,11 @@ class Leads
 	}
 
 	public function clearOutboundQueue( $idFeedOut, $label ) {
-		$this->lockTables( "feedout WRITE, data_outbound WRITE, " . $this->quoteIdentifier( 'feedout_' . $label ) . " WRITE" );
+		if( LEGACY_DB ) {
+			$this->lockTables( "feedout WRITE, data_outbound WRITE, " . $this->quoteIdentifier( 'feedout_' . $label ) . " WRITE" );
+		} else {
+			$this->lockTables( "feedout WRITE, data_outbound WRITE" );
+		}
 
 		try {
 			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND timestamp IS NULL" );
@@ -1001,12 +1013,14 @@ class Leads
 			return;
 		}
 
-		try {
-			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $label ) . " WHERE processed = '0'" );
-			$query->execute( );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
-			return;
+		if( LEGACY_DB ) {
+			try {
+				$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $label ) . " WHERE processed = '0'" );
+				$query->execute( );
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
+				return;
+			}
 		}
 
 		try {
@@ -1020,6 +1034,72 @@ class Leads
 		$this->unlockTables();
 	}
 
+	public function exportOutboundQueue( $idFeedOut ) {
+
+		$feed = $this->getOutboundFeed( $idFeedOut );
+		if( !$feed ) {
+			return;
+		}
+
+		$jobId = time();
+
+        $fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+        $filePath = ADMIN_ROOT . $fileLink;
+        $file = fopen( $filePath, 'w' );
+		if( !$file ) {
+			return;
+		}
+
+		fputcsv( $file, array(
+			'url',
+			'ip',
+			'lead timestamp',
+			'first name',
+			'last name',
+			'address',
+			'addr2',
+			'city',
+			'state',
+			'zip',
+			'country',
+			'dob',
+			'gender',
+			'landline',
+			'cellphone',
+		) );
+
+		try {
+
+			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.timestamp IS NULL AND o.idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fputcsv( $file, array(
+					$row['url'],
+					$row['ip'],
+					$row['leadstamp'],
+					$row['fname'],
+					$row['lname'],
+					$row['addr'],
+					$row['addr2'],
+					$row['city'],
+					$row['state'],
+					$row['zip'],
+					$row['country'],
+					$row['dob'],
+					$row['gender'],
+					$row['landline'],
+					$row['cellphone'],
+				) );
+
+				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['url'], null );
+
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to export queued records: ' . $e->getMessage() );
+			return;
+		}
+	}
+
 	public function getOutboundQueue( $idFeedOut ) {
 
 		$feed = $this->getOutboundFeed( $idFeedOut );
@@ -1027,74 +1107,26 @@ class Leads
 			return;
 		}
 
-		$jobId = time();
-
-        $fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
-        $filePath = ADMIN_ROOT . $fileLink;
-        $file = fopen( $filePath, 'w' );
-		if( !$file ) {
-			return;
-		}
-
-		fputcsv( $file, array(
-			'url',
-			'ip',
-			'lead timestamp',
-			'first name',
-			'last name',
-			'address',
-			'addr2',
-			'city',
-			'state',
-			'zip',
-			'country',
-			'dob',
-			'gender',
-			'landline',
-			'cellphone',
-		) );
-
 		try {
 
-			$query = $this->db->prepare( "SELECT * FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '0'" );
-			$query->execute( );
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
-				fputcsv( $file, array(
-					$row['urlTrim'],
-					$row['ip'],
-					$row['stamp'],
-					$row['fname'],
-					$row['lname'],
-					$row['addr'],
-					$row['addr2'],
-					$row['city'],
-					$row['state'],
-					$row['zip'],
-					$row['country'],
-					$row['dob'],
-					$row['gender'],
-					$row['landline'],
-					$row['cellphone'],
-				) );
-
-				$this->update( 'feedout_' . $feed->label, array(
-					'processed' => '1',
-					'poststamp' => date('Y-m-d H:i:s'),
-					'postresponse' => $feed->successString . ':EXPORT:' . $jobId,
-				), array(
-					'idRecord' => $row['idRecord'],
-				) );
-
-				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['urlTrim'], null );
-
+			if( LEGACY_DB ) {
+				$query = $this->db->prepare( "SELECT *,urlTrim AS url,stamp AS leadstamp FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '0' ORDER BY stamp DESC" );
+				$query->execute( );
+			} else {
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.timestamp IS NULL AND o.idFeedOut = ? ORDER BY leadstamp DESC" );
+				$query->execute( array( $idFeedOut ) );
 			}
+			return $query;
+
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get queued records: ' . $e->getMessage() );
-			return;
+			return null;
 		}
+
+		return null;
 	}
 
-	public function getRejected( $idFeedOut ) {
+	public function exportRejected( $idFeedOut ) {
 
 		$feed = $this->getOutboundFeed( $idFeedOut );
 		if( !$feed ) {
@@ -1130,13 +1162,13 @@ class Leads
 
 		try {
 
-			$query = $this->db->prepare( "SELECT * FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '1' AND poststamp >= DATE_SUB(NOW(), INTERVAL 3 DAY) AND postresponse NOT LIKE ?" );
+			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE timestamp IS NOT NULL AND o.idFeedOut = ? AND o.result NOT LIKE ?" );
 			$query->execute( array( '%' . $feed->successString . '%' ) );
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, array(
-					$row['urlTrim'],
+					$row['url'],
 					$row['ip'],
-					$row['stamp'],
+					$row['leadstamp'],
 					$row['fname'],
 					$row['lname'],
 					$row['addr'],
@@ -1151,15 +1183,7 @@ class Leads
 					$row['cellphone'],
 				) );
 
-				$this->update( 'feedout_' . $feed->label, array(
-					'processed' => '1',
-					'poststamp' => date('Y-m-d H:i:s'),
-					'postresponse' => $feed->successString . ':EXPORT:' . $jobId,
-				), array(
-					'idRecord' => $row['idRecord'],
-				) );
-
-				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['urlTrim'], null );
+				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['url'], null );
 				$q_query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
 				$q_query->execute( array( $idFeedOut ) );
 
@@ -1258,7 +1282,7 @@ class Leads
 			$this->insertRow( 'errorlog', array( 
 				'origination' => 'LEADS',
 				'description' => $message,
-				'stamp' => date( 'c' ),
+				'stamp' => date( 'Y-m-d H:i:s' ),
 			), false );
 		}
 

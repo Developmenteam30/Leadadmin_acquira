@@ -83,7 +83,7 @@ function main_post()
 		//Stores the responses with email associations in the array for 
 		//use in the update_records function.
 	}
-	if(!$settings['end']) { 
+	if(!$settings['end'] && LEGACY_DB ) { 
 		update_records($updatequery); //Updates the database with the appropriate responses per email.
 	}
 	$results['runtime'] = microtime(true) - $results['runtime']; 
@@ -250,32 +250,20 @@ function dbasesettings()
 }
 
 function queryset()
-{	//VER 1.7
+{
 	global $settings;
-	global $results;
-	
-	$date = date("Y-m-d H:i:s");
-	
-	dbCon();
-	$getLeads = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$settings['feedParams']->label."` "
-		."WHERE `processed` = '0' ORDER BY `stamp` DESC LIMIT ".$settings['feedParams']->throttle.";";
-	$dogetLeads = dbQry($getLeads, 'Fetching leads to process', true);
-	if($dogetLeads === false){ 
-		$settings['end'] = true; 
-		logError(
-			'Outgoing Feed '.$settings['feedParams']->label
-			, 'Database failure when trying to select leads for processing. View MySQL log.'
-			, true
-		);
-		echo "Database failure when trying to select leads for processing.\n"; @ob_flush(); flush();
-		return false; 
-	}
-	if($dogetLeads->num_rows == 0){ 
+
+	require_once( INCLUDES . 'leads.php' );
+	$leads = Leads::getInstance();
+	$query = $leads->getOutboundQueue( $settings['feedParams']->idFeedOut );
+
+	if( empty( $query ) ) {
 		$settings['end'] = true; 
 		echo "No updates.\n"; @ob_flush(); flush();
 		return false;
 	}
-	return $dogetLeads;	
+
+	return $query;
 }
 
 function process($leadset)
@@ -291,8 +279,9 @@ function process($leadset)
 	{ // Testing mode will echo out everything as it runs.
 		echo "PROCESSING\n\n"; @ob_flush(); flush();
 	}
-	while ($leaddata = $leadset->fetch_assoc())
-	{	//Check to make sure we haven't run over the allotted time for processing.
+	while ( $leaddata = $leadset->fetch( PDO::FETCH_ASSOC ) ) {
+
+		//Check to make sure we haven't run over the allotted time for processing.
 		$current_posttime = microtime(true) - $posttime;
 		if($settings['testing'] == 1 || $settings['samplerun'] == 1)
 		{ // Testing mode will echo out everything as it runs, as will sample run.
@@ -512,7 +501,7 @@ function runlead($leaddata, $fP)
 
 	require_once( INCLUDES . 'leads.php' );
 	$leads = Leads::getInstance();
-	$leads->outboundProcess( $leaddata['idRecord'], $fP->idFeedOut, $leaddata['urlTrim'], ( $response['status'] ? null : trim( $response['text'] ) ) );
+	$leads->outboundProcess( $leaddata['idRecord'], $fP->idFeedOut, $leaddata['url'], ( $response['status'] ? null : trim( $response['text'] ) ) );
 
 	unset($requestdata);
 	return $response;

@@ -171,8 +171,8 @@ if( in_array('url', $allowedFields ) ) { //URL is expected so trim it and store 
 	if( !empty( $_REQUEST['url'] ) ){ 
 		$_REQUEST['urlTrim'] = url_reformat($_REQUEST['url']);
 	} else { 
-		$_REQUEST['url'] = 'No Url Given';
-		$_REQUEST['urlTrim'] = url_reformat('No Url Given');
+		$_REQUEST['url'] = '';
+		$_REQUEST['urlTrim'] = '';
 	}
 }
 if( $c && !empty( $_REQUEST['email'] ) ) {
@@ -291,50 +291,53 @@ if($c){
 						$p = false;
 					}
 				}
-				if($p){ 
-					$insertToFeedOut = 
-						"INSERT INTO `".DATABASE_NAME."`.`feedout_".$feed->label."` ( `processed` ";
-					foreach($allowedFields as $allowedField){ 
-						$insertToFeedOut .= ", `".$allowedField."` ";
-						if($allowedField == 'url'){ 
-							$insertToFeedOut .= ", `urlTrim` ";
-						}
-					}
-					if( !empty( $feed->livedata ) ) {
-						$insertToFeedOut .= ") VALUES ( '-1' ";
-					} else {
-						$insertToFeedOut .= ") VALUES ( '0' ";
-					}
-					foreach($allowedFields as $allowedField){ 
-						if(isset($_REQUEST[$allowedField])){ 
-							if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
-								$insertToFeedOut .= ", 'No listcode'";
-							} elseif($allowedField == 'stamp'){ 
-								$insertToFeedOut .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
-							} else { 
-								$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
-							}
-						} else { 
-							if($allowedField == 'listcode'){ 
-								$insertToFeedOut .= ", 'No listcode'";
-							} else { 
-								$insertToFeedOut .= ", ''";
+				if($p){
+					$lastRecord = null;
+					if( LEGACY_DB ) {
+						$insertToFeedOut = 
+							"INSERT INTO `".DATABASE_NAME."`.`feedout_".$feed->label."` ( `processed` ";
+						foreach($allowedFields as $allowedField){ 
+							$insertToFeedOut .= ", `".$allowedField."` ";
+							if($allowedField == 'url'){ 
+								$insertToFeedOut .= ", `urlTrim` ";
 							}
 						}
-						if($allowedField == 'url'){ 
-							$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+						if( !empty( $feed->livedata ) ) {
+							$insertToFeedOut .= ") VALUES ( '-1' ";
+						} else {
+							$insertToFeedOut .= ") VALUES ( '0' ";
 						}
-					}
-					$insertToFeedOut .= ");";
-					$doinsertRecord = dbQry($insertToFeedOut, 'Populating '.$feed->label, true);
-					if($doinsertRecord === false){ 
-						logError(
-							'Feed '.$feedLabel
-							, 'Database failure when populate outgoing feed '.$feed->label.'. Check MySQL log file.'
-							, true
-						);
-					} else {
-						$lastRecord = $GLOBALS['dbconnx']->insert_id;
+						foreach($allowedFields as $allowedField){ 
+							if(isset($_REQUEST[$allowedField])){ 
+								if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
+									$insertToFeedOut .= ", 'No listcode'";
+								} elseif($allowedField == 'stamp'){ 
+									$insertToFeedOut .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
+								} else { 
+									$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
+								}
+							} else { 
+								if($allowedField == 'listcode'){ 
+									$insertToFeedOut .= ", 'No listcode'";
+								} else { 
+									$insertToFeedOut .= ", ''";
+								}
+							}
+							if($allowedField == 'url'){ 
+								$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+							}
+						}
+						$insertToFeedOut .= ");";
+						$doinsertRecord = dbQry($insertToFeedOut, 'Populating '.$feed->label, true);
+						if($doinsertRecord === false){ 
+							logError(
+								'Feed '.$feedLabel
+								, 'Database failure when populate outgoing feed '.$feed->label.'. Check MySQL log file.'
+								, true
+							);
+						} else {
+							$lastRecord = $GLOBALS['dbconnx']->insert_id;
+						}
 					}
 
 					$leads = Leads::getInstance();
@@ -415,135 +418,138 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 		}
 	}
 
-
-	$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."` ( `queryString`, `received` ";
-	dbCon("insertUpdate");
-	foreach($allowedFields as $allowedField){ 
-		$insertRecord .= ", `".$allowedField."` ";
-		if($allowedField == 'url'){ 
-			$insertRecord .= ", `urlTrim` ";
-		}
-	}
-	$insertRecord .= ") VALUES ( "
-		."'".$GLOBALS['dbconnx']->escape_string(serialize($_REQUEST))."', "
-		."'".date("Y-m-d H:i:s")."' ";
-	foreach($allowedFields as $allowedField){ 
-		if(isset($_REQUEST[$allowedField])){ 
-			if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
-				$insertRecord .= ", 'No listcode'";
-			} elseif($allowedField == 'stamp'){ 
-				$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
-			} else { 
-				$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
-			}
-		} else { 
-			if($allowedField == 'listcode'){ 
-				$insertRecord .= ", 'No listcode'";
-			} else { 
-				$insertRecord .= ", ''";
+	if( LEGACY_DB ) {
+		$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."` ( `queryString`, `received` ";
+		dbCon("insertUpdate");
+		foreach($allowedFields as $allowedField){ 
+			$insertRecord .= ", `".$allowedField."` ";
+			if($allowedField == 'url'){ 
+				$insertRecord .= ", `urlTrim` ";
 			}
 		}
-		if($allowedField == 'url'){ 
-			$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+		$insertRecord .= ") VALUES ( "
+			."'".$GLOBALS['dbconnx']->escape_string(serialize($_REQUEST))."', "
+			."'".date("Y-m-d H:i:s")."' ";
+		foreach($allowedFields as $allowedField){ 
+			if(isset($_REQUEST[$allowedField])){ 
+				if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
+					$insertRecord .= ", 'No listcode'";
+				} elseif($allowedField == 'stamp'){ 
+					$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
+				} else { 
+					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
+				}
+			} else { 
+				if($allowedField == 'listcode'){ 
+					$insertRecord .= ", 'No listcode'";
+				} else { 
+					$insertRecord .= ", ''";
+				}
+			}
+			if($allowedField == 'url'){ 
+				$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+			}
 		}
-	}
-	$insertRecord .= ");";
-	$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedLabel, true);
-	if($doinsertRecord === false){
-		$c = false; $result['reason'] = 'Database failure, please try again later.';
-		logError(
-			'Feed '.$feedLabel
-			, 'Database failure when attempting to insert valid record. Check MySQL log file.'
-			, true
-		);
-	} else { //Successfully inserted into the data table, now insert into the count table.
-		$date = date("Y-m-d");
-		$insertCountChange = "INSERT INTO "
-			."`".DATABASE_NAME."`.`urlcount` (`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) "
-			."VALUES ( "
-				." '".$feedParams->idFeedIn."' "
-				.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' "
-				.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['url'])."' "
-				.",'1' "
-				.",'".$date."' "
-			.") "
-			."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
-		$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
-		if($doinsertCountChange === false){ 
+		$insertRecord .= ");";
+		$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedLabel, true);
+		if($doinsertRecord === false){
+			$c = false; $result['reason'] = 'Database failure, please try again later.';
 			logError(
 				'Feed '.$feedLabel
-				, 'Database failure when attempting to add quantity change. Check MySQL log file.'
+				, 'Database failure when attempting to insert valid record. Check MySQL log file.'
 				, true
 			);
+		} else { //Successfully inserted into the data table, now insert into the count table.
+			$date = date("Y-m-d");
+			$insertCountChange = "INSERT INTO "
+				."`".DATABASE_NAME."`.`urlcount` (`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) "
+				."VALUES ( "
+					." '".$feedParams->idFeedIn."' "
+					.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' "
+					.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['url'])."' "
+					.",'1' "
+					.",'".$date."' "
+				.") "
+				."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
+			$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
+			if($doinsertCountChange === false){ 
+				logError(
+					'Feed '.$feedLabel
+					, 'Database failure when attempting to add quantity change. Check MySQL log file.'
+					, true
+				);
+			}
 		}
 	}
 	dbDcon();
 } else if( !empty( $feedLabel ) ) { //There was a failure somewhere, so insert into the invalid database with the query string and the error.
-	$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."_invalid` ( `queryString`,`error`,`received` ";
-	dbCon("insertUpdate");
-	foreach($allowedFields as $allowedField){ 
-		$insertRecord .= ", `".$allowedField."` ";
-		if($allowedField == 'url'){ 
-			$insertRecord .= ", `urlTrim` ";
-		}
-	}
-	$insertRecord .= ") VALUES ( "
-		."'".$GLOBALS['dbconnx']->escape_string(serialize($_REQUEST))."', "
-		."'".$result['reason']."', "
-		."'".date("Y-m-d H:i:s")."' ";
-	foreach($allowedFields as $allowedField){ 
-		if(isset($_REQUEST[$allowedField])){ 
-			if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
-				$insertRecord .= ", 'No listcode'";
-			} elseif($allowedField == 'stamp'){ 
-				$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
-			} else { 
-				$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
-			}
-		} else { 
-			if($allowedField == 'listcode'){ 
-				$insertRecord .= ", 'No listcode'";
-			} else { 
-				$insertRecord .= ", ''";
+	if( LEGACY_DB ) {
+		$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."_invalid` ( `queryString`,`error`,`received` ";
+		dbCon("insertUpdate");
+		foreach($allowedFields as $allowedField){ 
+			$insertRecord .= ", `".$allowedField."` ";
+			if($allowedField == 'url'){ 
+				$insertRecord .= ", `urlTrim` ";
 			}
 		}
-		if($allowedField == 'url') {
- 			if ( !empty( $_REQUEST['urlTrim'] ) ){ 
-				$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+		$insertRecord .= ") VALUES ( "
+			."'".$GLOBALS['dbconnx']->escape_string(serialize($_REQUEST))."', "
+			."'".$result['reason']."', "
+			."'".date("Y-m-d H:i:s")."' ";
+		foreach($allowedFields as $allowedField){ 
+			if(isset($_REQUEST[$allowedField])){ 
+				if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
+					$insertRecord .= ", 'No listcode'";
+				} elseif($allowedField == 'stamp'){ 
+					$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
+				} else { 
+					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
+				}
 			} else { 
-				$insertRecord .= ", ''";
+				if($allowedField == 'listcode'){ 
+					$insertRecord .= ", 'No listcode'";
+				} else { 
+					$insertRecord .= ", ''";
+				}
+			}
+			if($allowedField == 'url') {
+ 				if ( !empty( $_REQUEST['urlTrim'] ) ){ 
+					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+				} else { 
+					$insertRecord .= ", ''";
+				}
 			}
 		}
-	}
-	$insertRecord .= ");";
-	$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedLabel, true);
-	if($doinsertRecord === false){
-		$c = false; $result['reason'] = 'Database failure, please try again later.';
-		logError(
-			'Feed '.$feedLabel
-			, 'Database failure when attempting to insert invalid record. Check MySQL log file.'
-			, true
-		);
-	} else if( !empty( $_REQUEST['url'] ) && !empty( $_REQUEST['urlTrim'] ) ) { //Successfully inserted into the data table, now insert into the count table.
-		$date = date("Y-m-d");
-		$insertCountChange = "INSERT INTO "
-			."`".DATABASE_NAME."`.`urlcount_invalid` (`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) "
-			."VALUES ( "
-				." '".$feedParams->idFeedIn."' "
-				.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' "
-				.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['url'])."' "
-				.",'1' "
-				.",'".$date."' "
-			.") "
-			."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
-			//echo $insertCountChange;
-		$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
-		if($doinsertCountChange === false){ 
+		$insertRecord .= ");";
+		$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedLabel, true);
+		if($doinsertRecord === false){
+			$c = false; $result['reason'] = 'Database failure, please try again later.';
 			logError(
 				'Feed '.$feedLabel
-				, 'Database failure when attempting to add quantity change for invalid record. Check MySQL log file.'
+				, 'Database failure when attempting to insert invalid record. Check MySQL log file.'
 				, true
 			);
+		} else if( !empty( $_REQUEST['url'] ) && !empty( $_REQUEST['urlTrim'] ) ) { //Successfully inserted into the data table, now insert into the count table.
+			$date = date("Y-m-d");
+			$insertCountChange = "INSERT INTO "
+				."`".DATABASE_NAME."`.`urlcount_invalid` (`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) "
+				."VALUES ( "
+					." '".$feedParams->idFeedIn."' "
+					.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' "
+					.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['url'])."' "
+					.",'1' "
+					.",'".$date."' "
+				.") "
+				."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
+				//echo $insertCountChange;
+			$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
+			if($doinsertCountChange === false){ 
+				logError(
+					'Feed '.$feedLabel
+					, 'Database failure when attempting to add quantity change for invalid record. Check MySQL log file.'
+					, true
+				);
+			}
 		}
 	}
 	dbDcon();

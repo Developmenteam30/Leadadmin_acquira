@@ -13,4 +13,4 @@ include(INCLUDES."processFunctions.php");
 require_once( INCLUDES . 'leads.php' );
 
 $leads = Leads::getInstance();
-$leads->getOutboundQueue( 127 );
+$leads->exportOutboundQueue( 127 );

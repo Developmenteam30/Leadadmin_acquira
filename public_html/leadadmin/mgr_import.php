@@ -135,15 +135,18 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 		print " - VALID\n";
 
-		if( ( $lastRecord = insertIncomingData( $feedParams, $data, $jobId ) ) !== null ) {
-
-			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $jobId );
-
-			pushIncomingData( $idFeedIn, $data, $inboundId );
-			$counts['success']++;
+		if( LEGACY_DB ) {
+			if( ( $lastRecord = insertIncomingData( $feedParams, $data, $jobId ) ) !== null ) {
+				pushIncomingData( $idFeedIn, $data, $inboundId );
+				$counts['success']++;
+			} else {
+				$counts['failures']++;
+			}
 		} else {
-			$counts['failures']++;
+			$counts['success']++;
 		}
+
+		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $jobId );
 
 	} else {
 
@@ -156,7 +159,9 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		}
 		print "</ul>\n";
 
-		insertIncomingData( $feedParams, $data, $jobId, $result['errors'][0] );
+		if( LEGACY_DB ) {
+			insertIncomingData( $feedParams, $data, $jobId, $result['errors'][0] );
+		}
 
 		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $jobId );
 	}

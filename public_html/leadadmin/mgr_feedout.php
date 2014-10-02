@@ -69,7 +69,7 @@ function addFeedOut(
 			$c = false; $result['reason'] = 'Database failure - could not add feed.';
 		} 
 	}
-	if($c){ //Create feedout table..
+	if($c && LEGACY_DB ){ //Create feedout table..
 		$createTable = "CREATE TABLE `".DATABASE_NAME."`.`feedout_".$label."` ( "
 			."`idRecord` bigint(20) NOT NULL auto_increment, "
 			."`processed` enum('-1','0','1') default '0', "
@@ -139,7 +139,7 @@ function alterFeedOut($idFeedOut, $property, $newVal){
 					.'label name.';
 				}
 			}
-			if($c){ //Updating table names.
+			if($c && LEGACY_DB ){ //Updating table names.
 				$updateTableNames = 
 					"RENAME TABLE "
 						."`".DATABASE_NAME."`.`feedout_".$feed->label."` "
@@ -559,7 +559,7 @@ if(isset($_REQUEST['a'])){
 					}
 					if($_REQUEST['filterTypeUrl'] != $feed->filterTypeUrl){ 
 						if($c){ 
-							if($_REQUEST['filterTypeUrl'] == 'null'){ $filterTypeUrl = "NULL"; } 
+							if($_REQUEST['filterTypeUrl'] == 'null'){ $filterTypeUrl = NULL; } 
 							else { $filterTypeUrl = "'".$_REQUEST['filterTypeUrl']."'"; }
 							$alterResult = alterPopulationParameter(
 								$_REQUEST['idAssoc'], 'filterTypeUrl', $filterTypeUrl
@@ -583,7 +583,7 @@ if(isset($_REQUEST['a'])){
 					}
 					if($_REQUEST['filterTypeEmail'] != $feed->filterTypeEmail){ 
 						if($c){ 
-							if($_REQUEST['filterTypeEmail'] == 'null'){ $filterTypeEmail = "NULL"; } 
+							if($_REQUEST['filterTypeEmail'] == 'null'){ $filterTypeEmail = NULL; } 
 							else { $filterTypeEmail = "'".$_REQUEST['filterTypeEmail']."'"; }
 							$alterResult = alterPopulationParameter(
 								$_REQUEST['idAssoc'], 'filterTypeEmail', $filterTypeEmail
@@ -607,7 +607,7 @@ if(isset($_REQUEST['a'])){
 					}
 					if($_REQUEST['filterTypeListcode'] != $feed->filterTypeListcode){ 
 						if($c){ 
-							if($_REQUEST['filterTypeListcode'] == 'null'){ $filterTypeListcode = "NULL"; } 
+							if($_REQUEST['filterTypeListcode'] == 'null'){ $filterTypeListcode = NULL; } 
 							else { $filterTypeListcode = "'".$_REQUEST['filterTypeListcode']."'"; }
 							$alterResult = alterPopulationParameter(
 								$_REQUEST['idAssoc'], 'filterTypeListcode', $filterTypeListcode
@@ -2345,6 +2345,7 @@ function manageFeed(action, idFeedOut){
 	}
 	successString = $(e+'successString').val();
 	dailyLimit = $(e+'dailyLimit').val();
+    if( dailyLimit == '' ) { dailyLimit = 0; }
 /* 	alert(
 		"idFeedOut: "+idFeedOut
 		+"\n"+"label: "+label

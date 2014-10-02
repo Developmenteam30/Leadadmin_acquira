@@ -1477,7 +1477,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 		}
 	}
 	if($(e+'filterTypeUrl_disabled').is(":checked")){
-		filterTypeUrl = 'null';
+		filterTypeUrl = null;
 	}else if($(e+'filterTypeUrl_accept').is(":checked")){
 		filterTypeUrl = 'accept';
 	}else if($(e+'filterTypeUrl_reject').is(":checked")){
@@ -1487,7 +1487,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 		.map(function(){return $(this).val().trim();}).get().join(";");
 
 	if($(e+'filterTypeSiftLogic_disabled').is(":checked")){
-		filterTypeSiftLogic = 'null';
+		filterTypeSiftLogic = null;
 	}else if($(e+'filterTypeSiftLogic_accept').is(":checked")){
 		filterTypeSiftLogic = 'accept';
 	}else if($(e+'filterTypeSiftLogic_reject').is(":checked")){
