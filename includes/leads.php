@@ -499,10 +499,10 @@ class Leads
 
 		try {
 			if( LEGACY_DB ) {
-				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
+				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
 				$query->execute( array( $error, $idRecord, $idFeedOut ) );
 			} else {
-				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), result = ? WHERE idRecord = ? AND idFeedOut = ?' );
+				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, result = ? WHERE idRecord = ? AND idFeedOut = ?' );
 				$query->execute( array( $error, $idRecord, $idFeedOut ) );
 			}
 		} catch( PDOException $e ) {
@@ -653,7 +653,7 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT o.timestamp,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.timestamp IS NOT NULL AND o.result NOT LIKE CONCAT('%',f.successString,'%') ORDER BY o.timestamp DESC LIMIT " . intval( $offset ) . ",100" );
+			$query = $this->db->prepare( "SELECT o.timestamp,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.result NOT LIKE CONCAT('%',f.successString,'%') ORDER BY o.timestamp DESC LIMIT " . intval( $offset ) . ",100" );
 			$query->execute( array( $idFeedOut ) );
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
@@ -988,7 +988,7 @@ class Leads
 
 	public function archiveOutbound( $idFeedOut, $success ) {
 		try {
-			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND timestamp IS NOT NULL AND timestamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND result NOT LIKE ?" );
+			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND processed = 1 AND timestamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND result NOT LIKE ?" );
 			$query->execute( array( $idFeedOut, $success ) );
 			return $query->rowCount();
 		} catch( PDOException $e ) {
@@ -1006,7 +1006,7 @@ class Leads
 		}
 
 		try {
-			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND timestamp IS NULL" );
+			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND processed = 0" );
 			$query->execute( array( $idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
@@ -1070,7 +1070,7 @@ class Leads
 
 		try {
 
-			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.timestamp IS NULL AND o.idFeedOut = ?" );
+			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ?" );
 			$query->execute( array( $idFeedOut ) );
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, array(
@@ -1113,7 +1113,7 @@ class Leads
 				$query = $this->db->prepare( "SELECT *,urlTrim AS url,stamp AS leadstamp FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '0' ORDER BY stamp DESC LIMIT 500" );
 				$query->execute( );
 			} else {
-				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.timestamp IS NULL AND o.idFeedOut = ? ORDER BY leadstamp DESC LIMIT 500" );
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? ORDER BY leadstamp DESC LIMIT 500" );
 				$query->execute( array( $idFeedOut ) );
 			}
 			return $query;
@@ -1162,7 +1162,7 @@ class Leads
 
 		try {
 
-			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE timestamp IS NOT NULL AND o.idFeedOut = ? AND o.result NOT LIKE ?" );
+			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE processed = 1 AND o.idFeedOut = ? AND o.result NOT LIKE ?" );
 			$query->execute( array( '%' . $feed->successString . '%' ) );
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, array(
@@ -1251,7 +1251,7 @@ class Leads
 
 			$this->db->query( "UPDATE feedout SET queued = 0" );
 
-			$query = $this->db->prepare( "SELECT idFeedOut,COUNT(*) AS cnt FROM data_outbound WHERE timestamp IS NULL GROUP BY idFeedOut" );
+			$query = $this->db->prepare( "SELECT idFeedOut,COUNT(*) AS cnt FROM data_outbound WHERE processed = 0 GROUP BY idFeedOut" );
 			$query->execute( );
 			$rows = $query->fetchAll();
 
