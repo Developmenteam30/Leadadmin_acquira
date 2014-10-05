@@ -223,6 +223,9 @@ function alterPopulationParameter($idAssoc, $property, $newVal){
 	if(in_array($property, $quoters)){ 
 		$newVal = "'".$newVal."'";
 	}
+	if( empty( $newVal ) ) {
+		$newVal = "NULL";
+	}
 	$updateProperty = "UPDATE `".DATABASE_NAME."`.`feedPopulation` "
 		."SET `".$property."` = ".$newVal." "
 		."WHERE `idAssoc` = '".$idAssoc."'; ";
