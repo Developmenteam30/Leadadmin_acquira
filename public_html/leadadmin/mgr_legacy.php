@@ -8,7 +8,7 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 $mysqlErrorSource = 'Manager - Suppression';
 include(INCLUDES."_connx.php");
 include(INCLUDES."f_site.php");
-include(INCLUDES."processFunctions.php");
+require_once(INCLUDES."processFunctions.php");
 
 function legacyPopulate( $feedId, $file = false ) {
 
@@ -53,10 +53,12 @@ function legacyPopulate( $feedId, $file = false ) {
 			}
 			$query .= "ORDER BY stamp DESC";
 
-	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId = '1392144291'";
+	  		//$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId = '1392144291'";
 	  		//$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE urlTrim = 'http://www.rewardcorporation.com'";
-	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE received >= '2014-04-28' AND listcode = '1346'";
-			$query = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE stamp >= '2014-06-16 22:59' AND urlTrim = 'http://www.instantcheckmate.com'";
+	  		//$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE received >= '2014-04-28' AND listcode = '1346'";
+			//$query = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE stamp >= '2014-06-16 22:59' AND urlTrim = 'http://www.instantcheckmate.com'";
+			$query = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE stamp >= '2014-08-01' AND stamp < '2014-08-10 10:16:02' AND listcode = '1382329'";
+			$query = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId IN (1410894753,1410895983)";
 
 			dbCon();
     		$result = dbQry( $query, 'Getting inbound records', true );
@@ -105,7 +107,12 @@ function legacyPopulate( $feedId, $file = false ) {
 						}
 					}
 
-					addOutboundRecord( $population->outLabel, $row->listcode, $row->urlTrim, $row->url, $row->ip, $row->stamp, $row->email, $row->fname, $row->lname, $row->addr, $row->addr2, $row->city, $row->state, $row->zip, $row->country, $row->dob, $row->gender, $row->landline, $row->cellphone, $processed, $postStamp, $postRequest, $postResponse );
+					$legacyId = addOutboundRecord( $population->outLabel, $row->listcode, $row->urlTrim, $row->url, $row->ip, $row->stamp, $row->email, $row->fname, $row->lname, $row->addr, $row->addr2, $row->city, $row->state, $row->zip, $row->country, $row->dob, $row->gender, $row->landline, $row->cellphone, $processed, $postStamp, $postRequest, $postResponse );
+					if( !empty( $legacyId ) ) {
+						$leads = Leads::getInstance();
+//						$leads->outboundAdd( $inboundId, $legacyId, $population->idFeedIn, $population->idFeedOut, $row->url );
+					}
+
 					$cnt++;
 
 				}
@@ -124,4 +131,4 @@ print "Records that match population filters: {$cnt}\n";
 
 }
 
-legacyPopulate( 139, false );
+legacyPopulate( 211, false );

@@ -347,6 +347,11 @@ input::-webkit-inner-spin-button {
 	.desktopRow {
 		display: none;
 	}
+
+	.form-input textarea,
+	.form-input input {
+		width: auto;
+	}
 }
 @media (max-width: 600px){
 	div.navContainer { margin-top: 0px; }

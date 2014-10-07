@@ -4,4 +4,4 @@ require( '../includes/c_config.php' );
 require_once( INCLUDES."leads.php" );
 
 $leads = Leads::getInstance();
-$leads->clearOutboundQueue( 217, 'edemographic' );
+$leads->clearOutboundQueue( '211', 'qam_health_1346' );
