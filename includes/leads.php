@@ -231,6 +231,9 @@ class Leads
 			return null;
 		}
 
+		$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "suppresssion_" . $idCompany ) . " LIKE suppression_global" );
+		$query->execute( );
+
 		return $idCompany;
 	}
 
