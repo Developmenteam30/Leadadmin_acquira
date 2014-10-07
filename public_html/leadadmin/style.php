@@ -277,6 +277,64 @@ div.dashboardOutgoing { width: 50%; }
 	display: none;
 }
 
+.form-input h3 {
+	display: inline-block;
+}
+
+.form-input label {
+	display: inline-block;
+	width: 100px;
+	text-align: right;
+	margin: 5px 10px;
+	vertical-align: top;
+}
+
+.form-input textarea {
+	width: 400px;
+	height: 75px;
+}
+
+.form-input input,
+.form-input select {
+	font-family: Verdana, Helvetica, sans-serif;
+}
+
+.form-input input {
+	width: 400px;
+}
+
+.form-input input[type="submit"] {
+	width: auto;
+	color: <?php echo $buttonFontColor; ?>;
+	border: 0px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	padding: 5px 10px;
+	margin: 5px 0;
+	background-image: linear-gradient();
+	background-image: -o-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -moz-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -webkit-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -ms-linear-gradient(<?php echo $gradient; ?>);
+
+	background-image: -webkit-gradient(
+		linear,
+		left bottom,
+		left top,
+		color-stop(0.01, rgb(<?php echo hex2rgb($gradientColor1);?>)),
+		color-stop(0.25, rgb(<?php echo hex2rgb($gradientColor2);?>)),
+		color-stop(0.5, rgb(<?php echo hex2rgb($gradientColor3);?>))
+	);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	display: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
 @media (max-width: 1662px){
 	div.navContainer { margin: 20px auto 0; }
 }

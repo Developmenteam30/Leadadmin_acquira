@@ -182,6 +182,64 @@ class Leads
 		) );
 	}
 
+	public function checkCompanyName( $name, $idCompany = null ) {
+		$result = false;
+
+		try {
+			if( !empty( $idCompany ) ) {
+				$query = $this->db->prepare( "SELECT 1 FROM companies WHERE name = ? AND idCompany != ?" );
+				$query->execute( array( $name, $idCompany ) );
+			} else {
+				$query = $this->db->prepare( "SELECT 1 FROM companies WHERE name = ?" );
+				$query->execute( array( $name ) );
+			}
+			if( '1' == $query->fetchColumn( ) ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company info: ' . $e->getMessage() );
+		}
+
+		return $result;
+	}
+
+	public function addCompany( $fields ) {
+
+		if( empty( $fields['name'] ) ) {
+			return null;
+		}
+
+		$idCompany = $this->insertRow( 'companies', array(
+			'name' => $fields['name'],
+			'note' => empty( $fields['note'] ) ? null : $fields['note'],
+			'address' => empty( $fields['address'] ) ? null : $fields['address'],
+			'city' => empty( $fields['city'] ) ? null : $fields['city'],
+			'state' => empty( $fields['state'] ) ? null : $fields['state'],
+			'zipcode' => empty( $fields['zipcode'] ) ? null : $fields['zipcode'],
+			'main_name' => empty( $fields['main_name'] ) ? null : $fields['main_name'],
+			'main_phone' => empty( $fields['main_phone'] ) ? null : $fields['main_phone'],
+			'main_email' => empty( $fields['main_email'] ) ? null : $fields['main_email'],
+			'acct_name' => empty( $fields['acct_name'] ) ? null : $fields['acct_name'],
+			'acct_phone' => empty( $fields['acct_phone'] ) ? null : $fields['acct_phone'],
+			'acct_email' => empty( $fields['acct_email'] ) ? null : $fields['acct_email'],
+			'tech_name' => empty( $fields['tech_name'] ) ? null : $fields['tech_name'],
+			'tech_phone' => empty( $fields['tech_phone'] ) ? null : $fields['tech_phone'],
+			'tech_email' => empty( $fields['tech_email'] ) ? null : $fields['tech_email'],
+		) );
+
+		if( null === $idCompany ) {
+			return null;
+		}
+
+		return $idCompany;
+	}
+
+	public function updateCompany( $idCompany, $fields ) {
+		return $this->update( 'companies', $fields, array(
+			'idCompany' => $idCompany,
+		) );
+	}
+
 	public function getCompany( $idCompany ) {
 		$results = array();
 
