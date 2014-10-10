@@ -55,7 +55,7 @@ class Display
     
 			printf( "\t<div>\n" );
 
-			if( in_array( $field['type'], array( 'text', 'number', 'tel', 'email' ) ) ) {
+			if( in_array( $field['type'], array( 'text', 'number', 'tel', 'email', 'url' ) ) ) {
 
 				printf( "\t<label for=\"%s\">%s</label>\n", 
 						htmlentities( $field['id'] ), 

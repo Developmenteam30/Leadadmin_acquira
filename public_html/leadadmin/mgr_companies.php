@@ -31,6 +31,7 @@ if(isset($_REQUEST['a'])){
 				$idCompany = $leads->addCompany( array(
 					'name' => $_REQUEST['name'],
 					'note' => empty( $_REQUEST['note'] ) ? null : $_REQUEST['note'],
+					'url' => empty( $_REQUEST['url'] ) ? null : $_REQUEST['url'],
 					'address' => empty( $_REQUEST['address'] ) ? null : $_REQUEST['address'],
 					'city' => empty( $_REQUEST['city'] ) ? null : $_REQUEST['city'],
 					'state' => empty( $_REQUEST['state'] ) ? null : $_REQUEST['state'],
@@ -72,6 +73,7 @@ if(isset($_REQUEST['a'])){
 				$alterCompanyResult = $leads->updateCompany( $_REQUEST['idCompany'], array(
 					'name' => $_REQUEST['name'],
 					'note' => empty( $_REQUEST['note'] ) ? null : $_REQUEST['note'],
+					'url' => empty( $_REQUEST['url'] ) ? null : $_REQUEST['url'],
 					'address' => empty( $_REQUEST['address'] ) ? null : $_REQUEST['address'],
 					'city' => empty( $_REQUEST['city'] ) ? null : $_REQUEST['city'],
 					'state' => empty( $_REQUEST['state'] ) ? null : $_REQUEST['state'],
@@ -248,6 +250,11 @@ if(isset($_REQUEST['d'])){
 					'type' => 'number',
 				),
 				array(
+					'id' => 'url',
+					'label' => 'Web Site',
+					'type' => 'url',
+				),
+				array(
 					'id' => 'note',
 					'label' => 'Notes',
 					'type' => 'textarea',
@@ -331,6 +338,7 @@ $('#new_company').submit( function(event) {
 			"a" : "addNewCompany",
 			"name": $("#new_company #name").val(),
 			"note": $("#new_company #note").val(),
+			"url": $("#new_company #url").val(),
 			"address": $("#new_company #address").val(),
 			"city": $("#new_company #city").val(),
 			"state": $("#new_company #state").val(),
@@ -457,6 +465,12 @@ $('#new_company').submit( function(event) {
 					'value' => $company->zipcode,
 				),
 				array(
+					'id' => 'url',
+					'label' => 'Web Site',
+					'type' => 'url',
+					'value' => $company->url,
+				),
+				array(
 					'id' => 'note',
 					'label' => 'Notes',
 					'type' => 'textarea',
@@ -556,6 +570,7 @@ $('#edit_company').submit( function(event) {
 			"idCompany": $('#edit_company #idCompany').val(),
 			"name": $("#edit_company #name").val(),
 			"note": $("#edit_company #note").val(),
+			"url": $("#edit_company #url").val(),
 			"address": $("#edit_company #address").val(),
 			"city": $("#edit_company #city").val(),
 			"state": $("#edit_company #state").val(),
