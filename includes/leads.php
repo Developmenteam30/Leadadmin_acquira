@@ -630,40 +630,52 @@ class Leads
 		return $results;
 	}
 
-	public function getRevenueMappings( $idCompany, $date ) {
+	public function getRevenueInboundMappings( $date, $idCompany, $idFeedIn, $url ) {
 		$results = array();
+		$fields = array();
+		$fields[] = $date;
 
-		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue ";
+		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,'1/1/2010' AS firstDate,'2/3/2014' AS lastDate ";
+		//$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
 		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
+		//$query .= "LEFT JOIN stats_outbound s ON s.url = m.url ";
 		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
 		$query .= "AND m.url = r.url ";
 		$query .= "AND m.idFeedOut = r.idFeedOut ";
 		$query .= "AND r.date = ? ";
+		//$query .= "AND o.idFeedOut = s.idFeedOut ";
+		$query .= "WHERE 1=1 ";
 		if( !empty( $idCompany ) ) {
-			$query .= "WHERE i.idCompany = ? ";
+			$query .= "AND i.idCompany = ? ";
+			$fields[] = $idCompany;
 		}
+		if( !empty( $idFeedIn ) ) {
+			$query .= "AND i.idFeedIn = ? ";
+			$fields[] = $idFeedIn;
+		}
+		if( !empty( $url ) ) {
+			$query .= "AND m.url = ? ";
+			$fields[] = $url;
+		}
+		//$query .= "GROUP BY 4 ";
 		$query .= "ORDER BY 1,2,4,5,6 ";
 
 		try {
 			$query = $this->db->prepare( $query );
-			if( !empty( $idCompany ) ) {
-				$query->execute( array( $date, $idCompany ) );
-			} else {
-				$query->execute( array( $date ) );
-			}
+			$query->execute( $fields );
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get revenue mappings: ' . $e->getMessage() );
+			$this->logError( 'Unable to get inbound revenue mappings: ' . $e->getMessage() );
 		}
 
 		return $results;
 	}
 
-	public function getRevenueCompanies( ) {
+	public function getRevenueInboundCompanies( ) {
 		$results = array();
 
 		$query  = "SELECT ci.name AS name,ci.idCompany AS idCompany ";
@@ -678,7 +690,155 @@ class Leads
 			$query->execute( );
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get revenue companies: ' . $e->getMessage() );
+			$this->logError( 'Unable to get inbound revenue companies: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueInboundFeeds( $idCompany ) {
+		$results = array();
+
+		$query  = "SELECT i.idFeedIn,i.description AS inDescription ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "WHERE i.idCompany = ? ";
+		$query .= "GROUP BY 1 ";
+		$query .= "ORDER BY 1 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $idCompany ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound revenue feeds: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueInboundURLs( $idFeedIn ) {
+		$results = array();
+
+		$query  = "SELECT url ";
+		$query .= "FROM url_mapping ";
+		$query .= "WHERE idFeedIn = ? ";
+		$query .= "GROUP BY 1 ";
+		$query .= "ORDER BY 1 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $idFeedIn ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound revenue URLs: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueOutboundMappings( $date, $idCompany, $idFeedOut, $url ) {
+		$results = array();
+		$fields = array();
+		$fields[] = $date;
+
+		$query  = "SELECT m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,'1/1/2010' AS firstDate,'2/3/2014' AS lastDate ";
+		//$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
+		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
+		//$query .= "LEFT JOIN stats_outbound s ON s.url = m.url ";
+		$query .= "LEFT JOIN revenue r ON r.idFeedOut = m.idFeedOut ";
+		$query .= "AND m.url = r.url ";
+		$query .= "AND r.date = ? ";
+		$query .= "AND r.idFeedIn = 0 ";
+		//$query .= "AND o.idFeedOut = s.idFeedOut ";
+		$query .= "WHERE 1=1 ";
+		if( !empty( $idCompany ) ) {
+			$query .= "AND o.idCompany = ? ";
+			$fields[] = $idCompany;
+		}
+		if( !empty( $idFeedOut ) ) {
+			$query .= "AND o.idFeedOut = ? ";
+			$fields[] = $idFeedOut;
+		}
+		if( !empty( $url ) ) {
+			$query .= "AND m.url = ? ";
+			$fields[] = $url;
+		}
+		$query .= "GROUP BY 1 ";
+		$query .= "ORDER BY 2,3,1 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( $fields );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound revenue mappings: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueOutboundCompanies( ) {
+		$results = array();
+
+		$query  = "SELECT co.name AS name,co.idCompany AS idCompany ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedout i ON m.idFeedOut = i.idFeedOut ";
+		$query .= "INNER JOIN companies co ON i.idCompany = co.idCompany ";
+		$query .= "GROUP BY 2 ";
+		$query .= "ORDER BY 1 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound revenue companies: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueOutboundFeeds( $idCompany ) {
+		$results = array();
+
+		$query  = "SELECT o.idFeedOut,o.description AS outDescription ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
+		$query .= "INNER JOIN companies ci ON o.idCompany = ci.idCompany ";
+		$query .= "WHERE o.idCompany = ? ";
+		$query .= "GROUP BY 1 ";
+		$query .= "ORDER BY 1 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $idCompany ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound revenue feeds: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueOutboundURLs( $idFeedOut ) {
+		$results = array();
+
+		$query  = "SELECT url ";
+		$query .= "FROM url_mapping ";
+		$query .= "WHERE idFeedOut = ? ";
+		$query .= "GROUP BY 1 ";
+		$query .= "ORDER BY 1 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $idFeedOut ) );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound revenue URLs: ' . $e->getMessage() );
 		}
 
 		return $results;
