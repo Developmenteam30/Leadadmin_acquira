@@ -8,11 +8,12 @@ define( 'LEADS_SESSION_LEVEL_CLIENT', 10 );
 
 class LeadsSession
 {
-	public static function login( $userId, $level ) {
+	public static function login( $userId, $level, $idCompany ) {
 		LeadsSession::start();
 
 		$_SESSION['userId'] = $userId;
 		$_SESSION['level'] = intval( $level );
+		$_SESSION['idCompany'] = intval( $idCompany );
 
 		session_write_close();
 
@@ -30,6 +31,16 @@ class LeadsSession
 		unset( $_SESSION['level'] );
 
 		session_write_close();
+	}
+
+	public static function getCompanyId() {
+		LeadsSession::start();
+
+		if( empty( $_SESSION['idCompany'] ) ) {
+			return null;
+		}
+
+		return $_SESSION['idCompany'];
 	}
 
 	public static function getUserId() {
@@ -82,13 +93,13 @@ class LeadsSession
 
 		if( isset( $_REQUEST['a'] ) ) {
 
-			$result = array('status' => 0, 'error'=> 'You are no longer logged in. Log back in and try again.');
+			$result = array('status' => 0, 'error'=> 'Sorry, you do not have access to this page. Log back in and try again.');
 			echo json_encode($result);
 			exit;
 
     	} else if( isset( $_REQUEST['d'] ) ) {
 
-			echo "You are no longer logged in. Log back in and try again.";
+			echo "Sorry, you do not have access to this page. Log back in and try again.";
 			exit;
 
 		} else {

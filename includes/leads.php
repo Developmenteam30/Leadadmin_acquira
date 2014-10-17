@@ -134,7 +134,7 @@ class Leads
 
 	public function verifyUser( $username, $password ) {
 		try {
-			$query = $this->db->prepare( "SELECT idUser,username,password FROM users WHERE username = ?" );
+			$query = $this->db->prepare( "SELECT idUser,username,password,idCompany,level FROM users WHERE username = ?" );
 			$query->execute( array( $username ) );
 			$results = $query->fetch( );
 
@@ -147,7 +147,11 @@ class Leads
 						$this->setPasswordHash( $username, $password );
 					}
 
-					return $results['idUser'];
+					return array(
+						'idUser' => $results['idUser'],
+						'level' => $results['level'],
+						'idCompany' => $results['idCompany'],
+					);
 				}
 			}
 

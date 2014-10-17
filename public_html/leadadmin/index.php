@@ -6,6 +6,9 @@ require_once( INCLUDES . 'session.php' );
 if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 	header("Location: dashboard.php");
 	exit;
+} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT ) ) {
+	header("Location: client_reports.php");
+	exit;
 }
 
 require_once( INCLUDES . 'leads.php' );
@@ -34,11 +37,11 @@ if( isset( $_REQUEST['a'] ) ) {
 				}
 			}
 			if($c){
-				if( ( $userId = $leads->verifyUser( $_REQUEST['username'], $_REQUEST['password'] ) ) !== null ) {
+				if( ( $user = $leads->verifyUser( $_REQUEST['username'], $_REQUEST['password'] ) ) !== null ) {
 
 					$result['status'] = 1;
 					$result['error'] = 'Successfully logged in.';
-					LeadsSession::login( $userId, LEADS_SESSION_LEVEL_ADMIN );
+					LeadsSession::login( $user['idUser'], $user['level'], $user['idCompany'] );
 
 				} else {
 
