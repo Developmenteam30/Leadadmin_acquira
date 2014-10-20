@@ -19,6 +19,11 @@ if( isset( $_REQUEST['a'] ) ) {
 	switch($_REQUEST['a']){
 
 		case 'save_revenue':
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Not authorized.';
+				break;
+			}
 
 			$result['status'] = 0;
 			$result['error'] = 'Invalid revenue value.';
@@ -57,8 +62,10 @@ if( isset( $_REQUEST['d'] ) ) {
 ?>
 
 <p><a href="#" class="nonLink" onclick="display('dialog_mapping'); closeContent('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners');">Mapping Report</a></p>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 <p><a href="#" class="nonLink" onclick="display('dialog_revenue_listowners'); closeContent('dialog_revenue_mailers'); closeContent('dialog_mapping');">Revenue Report - List Owners</a></p>
 <p><a href="#" class="nonLink" onclick="display('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners'); closeContent('dialog_mapping');">Revenue Report - Mailers</a></p>
+<?php } ?>
 <p><a href="#" class="nonLink" onclick="display('dialog_search_email'); closeContent('dialog_search_email_results');">Email Search Report</a></p>
 <p><a href="#" class="nonLink" onclick="display('dialog_search_url'); closeContent('dialog_search_url_results');">URL Search Report</a></p>
 <div class="hidden" id="dialog_mapping"></div>
@@ -144,6 +151,11 @@ if( isset( $_REQUEST['d'] ) ) {
 		break;
 
 		case 'dialog_revenue_listowners':
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				print "You are not authorized to access this section.";
+				break;
+			}
+
 			if( empty( $_REQUEST['options']['report_date'] ) || strlen( $_REQUEST['options']['report_date'] ) != 6 ) $reportDate = date('Ym');
 			else $reportDate = $_REQUEST['options']['report_date'];
 
@@ -293,6 +305,11 @@ $(document).ready(function(){
 		break;
 
 		case 'dialog_revenue_mailers':
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				print "You are not authorized to access this section.";
+				break;
+			}
+
 			if( empty( $_REQUEST['options']['report_date'] ) || strlen( $_REQUEST['options']['report_date'] ) != 6 ) $reportDate = date('Ym');
 			else $reportDate = $_REQUEST['options']['report_date'];
 
