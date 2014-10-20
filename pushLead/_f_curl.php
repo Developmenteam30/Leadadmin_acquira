@@ -31,7 +31,7 @@ function PushLead($requestdata, $url, $post, $verifypeer = false, $returntransfe
 	}
 	curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, $followlocation );
 	
-	$timeout = 35;
+	$timeout = 65;
 	curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
 	
 	$response = curl_exec ($ch);
