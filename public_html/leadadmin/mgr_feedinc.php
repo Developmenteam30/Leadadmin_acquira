@@ -706,7 +706,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 					name='<?php echo $e; ?>feed_dedupeAcross'
 					id='<?php echo $e; ?>feed_dedupeAcross_url'
 					value='url'
-					<?php if($feed_dedupeAcross == 'url'){ ?>
+					<?php if( empty( $feed_dedupeAcross ) || $feed_dedupeAcross == 'url'){ ?>
 					checked='checked'
 					<?php } ?>
 				/> Dedupe across same URL
