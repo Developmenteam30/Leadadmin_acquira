@@ -275,6 +275,7 @@ function getOutgoingFeeds($subset = 'all'){
 	return $feeds;
 }
 
+/*
 function getOutgoingFeed($idFeedOut){ 
 	dbCon();
 	$getFeed = "SELECT * FROM `".DATABASE_NAME."`.`feedout` "
@@ -285,6 +286,7 @@ function getOutgoingFeed($idFeedOut){
 	if($dogetFeed->num_rows == 0){ return 0; }
 	return $dogetFeed->fetch_object();
 }
+*/
 
 function getOutgoingUrls( $label ){
 	$query  = "SELECT DISTINCT(urlTrim),LEFT(MIN(postStamp),10) start ";

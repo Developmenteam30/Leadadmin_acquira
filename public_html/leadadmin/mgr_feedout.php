@@ -1014,7 +1014,7 @@ if($outgoingFeeds === false){
 					onclick="display('dialog_newfeedout', { 'idFeedOut':'<?php echo $feed->idFeedOut; ?>'}, true);  $('#cM_<?php echo $feed->idFeedOut; ?>').toggle();" 
 						>Create New Feed From This Feed</a><br />
 						<a href='#' class='nonLink'
-					onclick="sendTestRecord(<?php echo $feed->idFeedOut; ?>, { 'sub': '<?php echo $feed->idCompany; ?>'});"
+					onclick='display("dialog_testrecord", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
 						>Send one test record</a><br />
 						<a href='#' class='nonLink'
 					onclick="feedRetire(<?php echo $feed->idFeedOut; ?>, { 'sub': '<?php echo $feed->idCompany; ?>'});"
@@ -1032,6 +1032,7 @@ if($outgoingFeeds === false){
 	<tr><td class='hidden' id='dialog_editfeedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 	<tr><td class='hidden' id='dialog_urlreport_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 	<tr><td class='hidden' id='dialog_urlreportdetails_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden' id='dialog_testrecord_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 <?php
 		}
 ?>
@@ -1134,6 +1135,42 @@ if($populationSettings === false){
 <p>Requested information doesn't exist.</p>
 <?php
 		break;
+		case 'dialog_testrecord':
+			$feed = $leads->getOutboundFeed( $_REQUEST['options']['idFeedOut'] );
+
+			require_once( SITE_ROOT . '/pushLead/_f_onlms.php' );
+			$settings['testing'] = 0;
+			$settings['testrecord'] = 1;
+			$leaddata = array(
+				'stamp' => date( 'Y-m-d H:i:s' ),
+				'url' => 'http://www.qmleads.com/',
+				'ip' => '1.2.3.4',
+				'email' => 'johndoe@somewhere.com',
+				'fname' => 'John',
+				'lname' => 'Doe',
+				'addr' => '123 Main St',
+				'addr2' => '',
+				'city' => 'New York',
+				'state' => 'NY',
+				'zip' => '10003',
+				'dob' => '1970-01-01',
+				'gender' => 'M',
+				'landline' => '2125551212',
+				'cellphone' => '2125559999',
+				'country' => 'US',
+				'listcode' => '',
+			);
+
+			print "<p><strong>HTTP Method:</strong> " . $feed->feedType . "</p>";
+
+			$response = runlead( $leaddata, $feed );
+
+			print "<strong>Query String:</strong> " . $response['querystring'] . "</p>";
+
+			print "<strong>Response:</strong> " . htmlspecialchars( stripslashes( $response['text'] ) ) . "</p>";
+
+			break;
+
 		case 'dialog_editfeedout':
 			$idFeedOut = $_REQUEST['options']['idFeedOut'];
 			$e = 'edit_'.$idFeedOut.'_';
@@ -2348,7 +2385,7 @@ function manageFeed(action, idFeedOut){
 	}
 	successString = $(e+'successString').val();
 	dailyLimit = $(e+'dailyLimit').val();
-    if( dailyLimit == '' ) { dailyLimit = 0; }
+	if( dailyLimit == '' ) { dailyLimit = 0; }
 /* 	alert(
 		"idFeedOut: "+idFeedOut
 		+"\n"+"label: "+label

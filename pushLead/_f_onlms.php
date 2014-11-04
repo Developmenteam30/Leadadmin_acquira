@@ -499,9 +499,20 @@ function runlead($leaddata, $fP)
 		print_r($response);
 	}
 
-	require_once( INCLUDES . 'leads.php' );
-	$leads = Leads::getInstance();
-	$leads->outboundProcess( $leaddata['idRecord'], $fP->idFeedOut, $leaddata['url'], ( $response['status'] ? null : trim( $response['text'] ) ) );
+	if( !empty( $settings['testrecord'] ) ) {
+		$geturl = $posturl."?";
+		$flag = false;
+		foreach($requestdata as $field => $value) {
+			if($flag) $geturl .= "&";
+			$geturl .= $field."=".urlencode($value);
+			$flag = true;
+        }
+		$response['querystring'] = $geturl;
+	} else {
+		require_once( INCLUDES . 'leads.php' );
+		$leads = Leads::getInstance();
+		$leads->outboundProcess( $leaddata['idRecord'], $fP->idFeedOut, $leaddata['url'], ( $response['status'] ? null : trim( $response['text'] ) ) );
+	}
 
 	unset($requestdata);
 	return $response;
