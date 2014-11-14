@@ -104,6 +104,33 @@ input.siteButton {
 div.headerRow { 
 	padding: 10px 10px 10px 10px; 
 }
+div.headerRow.client {
+	background-color: #dcdcdc;
+	overflow: auto;
+	margin-bottom: 20px;
+	padding: 10px 40px;
+}
+
+.footer {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin-top: 20px;
+	background-color: #dcdcdc;
+	text-align: center;
+	font-size: 1.25em;
+}
+
+.footer p {
+	padding: 40px 0;
+}
+
+.client div.logoutContainer {
+	margin: 20px 0 0 0;
+	font-size: 1.50em;
+}
+
 div.navContainer, div.logoutContainer{ 
 	/* border: 1px solid #000000; */
 	-webkit-border-radius: 5px;
@@ -164,6 +191,17 @@ div.mainContainer {
 	-webkit-box-shadow: 5px 0px 5px #000, -5px 0px 0px #000;
 	box-shadow: 5px 0px 5px #000, -5px 0px 0px #000;
 }
+div.mainContainer.client {
+	min-height: 100%;
+	position: relative;
+}
+div.mainContainer.client .content {
+	margin: 0 60px;
+	padding-bottom: 120px;
+	font-size: 1.1em;
+}
+
+
 h1.boxTitle { 
 	margin: 5px 0px 5px 0px;
 	font-size: 1.3em;
@@ -183,10 +221,16 @@ table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top
 table.standard td p { padding: 0 0 3px 0; }
 table.standard thead { font-weight: bold; text-align: center; }
 
+table.revenue-report td { padding: 10px; }
+table.revenue-report tr:nth-child(even) { background-color: #fdfdfd; }
+table.revenue-report thead td { font-weight: bold; background-color: #5a388f; color: #fff; }
+
+#dialog_revenue_listowners_detail { margin-top: 30px; }
+
 td.revenue { text-align: center; }
 td.revenue span:before { content:'$'; }
 td.revenue input { width: 70px; font-size: 1em; }
-tr.subtotal { font-weight: bold; background-color: #dadada; }
+tr.subtotal { font-weight: bold; background-color: #dadada !important; }
 
 /*Feed Tables Outgoing*/
 table.feedTableOutgoing { width: 100%; border-collapse: collapse; }
@@ -351,6 +395,27 @@ input::-webkit-inner-spin-button {
 	.form-input textarea,
 	.form-input input {
 		width: auto;
+	}
+
+	div.mainContainer.client .logoutContainer {
+		text-align: center;
+		width: 100%;
+		float: none;
+	}
+
+	div.mainContainer.client .content {
+		margin: 0;
+	}
+
+	div.mainContainer.client .logoContainer {
+		text-align: center;
+		width: 100%;
+		margin: 20px 0;
+	}
+
+	div.headerRow.client {
+		padding: 10px 0;
+		width: 100%;
 	}
 }
 @media (max-width: 600px){

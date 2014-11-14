@@ -132,6 +132,18 @@ class Leads
 		}
 	}
 
+	public function getUser( $idUser ) {
+		try {
+			$query = $this->db->prepare( "SELECT username,password,idCompany,level FROM users WHERE idUser = ?" );
+			$query->execute( array( $idUser ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get user information: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function verifyUser( $username, $password ) {
 		try {
 			$query = $this->db->prepare( "SELECT idUser,username,password,idCompany,level FROM users WHERE username = ?" );
@@ -674,6 +686,77 @@ class Leads
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound revenue mappings: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueInboundClientMappings( $date, $idCompany, $idFeedIn, $url ) {
+		$results = array();
+		$fields = array();
+		$fields[] = $date;
+
+		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,SUM(r.value) AS revenue,SUM(ROUND(r.value*0.50,2)) AS partner ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
+		$query .= "AND m.url = r.url ";
+		$query .= "AND m.idFeedOut = r.idFeedOut ";
+		$query .= "AND r.date = ? ";
+		$query .= "WHERE 1=1 ";
+		if( !empty( $idCompany ) ) {
+			$query .= "AND i.idCompany = ? ";
+			$fields[] = $idCompany;
+		}
+		if( !empty( $idFeedIn ) ) {
+			$query .= "AND i.idFeedIn = ? ";
+			$fields[] = $idFeedIn;
+		}
+		if( !empty( $url ) ) {
+			$query .= "AND m.url = ? ";
+			$fields[] = $url;
+		}
+		$query .= "GROUP BY 4 ";
+		$query .= "ORDER BY 1,2,4 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( $fields );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound client revenue mappings: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueInboundClientMonthMappings( $idCompany ) {
+		$results = array();
+		$fields = array();
+
+		$query  = "SELECT ci.name AS inName,r.date AS month,SUM(r.value) AS revenue,SUM(ROUND(r.value*0.50,2)) AS partner,i.idCompany AS idCompany ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
+		$query .= "AND m.url = r.url ";
+		$query .= "AND m.idFeedOut = r.idFeedOut ";
+		$query .= "WHERE r.value IS NOT NULL ";
+		$query .= "AND r.value > 0.00 ";
+		if( !empty( $idCompany ) ) {
+			$query .= "AND i.idCompany = ? ";
+			$fields[] = $idCompany;
+		}
+		$query .= "GROUP BY 1,2 ";
+		$query .= "ORDER BY 2 DESC,1 ASC";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( $fields );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound client revenue month mappings: ' . $e->getMessage() );
 		}
 
 		return $results;

@@ -239,7 +239,12 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "<table id=\"revenue_report\" class=\"standard\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
-				print "\t\t<td>Incoming Feed</td>\n";
+				if( empty( $idCompany ) ) {
+					print "\t\t<td>Incoming Company</td>\n";
+				}
+				if( empty( $idFeedIn ) ) {
+					print "\t\t<td>Incoming Feed</td>\n";
+				}
 				print "\t\t<td>Incoming URL</td>\n";
 				print "\t\t<td>Outgoing Company</td>\n";
 				print "\t\t<td>Outgoing Feed</td>\n";
@@ -251,7 +256,12 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "\t<tbody>\n";
 				foreach( $mappings as $mapping ) {
 					print "\t<tr class=\"bgGray\">\n";
-					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
+					if( empty( $idCompany ) ) {
+						printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
+					}
+					if( empty( $idFeedIn ) ) {
+						printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
+					}
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );

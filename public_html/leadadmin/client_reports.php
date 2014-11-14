@@ -11,59 +11,80 @@ $leads = Leads::getInstance();
 require_once( INCLUDES . 'display.php' );
 
 if( isset( $_REQUEST['d'] ) ) {
+
+	if( empty( $_REQUEST['options']['report_date'] ) || strlen( $_REQUEST['options']['report_date'] ) != 6 ) $reportDate = null;
+	else $reportDate = $_REQUEST['options']['report_date'];
+
+	if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+		if( empty( $_REQUEST['options']['idCompany'] ) ) $idCompany = null;
+		else $idCompany = $_REQUEST['options']['idCompany'];
+	} else {
+		$idCompany = LeadsSession::getCompanyId();
+		if( empty( $idCompany ) ) {
+			$idCompany = -9999;
+		}
+	}
+
+	if( empty( $_REQUEST['options']['idFeedIn'] ) ) $idFeedIn = null;
+	else $idFeedIn = $_REQUEST['options']['idFeedIn'];
+
+	if( empty( $_REQUEST['options']['url'] ) ) $urlFilter = null;
+	else $urlFilter = $_REQUEST['options']['url'];
+
 	switch( $_REQUEST['d'] ) {
 
 		case 'dialog_revenue_listowners':
-			if( empty( $_REQUEST['options']['report_date'] ) || strlen( $_REQUEST['options']['report_date'] ) != 6 ) $reportDate = date('Ym');
-			else $reportDate = $_REQUEST['options']['report_date'];
-
-			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				if( empty( $_REQUEST['options']['idCompany'] ) ) $idCompany = null;
-				else $idCompany = $_REQUEST['options']['idCompany'];
-			} else {
-				$idCompany = LeadsSession::getCompanyId();
+			$gross = $partner = 0;
+			$mappings = $leads->getRevenueInboundClientMonthMappings( $idCompany );
+			if( $mappings ) {
+				$colspan = 1;
+				print "<table id=\"revenue_report\" class=\"standard revenue-report\">\n";
+				print "\t<thead>\n";
+				print "\t<tr class=\"bgGray\">\n";
 				if( empty( $idCompany ) ) {
-					$idCompany = -9999;
+					print "\t\t<td>Company</td>\n";
+					$colspan++;
 				}
+				print "\t\t<td>Month</td>\n";
+				print "\t\t<td>Gross Revenue</td>\n";
+				print "\t\t<td>Partner Revenue</td>\n";
+				print "\t</tr>\n";
+				print "\t</thead>\n";
+				print "\t<tbody>\n";
+				foreach( $mappings as $mapping ) {
+					print "\t<tr class=\"bgGray\">\n";
+					if( empty( $idCompany ) ) {
+						printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
+					}
+					printf( "\t\t<td><a href=\"#\" onclick=\"display('dialog_revenue_listowners_detail', { 'report_date': '%s', 'idCompany': '%s' });\">%s</a></td>\n", $mapping['month'], $mapping['idCompany'], date( 'Y F', strtotime( $mapping['month'] . "01" ) ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'], 2 ) ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['partner'], 2 ) ) );
+					print "\t</tr>\n";
+					$gross += floatval( $mapping['revenue'] );
+					$partner += floatval( $mapping['partner'] );
+				}
+				print "\t<tr class=\"bgGray subtotal\">\n";
+				printf( "\t\t<td colspan=\"" . $colspan . "\">TOTAL REVENUE</td>\n" );
+				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $gross, 2 ) );
+				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $partner, 2 ) );
+				print "\t</tr>\n";
+				print "\t</tbody>\n";
+				print "</table>\n";
 			}
 
-			if( empty( $_REQUEST['options']['idFeedIn'] ) ) $idFeedIn = null;
-			else $idFeedIn = $_REQUEST['options']['idFeedIn'];
+			break;
 
-			if( empty( $_REQUEST['options']['url'] ) ) $urlFilter = null;
-			else $urlFilter = $_REQUEST['options']['url'];
 
+		case 'dialog_revenue_listowners_detail':
 ?>
-<div class="aRight">
-	<a href="#" class="nonLink" onclick="closeContent('dialog_revenue_listowners');">Close [X]</a>
+<div class="fr">
+    <a href="#" class="nonLink" onclick="closeContent('dialog_revenue_listowners_detail');">Close [X]</a>
 </div>
-<p><strong>Report Date:</strong>
-<select name="report_date" id="dialog_revenue_listowners_date" class="dialog_revenue_listowners_change">
-<?php 
-	for($y = date('Y'); $y >= 2012; $y--) {
-		for($m = 12; $m > 0; $m--) {
-			$format_month = str_pad( $m, 2, '0', STR_PAD_LEFT );
-			printf(' <option value="%s"%s>%s</option>',
-					$y . $format_month, ( $y == substr( $reportDate, 0, 4) && $format_month == substr( $reportDate, 4, 2 ) ) ? ' selected="selected"' : '', $y . '-' . $format_month );
-		}
-	}
-?>
-</select>
-<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
-<select name="idCompany" id="dialog_revenue_listowners_company" class="dialog_revenue_listowners_change">
-<?php 
-	printf( '<option value=""%s>SHOW ALL COMPANIES</option>',
-					( empty( $idCompany ) ? ' selected="selected"' : '' ) );
-	$companies = $leads->getRevenueInboundCompanies();
-	if( $companies ) {
-		foreach( $companies as $company ) {
-			printf(' <option value="%s"%s>%s</option>',
-					$company['idCompany'], ( $idCompany == $company['idCompany'] ? ' selected="selected"' : '' ), $company['name'] );
-		}
-	}
-?>
-</select>
-<?php } ?>
+<h2>Report Date: <?php echo date( 'Y F', strtotime( $reportDate . "01" ) ); ?></h2>
+
+<input type="hidden" id="dialog_revenue_listowners_date" value="<?php echo htmlspecialchars( $reportDate ); ?>" />
+<input type="hidden" id="dialog_revenue_listowners_company" value="<?php echo htmlspecialchars( $idCompany ); ?>" />
+
 <?php if( !empty( $idCompany ) ) {  ?>
 <select name="idFeedIn" id="dialog_revenue_listowners_feed" class="dialog_revenue_listowners_change">
 <?php 
@@ -101,16 +122,16 @@ if( isset( $_REQUEST['d'] ) ) {
 </p>
 
 <?php
-			$mappings = $leads->getRevenueInboundMappings( $reportDate, $idCompany, $idFeedIn, $urlFilter );
+			$gross = $partner = 0;
+			$mappings = $leads->getRevenueInboundClientMappings( $reportDate, $idCompany, $idFeedIn, $urlFilter );
 			if( $mappings ) {
-				print "<table id=\"revenue_report\" class=\"standard\">\n";
+				print "<table id=\"revenue_report\" class=\"standard revenue-report\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
-				print "\t\t<td>Incoming Feed</td>\n";
-				print "\t\t<td>Incoming URL</td>\n";
-				print "\t\t<td>Outgoing Company</td>\n";
-				print "\t\t<td>Outgoing Feed</td>\n";
-				print "\t\t<td>Amount</td>\n";
+				print "\t\t<td>Feed Name</td>\n";
+				print "\t\t<td>URL</td>\n";
+				print "\t\t<td>Gross Revenue</td>\n";
+				print "\t\t<td>Partner Revenue</td>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
@@ -118,15 +139,20 @@ if( isset( $_REQUEST['d'] ) ) {
 					print "\t<tr class=\"bgGray\">\n";
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
-					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
-					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
-					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'], 2 ) ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['partner'], 2 ) ) );
 					print "\t</tr>\n";
+					$gross += floatval( $mapping['revenue'] );
+					$partner += floatval( $mapping['partner'] );
 				}
+				print "\t<tr class=\"bgGray subtotal\">\n";
+				printf( "\t\t<td colspan=\"2\">TOTAL REVENUE</td>\n" );
+				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $gross, 2 ) );
+				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $partner, 2 ) );
+				print "\t</tr>\n";
 				print "\t</tbody>\n";
 				print "</table>\n";
 			}
-
 ?>
 <script type="text/javascript">
 $(document).ready(function(){
@@ -143,26 +169,10 @@ $(document).ready(function(){
 			feed = $('#dialog_revenue_listowners_feed').val();
 		}
 
-		display('dialog_revenue_listowners', { 'report_date': date, 'idCompany': company, 'idFeedIn': feed, 'url': url });
-	});
-
-	$("#revenue_report input").each(function() {
-		$(this).focusout(function(){
-			$.ajax({
-				url: "mgr_reports.php",
-				type: "POST",
-				async: true,
-				data: ({
-					"a" : "save_revenue",
-					"field" : $(this).attr("name"),
-					"value" : $(this).val()
-				})
-			});
-		});
+		display('dialog_revenue_listowners_detail', { 'report_date': date, 'idCompany': company, 'idFeedIn': feed, 'url': url });
 	});
 });
 </script>
-
 <?php
 		break;
 
@@ -292,21 +302,6 @@ $(document).ready(function(){
 
 		display('dialog_revenue_mailers', { 'report_date': date, 'idCompany': company, 'idFeedOut': feed, 'url': url });
 	});
-
-	$("#revenue_report input").each(function() {
-		$(this).focusout(function(){
-			$.ajax({
-				url: "mgr_reports.php",
-				type: "POST",
-				async: true,
-				data: ({
-					"a" : "save_revenue",
-					"field" : $(this).attr("name"),
-					"value" : $(this).val()
-				})
-			});
-		});
-	});
 });
 </script>
 
@@ -326,18 +321,16 @@ $(document).ready(function(){
 	display('dialog_revenue_listowners');
 });
 </script>
-<div class='mainContainer'>
-	<?php include(INCLUDES.'c_nav.php'); ?>
-	<div style='margin: auto;'>
-		<div class='fl' style='width: 100%;'>
-			<div class="hidden" id="dialog_revenue_listowners"></div>
-			<div class="hidden" id="dialog_revenue_mailers"></div>
-		</div>
-		<div class='clr'></div>
+<div class="mainContainer client">
+	<?php include(INCLUDES.'c_nav_client.php'); ?>
+	<div class="content">
+		<div class="hidden" id="dialog_revenue_listowners"></div>
+		<div class="hidden" id="dialog_revenue_listowners_detail"></div>
+		<div class="hidden" id="dialog_revenue_mailers"></div>
+	</div>
+	<div class="footer">
+		<p>Copyright &copy; 2014 Qatalyst Media, LLC.  All rights reserved.</p>
 	</div>
 </div>
-<script src="/leadadmin/js/TableFilter/tablefilter_all_min.js" language="javascript" type="text/javascript"></script>
-<script src="/leadadmin/js/TableFilter/sortabletable.js" language="javascript" type="text/javascript"></script>
-<script src="/leadadmin/js/TableFilter/tfAdapter.sortabletable.js" language="javascript" type="text/javascript"></script> 
 </body>
 </html>
