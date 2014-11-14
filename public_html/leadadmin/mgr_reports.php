@@ -236,24 +236,29 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php
 			$mappings = $leads->getRevenueInboundMappings( $reportDate, $idCompany, $idFeedIn, $urlFilter );
 			if( $mappings ) {
+				$colspan = 5;
 				print "<table id=\"revenue_report\" class=\"standard\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
 				if( empty( $idCompany ) ) {
 					print "\t\t<td>Incoming Company</td>\n";
+					$colspan++;
 				}
 				if( empty( $idFeedIn ) ) {
 					print "\t\t<td>Incoming Feed</td>\n";
+					$colspan++;
 				}
 				print "\t\t<td>Incoming URL</td>\n";
 				print "\t\t<td>Outgoing Company</td>\n";
 				print "\t\t<td>Outgoing Feed</td>\n";
 				print "\t\t<td>First Lead</td>\n";
 				print "\t\t<td>Last Lead</td>\n";
-				print "\t\t<td>Amount</td>\n";
+				print "\t\t<td>Gross</td>\n";
+				print "\t\t<td>Partner</td>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
+				$row = 0;
 				foreach( $mappings as $mapping ) {
 					print "\t<tr class=\"bgGray\">\n";
 					if( empty( $idCompany ) ) {
@@ -267,10 +272,16 @@ if( isset( $_REQUEST['d'] ) ) {
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['firstDate'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['lastDate'] ) );
-					printf( "\t\t<td class=\"revenue\"><input type=\"number\" min=\"0\" max=\"9999\" step=\"0.01\" name=\"%s\" value=\"%s\" /></td>\n", htmlspecialchars( base64_encode( $reportDate . '|' . $mapping['idFeedIn'] . '|' . $mapping['idFeedOut'] . '|' . $mapping['url'] ) ), ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
+					printf( "\t\t<td class=\"revenue\"><input type=\"number\" min=\"0\" max=\"9999\" step=\"0.01\" id=\"%s\" name=\"%s\" value=\"%s\" /></td>\n", 'A' . ++$row, htmlspecialchars( base64_encode( $reportDate . '|' . $mapping['idFeedIn'] . '|' . $mapping['idFeedOut'] . '|' . $mapping['url'] ) ), ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
+					printf( "\t\t<td class=\"revenue\" id=\"B%s\" data-format=\"$0,0.00\" data-formula=\"ROUND((%s*0.5)*100)/100\">%s</td>\n", $row, '$A' . $row, htmlspecialchars( $mapping['lastDate'] ) );
 					print "\t</tr>\n";
 
 				}
+				print "\t<tr class=\"bgGray subtotal\">\n";
+				print "\t\t<td colspan=\"" . $colspan . "\">TOTAL</td>\n";
+				printf( "\t\t<td class=\"revenue\" id=\"A%s\" data-format=\"$0,0.00\" data-formula=\"SUM(\$A1,\$A%s)\"></td>\n", ++$row, (sizeOf( $mappings )) );
+				printf( "\t\t<td class=\"revenue\" id=\"B%s\" data-format=\"$0,0.00\" data-formula=\"ROUND((\$A%s*0.5)*100)/100\"></td>\n", $row, $row );
+				print "\t</tr>\n";
 				print "\t</tbody>\n";
 				print "</table>\n";
 			}
@@ -308,6 +319,8 @@ $(document).ready(function(){
 			});
 		});
 	});
+
+	$('#revenue_report').calx();
 });
 </script>
 
@@ -722,6 +735,7 @@ $(document).ready(function(){
 		<div class='clr'></div>
 	</div>
 </div>
+<script src="/leadadmin/js/calx-1.1.4/jquery-calx-1.1.4.min.js" language="javascript" type="text/javascript"></script>
 <script src="/leadadmin/js/TableFilter/tablefilter_all_min.js" language="javascript" type="text/javascript"></script>
 <script src="/leadadmin/js/TableFilter/sortabletable.js" language="javascript" type="text/javascript"></script>
 <script src="/leadadmin/js/TableFilter/tfAdapter.sortabletable.js" language="javascript" type="text/javascript"></script> 

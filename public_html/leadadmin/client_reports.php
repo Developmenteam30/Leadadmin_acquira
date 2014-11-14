@@ -58,7 +58,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					}
 					printf( "\t\t<td><a href=\"#\" onclick=\"display('dialog_revenue_listowners_detail', { 'report_date': '%s', 'idCompany': '%s' });\">%s</a></td>\n", $mapping['month'], $mapping['idCompany'], date( 'Y F', strtotime( $mapping['month'] . "01" ) ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'], 2 ) ) );
-					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['partner'], 2 ) ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'] * 0.5, 2 ) ) );
 					print "\t</tr>\n";
 					$gross += floatval( $mapping['revenue'] );
 					$partner += floatval( $mapping['partner'] );
@@ -140,7 +140,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'], 2 ) ) );
-					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['partner'], 2 ) ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'] * 0.5, 2 ) ) );
 					print "\t</tr>\n";
 					$gross += floatval( $mapping['revenue'] );
 					$partner += floatval( $mapping['partner'] );
@@ -148,7 +148,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "\t<tr class=\"bgGray subtotal\">\n";
 				printf( "\t\t<td colspan=\"2\">TOTAL REVENUE</td>\n" );
 				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $gross, 2 ) );
-				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $partner, 2 ) );
+				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $gross * 0.5, 2 ) );
 				print "\t</tr>\n";
 				print "\t</tbody>\n";
 				print "</table>\n";
