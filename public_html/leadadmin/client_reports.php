@@ -15,7 +15,7 @@ if( isset( $_REQUEST['d'] ) ) {
 	if( empty( $_REQUEST['options']['report_date'] ) || strlen( $_REQUEST['options']['report_date'] ) != 6 ) $reportDate = null;
 	else $reportDate = $_REQUEST['options']['report_date'];
 
-	if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+	if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
 		if( empty( $_REQUEST['options']['idCompany'] ) ) $idCompany = null;
 		else $idCompany = $_REQUEST['options']['idCompany'];
 	} else {
