@@ -132,6 +132,17 @@ class Leads
 		}
 	}
 
+	public function addUser( $username, $password, $idCompany, $level ) {
+
+		$this->insertRow( 'users', array(
+			'username' => $username,
+			'idCompany' => $idCompany,
+			'level' => $level,
+		) );
+
+		$this->setPasswordHash( $username, $password );
+	}
+
 	public function getUser( $idUser ) {
 		try {
 			$query = $this->db->prepare( "SELECT username,password,idCompany,level FROM users WHERE idUser = ?" );
