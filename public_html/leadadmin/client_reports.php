@@ -130,6 +130,8 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "\t<tr class=\"bgGray\">\n";
 				print "\t\t<td>Feed Name</td>\n";
 				print "\t\t<td>URL</td>\n";
+				print "\t\t<td>First Seen</td>\n";
+				print "\t\t<td>Last Seen</td>\n";
 				print "\t\t<td>Gross Revenue</td>\n";
 				print "\t\t<td>Partner Revenue</td>\n";
 				print "\t</tr>\n";
@@ -139,6 +141,8 @@ if( isset( $_REQUEST['d'] ) ) {
 					print "\t<tr class=\"bgGray\">\n";
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", htmlspecialchars( $mapping['firstDate'] ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", htmlspecialchars( $mapping['lastDate'] ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'], 2 ) ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'] * 0.5, 2 ) ) );
 					print "\t</tr>\n";
@@ -146,7 +150,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					$partner += floatval( $mapping['partner'] );
 				}
 				print "\t<tr class=\"bgGray subtotal\">\n";
-				printf( "\t\t<td colspan=\"2\">TOTAL REVENUE</td>\n" );
+				printf( "\t\t<td colspan=\"4\">TOTAL REVENUE</td>\n" );
 				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $gross, 2 ) );
 				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $gross * 0.5, 2 ) );
 				print "\t</tr>\n";

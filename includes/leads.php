@@ -662,19 +662,17 @@ class Leads
 		$fields = array();
 		$fields[] = $date;
 
-		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,'1/1/2010' AS firstDate,'2/3/2014' AS lastDate ";
-		//$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
+		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
 		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
-		//$query .= "LEFT JOIN stats_outbound s ON s.url = m.url ";
+		$query .= "LEFT JOIN stats_outbound s ON s.url = m.url AND s.idFeedOut = m.idFeedOut ";
 		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
 		$query .= "AND m.url = r.url ";
 		$query .= "AND m.idFeedOut = r.idFeedOut ";
 		$query .= "AND r.date = ? ";
-		//$query .= "AND o.idFeedOut = s.idFeedOut ";
 		$query .= "WHERE 1=1 ";
 		if( !empty( $idCompany ) ) {
 			$query .= "AND i.idCompany = ? ";
@@ -688,7 +686,7 @@ class Leads
 			$query .= "AND m.url = ? ";
 			$fields[] = $url;
 		}
-		//$query .= "GROUP BY 4 ";
+		$query .= "GROUP BY 2,4,6 ";
 		$query .= "ORDER BY 1,2,4,5,6 ";
 
 		try {
@@ -707,10 +705,11 @@ class Leads
 		$fields = array();
 		$fields[] = $date;
 
-		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,SUM(r.value) AS revenue,SUM(ROUND(r.value*0.50,2)) AS partner ";
+		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,SUM(DISTINCT r.value) AS revenue,SUM(DISTINCT ROUND(r.value*0.50,2)) AS partner,IF(SUM(r.value)>0,'0','1'),MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "LEFT JOIN stats_outbound s ON s.url = m.url ";
 		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
 		$query .= "AND m.url = r.url ";
 		$query .= "AND m.idFeedOut = r.idFeedOut ";
@@ -729,7 +728,7 @@ class Leads
 			$fields[] = $url;
 		}
 		$query .= "GROUP BY 4 ";
-		$query .= "ORDER BY 1,2,4 ";
+		$query .= "ORDER BY 7,1,2,4 ";
 
 		try {
 			$query = $this->db->prepare( $query );
@@ -841,17 +840,15 @@ class Leads
 		$fields = array();
 		$fields[] = $date;
 
-		$query  = "SELECT m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,'1/1/2010' AS firstDate,'2/3/2014' AS lastDate ";
-		//$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
+		$query  = "SELECT m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
 		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
-		//$query .= "LEFT JOIN stats_outbound s ON s.url = m.url ";
+		$query .= "LEFT JOIN stats_outbound s ON s.url = m.url AND s.idFeedOut = m.idFeedOut ";
 		$query .= "LEFT JOIN revenue r ON r.idFeedOut = m.idFeedOut ";
 		$query .= "AND m.url = r.url ";
 		$query .= "AND r.date = ? ";
 		$query .= "AND r.idFeedIn = 0 ";
-		//$query .= "AND o.idFeedOut = s.idFeedOut ";
 		$query .= "WHERE 1=1 ";
 		if( !empty( $idCompany ) ) {
 			$query .= "AND o.idCompany = ? ";
@@ -865,7 +862,7 @@ class Leads
 			$query .= "AND m.url = ? ";
 			$fields[] = $url;
 		}
-		$query .= "GROUP BY 1 ";
+		$query .= "GROUP BY 1,3 ";
 		$query .= "ORDER BY 2,3,1 ";
 
 		try {
