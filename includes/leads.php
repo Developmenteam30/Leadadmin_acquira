@@ -547,6 +547,57 @@ class Leads
 		$this->unlockTables();
 	}
 
+	public function inboundCheckDuplicates( $idFeedIn, $column, $requestValues, $dedupeAcross ) {
+
+		$days = 120;
+
+		// Override duplicate time check period for InstantCheckMate.com feeds
+		if( 'email' == $column && !empty( $requestValues['email'] ) && !empty( $requestValues['url'] ) && strpos( $requestValues['url'], 'instantcheckmate.com' ) !== false ) {
+			$status = $this->globalEmailSearch( $requestValues['email'] );
+			if( !empty( $status ) ) {
+				return true;
+			}
+		}
+    
+		try {
+			switch( $dedupeAcross ) {
+				case 'global':
+					$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY)" );
+					$query->execute( array(
+						$idFeedIn,
+						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
+					) );
+				break;
+				case 'url':
+					$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY)" );
+					$query->execute( array(
+						$idFeedIn,
+						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
+						!empty( $requestValues['url'] ) ? $this->parseUrl( $requestValues['url'] ) : '',
+					) );
+				break;
+				case 'listcode':
+					$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY)" );
+					$query->execute( array(
+						$idFeedIn,
+						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
+						!empty( $requestValues['listcode'] ) ? $requestValues['listcode'] : '',
+					) );
+				break;
+			}
+
+			if( $query && $query->fetchColumn() >= 1 ) {
+				return true;
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check for inbound duplicates: ' . $e->getMessage() );
+			return null;
+		}
+
+		return false;
+	}
+
 	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url ) {
 		$this->lockTables( "data_outbound WRITE, url_mapping WRITE, feedout WRITE, errorlog WRITE" );
 
@@ -1359,9 +1410,9 @@ class Leads
 
 		$jobId = time();
 
-        $fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
-        $filePath = ADMIN_ROOT . $fileLink;
-        $file = fopen( $filePath, 'w' );
+		$fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+		$filePath = ADMIN_ROOT . $fileLink;
+		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
 			return;
 		}
@@ -1451,9 +1502,9 @@ class Leads
 
 		$jobId = time();
 
-        $fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
-        $filePath = ADMIN_ROOT . $fileLink;
-        $file = fopen( $filePath, 'w' );
+		$fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+		$filePath = ADMIN_ROOT . $fileLink;
+		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
 			return;
 		}

@@ -1,6 +1,9 @@
 <?php
 require_once("../../includes/c_config.php");
 require_once( INCLUDES . 'leads.php' );
+require_once( INCLUDES . 'processFunctions.php' );
+
+$leads = Leads::getInstance();
 
 $statsDay = date('Y-m-d');
 
@@ -193,26 +196,26 @@ if( $c && !is_null( $feedParams->filterTypeUrl ) ) {
 }
 
 if($c && $feedParams->dedupeEmail && isset($_REQUEST['email']) && $_REQUEST['email'] != ''){ 
-	$dupeCount = checkDuplicate('email', $_REQUEST, $feedParams->label, $feedParams->dedupeAcross);
-	if($dupeCount === false){ 
+	$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'email', $_REQUEST, $feedParams->dedupeAcross );
+	if( $dupeCount === null ){ 
 		$c = false; $result['reason'] = 'Database failure - could not check duplicates.';
-	} elseif($dupeCount > 0){ 
+	} elseif( $dupeCount ){ 
 		$c = false; $result['reason'] = 'Duplicate Email';
 	}
 }
 if($c && $feedParams->dedupeLandline && isset($_REQUEST['landline']) && $_REQUEST['landline'] != ''){ 
-	$dupeCount = checkDuplicate('landline', $_REQUEST, $feedParams->label, $feedParams->dedupeAcross);
-	if($dupeCount === false){ 
+	$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'landline', $_REQUEST, $feedParams->dedupeAcross );
+	if( $dupeCount === null ){ 
 		$c = false; $result['reason'] = 'Database failure - could not check duplicates.';
-	} elseif($dupeCount > 0){ 
+	} elseif( $dupeCount ){ 
 		$c = false; $result['reason'] = 'Duplicate Phone (landline)';
 	}
 }
 if($c && $feedParams->dedupeCellphone && isset($_REQUEST['cellphone']) && $_REQUEST['cellphone'] != ''){ 
-	$dupeCount = checkDuplicate('cellphone', $_REQUEST, $feedParams->label, $feedParams->dedupeAcross);
-	if($dupeCount === false){ 
+	$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'cellphone', $_REQUEST, $feedParams->dedupeAcross );
+	if( $dupeCount === null ){ 
 		$c = false; $result['reason'] = 'Database failure - could not check duplicates.';
-	} elseif($dupeCount > 0){ 
+	} elseif( $dupeCount ){ 
 		$c = false; $result['reason'] = 'Duplicate Phone (cellphone)';
 	}
 }
@@ -241,7 +244,6 @@ if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_n
 unlockTables();
 
 if( !empty( $feedParams ) ) {
-	$leads = Leads::getInstance();
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $c ? null : $result['reason'], null );
 }
 
@@ -340,7 +342,6 @@ if($c){
 						}
 					}
 
-					$leads = Leads::getInstance();
 					$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['urlTrim'] );
 				}
 
@@ -368,8 +369,6 @@ if($c){
 								$update .= "SET processed = '1', poststamp = NOW(), postresponse = " . valueSet( $status['text'] ) . " ";
 								$update .= "WHERE idRecord = " . $lastRecord;
 								dbQry( $update, 'Update processed status of live record' );
-
-								$leads = Leads::getInstance();
 
 								if( isset( $status['status'] ) && $status['status'] != true ) {
 
@@ -413,7 +412,6 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 
 		// Add an entry to the notification table to see if this feed goes dormant
 		if( !empty( $feedParams->notifications ) ) {
-			$leads = Leads::getInstance();
 			$leads->addNotification( $feedParams->idFeedIn, $_REQUEST['url'] );
 		}
 	}
