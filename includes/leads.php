@@ -1376,7 +1376,7 @@ class Leads
 			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND processed = 0" );
 			$query->execute( array( $idFeedOut ) );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
+			$this->logError( 'Unable to delete queued records (1): ' . $e->getMessage() );
 			return;
 		}
 
@@ -1385,16 +1385,16 @@ class Leads
 				$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $label ) . " WHERE processed = '0'" );
 				$query->execute( );
 			} catch( PDOException $e ) {
-				$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
+				$this->logError( 'Unable to delete queued records (2): ' . $e->getMessage() );
 				return;
 			}
 		}
 
 		try {
-			$this->db->query( "UPDATE feedout SET queued = 0 WHERE idFeedOut = ?" );
+			$query = $this->db->prepare( "UPDATE feedout SET queued = 0 WHERE idFeedOut = ?" );
 			$query->execute( array( $idFeedOut ) );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete queued records: ' . $e->getMessage() );
+			$this->logError( 'Unable to delete queued records (3): ' . $e->getMessage() );
 			return;
 		}
 
