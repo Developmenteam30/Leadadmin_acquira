@@ -1277,6 +1277,22 @@ class Leads
 		return $results;
 	}
 
+	public function checkInboundURLExists( $idFeedIn, $url ) {
+		try {
+			$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM data_inbound WHERE url = ? AND idFeedIn = ?" );
+			$query->execute( array( $this->parseUrl( $url ), $idFeedIn ) );
+			if( $query && $query->fetchColumn() > 1 ) {
+				return true;
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound URL exists results: ' . $e->getMessage() );
+			return null;
+		}
+
+		return false;
+	}
+
 	public function inboundURLSearch( $url ) {
 		$results = array();
 
