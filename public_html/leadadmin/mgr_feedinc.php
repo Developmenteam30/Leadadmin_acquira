@@ -309,11 +309,19 @@ if(isset($_REQUEST['a'])){
 				}
 				$exportColumns = explode(";", $_REQUEST['exportColumns']);
 			}
-			if($c){ 
-				$exportUrlList = explode(";", $_REQUEST['exportUrlList']);
+			if($c){
+				if( !empty( $_REQUEST['exportUrlList'] ) ) {
+					$exportUrlList = explode(";", $_REQUEST['exportUrlList']);
+				} else {
+					$exportUrlList = array();
+				}
 			}
 			if($c){ 
-				$exportEmailList = explode(";", $_REQUEST['exportEmailList']);
+				if( !empty( $_REQUEST['exportEmailList'] ) ) {
+					$exportEmailList = explode(";", $_REQUEST['exportEmailList']);
+				} else {
+					$exportEmailList = array();
+				}
 			}
 			if($c){
 				$settings = array(
@@ -324,10 +332,7 @@ if(isset($_REQUEST['a'])){
 					, 'urlList' => $exportUrlList
 					, 'emailList' => $exportEmailList
 				);
-				$exportResult = exportData($feed, $settings);
-				if(!$exportResult['success']){ 
-					$c = false; $result['error'] = $exportResult['reason'];
-				}
+				$exportResult = $leads->exportInboundRecords( $_REQUEST['idFeedIn'], $settings );
 			}
 			if($c){
 				$result['status'] = 1;

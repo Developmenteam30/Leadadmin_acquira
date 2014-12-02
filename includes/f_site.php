@@ -4,7 +4,7 @@
 //ES 2013 08 27 v1.1 : Added hex2rgb function
 //Core Values//
 $recordFields = array(
-	'listcode', 'url', 'ip', 'stamp', 'email', 'fname', 'lname', 'addr', 'addr2',
+	'listcode', 'url', 'ip', 'leadstamp', 'email', 'fname', 'lname', 'addr', 'addr2',
 	'city', 'state', 'zip', 'dob', 'gender', 'landline', 'cellphone', 'country'
 );
 $additionalMapFields = array(

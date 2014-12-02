@@ -1417,6 +1417,112 @@ class Leads
 		$this->unlockTables();
 	}
 
+	public function exportInboundRecords( $idFeedIn, $settings ) {
+
+		$feed = $this->getInboundFeed( $idFeedIn );
+		if( !$feed ) {
+			return;
+		}
+
+		$jobId = time();
+
+		$fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+		$filePath = ADMIN_ROOT . $fileLink;
+		$file = fopen( $filePath, 'w' );
+		if( !$file ) {
+			return;
+		}
+
+		fputcsv( $file, $settings['columns'] );
+
+		try {
+
+			$fields = array();
+
+			$query  = "SELECT ";
+			$comma = false;
+			foreach( $settings['columns'] as $column ) {
+				if( $comma ) {
+					$query .= ', ';
+				}
+				$query .= $this->quoteIdentifier( $column );
+				$comma = true;
+			}
+			$query .= " FROM data_inbound WHERE idFeedIn = ? ";
+			$fields[] = $idFeedIn;
+
+			if( !empty( $settings['dateStart'] ) && strtotime( $settings['dateStart'] ) !== FALSE ) {
+				$query .= "AND timestamp >= ? ";
+				$fields[] = date( 'Y-m-d', strtotime( $settings['dateStart'] ) ) . ' 00:00:00';
+			}
+
+			if( !empty( $settings['dateEnd'] ) && strtotime( $settings['dateEnd'] ) !== FALSE ) {
+				$query .= "AND timestamp <= ? ";
+				$fields[] = date( 'Y-m-d', strtotime( $settings['dateEnd'] ) ) . ' 23:59:59';
+			}
+
+			if( !empty( $settings['urlList'] ) && is_array( $settings['urlList'] ) ) {
+				$orFlag = false;
+
+				$query .= "AND (";
+				foreach( $settings['urlList'] as $url ) {
+					if( !empty( $url ) ) {
+						if( $orFlag ) {
+							$query .= " OR ";
+						}
+						$query .= "url LIKE ?";
+						$fields[] = '%' . $url . '%';
+						$orFlag = true;
+					}
+				}
+				$query .= ")";
+			}
+
+			if( !empty( $settings['emailList'] ) && is_array( $settings['emailList'] ) ) {
+				$orFlag = false;
+
+				$query .= "AND (";
+				foreach( $settings['emailList'] as $email ) {
+					if( !empty( $email ) ) {
+						if( $orFlag ) {
+							$query .= " OR ";
+						}
+						$query .= "email LIKE ?";
+						$fields[] = '%@' . $email;
+						$orFlag = true;
+					}
+				}
+				$query .= ")";
+			}
+
+			if( !empty( $settings['limit'] ) ) {
+				$query .= "LIMIT " . intval( $settings['limit'] );
+			}
+
+			$query = $this->db->Prepare( $query );
+
+			$query->execute( $fields );
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fputcsv( $file, $row );
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to export inbound records: ' . $e->getMessage() );
+			return;
+		}
+
+		fclose( $file );
+
+        $this->auditLog( 'FEEDINC:EXPORT', $idFeedIn );
+
+		$result = array();
+        $result['success'] = true;
+        $result['reason'] = 'Successfully exported data to file.';
+        $result['fileLink'] = $fileLink;
+
+		return $result;
+	}
+
 	public function exportOutboundQueue( $idFeedOut ) {
 
 		$feed = $this->getOutboundFeed( $idFeedOut );
@@ -1477,10 +1583,13 @@ class Leads
 				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['url'], null );
 
 			}
+
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to export queued records: ' . $e->getMessage() );
 			return;
 		}
+
+		fclose( $file );
 	}
 
 	public function getOutboundQueue( $idFeedOut ) {
@@ -1571,10 +1680,13 @@ class Leads
 				$q_query->execute( array( $idFeedOut ) );
 
 			}
+
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get rejected records: ' . $e->getMessage() );
 			return;
 		}
+
+		fclose( $file );
 	}
 
 	public function getOutboundTables() {
