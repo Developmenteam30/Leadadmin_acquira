@@ -1419,8 +1419,15 @@ class Leads
 
 	public function exportInboundRecords( $idFeedIn, $settings ) {
 
+		$result = array(
+			'success' => false,
+			'reason' => 'None.',
+			'fileLink' => null,
+		);
+
 		$feed = $this->getInboundFeed( $idFeedIn );
 		if( !$feed ) {
+			$result['reason'] = 'Not a valid incoming feed.';
 			return;
 		}
 
@@ -1430,6 +1437,7 @@ class Leads
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
+			$result['reason'] = 'Unable to create CSV file.';
 			return;
 		}
 
@@ -1515,7 +1523,6 @@ class Leads
 
         $this->auditLog( 'FEEDINC:EXPORT', $idFeedIn );
 
-		$result = array();
         $result['success'] = true;
         $result['reason'] = 'Successfully exported data to file.';
         $result['fileLink'] = $fileLink;
