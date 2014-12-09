@@ -491,7 +491,7 @@ class Leads
 			'city' => empty( $fields['city'] ) ? null : $fields['city'],
 			'state' => empty( $fields['state'] ) ? null : $fields['state'],
 			'zip' => empty( $fields['zip'] ) ? null : $fields['zip'],
-			'dob' => ( empty( $fields['dob'] ) || '0000-00-00' == $fields['dob'] ) ? null : $fields['dob'],
+			'dob' => ( empty( $fields['dob'] ) || '0000-00-00' == $fields['dob'] ) ? null : date( 'Y-m-d', strtotime( $fields['dob'] ) ),
 			'gender' => empty( $fields['gender'] ) ? null : $fields['gender'],
 			'landline' => empty( $fields['landline'] ) ? null : $fields['landline'],
 			'cellphone' => empty( $fields['cellphone'] ) ? null : $fields['cellphone'],
