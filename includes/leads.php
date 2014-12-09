@@ -1771,7 +1771,7 @@ class Leads
 		return null;
 	}
 
-	public function logError( $message, $db = false ) {
+	public function logError( $message, $db = false, $email = true ) {
 
 		$stamp = date('Y-m-d H:i:s');
 		$errfile = fopen( SITE_ROOT . 'error' . FD . 'leads-log', 'a' );
@@ -1788,27 +1788,29 @@ class Leads
 			), false );
 		}
 
-		// Limit notification emails to one per minute to prevent flooding
-		$time = @file_get_contents( SITE_ROOT."error".FD."email-stamp" );
-		if( $time === FALSE || ( $time < ( time() - 60 ) ) ) {
-			file_put_contents( SITE_ROOT."error".FD."email-stamp", time() );
-		} else {
-			return;
-		}
+		if( $email ) {
+			// Limit notification emails to one per minute to prevent flooding
+			$time = @file_get_contents( SITE_ROOT."error".FD."email-stamp" );
+			if( $time === FALSE || ( $time < ( time() - 60 ) ) ) {
+				file_put_contents( SITE_ROOT."error".FD."email-stamp", time() );
+			} else {
+				return;
+			}
 
-		$from = 'lmsalerts@'.SITE_URL;
-		$body = $stamp . ' ' . $message . PHP_EOL;
-		$fromName = CONFIG_COMPANY_NAME.' List Management System';
-		$to = ADMINISTRATOR_EMAIL;
-		$subject = 'List Management ERROR';
-		$header = "From:" . $fromName . " <" . $from . ">\n";
-		$header .= "Content-type: text/html; charset=iso-8859-1\n";
-		$header .= "Reply-To: <" . $from . ">\n";
-		$header .= "X-Sender: <" . $from . ">\n";
-		$header .= "X-Mailer: PHP5\n";
-		$header .= "X-Priority: 3\n";
-		$header .= "Return-Path: <" . $from . ">\n";
-		$sent = @mail( $to, $subject, $body, $header );
+			$from = 'lmsalerts@'.SITE_URL;
+			$body = $stamp . ' ' . $message . PHP_EOL;
+			$fromName = CONFIG_COMPANY_NAME.' List Management System';
+			$to = ADMINISTRATOR_EMAIL;
+			$subject = 'List Management ERROR';
+			$header = "From:" . $fromName . " <" . $from . ">\n";
+			$header .= "Content-type: text/html; charset=iso-8859-1\n";
+			$header .= "Reply-To: <" . $from . ">\n";
+			$header .= "X-Sender: <" . $from . ">\n";
+			$header .= "X-Mailer: PHP5\n";
+			$header .= "X-Priority: 3\n";
+			$header .= "Return-Path: <" . $from . ">\n";
+			$sent = @mail( $to, $subject, $body, $header );
+		}
 	}
 
 	public function getErrorCount() {

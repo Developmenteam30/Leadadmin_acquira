@@ -342,7 +342,7 @@ if($c){
 						}
 					}
 
-					$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['urlTrim'] );
+					$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'] );
 				}
 
 				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
@@ -400,13 +400,14 @@ if($c){
 
 if($c){ //Inputted information is validated, go ahead and insert the record into the database.
 
-	if( !empty( $_REQUEST['urlTrim'] ) ) {
+	if( !empty( $_REQUEST['url'] ) ) {
 
 		// Notify if this is the first time we've seen this URL on this feed
-		$urlExists = $leads->checkInboundURLExists( $feedParams->idFeedIn, $_REQUEST['urlTrim'] );
+		$urlExists = $leads->checkInboundURLExists( $feedParams->idFeedIn, $_REQUEST['url'] );
 		if( false === $urlExists ) {
+			// $leads->logError( print_r( $_REQUEST, true ), false, false );
 			notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
-                                        str_replace( '.', '*', $_REQUEST['urlTrim'] ) )
+                                        str_replace( '.', '*', $_REQUEST['url'] ) )
 							);
 		}
 

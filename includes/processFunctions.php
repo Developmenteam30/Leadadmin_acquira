@@ -823,7 +823,7 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 			$urlCount = $leads->checkURLNotifications( $feedParams->idFeedIn, $data['url'] );
 			if( $urlCount === 0 ) {
 				notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
-										str_replace( '.', '*', $data['urlTrim'] ) )
+										str_replace( '.', '*', $data['url'] ) )
 							);
 			}
 		}

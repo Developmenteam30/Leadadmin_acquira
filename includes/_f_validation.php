@@ -233,4 +233,3 @@ function tagger($url)
 	foreach($realestate_tags as $tag) { if(stripos($url, $tag) !== false) { return "REALESTATE"; } }
 	return "MISC";
 }
-?>
