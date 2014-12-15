@@ -12,7 +12,7 @@ function sendNotification( $label, $feedId, $url, $time, $hours ) {
 	$to         = MANAGER_EMAIL;
 	$subject    = 'Dormant URL notification';
 	$body  = "\nThe following URL has gone dormant for more than {$hours} hours:\n\n";
-	$body .= "URL: {$url}\n\n";
+	$body .= "URL: " . str_replace( '.', '*', $url ) . "\n\n";
 	$body .= "Feed: {$label} ({$feedId})\n\n";
 	$body .= "Last seen time: {$time}\n\n";
 
