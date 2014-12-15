@@ -480,7 +480,7 @@ class Leads
 			'timestamp' => date( 'Y-m-d H:i:s' ),
 			'idFeedIn' => $idFeedIn,
 			'listcode' => empty( $fields['listcode'] ) ? null : $fields['listcode'],
-			'leadstamp' => empty( $fields['stamp'] ) ? null : date( 'Y-m-d H:i:s', strtotime( $fields['stamp'] ) ),
+			'leadstamp' => empty( $fields['leadstamp'] ) ? null : date( 'Y-m-d H:i:s', strtotime( $fields['leadstamp'] ) ),
 			'url' => empty( $fields['url'] ) ? null : $this->parseUrl( $fields['url'] ),
 			'ip' => empty( $fields['ip'] ) ? null : $fields['ip'],
 			'email' => empty( $fields['email'] ) ? null : $fields['email'],
