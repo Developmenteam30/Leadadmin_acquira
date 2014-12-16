@@ -130,6 +130,11 @@ if($c){ //Validation of incoming data.
 		unset( $_REQUEST['gender'] );
 	}
 
+	// Fix legacy lead timestamp field
+	if( !empty( $_REQUEST['stamp'] ) ) {
+		$_REQUEST['leadstamp'] = $_REQUEST['stamp'];
+	}
+
 	if($c){ 
 		foreach($required as $requiredKey){ 
 			switch($requiredKey){
@@ -244,6 +249,7 @@ if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_n
 unlockTables();
 
 if( !empty( $feedParams ) ) {
+
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $c ? null : $result['reason'], null );
 }
 
@@ -313,7 +319,7 @@ if($c){
 							if(isset($_REQUEST[$allowedField])){ 
 								if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
 									$insertToFeedOut .= ", 'No listcode'";
-								} elseif($allowedField == 'stamp'){ 
+								} elseif($allowedField == 'leadstamp'){ 
 									$insertToFeedOut .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
 								} else { 
 									$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
@@ -433,7 +439,7 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 			if(isset($_REQUEST[$allowedField])){ 
 				if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
 					$insertRecord .= ", 'No listcode'";
-				} elseif($allowedField == 'stamp'){ 
+				} elseif($allowedField == 'leadstamp'){ 
 					$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
 				} else { 
 					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
@@ -499,7 +505,7 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 			if(isset($_REQUEST[$allowedField])){ 
 				if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
 					$insertRecord .= ", 'No listcode'";
-				} elseif($allowedField == 'stamp'){ 
+				} elseif($allowedField == 'leadstamp'){ 
 					$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
 				} else { 
 					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
