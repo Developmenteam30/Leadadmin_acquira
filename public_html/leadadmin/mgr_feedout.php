@@ -1308,6 +1308,7 @@ if($populationSettings === false){
 					<option value='curlGET'<?php if($feed_feedType == 'curlGET'){ ?>selected='selected'<?php } ?>>HTTP GET</option>
 					<option value='curlPOST'<?php if($feed_feedType == 'curlPOST'){ ?>selected='selected'<?php } ?>>HTTP POST</option>
 					<option value='JSON'<?php if($feed_feedType == 'JSON'){ ?>selected='selected'<?php } ?>>JSON</option>
+					<option value='csvString'<?php if($feed_feedType == 'csvString'){ ?>selected='selected'<?php } ?>>CSV string</option>
 				</select>
 			</p>
 		</td>

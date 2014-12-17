@@ -434,7 +434,7 @@ function runlead($leaddata, $fP)
 		echo "Posting Array: \n"; @ob_flush(); flush();
 		print_r($requestdata);
 	}
-	
+
 	if($fP->feedType == 'curlGET') { 
 		#GET method to be used, so compile data onto the url string.
 		$geturl = $posturl."?";
@@ -442,6 +442,27 @@ function runlead($leaddata, $fP)
 		foreach($requestdata as $field => $value) { 
 			if($flag) $geturl .= "&";
 			$geturl .= $field."=".urlencode($value);
+			$flag = true;
+		}
+		if($settings['testing'] == 1) { 
+			echo "Get URL: \n"; @ob_flush(); flush();
+			echo $geturl."\n"; @ob_flush(); flush();
+			echo "Posting data.\n"; @ob_flush(); flush();
+		}
+		$response['text'] = addslashes(
+			PushLead(
+				"", 
+				$geturl, 
+				false
+			)
+		);
+	} else if( 'csvString' == $fP->feedType ) {
+		#GET method to be used, so compile data onto the url string.
+		$geturl = $posturl."?data=";
+		$flag = false;
+		foreach($requestdata as $field => $value) { 
+			if($flag) $geturl .= ",";
+			$geturl .= urlencode( str_replace( ',', '', $value ) );
 			$flag = true;
 		}
 		if($settings['testing'] == 1) { 
@@ -500,13 +521,15 @@ function runlead($leaddata, $fP)
 	}
 
 	if( !empty( $settings['testrecord'] ) ) {
-		$geturl = $posturl."?";
-		$flag = false;
-		foreach($requestdata as $field => $value) {
-			if($flag) $geturl .= "&";
-			$geturl .= $field."=".urlencode($value);
-			$flag = true;
-        }
+		if( 'curlPOST' == $fP->feedType ) {
+			$geturl = $posturl."?";
+			$flag = false;
+			foreach($requestdata as $field => $value) {
+				if($flag) $geturl .= "&";
+				$geturl .= $field."=".urlencode($value);
+				$flag = true;
+			}
+		}
 		$response['querystring'] = $geturl;
 	} else {
 		require_once( INCLUDES . 'leads.php' );
