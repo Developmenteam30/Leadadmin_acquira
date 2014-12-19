@@ -562,14 +562,14 @@ class Leads
 		try {
 			switch( $dedupeAcross ) {
 				case 'global':
-					$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY)" );
+					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
 						$idFeedIn,
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
 					) );
 				break;
 				case 'url':
-					$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY)" );
+					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
 						$idFeedIn,
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
@@ -577,7 +577,7 @@ class Leads
 					) );
 				break;
 				case 'listcode':
-					$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY)" );
+					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
 						$idFeedIn,
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
@@ -586,7 +586,7 @@ class Leads
 				break;
 			}
 
-			if( $query && $query->fetchColumn() >= 1 ) {
+			if( $query && $query->fetchColumn() ) {
 				return true;
 			}
 
@@ -1279,9 +1279,9 @@ class Leads
 
 	public function checkInboundURLExists( $idFeedIn, $url ) {
 		try {
-			$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM data_inbound WHERE url = ? AND idFeedIn = ?" );
+			$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE url = ? AND idFeedIn = ? LIMIT 1" );
 			$query->execute( array( $this->parseUrl( $url ), $idFeedIn ) );
-			if( $query && $query->fetchColumn() > 1 ) {
+			if( $query && $query->fetchColumn() ) {
 				return true;
 			}
 
