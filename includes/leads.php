@@ -1279,7 +1279,7 @@ class Leads
 
 	public function checkInboundURLExists( $idFeedIn, $url ) {
 		try {
-			$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE url = ? AND idFeedIn = ? LIMIT 1" );
+			$query = $this->db->prepare( "SELECT 1 FROM notifications WHERE url = ? AND idFeedIn = ? LIMIT 1" );
 			$query->execute( array( $this->parseUrl( $url ), $idFeedIn ) );
 			if( $query && $query->fetchColumn() ) {
 				return true;
