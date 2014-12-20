@@ -606,7 +606,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 					<?php if($feed_dedupeAcross == 'global'){ ?>
 					checked='checked'
 					<?php } ?>
-				/> Dedupe Across entire feed
+				/> Dedupe Across all feeds
 				<input type='radio'
 					name='<?php echo $e; ?>feed_dedupeAcross'
 					id='<?php echo $e; ?>feed_dedupeAcross_url'
