@@ -408,18 +408,20 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 
 	if( !empty( $_REQUEST['url'] ) ) {
 
-		// Notify if this is the first time we've seen this URL on this feed
-		$urlExists = $leads->checkInboundURLExists( $feedParams->idFeedIn, $_REQUEST['url'] );
-		if( false === $urlExists ) {
-			// $leads->logError( print_r( $_REQUEST, true ), false, false );
-			notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
+		if( !empty( $feedParams->notifications ) ) {
+
+			// Notify if this is the first time we've seen this URL on this feed
+			$urlExists = $leads->checkInboundURLExists( $feedParams->idFeedIn, $_REQUEST['url'] );
+			if( false === $urlExists ) {
+				// $leads->logError( print_r( $_REQUEST, true ), false, false );
+				notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
                                         str_replace( '.', '*', $_REQUEST['url'] ) )
 							);
-		}
+			}
 
-		// Add an entry to the notification table to see if this feed goes dormant
-		if( !empty( $feedParams->notifications ) ) {
+			// Add an entry to the notification table to see if this feed goes dormant
 			$leads->addNotification( $feedParams->idFeedIn, $_REQUEST['url'] );
+
 		}
 	}
 
