@@ -389,6 +389,9 @@ function runlead($leaddata, $fP)
 			assignValue( $fieldValuePair[0], $fieldValuePair[1], $requestdata );
 		}
 	}
+	if( empty( $leaddata['stamp'] ) ) {
+		$leaddata['stamp'] = $leaddata['leadstamp'];
+	}
 	for($count = 0; $count < count($varFields); $count++) { //Compile mapped fields into the post array.
 		if($varFields[$count] != '') { 
 			switch($fieldMap[$count]){

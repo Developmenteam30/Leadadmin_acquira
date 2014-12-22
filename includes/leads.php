@@ -1496,6 +1496,7 @@ class Leads
 				$query .= "LIMIT " . intval( $settings['limit'] );
 			}
 
+			$result['query'] = $query;
 			$query = $this->db->Prepare( $query );
 
 			$query->execute( $fields );
