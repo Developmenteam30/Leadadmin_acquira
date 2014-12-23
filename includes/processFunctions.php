@@ -230,16 +230,7 @@ function validate($fieldType, $value, $feedParams){
 			}
 		break;
 		case 'stamp':
-			if( $c &&( 
-				preg_match('/^[0-3][0-9]-[0-3][0-9]-[0-9]{4}/', $value)
-				|| preg_match('/^[0-3][0-9]\/[0-3][0-9]\/[0-9]{4}/', $value)
-			)){ 
-				$c = false; $result['reason'] = 'Action Date (stamp) is invalid format. Please submit stamp as YYYY-mm-dd HH:ii:ss';
-			}
-			if(	$c && (
-				strtotime($value) == -1
-				|| strtotime($value) == false
-			)){ 
+			if( $c && strtotime($value) === false ) { 
 				$c = false; $result['reason'] = 'Action Date (stamp) is invalid.';
 			}
 			if($c
