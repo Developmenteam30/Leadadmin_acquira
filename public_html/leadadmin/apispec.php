@@ -24,7 +24,7 @@ $fields = array(
 	'listcode' => array( 'type' => 'varchar(20)', 'format' => '', 'notes' => 'Campaign ID or List Descriptor' ),
 	'url' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Source of the lead' ),
 	'ip' => array( 'type' => 'varchar(16)', 'format' => '', 'notes' => 'IP Address' ),
-	'leadstamp' => array( 'type' => 'datetime', 'format' => 'YYYY-MM-DD hh:mm:ss', 'notes' => 'Lead action date' ),
+	'stamp' => array( 'type' => 'datetime', 'format' => 'YYYY-MM-DD hh:mm:ss', 'notes' => 'Lead action date' ),
 	'email' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Email address' ),
 	'fname' => array( 'type' => 'varchar(50)', 'format' => '', 'notes' => 'First name' ),
 	'lname' => array( 'type' => 'varchar(50)', 'format' => '', 'notes' => 'Last name' ),

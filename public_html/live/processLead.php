@@ -131,8 +131,8 @@ if($c){ //Validation of incoming data.
 	}
 
 	// Fix legacy lead timestamp field
-	if( !empty( $_REQUEST['stamp'] ) ) {
-		$_REQUEST['leadstamp'] = $_REQUEST['stamp'];
+	if( !empty( $_REQUEST['leadstamp'] ) ) {
+		$_REQUEST['stamp'] = $_REQUEST['leadstamp'];
 	}
 
 	if($c){ 
@@ -319,7 +319,7 @@ if($c){
 							if(isset($_REQUEST[$allowedField])){ 
 								if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
 									$insertToFeedOut .= ", 'No listcode'";
-								} elseif($allowedField == 'leadstamp'){ 
+								} elseif($allowedField == 'stamp'){ 
 									$insertToFeedOut .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
 								} else { 
 									$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
@@ -441,7 +441,7 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 			if(isset($_REQUEST[$allowedField])){ 
 				if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
 					$insertRecord .= ", 'No listcode'";
-				} elseif($allowedField == 'leadstamp'){ 
+				} elseif($allowedField == 'stamp'){ 
 					$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
 				} else { 
 					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
@@ -507,7 +507,7 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 			if(isset($_REQUEST[$allowedField])){ 
 				if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
 					$insertRecord .= ", 'No listcode'";
-				} elseif($allowedField == 'leadstamp'){ 
+				} elseif($allowedField == 'stamp'){ 
 					$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
 				} else { 
 					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
