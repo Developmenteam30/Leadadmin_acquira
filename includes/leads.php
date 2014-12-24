@@ -1767,6 +1767,7 @@ class Leads
 		$errfile = fopen( SITE_ROOT . 'error' . FD . 'leads-log', 'a' );
 		if( $errfile ) {
 			fwrite( $errfile, $stamp . ' ' . $message . PHP_EOL );
+			fwrite( $errfile, $stamp . ' REQUEST: ' . print_r( $_REQUEST, true ) . PHP_EOL );
 			fclose( $errfile );
 		}
 
