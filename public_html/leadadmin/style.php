@@ -68,6 +68,14 @@ div.contextMenu { display: none; position: absolute; background: #DDDDDD; border
 	filter:alpha(opacity=60); /* For IE8 and earlier */
 }
 
+#logo {
+	max-height: 47px;
+}
+
+#logo-reports {
+	max-height: 63px;
+}
+
 /*Site Styles*/
 div.siteBorder { 
 	border: 1px solid #414042;
@@ -111,19 +119,20 @@ div.headerRow.client {
 	padding: 10px 40px;
 }
 
+.payment {
+	font-weight: bold;
+}
+
 .footer {
 	position: absolute;
 	bottom: 0;
 	left: 0;
 	right: 0;
-	margin-top: 20px;
+	margin-top: 30px;
 	background-color: #dcdcdc;
 	text-align: center;
 	font-size: 1.25em;
-}
-
-.footer p {
-	padding: 40px 0;
+	padding: 2em 0;
 }
 
 .client div.logoutContainer {
@@ -197,7 +206,7 @@ div.mainContainer.client {
 }
 div.mainContainer.client .content {
 	margin: 0 60px;
-	padding-bottom: 120px;
+	padding-bottom: 130px;
 	font-size: 1.1em;
 }
 
@@ -223,7 +232,7 @@ table.standard thead { font-weight: bold; text-align: center; }
 
 table.revenue-report td { padding: 10px; }
 table.revenue-report tr:nth-child(even) { background-color: #fdfdfd; }
-table.revenue-report thead td { font-weight: bold; background-color: #5a388f; color: #fff; }
+table.revenue-report thead td { font-weight: bold; background-color: <?php echo $gradientColor3; ?>; color: #fff; }
 
 #dialog_revenue_listowners_detail { margin-top: 30px; }
 

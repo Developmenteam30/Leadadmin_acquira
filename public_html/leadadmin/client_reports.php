@@ -333,7 +333,8 @@ $(document).ready(function(){
 		<div class="hidden" id="dialog_revenue_mailers"></div>
 	</div>
 	<div class="footer">
-		<p>Copyright &copy; 2014 Qatalyst Media, LLC.  All rights reserved.</p>
+		<p class="payment">Please send all invoices to <a href="mailto:<?php echo PAYMENT_EMAIL;?>"><?php echo PAYMENT_EMAIL; ?></a> to ensure prompt payment.</p>
+		<p>Copyright &copy; 2014 <?php echo CONFIG_COMPANY_NAME; ?>, LLC.  All rights reserved.</p>
 	</div>
 </div>
 </body>

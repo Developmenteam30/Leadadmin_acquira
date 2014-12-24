@@ -6,7 +6,7 @@ require_once( INCLUDES . 'session.php' );
 		<a class="navButtonLogout navLast" href="logout.php"><img class="navIcon" height="11" width="11" src="images/icon_logout_1.gif" />Log Out</a>
 		<div class="clr"></div>
 	</div>
-	<div class="logoContainer navLogo fl"><img src="images/logo.jpg" /></div>
+	<div class="logoContainer navLogo fl"><img alt="Logo" id="logo" src="images/logo.png" /></div>
 	<div class="navContainer fl">
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 		<a class="navButton" href="dashboard.php"><img class="navIcon" height="12" width="12" src="images/icon_dashboard_1.gif" />Dashboard</a>
