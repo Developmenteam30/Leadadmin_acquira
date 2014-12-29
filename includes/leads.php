@@ -1420,6 +1420,13 @@ class Leads
 			return;
 		}
 
+		// Fix column names
+		foreach( $settings['columns'] as $key => $column ) {
+			if( 'stamp' == $column ) {
+				$settings['columns'][$key] = 'leadstamp';
+			}
+		}
+
 		$jobId = time();
 
 		$fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
