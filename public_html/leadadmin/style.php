@@ -120,7 +120,9 @@ div.headerRow.client {
 }
 
 .payment {
+	text-align: center;
 	font-weight: bold;
+	margin: 1em 0;
 }
 
 .footer {
