@@ -553,13 +553,28 @@ class Leads
 
 		try {
 			switch( $dedupeAcross ) {
-				case 'global':
+				case 'all':
+					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
+					$query->execute( array(
+						$idFeedIn,
+						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
+					) );
+				break;
+				case 'allGlobal':
 					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE " . $this->quoteIdentifier( $column ) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
 					) );
 				break;
 				case 'url':
+					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
+					$query->execute( array(
+						$idFeedIn,
+						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
+						!empty( $requestValues['url'] ) ? $this->parseUrl( $requestValues['url'] ) : '',
+					) );
+				break;
+				case 'urlGlobal':
 					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE " . $this->quoteIdentifier( $column ) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
@@ -567,6 +582,13 @@ class Leads
 					) );
 				break;
 				case 'listcode':
+					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
+					$query->execute( array(
+						$idFeedIn,
+						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
+						!empty( $requestValues['listcode'] ) ? $requestValues['listcode'] : '',
+					) );
+				case 'listcodeGlobal':
 					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE " . $this->quoteIdentifier( $column ) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
