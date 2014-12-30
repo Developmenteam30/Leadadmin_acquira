@@ -56,7 +56,7 @@ p { margin: 0px 0px 0px 0px; padding: 5px;}
 input[type="text"] { width: 150px; }
 input[type="text"].long { width: 300px; }
 
-div.centered { margin: auto; }
+div.centered { margin: auto; text-align: center; }
 div.divContainer { border-collapse: collapse; }
 div.divRow { display: table-row;  }
 div.divCol { display: table-cell; border: 1px solid #DDDDDD; }

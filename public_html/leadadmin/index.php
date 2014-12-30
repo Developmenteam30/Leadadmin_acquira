@@ -91,7 +91,7 @@ function logIn(){
 <body>
 
 <div class="mainContainer">
-	<div class="logoContainer centered loginLogo"><img src="images/logo.jpg"/></div>
+	<div class="centered loginLogo"><img src="images/logo.png"/></div>
 	<div class="loginContainer">
 		<h1 class="boxTitle siteHeader">Log In</h1>
 		<div class="loginBox siteBorder">
