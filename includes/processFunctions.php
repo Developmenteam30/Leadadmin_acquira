@@ -427,24 +427,32 @@ function checkDuplicate($column, $requestValues, $feedLabel, $dedupeAcross){
 
 	dbCon();
 	switch($dedupeAcross){
-		case 'global':
+		case 'all':
+		case 'allGlobal':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
 			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
 		break;
 		case 'url':
+		case 'urlGlobal':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
 			."AND `urlTrim` = '".$GLOBALS['dbconnx']->escape_string($requestValues['urlTrim'])."' "
 			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
 		break;
 		case 'listcode':
+		case 'listcodeGlobal':
 			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
 			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($value)."' "
 			."AND `listcode` = '".$GLOBALS['dbconnx']->escape_string($requestValues['listcode'])."' "
 			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
 		break;
-	}	
+	}
+
+	if( empty( $checkDupe ) ) {
+		return 0;
+	}
+
 	$docheckDupe = dbQry($checkDupe, 'Checking if value is duplicate.', true);
 	dbDcon();
 	if($docheckDupe === false){ return false; }
