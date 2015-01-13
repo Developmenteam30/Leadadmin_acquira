@@ -42,6 +42,84 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			}
 			break;
+
+		case 'send_report_ready':
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Not authorized.';
+				break;
+			}
+
+			if( empty( $_REQUEST['idCompany'] ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Company ID is missing.';
+				break;
+			}
+
+			if( empty( $_REQUEST['date'] ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Date is missing.';
+				break;
+			}
+
+			$company = $leads->getCompany( $_REQUEST['idCompany'] );
+			if( empty( $company ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Invalid company ID.';
+				break;
+			}
+
+			if( empty( $company->acct_email ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Accounting contact email is not setup.';
+				break;
+			}
+
+			if( empty( $company->acct_name ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Accounting contact name is not setup.';
+				break;
+			}
+
+			$user = $leads->findClientUser( $_REQUEST['idCompany'] );
+			if( empty( $user ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Client username/password is not setup.';
+				break;
+			}
+
+			$date = date( 'F Y', strtotime( $_REQUEST['date'] . '01' ) );
+			list( $first, $garbage ) = explode( ' ', $company->acct_name, 2 );
+
+			$message  = "Hi {$first},\r\n";
+			$message .= "\r\n";
+			$message .= "Your {$date} List Mangement Revenue Report is now available.  Your login credentials are listed below:\r\n";
+			$message .= "\r\n";
+			$message .= "Link: https://www.qmleads.com/leadadmin/client_reports.php\r\n";
+			$message .= "Username: {$user->username}\r\n";
+			$message .= "Password: [Supplied when your account was setup]\r\n";
+			$message .= "\r\n";
+			$message .= "To ensure prompt payment, please be sure to email all invoices to accounting@qatalystmedia.com.\r\n";
+			$message .= "\r\n";
+			$message .= "Thank you for your business and we look forward to growing our partnership.\r\n";
+			$message .= "\r\n";
+			$message .= "Warmly,\r\n";
+			$message .= "\r\n";
+			$message .= "Accounting\r\n";
+			$message .= "Qatalyst Media, LLC\r\n";
+			$message .= "119 Rockland Center #245\r\n";
+			$message .= "Nanuet, NY 10954\r\n";
+
+			if( mail( $company->acct_email, "{$date} List Management Report Available | Qatalyst Media", $message, "From: \"Qatalyst Media\" <accounting@qatalystmedia.com>\r\nBCC: accounting@qatalystmedia.com", '-faccounting@qatalystmedia.com' ) ) {
+				$result['status'] = 1;
+				$result['error'] = 'Message sent!';
+				break;
+			}
+
+			$result['status'] = 0;
+			$result['error'] = 'Unable to send message.';
+
+			break;
 	}
 	echo json_encode($result);
 	exit;
@@ -231,6 +309,12 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php } else { ?>
 <input type="hidden" id="dialog_revenue_listowners_url" value="" />
 <?php } ?>
+
+<?php
+if( !empty( $idCompany ) ) {
+	print '<input class="fr" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
+}
+?>
 </p>
 
 <?php
@@ -322,6 +406,30 @@ $(document).ready(function(){
 
 	$('#revenue_report').calx();
 });
+
+function sendReportReady( idCompany, date ){
+	var response = $.ajax({
+		url: "mgr_reports.php",
+		type: "POST",
+		async: true,
+		data: ({
+			"a" : "send_report_ready",
+			"idCompany" : idCompany,
+			"date" : date
+		})
+	}).done(function(responseText){
+		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
+		if(result===null) {
+			alert("JSON Failed: "+responseText);
+			return false;
+		}
+		if(result.status == 1){
+			alert("Report email sent.");
+		} else {
+			alert(result.error);
+		}
+	});
+}
 </script>
 
 <?php

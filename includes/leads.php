@@ -155,6 +155,18 @@ class Leads
 		return $results;
 	}
 
+	public function findClientUser( $idCompany ) {
+		try {
+			$query = $this->db->prepare( "SELECT username FROM users WHERE idCompany = ? AND level = ?" );
+			$query->execute( array( $idCompany, LEADS_SESSION_LEVEL_CLIENT ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get client user information: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function verifyUser( $username, $password ) {
 		try {
 			$query = $this->db->prepare( "SELECT idUser,username,password,idCompany,level FROM users WHERE username = ?" );
