@@ -97,7 +97,7 @@ if( isset( $_REQUEST['a'] ) ) {
 			$message .= "\r\n";
 			$message .= "Link: https://www.qmleads.com/leadadmin/client_reports.php\r\n";
 			$message .= "Username: {$user->username}\r\n";
-			$message .= "Password: [Supplied when your account was setup]\r\n";
+			$message .= "Password: [If you forgot your password, please contact your Qatalyst Media Account Manager]\r\n";
 			$message .= "\r\n";
 			$message .= "To ensure prompt payment, please be sure to email all invoices to accounting@qatalystmedia.com.\r\n";
 			$message .= "\r\n";
