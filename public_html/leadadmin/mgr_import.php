@@ -21,11 +21,6 @@ if( empty( $_REQUEST['idFeedIn'] )) {
 	exit;
 }
 
-if( empty( $_REQUEST['url'] )) {
-	print '<p class="error">ERROR: No url supplied</p>';
-	exit;
-}
-
 $idFeedIn = $_REQUEST['idFeedIn'];
 $jobId = time();
     
@@ -113,11 +108,6 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		}
 	}
 
-	if( !empty( $_REQUEST['url'] ) )
-		$data['url'] = $_REQUEST['url'];
-	if( !empty( $_REQUEST['listcode'] ) )
-		$data['listcode'] = $_REQUEST['listcode'];
-
 	// Fix zip codes with a missing leading zeros
 	if( !empty( $data['zip'] ) ) {
 		$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT);
@@ -135,18 +125,16 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 		print " - VALID\n";
 
-		if( LEGACY_DB ) {
-			if( ( $lastRecord = insertIncomingData( $feedParams, $data, $jobId ) ) !== null ) {
-				pushIncomingData( $idFeedIn, $data, $inboundId );
-				$counts['success']++;
-			} else {
-				$counts['failures']++;
-			}
+		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $jobId );
+		if( null === $inboundId ) {
+			$counts['failures']++;
 		} else {
+			if( LEGACY_DB ) {
+				insertIncomingData( $feedParams, $data, $jobId );
+				pushIncomingData( $idFeedIn, $data, $inboundId );
+			}
 			$counts['success']++;
 		}
-
-		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $jobId );
 
 	} else {
 
@@ -159,11 +147,12 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		}
 		print "</ul>\n";
 
+		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $jobId );
+
 		if( LEGACY_DB ) {
 			insertIncomingData( $feedParams, $data, $jobId, $result['errors'][0] );
 		}
 
-		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $jobId );
 	}
 
 	print "<br/>\n";

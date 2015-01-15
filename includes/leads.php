@@ -3,6 +3,9 @@
 require_once( 'c_config.php' );
 require_once( 'processFunctions.php' );
 
+class Leads_PDOException extends PDOException {
+}
+
 class Leads
 {
 	protected $db;
@@ -69,10 +72,7 @@ class Leads
 			$query->execute( array_values( $data ) );
 			return $this->db->lastInsertId();
 		} catch( PDOException $e ) {
-			if( $logError ) {
-				$this->logError( 'Unable to insert record: ' . $e->getMessage() );
-			}
-			return null;
+			throw new Leads_PDOException( 'Unable to insert record', null, $e );
 		}
 
 		return null;
@@ -105,10 +105,7 @@ class Leads
 			$query->execute( array_merge( array_values( $data ), array_values( $where ) ) );
 			return true;
 		} catch( PDOException $e ) {
-			if( $logError ) {
-				$this->logError( 'Unable to update table: ' . $e->getMessage() );
-			}
-			return null;
+			throw new Leads_PDOException( 'Unable to update table', null, $e );
 		}
 
 		return null;
@@ -119,7 +116,7 @@ class Leads
 			try {
 				$this->db->query( "LOCK TABLES " . $tables );
 			} catch( PDOException $e ) {
-				$this->logError( 'Unable to lock tables: ' . $e->getMessage() );
+				throw new Leads_PDOException( 'Unable to lock tables', null, $e );
 			}
 		}
 	}
@@ -128,17 +125,22 @@ class Leads
 		try {
 			$this->db->query( "UNLOCK TABLES" );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to unlock tables: ' . $e->getMessage() );
+			throw new Leads_PDOException( 'Unable to unlock tables', null, $e );
 		}
 	}
 
 	public function addUser( $username, $password, $idCompany, $level ) {
 
-		$this->insertRow( 'users', array(
-			'username' => $username,
-			'idCompany' => $idCompany,
-			'level' => $level,
-		) );
+		try {
+			$this->insertRow( 'users', array(
+				'username' => $username,
+				'idCompany' => $idCompany,
+				'level' => $level,
+			) );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add user: ' . $pdoException->getMessage() );
+		}
 
 		$this->setPasswordHash( $username, $password );
 	}
@@ -206,19 +208,24 @@ class Leads
 			$query = $this->db->prepare( "UPDATE users SET password = ? WHERE username = ?" );
 			$query->execute( array( $hash, $username ) );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get company info: ' . $e->getMessage() );
+			$this->logError( 'Unable to set password hash: ' . $e->getMessage() );
 		}
 	}
 
 	public function auditLog( $action, $notes = null ) {
 
 		require_once( INCLUDES . 'session.php' );
-		$this->insertRow( 'auditlog', array(
-			'userId' => LeadsSession::getUserId(),
-			'ipaddress' => $_SERVER['REMOTE_ADDR'], 
-			'action' => $action,
-			'notes' => $notes,
-		) );
+		try {
+			$this->insertRow( 'auditlog', array(
+				'userId' => LeadsSession::getUserId(),
+				'ipaddress' => $_SERVER['REMOTE_ADDR'], 
+				'action' => $action,
+				'notes' => $notes,
+			) );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add audit log: ' . $pdoException->getMessage() );
+		}
 	}
 
 	public function checkCompanyName( $name, $idCompany = null ) {
@@ -248,38 +255,59 @@ class Leads
 			return null;
 		}
 
-		$idCompany = $this->insertRow( 'companies', array(
-			'name' => $fields['name'],
-			'note' => empty( $fields['note'] ) ? null : $fields['note'],
-			'address' => empty( $fields['address'] ) ? null : $fields['address'],
-			'city' => empty( $fields['city'] ) ? null : $fields['city'],
-			'state' => empty( $fields['state'] ) ? null : $fields['state'],
-			'zipcode' => empty( $fields['zipcode'] ) ? null : $fields['zipcode'],
-			'main_name' => empty( $fields['main_name'] ) ? null : $fields['main_name'],
-			'main_phone' => empty( $fields['main_phone'] ) ? null : $fields['main_phone'],
-			'main_email' => empty( $fields['main_email'] ) ? null : $fields['main_email'],
-			'acct_name' => empty( $fields['acct_name'] ) ? null : $fields['acct_name'],
-			'acct_phone' => empty( $fields['acct_phone'] ) ? null : $fields['acct_phone'],
-			'acct_email' => empty( $fields['acct_email'] ) ? null : $fields['acct_email'],
-			'tech_name' => empty( $fields['tech_name'] ) ? null : $fields['tech_name'],
-			'tech_phone' => empty( $fields['tech_phone'] ) ? null : $fields['tech_phone'],
-			'tech_email' => empty( $fields['tech_email'] ) ? null : $fields['tech_email'],
-		) );
+		$this->db->beginTransaction();
 
-		if( null === $idCompany ) {
-			return null;
+		try {
+			$idCompany = $this->insertRow( 'companies', array(
+				'name' => $fields['name'],
+				'note' => empty( $fields['note'] ) ? null : $fields['note'],
+				'address' => empty( $fields['address'] ) ? null : $fields['address'],
+				'city' => empty( $fields['city'] ) ? null : $fields['city'],
+				'state' => empty( $fields['state'] ) ? null : $fields['state'],
+				'zipcode' => empty( $fields['zipcode'] ) ? null : $fields['zipcode'],
+				'main_name' => empty( $fields['main_name'] ) ? null : $fields['main_name'],
+				'main_phone' => empty( $fields['main_phone'] ) ? null : $fields['main_phone'],
+				'main_email' => empty( $fields['main_email'] ) ? null : $fields['main_email'],
+				'acct_name' => empty( $fields['acct_name'] ) ? null : $fields['acct_name'],
+				'acct_phone' => empty( $fields['acct_phone'] ) ? null : $fields['acct_phone'],
+				'acct_email' => empty( $fields['acct_email'] ) ? null : $fields['acct_email'],
+				'tech_name' => empty( $fields['tech_name'] ) ? null : $fields['tech_name'],
+				'tech_phone' => empty( $fields['tech_phone'] ) ? null : $fields['tech_phone'],
+				'tech_email' => empty( $fields['tech_email'] ) ? null : $fields['tech_email'],
+			) );
+		} catch( Leads_PDOException $e ) {
+			$this->db->rollBack();
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add company: ' . $pdoException->getMessage() );
 		}
 
-		$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "suppression_" . $idCompany ) . " LIKE suppression_global" );
-		$query->execute( );
+		try {
+			$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "suppression_" . $idCompany ) . " LIKE suppression_global" );
+			$query->execute( );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to create suppression table: ' . $e->getMessage() );
+		}
+
+		$this->db->commit();
 
 		return $idCompany;
 	}
 
 	public function updateCompany( $idCompany, $fields ) {
-		return $this->update( 'companies', $fields, array(
-			'idCompany' => $idCompany,
-		) );
+
+		try {
+			$status = $this->update( 'companies', $fields, array(
+				'idCompany' => $idCompany,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update company: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $null;
 	}
 
 	public function getCompany( $idCompany ) {
@@ -316,27 +344,31 @@ class Leads
 			return null;
 		}
 
-		$idFeedIn = $this->insertRow( 'feedinc', array(
-			'label' => $fields['label'],
-			'description' => empty( $fields['description'] ) ? null : $fields['description'],
-			'idCompany' => $fields['idCompany'],
-			'required' => empty( $fields['required'] ) ? null : $fields['required'],
-			'allowedFields' => empty( $fields['allowedFields'] ) ? null : $fields['allowedFields'],
-			'password' => empty( $fields['password'] ) ? null : $fields['password'],
-			'dedupeEmail' => empty( $fields['dedupeEmail'] ) ? 0 : 1,
-			'dedupeLandline' => empty( $fields['dedupeLandline'] ) ? 0 : 1,
-			'dedupeCellphone' => empty( $fields['dedupeCellphone'] ) ? 0 : 1,
-			'rejectOldLeads' => empty( $fields['rejectOldLeads'] ) ? null : $fields['rejectOldLeads'],
-			'rejectOldLeadsMaxAge' => empty( $fields['rejectOldLeadsMaxAge'] ) ? null : $fields['rejectOldLeadsMaxAge'],
-			'retired' => empty( $fields['retired'] ) ? 0 : 1,
-			'dedupeAcross' => empty( $fields['dedupeAcross'] ) ? null : $fields['dedupeAcross'],
-			'filterTypeUrl' => empty( $fields['filterTypeUrl'] ) ? null : $fields['filterTypeUrl'],
-			'filterTypeSiftLogic' => empty( $fields['filterTypeSiftLogic'] ) ? null : $fields['filterTypeSiftLogic'],
-			'notifications' => empty( $fields['notifications'] ) ? 0 : 1,
-		) );
+		$this->db->beginTransaction();
 
-		if( null === $idFeedIn ) {
-			return null;
+		try {
+			$idFeedIn = $this->insertRow( 'feedinc', array(
+				'label' => $fields['label'],
+				'description' => empty( $fields['description'] ) ? null : $fields['description'],
+				'idCompany' => $fields['idCompany'],
+				'required' => empty( $fields['required'] ) ? null : $fields['required'],
+				'allowedFields' => empty( $fields['allowedFields'] ) ? null : $fields['allowedFields'],
+				'password' => empty( $fields['password'] ) ? null : $fields['password'],
+				'dedupeEmail' => empty( $fields['dedupeEmail'] ) ? 0 : 1,
+				'dedupeLandline' => empty( $fields['dedupeLandline'] ) ? 0 : 1,
+				'dedupeCellphone' => empty( $fields['dedupeCellphone'] ) ? 0 : 1,
+				'rejectOldLeads' => empty( $fields['rejectOldLeads'] ) ? null : $fields['rejectOldLeads'],
+				'rejectOldLeadsMaxAge' => empty( $fields['rejectOldLeadsMaxAge'] ) ? null : $fields['rejectOldLeadsMaxAge'],
+				'retired' => empty( $fields['retired'] ) ? 0 : 1,
+				'dedupeAcross' => empty( $fields['dedupeAcross'] ) ? null : $fields['dedupeAcross'],
+				'filterTypeUrl' => empty( $fields['filterTypeUrl'] ) ? null : $fields['filterTypeUrl'],
+				'filterTypeSiftLogic' => empty( $fields['filterTypeSiftLogic'] ) ? null : $fields['filterTypeSiftLogic'],
+				'notifications' => empty( $fields['notifications'] ) ? 0 : 1,
+			) );
+		} catch( Leads_PDOException $e ) {
+			$this->db->rollBack();
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add inbound feed: ' . $pdoException->getMessage() );
 		}
 
 		if( LEGACY_DB ) {
@@ -344,6 +376,7 @@ class Leads
 				$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] ) . " LIKE feedinc_empty" );
 				$query->execute( );
 			} catch( PDOException $e ) {
+				$this->db->rollBack();
 				$this->logError( 'Unable to create new inbound table: ' . $e->getMessage() );
 				return null;
 			}
@@ -352,27 +385,43 @@ class Leads
 				$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] . "_invalid" ) . " LIKE feedinc_empty_invalid" );
 				$query->execute( );
 			} catch( PDOException $e ) {
+				$this->db->rollBack();
 				$this->logError( 'Unable to create new inbound invalid table: ' . $e->getMessage() );
 				return null;
 			}
 		}
 
+		$this->db->commit();
+
 		return $idFeedIn;
 	}
 
 	public function updateInboundFeed( $idFeedIn, $fields ) {
-		return $this->update( 'feedinc', $fields, array(
-			'idFeedIn' => $idFeedIn,
-		) );
+		try {
+			$status = $this->update( 'feedinc', $fields, array(
+				'idFeedIn' => $idFeedIn,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update inbound feed: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
 	}
 
 	public function renameInboundTables( $old, $new ) {
 
 		if( LEGACY_DB ) {
+
+			$this->db->beginTransaction();
+
 			try {
 				$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new ) );
 				$query->execute( );
 			} catch( PDOException $e ) {
+				$this->db->rollBack();
 				$this->logError( 'Unable to rename inbound table: ' . $e->getMessage() );
 				return null;
 			}
@@ -381,9 +430,13 @@ class Leads
 				$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old . "_invalid" ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new . "_invalid" ) );
 				$query->execute( );
 			} catch( PDOException $e ) {
+				$this->db->rollBack();
 				$this->logError( 'Unable to rename inbound invalid table: ' . $e->getMessage() );
 				return null;
 			}
+
+			$this->db->commit();
+
 		}
 
 		return true;
@@ -486,62 +539,66 @@ class Leads
 	}
 
 	public function inboundAdd( $idFeedIn, $fields, $statsDay, $error = null, $jobId = null ) {
-		$this->lockTables( "data_inbound WRITE, stats_inbound WRITE, errorlog WRITE" );
+		$this->db->beginTransaction();
 
-		$status = $idRecord = $this->insertRow( 'data_inbound', array(
-			'timestamp' => date( 'Y-m-d H:i:s' ),
-			'idFeedIn' => $idFeedIn,
-			'listcode' => empty( $fields['listcode'] ) ? null : $fields['listcode'],
-			'leadstamp' => empty( $fields['stamp'] ) ? null : date( 'Y-m-d H:i:s', strtotime( $fields['stamp'] ) ),
-			'url' => empty( $fields['url'] ) ? null : $this->parseUrl( $fields['url'] ),
-			'ip' => empty( $fields['ip'] ) ? null : $fields['ip'],
-			'email' => empty( $fields['email'] ) ? null : $fields['email'],
-			'fname' => empty( $fields['fname'] ) ? null : $fields['fname'],
-			'lname' => empty( $fields['lname'] ) ? null : $fields['lname'],
-			'addr' => empty( $fields['addr'] ) ? null : $fields['addr'],
-			'addr2' => empty( $fields['addr2'] ) ? null : $fields['addr2'],
-			'city' => empty( $fields['city'] ) ? null : $fields['city'],
-			'state' => empty( $fields['state'] ) ? null : $fields['state'],
-			'zip' => empty( $fields['zip'] ) ? null : $fields['zip'],
-			'dob' => ( empty( $fields['dob'] ) || '0000-00-00' == $fields['dob'] ) ? null : date( 'Y-m-d', strtotime( $fields['dob'] ) ),
-			'gender' => empty( $fields['gender'] ) ? null : $fields['gender'],
-			'landline' => empty( $fields['landline'] ) ? null : $fields['landline'],
-			'cellphone' => empty( $fields['cellphone'] ) ? null : $fields['cellphone'],
-			'country' => empty( $fields['country'] ) ? null : $fields['country'],
-			'result' => empty( $error ) ? null : $error,
-			'jobId' => empty( $jobId ) ? null : $jobId,
-		) );
-
-		if( $status !== null ) {
-			try {
-				if( !empty( $fields['url'] ) ) {
-					if( empty( $error ) ) {
-						$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
-					} else {
-						$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
-					}
-					$query->execute( array( $idFeedIn, $this->parseUrl( $fields['url'] ) , $statsDay ) );
-				}
-			} catch( PDOException $e ) {
-				$this->logError( 'Unable to insert stats_inbound record: ' . $e->getMessage() );
-				$this->unlockTables();
-				return $idRecord;
-			}
+		try {
+			$idRecord = $this->insertRow( 'data_inbound', array(
+				'timestamp' => date( 'Y-m-d H:i:s' ),
+				'idFeedIn' => $idFeedIn,
+				'listcode' => empty( $fields['listcode'] ) ? null : $fields['listcode'],
+				'leadstamp' => empty( $fields['stamp'] ) ? null : date( 'Y-m-d H:i:s', strtotime( $fields['stamp'] ) ),
+				'url' => empty( $fields['url'] ) ? null : $this->parseUrl( $fields['url'] ),
+				'ip' => empty( $fields['ip'] ) ? null : $fields['ip'],
+				'email' => empty( $fields['email'] ) ? null : $fields['email'],
+				'fname' => empty( $fields['fname'] ) ? null : $fields['fname'],
+				'lname' => empty( $fields['lname'] ) ? null : $fields['lname'],
+				'addr' => empty( $fields['addr'] ) ? null : $fields['addr'],
+				'addr2' => empty( $fields['addr2'] ) ? null : $fields['addr2'],
+				'city' => empty( $fields['city'] ) ? null : $fields['city'],
+				'state' => empty( $fields['state'] ) ? null : $fields['state'],
+				'zip' => empty( $fields['zip'] ) ? null : $fields['zip'],
+				'dob' => ( empty( $fields['dob'] ) || '0000-00-00' == $fields['dob'] ) ? null : date( 'Y-m-d', strtotime( $fields['dob'] ) ),
+				'gender' => empty( $fields['gender'] ) ? null : $fields['gender'],
+				'landline' => empty( $fields['landline'] ) ? null : $fields['landline'],
+				'cellphone' => empty( $fields['cellphone'] ) ? null : $fields['cellphone'],
+				'country' => empty( $fields['country'] ) ? null : $fields['country'],
+				'result' => empty( $error ) ? null : $error,
+				'jobId' => empty( $jobId ) ? null : $jobId,
+			) );
+		} catch( Leads_PDOException $e ) {
+			$this->db->rollBack();
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add inbound feed: ' . $pdoException->getMessage() );
 		}
 
-		$this->unlockTables();
+		try {
+			if( !empty( $fields['url'] ) ) {
+				if( empty( $error ) ) {
+					$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
+				} else {
+					$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
+				}
+				$query->execute( array( $idFeedIn, $this->parseUrl( $fields['url'] ) , $statsDay ) );
+			}
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to insert stats_inbound record: ' . $e->getMessage() );
+			return null;
+		}
+
+		$this->db->commit();
 		return $idRecord;
 	}
 
 	public function inboundProcess( $idRecord, $idFeedIn, $url, $statsDay, $error = null ) {
-		$this->lockTables( "data_inbound WRITE, stats_inbound WRITE, errorlog WRITE" );
+		$this->db->beginTransaction();
 
 		try {
 			$query = $this->db->prepare( 'UPDATE data_inbound SET result = ? WHERE idRecord = ?' );
 			$query->execute( array( $error, $idRecord ) );
 		} catch( PDOException $e ) {
+			$this->db->rollBack();
 			$this->logError( 'Unable to update data_inbound record: ' . $e->getMessage() );
-			$this->unlockTables();
 			return;
 		}
 
@@ -551,12 +608,12 @@ class Leads
 			}
 			$query->execute( array( $idFeedIn, $this->parseUrl( $url ), $statsDay ) );
 		} catch( PDOException $e ) {
+			$this->db->rollBack();
 			$this->logError( 'Unable to update stats_inbound record: ' . $e->getMessage() );
-			$this->unlockTables();
 			return;
 		}
 
-		$this->unlockTables();
+		$this->db->commit();
 	}
 
 	public function inboundCheckDuplicates( $idFeedIn, $column, $requestValues, $dedupeAcross ) {
@@ -622,42 +679,46 @@ class Leads
 	}
 
 	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url ) {
-		$this->lockTables( "data_outbound WRITE, url_mapping WRITE, feedout WRITE, errorlog WRITE" );
+		$this->db->beginTransaction();
 
-		$status = $this->insertRow( 'data_outbound', array(
-			'idRecord' => $idRecord,
-			'idRecordLegacy' => $idRecordLegacy,
-			'idFeedIn' => $idFeedIn,
-			'idFeedOut' => $idFeedOut,
-		) );
-
-		if( $status !== null ) {
-			try {
-				$query = $this->db->prepare( "REPLACE INTO url_mapping(timestamp,idFeedIn,idFeedOut,url) VALUES(NOW(), ?, ?, ?)" );
-				$query->execute( array( $idFeedIn, $idFeedOut, $this->parseUrl( $url ) ) );
-			} catch( PDOException $e ) {
-				$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
-				$this->unlockTables();
-				return $status;
-			}
-
-			try {
-				$query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
-				$query->execute( array( $idFeedOut ) );
-			} catch( PDOException $e ) {
-				$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
-				$this->unlockTables();
-				return $status;
-			}
+		try {
+			$status = $this->insertRow( 'data_outbound', array(
+				'idRecord' => $idRecord,
+				'idRecordLegacy' => $idRecordLegacy,
+				'idFeedIn' => $idFeedIn,
+				'idFeedOut' => $idFeedOut,
+			) );
+		} catch( Leads_PDOException $e ) {
+			$this->db->rollBack();
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add inbound feed: ' . $pdoException->getMessage() );
 		}
 
-		$this->unlockTables();
+		try {
+			$query = $this->db->prepare( "REPLACE INTO url_mapping(timestamp,idFeedIn,idFeedOut,url) VALUES(NOW(), ?, ?, ?)" );
+			$query->execute( array( $idFeedIn, $idFeedOut, $this->parseUrl( $url ) ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
+			return $status;
+		}
+
+		try {
+			$query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
+			return $status;
+		}
+
+		$this->db->commit();
 
 		return $status;
 	}
 
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
-		$this->lockTables( "data_outbound WRITE, stats_outbound WRITE, feedout WRITE, errorlog WRITE" );
+		$this->db->beginTransaction();
 
 		try {
 			if( LEGACY_DB ) {
@@ -668,8 +729,8 @@ class Leads
 				$query->execute( array( $error, $idRecord, $idFeedOut ) );
 			}
 		} catch( PDOException $e ) {
+			$this->db->rollBack();
 			$this->logError( 'Unable to update data_outbound record: ' . $e->getMessage() );
-			$this->unlockTables();
 			return;
 		}
 
@@ -681,8 +742,8 @@ class Leads
 			}
 			$query->execute( array( $idFeedOut, $this->parseUrl( $url ), date('Y-m-d') ) );
 		} catch( PDOException $e ) {
+			$this->db->rollBack();
 			$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
-			$this->unlockTables();
 			return;
 		}
 
@@ -690,12 +751,12 @@ class Leads
 			$query = $this->db->prepare( "UPDATE feedout SET queued = queued - 1 WHERE idFeedOut = ?" );
 			$query->execute( array( $idFeedOut ) );
 		} catch( PDOException $e ) {
+			$this->db->rollBack();
 			$this->logError( 'Unable to subtract from queue count: ' . $e->getMessage() );
-			$this->unlockTables();
 			return $status;
 		}
 
-		$this->unlockTables();
+		$this->db->commit();
 	}
 
 	public function getUrlMappings() {
@@ -1405,10 +1466,15 @@ class Leads
 	}
 
 	public function clearOutboundQueue( $idFeedOut, $label ) {
-		if( LEGACY_DB ) {
-			$this->lockTables( "feedout WRITE, data_outbound WRITE, " . $this->quoteIdentifier( 'feedout_' . $label ) . " WRITE" );
-		} else {
-			$this->lockTables( "feedout WRITE, data_outbound WRITE" );
+		try {
+			if( LEGACY_DB ) {
+				$this->lockTables( "feedout WRITE, data_outbound WRITE, " . $this->quoteIdentifier( 'feedout_' . $label ) . " WRITE" );
+			} else {
+				$this->lockTables( "feedout WRITE, data_outbound WRITE" );
+			}
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to lock tables: ' . $pdoException->getMessage() );
 		}
 
 		try {
@@ -1437,7 +1503,12 @@ class Leads
 			return;
 		}
 
-		$this->unlockTables();
+		try {
+			$this->unlockTables();
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to unlock tables: ' . $pdoException->getMessage() );
+		}
 	}
 
 	public function exportInboundRecords( $idFeedIn, $settings ) {
@@ -1552,11 +1623,11 @@ class Leads
 
 		fclose( $file );
 
-        $this->auditLog( 'FEEDINC:EXPORT', $idFeedIn );
+		$this->auditLog( 'FEEDINC:EXPORT', $idFeedIn );
 
-        $result['success'] = true;
-        $result['reason'] = 'Successfully exported data to file.';
-        $result['fileLink'] = $fileLink;
+		$result['success'] = true;
+		$result['reason'] = 'Successfully exported data to file.';
+		$result['fileLink'] = $fileLink;
 
 		return $result;
 	}
@@ -1797,6 +1868,9 @@ class Leads
 			$this->unlockTables();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to reset queued stats: ' . $e->getMessage() );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to lock/unlock tables: ' . $pdoException->getMessage() );
 		}
 
 		return null;
@@ -1813,11 +1887,15 @@ class Leads
 		}
 
 		if( $db ) {
-			$this->insertRow( 'errorlog', array( 
-				'origination' => 'LEADS',
-				'description' => $message,
-				'stamp' => date( 'Y-m-d H:i:s' ),
-			), false );
+			try {
+				$this->insertRow( 'errorlog', array( 
+					'origination' => 'LEADS',
+					'description' => $message,
+					'stamp' => date( 'Y-m-d H:i:s' ),
+				), false );
+			} catch( Leads_PDOException $e ) {
+				// Do nothing
+			}
 		}
 
 		if( $email ) {

@@ -851,6 +851,8 @@ function insertIncomingData( $feedParams, $data, $jobId, $error = null ) {
 
 function pushIncomingData( $idFeedIn, $data, $inboundId ) {
 
+	$leads = Leads::getInstance();
+
 	$populations = getIncomingPopulationSettings( $idFeedIn );
     if( $populations === false ) {
         print "Database error";
@@ -865,31 +867,32 @@ function pushIncomingData( $idFeedIn, $data, $inboundId ) {
 						isset( $data['email'] ) ? $data['email'] : null,
 						isset( $data['listcode'] ) ? $data['listcode'] : null ) ) {
 
-				$legacyId = addOutboundRecord( $population->label, 
-					isset($data['listcode']) ? $data['listcode'] : null,
-					isset($data['urlTrim']) ? $data['urlTrim'] : null,
-					isset($data['url']) ? $data['url'] : null,
-					isset($data['ip']) ? $data['ip'] : null,
-					isset($data['stamp']) ? $data['stamp'] : null,
-					isset($data['email']) ? $data['email'] : null,
-					isset($data['fname']) ? $data['fname'] : null,
-					isset($data['lname']) ? $data['lname'] : null,
-					isset($data['addr']) ? $data['addr'] : null,
-					isset($data['addr2']) ? $data['addr2'] : null,
-					isset($data['city']) ? $data['city'] : null,
-					isset($data['state']) ? $data['state'] : null,
-					isset($data['zip']) ? $data['zip'] : null,
-					isset($data['country']) ? $data['country'] : null,
-					isset($data['dob']) ? $data['dob'] : null,
-					isset($data['gender']) ? $data['gender'] : null,
-					isset($data['landline']) ? $data['landline'] : null,
-					isset($data['cellphone']) ? $data['cellphone'] : null, 
-					'0', null, null, null );
-
-				if( !empty( $legacyId ) ) {
-					$leads = Leads::getInstance();
-					$leads->outboundAdd( $inboundId, $legacyId, $idFeedIn, $population->idFeedOut, $data['url'] );
+				if( LEGACY_DB ) {
+					$legacyId = addOutboundRecord( $population->label, 
+						isset($data['listcode']) ? $data['listcode'] : null,
+						isset($data['urlTrim']) ? $data['urlTrim'] : null,
+						isset($data['url']) ? $data['url'] : null,
+						isset($data['ip']) ? $data['ip'] : null,
+						isset($data['stamp']) ? $data['stamp'] : null,
+						isset($data['email']) ? $data['email'] : null,
+						isset($data['fname']) ? $data['fname'] : null,
+						isset($data['lname']) ? $data['lname'] : null,
+						isset($data['addr']) ? $data['addr'] : null,
+						isset($data['addr2']) ? $data['addr2'] : null,
+						isset($data['city']) ? $data['city'] : null,
+						isset($data['state']) ? $data['state'] : null,
+						isset($data['zip']) ? $data['zip'] : null,
+						isset($data['country']) ? $data['country'] : null,
+						isset($data['dob']) ? $data['dob'] : null,
+						isset($data['gender']) ? $data['gender'] : null,
+						isset($data['landline']) ? $data['landline'] : null,
+						isset($data['cellphone']) ? $data['cellphone'] : null, 
+						'0', null, null, null );
+				} else {
+					$legacyId = null;
 				}
+
+				$leads->outboundAdd( $inboundId, $legacyId, $idFeedIn, $population->idFeedOut, $data['url'] );
 
 			}
 		}

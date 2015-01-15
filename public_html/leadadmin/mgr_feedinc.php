@@ -838,14 +838,6 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		<td colspan='2'><p class='aCenter'>Import Settings</p></td>
 	</tr>
 	<tr>
-		<td><p>URL</p></td>
-		<td><input type="text" name="url" value="" /></td>
-	</tr>
-	<tr>
-		<td><p>Listcode</p></td>
-		<td><input type="text" name="listcode" value="" /></td>
-	</tr>
-	<tr>
 		<td><p>File</p></td>
 		<td><p>Please select the file to upload from your computer.  File must be in CSV format.  Limit <?php echo (MAX_UPLOAD_SIZE / 1024000);?>MB.</p><p><input type="file" name="import_file" multiple="false" accept="text/csv" /></p></td>
 	</tr>
@@ -862,21 +854,19 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		}
 
 		foreach( $allowedFields as $field) {
-			if( 'listcode' != $field && 'url' != $field) {
-				printf ("<p>%s%s <select name=\"field_%s\">",
-					$field, in_array($field, $requiredFields) ? '*' : '', $field);
-				print "<option>--</option>\n";
-				for($i = 0; $i < 26; $i++) {
-					print "<option value=\"{$i}\">" . chr(65+$i) . "</option>\n";
-				}
-				print "</select>";
-				if( 'stamp' == $field ) {
-					print " (Use for either a full date+time stamp or just a date stamp field)";
-				} else if( 'time' == $field ) {
-					print " (Use for just a time stamp field)";
-				}
-				print "</p>\n";
+			printf ("<p>%s%s <select name=\"field_%s\">",
+				$field, in_array($field, $requiredFields) ? '*' : '', $field);
+			print "<option>--</option>\n";
+			for($i = 0; $i < 26; $i++) {
+				print "<option value=\"{$i}\">" . chr(65+$i) . "</option>\n";
 			}
+			print "</select>";
+			if( 'stamp' == $field ) {
+				print " (Use for either a full date+time stamp or just a date stamp field)";
+			} else if( 'time' == $field ) {
+				print " (Use for just a time stamp field)";
+			}
+			print "</p>\n";
 		}
 
 ?>
