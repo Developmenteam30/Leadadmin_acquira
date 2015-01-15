@@ -332,7 +332,7 @@ if(isset($_REQUEST['a'])){
 						, $_REQUEST['description']
 						, $_REQUEST['idCompany']
 						, $_REQUEST['feedType']
-						, $_REQUEST['postUrl']
+						, trim( $_REQUEST['postUrl'] )
 						, $_REQUEST['staticFields']
 						, $_REQUEST['varFields']
 						, $_REQUEST['fieldMap']
@@ -406,7 +406,7 @@ if(isset($_REQUEST['a'])){
 					}
 					if($_REQUEST['postUrl'] != $feed->postUrl){ 
 						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut($_REQUEST['idFeedOut'], 'postUrl', $_REQUEST['postUrl']);
+							$alterResult = alterFeedOut($_REQUEST['idFeedOut'], 'postUrl', trim( $_REQUEST['postUrl'] ));
 							if(!$alterResult['success']){ 
 								$c = false; $result['error'] = $alterResult['reason'];
 							}
