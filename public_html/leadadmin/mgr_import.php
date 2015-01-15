@@ -131,8 +131,8 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		} else {
 			if( LEGACY_DB ) {
 				insertIncomingData( $feedParams, $data, $jobId );
-				pushIncomingData( $idFeedIn, $data, $inboundId );
 			}
+			pushIncomingData( $idFeedIn, $data, $inboundId );
 			$counts['success']++;
 		}
 
