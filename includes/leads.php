@@ -1837,6 +1837,24 @@ class Leads
 		return $result;
 	}
 
+	public function validateSuppressions() {
+
+		try {
+			$query = $this->db->prepare( "SELECT email FROM " . $this->quoteIdentifier( 'suppression_global' ) );
+			$query->execute( );
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				if( strpos( $row['email'], '@' ) !== FALSE && !filter_var( $row['email'], FILTER_VALIDATE_EMAIL ) ) {
+					$delete = $this->db->prepare( "DELETE FROM suppression_global WHERE email = ?" );
+					$delete->execute( array( $row['email'] ) );
+					print $row['email'] . PHP_EOL;
+				}
+			}
+		} catch( PDOException $e ) {
+			$result['reason'] = 'DB query error.';
+			$this->logError( 'Unable to get get supression records for validation: ' . $e->getMessage() );
+		}
+	}
+
 	public function archiveLegacyOutbound( $table, $success ) {
 		try {
 			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $table ) . " WHERE poststamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND processed = '1' AND postresponse NOT LIKE ?" );
