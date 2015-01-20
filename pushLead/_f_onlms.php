@@ -532,6 +532,8 @@ function runlead($leaddata, $fP)
 				$geturl .= $field."=".urlencode($value);
 				$flag = true;
 			}
+		} else if( 'JSON' == $fP->feedType ) {
+			$geturl = $posturl . "?" . json_encode( $requestdata );
 		}
 		$response['querystring'] = $geturl;
 	} else {
