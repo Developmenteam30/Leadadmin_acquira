@@ -607,11 +607,11 @@ checked='checked'<?php } ?> />  Dedupe across all records of this feed
 checked='checked'<?php } ?> /> Dedupe across same URL of this feed
 				<input  type='radio' name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_listcode' value='listcode' <?php if($feed_dedupeAcross == 'listcode'){ ?>
 checked='checked'<?php } ?>	/> Dedupe across same listcode of this feed<br/>
-				ALL FEEDS: <input type='radio' name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_global' value='global' <?php if($feed_dedupeAcross == 'allGlobal'){ ?> 
+				ALL FEEDS: <input type='radio' name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_global' value='allGlobal' <?php if($feed_dedupeAcross == 'allGlobal'){ ?> 
 checked='checked'<?php } ?> />  Dedupe across all records of all feeds
-				<input type='radio'	name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_url' value='url' <?php if( empty( $feed_dedupeAcross ) || $feed_dedupeAcross == 'urlGlobal'){ ?>
+				<input type='radio'	name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_url' value='urlGlobal' <?php if( empty( $feed_dedupeAcross ) || $feed_dedupeAcross == 'urlGlobal'){ ?>
 checked='checked'<?php } ?> /> Dedupe across same URL of all feeds
-				<input  type='radio' name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_listcode' value='listcode' <?php if($feed_dedupeAcross == 'listcodeGlobal'){ ?>
+				<input  type='radio' name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_listcode' value='listcodeGlobal' <?php if($feed_dedupeAcross == 'listcodeGlobal'){ ?>
 checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 			</p>
 		</td>
