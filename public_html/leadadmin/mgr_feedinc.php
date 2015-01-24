@@ -106,6 +106,7 @@ if(isset($_REQUEST['a'])){
 						'filterTypeSiftLogic' => empty( $_REQUEST['filterTypeSiftLogic'] ) ? null : $_REQUEST['filterTypeSiftLogic'],
 						'filterSiftLogic' => empty( $_REQUEST['filterSiftLogic'] ) ? null : $_REQUEST['filterSiftLogic'],
 						'notifications' => empty( $_REQUEST['notifications'] ) ? null : $_REQUEST['notifications'],
+						'rejectOldLeads' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? 0 : 1,
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
 					) );
 
@@ -115,7 +116,7 @@ if(isset($_REQUEST['a'])){
 						$result['error'] = 'Failed to create new feed.';
 					} else {
 						$result['status'] = 1;
-						$result['error'] = 'Successfully created new feed #{$idFeedIn}.';
+						$result['error'] = "Successfully created new feed #{$idFeedIn}.";
 						$leads->auditLog( 'FEEDINC:ADD', $idFeedIn );
 					}
 
@@ -174,6 +175,7 @@ if(isset($_REQUEST['a'])){
 						'filterTypeSiftLogic' => empty( $_REQUEST['filterTypeSiftLogic'] ) ? null : $_REQUEST['filterTypeSiftLogic'],
 						'filterSiftLogic' => empty( $_REQUEST['filterSiftLogic'] ) ? null : $_REQUEST['filterSiftLogic'],
 						'notifications' => empty( $_REQUEST['notifications'] ) ? null : $_REQUEST['notifications'],
+						'rejectOldLeads' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? 0 : 1,
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
 					) );
 
@@ -754,7 +756,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 	<tr>
 		<td><p>Lead Rejections</p></td>
 		<td>
-			<p>How old are leads allowed to be before we reject them?  This should be a text string like "7 Days Ago" or "30 Days Ago".  Do not enter just a number.</p>
+			<p>How old are leads allowed to be before we reject them?  This should be a text string like "7 Days Ago" or "30 Days Ago".  Do not enter just a number. A blank value disables this feature.</p>
 			<p>
 				<input type='text' name='<?php echo $e; ?>feed_rejectOldLeadsMaxAge' id='<?php echo $e; ?>feed_rejectOldLeadsMaxAge' value='<?php echo $feed_rejectOldLeadsMaxAge; ?>' class='long' />
 			</p>
@@ -1364,8 +1366,13 @@ foreach($incomingAdditionalRequirementSettings as $f){
 	}else if($(e+'filterTypeUrl_reject').is(":checked")){
 		filterTypeUrl = 'reject';
 	}
-	filterUrl = $("input[name='"+c+"_"+idFeedIn+"_feed_filterUrl\\[\\]']")
-		.map(function(){return $(this).val().trim();}).get().join(";");
+	if(c == 'new'){
+		filterUrl = $("input[name='"+c+"_feed_filterUrl\\[\\]']")
+			.map(function(){return $(this).val().trim();}).get().join(";");
+	} else {
+		filterUrl = $("input[name='"+c+"_"+idFeedIn+"_feed_filterUrl\\[\\]']")
+			.map(function(){return $(this).val().trim();}).get().join(";");
+	}
 
 	if($(e+'filterTypeSiftLogic_disabled').is(":checked")){
 		filterTypeSiftLogic = null;
@@ -1374,15 +1381,20 @@ foreach($incomingAdditionalRequirementSettings as $f){
 	}else if($(e+'filterTypeSiftLogic_reject').is(":checked")){
 		filterTypeSiftLogic = 'reject';
 	}
-	filterSiftLogic = $("input[name='"+c+"_"+idFeedIn+"_feed_filterSiftLogic\\[\\]']")
-		.map(function(){return $(this).val().trim();}).get().join(";");
+	if(c == 'new'){
+		filterSiftLogic = $("input[name='"+c+"_feed_filterSiftLogic\\[\\]']")
+			.map(function(){return $(this).val().trim();}).get().join(";");
+	} else {
+		filterSiftLogic = $("input[name='"+c+"_"+idFeedIn+"_feed_filterSiftLogic\\[\\]']")
+			.map(function(){return $(this).val().trim();}).get().join(";");
+	}
 
 	if($(e+'dedupeEmail').is(":checked")){ dedupeEmail = 1;	} else { dedupeEmail = 0; }
 	if($(e+'dedupeLandline').is(":checked")){ dedupeLandline = 1;	} else { dedupeLandline = 0; }
 	if($(e+'dedupeCellphone').is(":checked")){ dedupeCellphone = 1;	} else { dedupeCellphone = 0; }
 	if($(e+'retired_yes').is(":checked")){ retired = 1; } else { retired = 0; }
 	if($(e+'notifications_yes').is(":checked")){ notifications = 1; } else { notifications = 0; }
-	if(c == 'new'){ 
+	if(c == 'new'){
 		dedupeAcross = $('input[name="'+c+'_feed_dedupeAcross"]:checked').val();
 	} else { 
 		dedupeAcross = $('input[name="'+c+'_'+idFeedIn+'_feed_dedupeAcross"]:checked').val();

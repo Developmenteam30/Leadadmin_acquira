@@ -357,12 +357,14 @@ class Leads
 				'dedupeEmail' => empty( $fields['dedupeEmail'] ) ? 0 : 1,
 				'dedupeLandline' => empty( $fields['dedupeLandline'] ) ? 0 : 1,
 				'dedupeCellphone' => empty( $fields['dedupeCellphone'] ) ? 0 : 1,
+				'dedupeAcross' => empty( $fields['dedupeAcross'] ) ? null : $fields['dedupeAcross'],
 				'rejectOldLeads' => empty( $fields['rejectOldLeads'] ) ? null : $fields['rejectOldLeads'],
 				'rejectOldLeadsMaxAge' => empty( $fields['rejectOldLeadsMaxAge'] ) ? null : $fields['rejectOldLeadsMaxAge'],
 				'retired' => empty( $fields['retired'] ) ? 0 : 1,
-				'dedupeAcross' => empty( $fields['dedupeAcross'] ) ? null : $fields['dedupeAcross'],
 				'filterTypeUrl' => empty( $fields['filterTypeUrl'] ) ? null : $fields['filterTypeUrl'],
+				'filterUrl' => empty( $fields['filterUrl'] ) ? null : $fields['filterUrl'],
 				'filterTypeSiftLogic' => empty( $fields['filterTypeSiftLogic'] ) ? null : $fields['filterTypeSiftLogic'],
+				'filterSiftLogic' => empty( $fields['filterSiftLogic'] ) ? null : $fields['filterSiftLogic'],
 				'notifications' => empty( $fields['notifications'] ) ? 0 : 1,
 			) );
 		} catch( Leads_PDOException $e ) {
