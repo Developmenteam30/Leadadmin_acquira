@@ -1869,6 +1869,30 @@ class Leads
 		return -1;
 	}
 
+	public function resetOutboundStats( $idFeedOut, $date ) {
+		if( empty( $idFeedOut ) || empty( $date ) ) {
+			return;
+		}
+
+		$this->lockTables( "feedout f WRITE, data_inbound i WRITE, data_outbound o WRITE, stats_outbound WRITE" );
+
+		try {
+			$query = $this->db->prepare( "SELECT i.url,SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp LIKE ? GROUP BY i.url" );
+			$query->execute( array( $idFeedOut, $date . '%' ) );
+			$records = $query->fetchAll( );
+
+			foreach( $records as $record ) {
+				$query = $this->db->prepare( "REPLACE INTO stats_outbound(idFeedOut,url,stamp,accepted,rejected) VALUES(?,?,?,?,?)" );
+				$query->execute( array( $idFeedOut, $record['url'], $date, $record['accepted'], $record['rejected'] ) );
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to count outbound accepted records: ' . $e->getMessage() );
+		}
+
+		$this->unlockTables();
+
+	}
+
 	public function resetQueuedStats() {
 		try {
 			$this->lockTables( "feedout WRITE, data_outbound WRITE" );
