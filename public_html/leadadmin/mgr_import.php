@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
 
@@ -21,17 +21,28 @@ if( empty( $_REQUEST['idFeedIn'] )) {
 	exit;
 }
 
-$idFeedIn = $_REQUEST['idFeedIn'];
+$idFeedIn = !empty( $_REQUEST['idFeedIn'] ) ? $_REQUEST['idFeedIn'] : 0;
 $jobId = time();
-    
+$leads = Leads::getInstance();
+
+if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+	$idCompany = LeadsSession::getCompanyId();
+	if( empty( $idCompany ) ) {
+		$idCompany = -9999;
+	}
+	if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+		die( 'Sorry, you do not have access to this feed.' );
+	}
+}
+
 $feedParams = getFeedIn ( $idFeedIn );
 if($feedParams === false){
 	print '<p class="error">Database failure.  Cannot load feed information.</p>';
 	logError(
 		'Feed '.$idFeedIn
-            , 'Database failure when attempting to load feed parameters. Check MySQL log file.'
-            , true
-        );
+, 'Database failure when attempting to load feed parameters. Check MySQL log file.'
+, true
+		);
 
 	exit;
 } else if( 0 === $feedParams ) {
@@ -119,7 +130,6 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 		print " ";
 
 	$result = validateIncomingData( $feedParams, $data );
-	$leads = Leads::getInstance();
 
 	if( $result['valid'] ) {
 

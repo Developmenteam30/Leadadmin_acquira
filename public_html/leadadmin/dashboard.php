@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -26,7 +26,15 @@ if(isset($_REQUEST['a'])){
 if(isset($_REQUEST['d'])){ 
 	switch($_REQUEST['d']){
 		case 'incomingFeeds':
-$incomingFeeds = $leads->getInboundFeeds( false );
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$incomingFeeds = $leads->getInboundFeeds( null, false );
+			} else {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				$incomingFeeds = $leads->getInboundFeeds( $idCompany, false );
+			}
 ?>
 <p>
 	Incoming Feeds (Last Updated: <?php echo date("m-d g:i:s a"); ?>)
@@ -68,7 +76,7 @@ if($incomingFeeds === false){
 	foreach($companyFeedLists as $idCompany => $companyFeedList){ 
 		$totalAccepted = 0;
 		$totalRejected = 0;
-        
+		
 		foreach($companyFeedList as $keyFeed => $feed){
 
 			$stats = $leads->getInboundStats( $feed->idFeedIn );
@@ -136,6 +144,17 @@ if($incomingFeeds === false){
 		case 'feedinc':
 		
 $idFeedIn = intval( $_REQUEST['options']['sub'] );
+
+if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+	$idCompany = LeadsSession::getCompanyId();
+	if( empty( $idCompany ) ) {
+		$idCompany = -9999;
+	}
+	if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+		die( 'Sorry, you do not have access to this feed' );
+	}
+}
+
 $urls = $leads->getInboundURLStats( $idFeedIn );
 ?>
 <div class='fr'>
@@ -178,8 +197,15 @@ if( empty( $urls ) ) {
 		
 		break;
 		case 'outgoingFeeds':
-		
-$outgoingFeeds = $leads->getOutboundFeeds( false );
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$outgoingFeeds = $leads->getOutboundFeeds( null, false );
+			} else {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, false );
+			}
 ?>
 <p>
 	Outgoing Feeds (Last Updated: <?php echo date("m-d g:i:s a"); ?>)

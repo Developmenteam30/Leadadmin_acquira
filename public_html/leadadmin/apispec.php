@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
 
@@ -12,6 +12,17 @@ if( empty( $_REQUEST['idFeedIn'] ) ) {
 }
 
 $leads = Leads::getInstance();
+// If this a client, ensure they have access for this feed
+if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+	$idCompany = LeadsSession::getCompanyId();
+	if( empty( $idCompany ) ) {
+    	$idCompany = -9999;
+	}
+	if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
+		die( 'Sorry, you do not have access to view this feed' );
+	}
+}
+
 $feed = $leads->getInboundFeed( $_REQUEST['idFeedIn'] );
 if( empty( $feed ) ) {
 	die('ERROR: Feed not found.');

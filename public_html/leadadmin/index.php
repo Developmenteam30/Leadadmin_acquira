@@ -3,10 +3,10 @@
 require_once( '../../includes/c_config.php' );
 require_once( INCLUDES . 'session.php' );
 
-if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
 	header("Location: dashboard.php");
 	exit;
-} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT ) ) {
+} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_REPORTS ) ) {
 	header("Location: client_reports.php");
 	exit;
 }

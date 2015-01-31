@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -350,8 +350,22 @@ if(isset($_REQUEST['a'])){
 				}
 			} else {			
 				$result['error'] = 'Failed when editing feed.';
+
+				$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
+				if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+					$idCompany = LeadsSession::getCompanyId();
+					if( empty( $idCompany ) ) {
+						$idCompany = -9999;
+					}
+					if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+						$c = false;
+						$result['error'] = 'Sorry, you do not have access to this feed.';
+						break;
+					}
+				}
+
 				if($c){ 
-					$feed = $leads->getOutboundFeed( $_REQUEST['idFeedOut'] );
+					$feed = $leads->getOutboundFeed( $idFeedOut );
 					if($feed === false){ 
 						$c = false; $result['error'] = 'Database failure - could not fetch feed information for '
 							.'editing.';
@@ -482,6 +496,19 @@ if(isset($_REQUEST['a'])){
 		case "managePopulation":
 			$c = true; $result['error'] = 'Failed when attempting to manage population.';
 			$action = $_REQUEST['action'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $_REQUEST['idFeedOut'] ) ) {
+					$c = false;
+					$result['error'] = 'Sorry, you do not have access to this feed.';
+					break;
+				}
+			}
+
 			if($action == 'new'){
 				$result['error'] = 'Failed when adding a new population parameter.';
 				//Validate Input
@@ -734,6 +761,21 @@ if(isset($_REQUEST['a'])){
 		break;
 		case 'manageFeedParam':
 			$c = true; $result['error'] = 'Failed when attempting to manage feed params.';
+
+			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					$c = false;
+					$result['error'] = 'Sorry, you do not have access to this feed.';
+					break;
+				}
+			}
+
+
 			switch($_REQUEST['action']){ 
 				case "toggle":
 					if($c){ 
@@ -793,8 +835,22 @@ if(isset($_REQUEST['a'])){
 		break;
 		case 'feedRetire':
 			$c = true; $result['error'] = 'Failed when attempting to retire feed.';
+
+			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					$c = false;
+					$result['error'] = 'Sorry, you do not have access to this feed.';
+					break;
+				}
+			}
+
 			if($c){
-				$retireResult = retireFeed($_REQUEST['idFeedOut']);
+				$retireResult = retireFeed( $idFeedOut );
 				if(!$retireResult['success']){
 					$c = false; $result['error'] = $retireResult['reason'];
 				}
@@ -802,15 +858,6 @@ if(isset($_REQUEST['a'])){
 			if($c){
 				$result['status'] = 1;
 			}
-		break;
-		case 'sendTestRecord':
-			system( sprintf( 'php -f %s/pushLead/onlms_process.php -- --v=9.6 --testing=1 --idFeedOut=%d >/dev/null 2>&1 &',
-							ADMIN_ROOT,
-							intval($_REQUEST['idFeedOut'])
-				  )
-			);
-
-			$result['status'] = 1;
 		break;
 	}
 	echo json_encode($result);
@@ -829,8 +876,15 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'outgoingFeeds':
-
-$outgoingFeeds = $leads->getOutboundFeeds( false );
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$outgoingFeeds = $leads->getOutboundFeeds( null, false );
+			} else {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, false );
+			}
 ?>
 <p>
 	Outgoing Feeds
@@ -1046,7 +1100,18 @@ if($outgoingFeeds === false){
 	
 		break;
 		case 'feedout':
-			$idFeedOut = $_REQUEST['options']['idFeedOut'];	
+			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
 			$feed = $leads->getOutboundFeed( $idFeedOut );
 			$populationSettings = getPopulationSettings($idFeedOut);	
 			$cacheFeedIn = array();
@@ -1136,7 +1201,19 @@ if($populationSettings === false){
 <?php
 		break;
 		case 'dialog_testrecord':
-			$feed = $leads->getOutboundFeed( $_REQUEST['options']['idFeedOut'] );
+			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
+			$feed = $leads->getOutboundFeed( $idFeedOut );
 
 			require_once( SITE_ROOT . '/pushLead/_f_onlms.php' );
 			$settings['testing'] = 0;
@@ -1172,7 +1249,18 @@ if($populationSettings === false){
 			break;
 
 		case 'dialog_editfeedout':
-			$idFeedOut = $_REQUEST['options']['idFeedOut'];
+			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
 			$e = 'edit_'.$idFeedOut.'_';
 			$feed = $leads->getOutboundFeed( $idFeedOut );
 			if($feed === false){ 
@@ -1245,7 +1333,12 @@ if($populationSettings === false){
 					}
 				}
 			}
-			$companies = getCompanies();
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$companies = array( $leads->getCompany( $feed_idCompany ) );
+			} else {
+				$companies = $leads->getCompanies();
+			}
 ?>
 <table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
 	<tr>
@@ -1477,7 +1570,18 @@ if($populationSettings === false){
 		break;
 
 		case 'dialog_urlreport':
-			$idFeedOut = $_REQUEST['options']['idFeedOut'];
+			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
 			$feed = $leads->getOutboundFeed( $idFeedOut );
 ?>
 <div class='fr'>
@@ -1588,7 +1692,20 @@ if($populationSettings === false){
 			}
 		break;
 		case 'dialog_urlreportdetails':
-			$feed = $leads->getOutboundFeed( $_REQUEST['options']['idFeedOut'] );
+
+			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
+			$feed = $leads->getOutboundFeed( $idFeedOut );
 			if($feed === false){ 
 ?>
 <p>Database failure - could not fetch feed information.</p>
@@ -1750,7 +1867,16 @@ if($populationSettings === false){
 				}
 			}
 			$feed = $leads->getOutboundFeed( $popset_idFeedOut );
-			$feedsIncoming = getIncomingFeeds( false );
+
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$incomingFeeds = $leads->getInboundFeeds( null, false );
+			} else {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				$incomingFeeds = $leads->getInboundFeeds( $idCompany, false );
+			}
 ?>
 <input type='hidden' name='<?php echo $e; ?>popset_idAssoc'
 	id='<?php echo $e; ?>popset_idAssoc'
@@ -1767,7 +1893,7 @@ if($populationSettings === false){
 			<p>	
 				<select id='<?php echo $e; ?>popset_idFeedIn'>
 				<?php 
-				foreach($feedsIncoming as $fI){ 
+				foreach($incomingFeeds as $fI){ 
 				?>
 					<option value='<?php echo $fI->idFeedIn; ?>'
 						<?php if($fI->idFeedIn == $popset_idFeedIn){ echo "selected='selected'"; } ?>
@@ -2133,7 +2259,17 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 <?php
 		break;
 		case 'dialog_editpopulation':
-			$idFeedOut = $_REQUEST['options']['idFeedOut'];
+			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
 ?>
 <div class='fr'>
 	<a href='#' class='nonLink' onclick='closeContent("dialog_editpopulation", {"sub":  <?php echo $idFeedOut; ?>} );' >Close [X]</a>
@@ -2919,37 +3055,6 @@ function feedRetire(idFeedOut, options){
 	}	
 }
 
-function sendTestRecord(idFeedOut, options){ 
-		var response = $.ajax({
-			url: "mgr_feedout.php",
-			type: "POST",
-			async: true,
-			data: ({
-				"a" : "sendTestRecord"
-				, "idFeedOut": idFeedOut
-			})
-		}).done(function(responseText){ 
-			var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-			toggleHidden('cM_' + idFeedOut, '');
-			if(result===null) { 
-				alert("JSON Failed: "+responseText); 
-			} else { 
-				alert("One test record sent to feed");
-			}			
-		});
-}
-
-function equalHeight(group) {
-	tallest = 0;
-	group.each(function() {
-		thisHeight = $(this).height();
-		if(thisHeight > tallest) {
-			tallest = thisHeight;
-		}
-	});
-	group.height(tallest);
-}
-
 $(document).ready(function(){ 
 	display('outgoingFeeds');
 });
@@ -2959,8 +3064,9 @@ $(document).ready(function(){
 	<?php include(INCLUDES.'c_nav.php'); ?>
 	<div style='margin: auto;'>
 		<div id='controls'>
-			<a href='#' class='nonLink' onclick="display('dialog_newfeedout');" 
-			>Add New Feed</a>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
+			<a href='#' class='nonLink' onclick="display('dialog_newfeedout');">Add New Feed</a>
+<?php } ?>
 		</div>
 		<div id='dialogs'>
 			<div id='dialog_newfeedout' style='display:none;'></div>

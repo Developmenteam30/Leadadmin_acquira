@@ -160,7 +160,7 @@ class Leads
 	public function findClientUser( $idCompany ) {
 		try {
 			$query = $this->db->prepare( "SELECT username FROM users WHERE idCompany = ? AND level = ?" );
-			$query->execute( array( $idCompany, LEADS_SESSION_LEVEL_CLIENT ) );
+			$query->execute( array( $idCompany, LEADS_SESSION_LEVEL_CLIENT_REPORTS ) );
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get client user information: ' . $e->getMessage() );
@@ -458,16 +458,29 @@ class Leads
 		return $results;
 	}
 
-	public function getInboundFeeds( $retired = null ) {
+	public function getInboundFeeds( $idCompany = null, $retired = null ) {
 		$results = array();
 
 		try {
 			if( $retired === null ) {
-				$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany ORDER BY c.name,f.idFeedIn" );
-				$query->execute( );
+
+				if( !empty( $idCompany ) ) {
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? ORDER BY f.idFeedIn" );
+					$query->execute( array( $idCompany ) );
+				} else {
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany ORDER BY c.name,f.idFeedIn" );
+					$query->execute( );
+				}
+
 			} else {
-				$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.retired = ? ORDER BY c.name,f.idFeedIn" );
-				$query->execute( array( $retired ? '1' : '0' ) );
+
+				if( !empty( $idCompany ) ) {
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? AND f.retired = ? ORDER BY f.idFeedIn" );
+					$query->execute( array( $idCompany, $retired ? '1' : '0' ) );
+				} else {
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.retired = ? ORDER BY c.name,f.idFeedIn" );
+					$query->execute( array( $retired ? '1' : '0' ) );
+				}
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -475,6 +488,22 @@ class Leads
 		}
 
 		return $results;
+	}
+
+	public function checkInboundFeedAccess( $idCompany, $idFeedIn ) {
+		$result = false;
+
+		try {
+			$query = $this->db->prepare( "SELECT 1 FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? AND f.idFeedIn = ?" );
+			$query->execute( array( $idCompany, $idFeedIn ) );
+			if( '1' == $query->fetchColumn( ) ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound feed access: ' . $e->getMessage() );
+		}
+
+		return $result;
 	}
 
 	public function checkInboundFeedLabelExists( $label ) {
@@ -507,16 +536,30 @@ class Leads
 		return $results;
 	}
 
-	public function getOutboundFeeds( $retired = null ) {
+	public function getOutboundFeeds( $idCompany = null, $retired = null ) {
 		$results = array();
 
 		try {
 			if( $retired === null ) {
-				$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany ORDER BY c.name,f.idFeedOut" );
-				$query->execute( );
+
+				if( !empty( $idCompany ) ) {
+					$query = $this->db->prepare( "SELECT o.*,co.name FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? ORDER BY o.idFeedOut" );
+					$query->execute( array( $idCompany ) );
+				} else {
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany ORDER BY c.name,f.idFeedOut" );
+					$query->execute( );
+				}
+
 			} else {
-				$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.retired = ? ORDER BY c.name,f.idFeedOut" );
-				$query->execute( array( $retired ? '1' : '0' ) );
+
+				if( !empty( $idCompany ) ) {
+					$query = $this->db->prepare( "SELECT o.*,co.name FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? AND o.retired = ? ORDER BY o.idFeedOut" );
+					$query->execute( array( $idCompany, $retired ? '1' : '0' ) );
+				} else {
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.retired = ? ORDER BY c.name,f.idFeedOut" );
+					$query->execute( array( $retired ? '1' : '0' ) );
+				}
+
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -524,6 +567,22 @@ class Leads
 		}
 
 		return $results;
+	}
+
+	public function checkOutboundFeedAccess( $idCompany, $idFeedOut ) {
+		$result = false;
+
+		try {
+			$query = $this->db->prepare( "SELECT 1 FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? AND o.idFeedOut = ?" );
+			$query->execute( array( $idCompany, $idFeedOut ) );
+			if( '1' == $query->fetchColumn( ) ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound feed access: ' . $e->getMessage() );
+		}
+
+		return $result;
 	}
 
 	public function getOutboundStats( $idFeedOut ) {
@@ -1106,7 +1165,7 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT o.timestamp,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.result NOT LIKE CONCAT('%',f.successString,'%') ORDER BY o.timestamp DESC LIMIT " . intval( $offset ) . ",100" );
+			$query = $this->db->prepare( "SELECT o.timestamp,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.result IS NOT NULL ORDER BY o.timestamp DESC LIMIT " . intval( $offset ) . ",100" );
 			$query->execute( array( $idFeedOut ) );
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {

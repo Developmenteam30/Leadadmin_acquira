@@ -5,7 +5,7 @@ $title = 'Rejection Log';
 include(INCLUDES."c_header.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -27,8 +27,30 @@ if(empty($id) || empty($type)) {
 } else {
 
 	if( $type == 'inbound' ) {
+		// If this a client, ensure they have access for this feed
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+		    $idCompany = LeadsSession::getCompanyId();
+		    if( empty( $idCompany ) ) {
+        		$idCompany = -9999;
+	    	}
+		    if( !$leads->checkInboundFeedAccess( $idCompany, $id ) ) {
+        		die( 'Sorry, you do not have access to view this feed' );
+		    }
+		}
+
 		$records = $leads->getInboundRejections( $id, $offset );
 	} else if( $type == 'outbound' ) {
+		// If this a client, ensure they have access for this feed
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+		    $idCompany = LeadsSession::getCompanyId();
+		    if( empty( $idCompany ) ) {
+        		$idCompany = -9999;
+	    	}
+		    if( !$leads->checkOutboundFeedAccess( $idCompany, $id ) ) {
+        		die( 'Sorry, you do not have access to view this feed' );
+		    }
+		}
+
 		$records = $leads->getOutboundRejections( $id, $offset );
 	} else {
 		print "<p>ERROR: Invalid type specified</p>\n";

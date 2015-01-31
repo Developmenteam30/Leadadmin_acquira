@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -25,6 +25,11 @@ if(isset($_REQUEST['a'])){
 			$c = true;
 			$result['error'] = 'Failed when attempting to manage feeds.';
 			$action = $_REQUEST['action'];
+
+			if( empty( $_REQUEST['label'] ) ) {
+				$c = false;
+				$result['error'] = 'Action cannot be empty.';
+			}
 
 			//Validate Input
 			if( empty( $_REQUEST['label'] ) ) {
@@ -80,6 +85,11 @@ if(isset($_REQUEST['a'])){
 
 			if( 'new' == $action ) {
 
+				if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+					$c = false;
+					$result['error'] = 'Sorry, you do not have permission to add new feeds.';
+				}
+
 				if( $c ) {
 					//Label can not be already used
 					$checkResult = $leads->checkInboundFeedLabelExists( $_REQUEST['label'] );
@@ -121,7 +131,21 @@ if(isset($_REQUEST['a'])){
 					}
 
 				}
-			} else {			
+			} else {
+				if( $c ) {
+					if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+					    $idCompany = LeadsSession::getCompanyId();
+					    if( empty( $idCompany ) ) {
+					        $idCompany = -9999;
+					    }
+					    if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
+							$c = false;
+							$result['error'] = 'Sorry, you do not have access to this feed.';
+			    		}
+					} else {
+						$idCompany = empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'];
+					}
+				}
 
 				if( $c ) {
 					$feed = $leads->getInboundFeed( $_REQUEST['idFeedIn'] );
@@ -162,7 +186,7 @@ if(isset($_REQUEST['a'])){
 					$status = $leads->updateInboundFeed( $_REQUEST['idFeedIn'], array(
 						'label' => empty( $_REQUEST['label'] ) ? null : $_REQUEST['label'],
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
-						'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
+						'idCompany' => $idCompany,
 						'required' => empty( $_REQUEST['required'] ) ? null : $_REQUEST['required'],
 						'retired' => !empty( $_REQUEST['retired'] ) ? 1 : 0,
 						'allowedFields' => empty( $_REQUEST['allowedFields'] ) ? null : $_REQUEST['allowedFields'],
@@ -196,6 +220,18 @@ if(isset($_REQUEST['a'])){
 		break;
 		case 'exportData':
 			$c = true; $result['error'] = 'Failed when trying to export data.';
+
+			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			    $idCompany = LeadsSession::getCompanyId();
+			    if( empty( $idCompany ) ) {
+			        $idCompany = -9999;
+			    }
+			    if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
+					$c = false;
+					$result['error'] = 'Sorry, you do not have access to this feed.';
+		    	}
+			}
+
 			if($c){ 
 				$feed = $leads->getInboundFeed( $_REQUEST['idFeedIn'] );
 				if($feed === false){ 
@@ -259,9 +295,18 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'incomingFeeds':
-		if( isset( $_REQUEST['retired'] ) ) $retired = true;
-		else $retired = false;
-$incomingFeeds = $leads->getInboundFeeds( $retired );
+			if( isset( $_REQUEST['retired'] ) ) $retired = true;
+			else $retired = false;
+
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$incomingFeeds = $leads->getInboundFeeds( null, $retired );
+			} else {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				$incomingFeeds = $leads->getInboundFeeds( $idCompany, $retired );
+			}
 ?>
 <?php		
 if($incomingFeeds === false){ 
@@ -353,7 +398,7 @@ if($incomingFeeds === false){
 		foreach($companyFeedList as $feed){ 
 ?>
 	<tr>
-        <td colspan="3" class='fTI_description<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</p></td>
+		<td colspan="3" class='fTI_description<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</p></td>
 		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
 		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
@@ -399,6 +444,17 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		
 		case 'dialog_editfeed':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			    $idCompany = LeadsSession::getCompanyId();
+			    if( empty( $idCompany ) ) {
+			        $idCompany = -9999;
+			    }
+			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+		    	}
+			}
+
 			$e = 'edit_'.$idFeedIn.'_'; $d = 'edit';
 			$feed = $leads->getInboundFeed( $idFeedIn );
 			if($feed === false){ 
@@ -502,6 +558,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		<td><p>Company</p></td>
 		<td>
 			<p>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 				<?php if($companies === false){ ?>
 				Database failure - could not fetch company list
 				<?php } elseif(!is_object($companies) && $companies == 0){ ?>
@@ -519,6 +576,10 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 				<?php } ?>
 				</select>
 				<?php } ?>
+<?php } else { ?>
+				<?php echo $idCompany; ?>
+				<input type="hidden" name="<?php echo $e; ?>feed_idCompany" id="<?php echo $e; ?>feed_idCompany" value="<?php echo $idCompany; ?>" />
+<?php } ?>
 			</p>
 		</td>
 	</tr>
@@ -803,9 +864,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 								if($d == 'edit'){ ?>_<?php echo $idFeedIn; ?><?php } ?>"<?php
 						?>);'
 				/> 
-				<input type='button' value='Add New Feed' 
-					onclick='manageFeed("new");'
-				/>
+				<input type='button' value='Add New Feed' onclick='manageFeed("new");' />
 		<?php } ?>
 			</p>
 		</td>
@@ -815,6 +874,17 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		break;
 		case 'dialog_import':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			    $idCompany = LeadsSession::getCompanyId();
+			    if( empty( $idCompany ) ) {
+			        $idCompany = -9999;
+			    }
+			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+		    	}
+			}
+
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <div class='fr'>
@@ -884,6 +954,17 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		break;
 		case 'dialog_export':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			    $idCompany = LeadsSession::getCompanyId();
+			    if( empty( $idCompany ) ) {
+			        $idCompany = -9999;
+			    }
+			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+		    	}
+			}
+
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <div class='fr'>
@@ -1017,6 +1098,17 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		break;
 		case 'dialog_urlreport':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			    $idCompany = LeadsSession::getCompanyId();
+			    if( empty( $idCompany ) ) {
+			        $idCompany = -9999;
+			    }
+			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+		    	}
+			}
+
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <div class='fr'>
@@ -1127,7 +1219,20 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 			}
 		break;
 		case 'dialog_urlreportdetails':
-			$feed = $leads->getInboundFeed( $_REQUEST['options']['idFeedIn'] );
+
+			$idFeedIn = !empty( $_REQUEST['options']['idFeedIn'] ) ? $_REQUEST['options']['idFeedIn'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			    $idCompany = LeadsSession::getCompanyId();
+			    if( empty( $idCompany ) ) {
+			        $idCompany = -9999;
+			    }
+			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+		    	}
+			}
+
+			$feed = $leads->getInboundFeed( $idFeedIn );
 			if($feed === false){ 
 ?>
 <p>Database failure - could not fetch feed information.</p>
@@ -1210,6 +1315,17 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		break;
 		case 'dialog_listcodes':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			    $idCompany = LeadsSession::getCompanyId();
+			    if( empty( $idCompany ) ) {
+			        $idCompany = -9999;
+			    }
+			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+		    	}
+			}
+
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <p>Generate New Listcode for (<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
@@ -1607,8 +1723,9 @@ table.feedTable th, table.feedTable td { padding: 3px; }
 	<?php include(INCLUDES.'c_nav.php'); ?>
 	<div style='margin: auto;'>
 		<div id='controls'>
-			<a href='#' class='nonLink' onclick="display('dialog_newfeed');" 
-			>Add New Feed</a>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
+			<a href='#' class='nonLink' onclick="display('dialog_newfeed');" >Add New Feed</a>
+<?php } ?>
 		</div>
 		<div id='dialogs'>
 			<div id='dialog_newfeed' style='display:none;'></div>

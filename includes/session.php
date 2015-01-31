@@ -4,7 +4,9 @@ require_once( INCLUDES . 'leads.php' );
 
 define( 'LEADS_SESSION_LEVEL_ADMIN', 90 );
 define( 'LEADS_SESSION_LEVEL_STAFF', 50 );
+define( 'LEADS_SESSION_LEVEL_CLIENT_DASHBOARD', 20 );
 define( 'LEADS_SESSION_LEVEL_CLIENT', 10 );
+define( 'LEADS_SESSION_LEVEL_CLIENT_REPORTS', 10 );
 
 class LeadsSession
 {
