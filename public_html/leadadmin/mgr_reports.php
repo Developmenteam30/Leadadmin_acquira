@@ -143,6 +143,7 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 <p><a href="#" class="nonLink" onclick="display('dialog_revenue_listowners'); closeContent('dialog_revenue_mailers'); closeContent('dialog_mapping');">Revenue Report - List Owners</a></p>
 <p><a href="#" class="nonLink" onclick="display('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners'); closeContent('dialog_mapping');">Revenue Report - Mailers</a></p>
+<p><a href="/leadadmin/client_reports.php" target="_blank">Master Client Revenue Report</a></p>
 <?php } ?>
 <p><a href="#" class="nonLink" onclick="display('dialog_search_email'); closeContent('dialog_search_email_results');">Email Search Report</a></p>
 <p><a href="#" class="nonLink" onclick="display('dialog_search_url'); closeContent('dialog_search_url_results');">URL Search Report</a></p>
