@@ -824,7 +824,7 @@ class Leads
 			$fields[] = $url;
 		}
 		$query .= "GROUP BY 2,4,6 ";
-		$query .= "ORDER BY 1,2,4,5,6 ";
+		$query .= "ORDER BY 4 ASC,10 DESC ";
 
 		try {
 			$query = $this->db->prepare( $query );
