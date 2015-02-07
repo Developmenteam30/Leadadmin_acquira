@@ -69,7 +69,7 @@ $allowedArray = explode( ';', $feed->allowedFields );
 <hr/>
 
 <h3>Server Information</h3>
-<p>FTP Hostname: <strong><?php echo SITE_URL; ?></strong></p>
+<p>FTP Hostname: <strong>ftp.<?php echo SITE_URL; ?></strong></p>
 <p>FTP Username: <strong><?php echo $feed->label; ?></strong></p>
 <p>FTP Password: <strong><?php echo $feed->password; ?></strong></p>
 
