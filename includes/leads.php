@@ -372,7 +372,7 @@ class Leads
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();
-			$this->logError( 'Unable to add inbound feed: ' . $pdoException->getMessage() );
+			$this->logError( 'Unable to add inbound record: ' . $pdoException->getMessage() );
 		}
 
 		if( LEGACY_DB ) {
@@ -755,7 +755,7 @@ class Leads
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();
-			$this->logError( 'Unable to add inbound feed: ' . $pdoException->getMessage() );
+			$this->logError( 'Unable to add outbound record: ' . $pdoException->getMessage() );
 			return null;
 		}
 
