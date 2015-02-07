@@ -2,6 +2,12 @@
 
 require_once( INCLUDES . 'leads.php' );
 
+require_once( INCLUDES . 'sessions-database.php' );
+$pdo = new PDO( 'mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME, $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p'] );
+$pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+$session = new PdoSessionHandler( $pdo );
+session_set_save_handler( $session );
+
 define( 'LEADS_SESSION_LEVEL_ADMIN', 90 );
 define( 'LEADS_SESSION_LEVEL_STAFF', 50 );
 define( 'LEADS_SESSION_LEVEL_CLIENT_DASHBOARD', 20 );
