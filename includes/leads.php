@@ -279,6 +279,7 @@ class Leads
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to add company: ' . $pdoException->getMessage() );
+			return null;
 		}
 
 		try {
@@ -287,6 +288,7 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to create suppression table: ' . $e->getMessage() );
+			return null;
 		}
 
 		$this->db->commit();
@@ -630,6 +632,7 @@ class Leads
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to add inbound feed: ' . $pdoException->getMessage() );
+			return null;
 		}
 
 		try {
@@ -753,6 +756,7 @@ class Leads
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to add inbound feed: ' . $pdoException->getMessage() );
+			return null;
 		}
 
 		try {
@@ -761,7 +765,7 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to add URL mapping: ' . $e->getMessage() );
-			return $status;
+			return null;
 		}
 
 		try {
@@ -770,7 +774,7 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
-			return $status;
+			return null;
 		}
 
 		$this->db->commit();

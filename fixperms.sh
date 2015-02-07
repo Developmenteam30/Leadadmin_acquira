@@ -1,7 +1,5 @@
 #!/bin/sh
-chown -R rscs:webdev * .svn
+chown -R rscs:rscs * .svn
 chmod -R g+rw * .svn
-chown -R apache:webdev error public_html/leadadmin/exports/
-chown -R rscs:webdev public_html/leadadmin/exports/.svn
-chown -R rscs:webdev error/.svn
+chown -R apache:rscs error public_html/leadadmin/exports/
 chmod -R o+rwx pushLead/lockfiles/
