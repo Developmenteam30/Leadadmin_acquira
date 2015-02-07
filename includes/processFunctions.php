@@ -166,7 +166,7 @@ function logError($origination, $description, $notify = false){
 		$header .= "X-Mailer: PHP5\n";
 		$header .= "X-Priority: 3\n";
 		$header .= "Return-Path: <" . $from . ">\n";
-		$sent = @mail($to, $subject, $messages ,$header);
+		$sent = @mail( $to, $subject, $messages, $header, "-f {$from}" );
 		if(!$sent){ 
 			logError(
 				'Error Logging'
@@ -189,7 +189,7 @@ function notifyManagers($body)
 		$header .= "Reply-To: <" . $from . ">\r\n";
 		$header .= "X-Sender: <" . $from . ">\r\n";
 		$header .= "Return-Path: <" . $from . ">\r\n";
-		$sent = @mail($to, $subject, $messages ,$header);
+		$sent = @mail( $to, $subject, $messages, $header, "-f {$from}" );
 		if(!$sent){ 
 			logError(
 				'Error Logging'

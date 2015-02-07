@@ -2026,7 +2026,7 @@ class Leads
 			$header .= "X-Mailer: PHP5\n";
 			$header .= "X-Priority: 3\n";
 			$header .= "Return-Path: <" . $from . ">\n";
-			$sent = @mail( $to, $subject, $body, $header );
+			$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 		}
 	}
 
