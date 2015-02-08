@@ -107,9 +107,13 @@ function getOutgoingFeed($idFeedOut){
 	return $dogetFeed->fetch_object();
 }
 
-function getActiveFeeds(){ 
+function getActiveFeeds( $mod = null ){ 
 	dbCon();
-	$getFeed = "SELECT idFeedOut FROM `".DATABASE_NAME."`.`feedout` WHERE enabled = '1' AND cron = '1' AND retired = '0';";
+	if( !empty( $mod ) ) {
+		$getFeed = "SELECT idFeedOut FROM `".DATABASE_NAME."`.`feedout` WHERE enabled = '1' AND cron = '1' AND retired = '0' AND MOD(idFeedOut,2) = " . ( 'even' === $mod ? 0 : 1 );
+	} else {
+		$getFeed = "SELECT idFeedOut FROM `".DATABASE_NAME."`.`feedout` WHERE enabled = '1' AND cron = '1' AND retired = '0';";
+	}
 	$dogetFeed = dbQry($getFeed, 'Fetching active feeds', true);
 	dbDcon();
 	if($dogetFeed === false){ return false; }
