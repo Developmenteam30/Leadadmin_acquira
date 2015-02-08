@@ -12,6 +12,9 @@ define("MAX_RUNTIME_POST_QUERY", 15);
 define("MAX_RUNTIME_PROCESS", 200);
 define("MAX_SLAVE_LAG_ALLOWED", 1);
 
+require_once( INCLUDES . 'leads.php' );
+$leads = Leads::getInstance();
+
 function assignValue( $key, $value, &$requestdata ) {
 
     if( strpos( $key, '|' ) !== FALSE ) {
@@ -256,9 +259,8 @@ function dbasesettings()
 function queryset()
 {
 	global $settings;
+	global $leads;
 
-	require_once( INCLUDES . 'leads.php' );
-	$leads = Leads::getInstance();
 	$query = $leads->getOutboundQueue( $settings['feedParams']->idFeedOut );
 
 	if( empty( $query ) ) {
@@ -274,10 +276,11 @@ function process($leadset)
 {	//VER 1.3
 	global $settings;
 	global $results;
+	global $leads;
 	
 	$updatequery = array(); 
 	$results['statistics'] = array();
-		
+
 	$posttime = microtime(true); //Record how long it takes to process all leads.
 	if($settings['testing'] == 1)
 	{ // Testing mode will echo out everything as it runs.
@@ -314,6 +317,7 @@ function process($leadset)
 				, 'url' => $leaddata['url']
 				, 'idFeedOut' => $settings['feedParams']->idFeedOut
 			);
+			$leads->outboundProcess( $leaddata['idRecord'], $settings['feedParams']->idFeedOut, $leaddata['url'], 'LOCAL REJECTION: Email is suppressed (global)' );
 		} elseif($leaddata['email'] != '' && checkSuppression($leaddata['email'], $settings['feedParams']->idCompany)) {
 			$response = array(
 				'text' => 'Email is suppressed (company).'
@@ -321,6 +325,7 @@ function process($leadset)
 				, 'url' => $leaddata['url']
 				, 'idFeedOut' => $settings['feedParams']->idFeedOut
 			);
+			$leads->outboundProcess( $leaddata['idRecord'], $settings['feedParams']->idFeedOut, $leaddata['url'], 'LOCAL REJECTION: Email is suppressed (company)' );
 		} else {
 			$response = runlead($leaddata, $settings['feedParams']);
 		}
@@ -379,6 +384,7 @@ function process($leadset)
 function runlead($leaddata, $fP)
 {
 	global $settings;
+	global $leads;
 	
 	$response = "";
 	
@@ -541,8 +547,6 @@ function runlead($leaddata, $fP)
 		}
 		$response['querystring'] = $geturl;
 	} else {
-		require_once( INCLUDES . 'leads.php' );
-		$leads = Leads::getInstance();
 		$leads->outboundProcess( $leaddata['idRecord'], $fP->idFeedOut, $leaddata['url'], ( $response['status'] ? null : trim( $response['text'] ) ) );
 	}
 

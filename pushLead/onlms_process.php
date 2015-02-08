@@ -55,11 +55,3 @@ tags which it processes. Works well for getting specific results when testing.
 */
 
 main_post(); //all the functions that occur after the settings variable is set.
-if(!$settings['testing']){ 
-?>
-<script>
-reload = setTimeout(function(){ location.reload(true); }, 3000);
-</script>
-<?php
-}
-?>
