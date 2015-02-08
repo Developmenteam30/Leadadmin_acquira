@@ -65,18 +65,12 @@ if( $c ) {
 } else {
 	$mysqlErrorSource = 'Incoming Feed';
 }
-include(INCLUDES."_connx.php");
 
 if($c) { 
-	$feedParams = loadParameters($feedLabel);
+	$feedParams = $leads->getInboundFeedLabel( $feedLabel );
 	if($feedParams === false){
 		$c = false; 
 		$result['reason'] = 'Database failure, please try again later.';
-		logError(
-			'Feed '.$feedLabel
-			, 'Database failure when attempting to load feed parameters. Check MySQL log file.'
-			, true
-		);
 	} else if( 0 === $feedParams ) {
 		$c = false;
 		$result['reason'] = 'Invalid feed label';
@@ -85,10 +79,6 @@ if($c) {
 		$required = explode(';', $feedParams->required);
 		$allowedFields = explode(';', $feedParams->allowedFields);
 	}
-}
-
-if(0 && $c) {
-	lockTables($feedLabel);
 }
 
 if($c &&( 
@@ -184,8 +174,8 @@ if( !empty( $allowedFields ) && in_array('url', $allowedFields ) ) { //URL is ex
 	}
 }
 if( $c && !empty( $_REQUEST['email'] ) ) {
-	$exists = checkSuppression( $_REQUEST['email'], 'global' );
-	if( $exists ) {
+	$exists = $leads->checkSuppression( $_REQUEST['email'], null );
+	if( $exists === true ) {
 		$c = false;
 		$result['reason'] = 'Email exists in our global suppression file.';
 	}
@@ -246,30 +236,23 @@ if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_n
 	}
 }
 
-unlockTables();
-
 if( !empty( $feedParams ) ) {
 
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $c ? null : $result['reason'], null );
+
+var_dump($inboundId);
 }
 
 //Population Portion of the script. 
 if($c){ 
-	$feedsOut = getIncomingPopulationSettings($feedParams->idFeedIn);
-	if($feedsOut === false){ 
+	$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn );
+	if( $feedsOut === false ) { 
 		logError(
 			'Feed '.$feedLabel
 			, 'Database failure when attempting to load outgoing feed population parameters. Check MySQL log file.'
 			, true
 		);
 	} elseif(count($feedsOut) != 0 && $feedsOut != 0) { 
-		/*
-		logError(
-			'Feed '.$feedLabel
-			, 'Capturing information from feeds.'.print_r($feedsOut, true)
-			, false
-		);
-		*/
 		foreach($feedsOut as $feed){ 
 			if($feed->enabled){ 
 				$p = true;
@@ -293,7 +276,7 @@ if($c){
 				}
 				// Ensure we haven't reached our daily limit of records
 				if($p && !is_null($feed->dailyLimit) && intval($feed->dailyLimit) > 0) {
-					$cnt = getOutboundDailyCount( $feed->label );
+					$cnt = $leads->getOutboundDailyCount( $feed->idFeedOut );
 					if( $cnt && $cnt > $feed->dailyLimit ) {
 						logError( 'Feed '.$feed->label, 'Daily feed limit of ' . $feed->dailyLimit . ' reached', false );
 						$p = false;
@@ -346,52 +329,74 @@ if($c){
 						} else {
 							$lastRecord = $GLOBALS['dbconnx']->insert_id;
 						}
+
+						$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'] );
+					} else {
+						$lastRecord = 999999999;
+						$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'], ( !empty( $feed->livedata ) ? -1 : 0 ) );
 					}
 
-					$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'] );
 				}
 
 				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
 				if( $p && !empty( $lastRecord ) && !empty( $feed->livedata ) ) {
 					require_once( SITE_ROOT . FD . 'pushLead/_f_onlms.php' );
-    
-					$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label. "` WHERE `processed` = '-1' AND idRecord = " . $lastRecord;
-					$dogetLead = dbQry($getLead, 'Fetching live lead to process', true);
-					if($dogetLead === false){
-						logError(
-							'Outgoing Feed '.$settings['feedParams']->label
-							, 'Database failure when trying to select leads for processing. View MySQL log.'
-							, true
-						);
-					} else if( $dogetLead->num_rows > 0 ) {
 
-						$feedOut = getOutgoingFeed( $feed->idFeedOut );
-						while( $c && ( $row = $dogetLead->fetch_array( MYSQLI_ASSOC ) ) ) {
+					if( LEGACY_DB ) {
 
-							$status = runlead( $row, $feedOut );
-							if( isset( $status ) ) {
+						$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label. "` WHERE `processed` = '-1' AND idRecord = " . $lastRecord;
+						$dogetLead = dbQry($getLead, 'Fetching live lead to process', true);
+						if($dogetLead === false){
+							logError(
+								'Outgoing Feed '.$settings['feedParams']->label
+								, 'Database failure when trying to select leads for processing. View MySQL log.'
+								, true
+							);
+						} else if( $dogetLead->num_rows > 0 ) {
 
-								$update  = "UPDATE `".DATABASE_NAME."`.`feedout_".$feed->label."` ";
-								$update .= "SET processed = '1', poststamp = NOW(), postresponse = " . valueSet( $status['text'] ) . " ";
-								$update .= "WHERE idRecord = " . $lastRecord;
-								dbQry( $update, 'Update processed status of live record' );
+							$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
+							while( $c && ( $row = $dogetLead->fetch_array( MYSQLI_ASSOC ) ) ) {
 
-								if( isset( $status['status'] ) && $status['status'] != true ) {
+								$status = runlead( $row, $feedOut );
+								if( isset( $status ) ) {
 
-									$c = false;
-									$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
+									$update  = "UPDATE `".DATABASE_NAME."`.`feedout_".$feed->label."` ";
+									$update .= "SET processed = '1', poststamp = NOW(), postresponse = " . valueSet( $status['text'] ) . " ";
+									$update .= "WHERE idRecord = " . $lastRecord;
+									dbQry( $update, 'Update processed status of live record' );
 
-									if( !empty( $_REQUEST['url'] ) ) {
-										updateStats( $feed->idFeedOut, $_REQUEST['url'], 0, 1, 0 );
-										$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $statsDay, $result['reason'] );
+									if( isset( $status['status'] ) && $status['status'] != true ) {
+
+										$c = false;
+										$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
+
+										if( !empty( $_REQUEST['url'] ) ) {
+											updateStats( $feed->idFeedOut, $_REQUEST['url'], 0, 1, 0 );
+											$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $statsDay, $result['reason'] );
+										}
+
+									} else {
+
+										if( !empty( $_REQUEST['url'] ) ) {
+											updateStats( $feed->idFeedOut, $_REQUEST['url'], 1, 0, 0 );
+										}
+
 									}
+								}
+							}
+						}
 
-								} else {
+					} else {
+						$record = $leads->getOutboundRecord( $inboundId, $feed->idFeedOut, -1 );
+						if( !empty( $record ) ) {
+							$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
+							$status = runlead( $record, $feedOut );
+							if( isset( $status['status'] ) && $status['status'] != true ) {
+								$c = false;
+								$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
 
-									if( !empty( $_REQUEST['url'] ) ) {
-										updateStats( $feed->idFeedOut, $_REQUEST['url'], 1, 0, 0 );
-									}
-
+								if( !empty( $_REQUEST['url'] ) ) {
+									$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $statsDay, $result['reason'] );
 								}
 
 							}
@@ -488,7 +493,6 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 			}
 		}
 	}
-	dbDcon();
 } else if( !empty( $feedLabel ) ) { //There was a failure somewhere, so insert into the invalid database with the query string and the error.
 	if( LEGACY_DB ) {
 		$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."_invalid` ( `queryString`,`error`,`received` ";
@@ -559,7 +563,6 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 			}
 		}
 	}
-	dbDcon();
 }
 
 if($c){ 

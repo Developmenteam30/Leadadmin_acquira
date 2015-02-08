@@ -255,8 +255,6 @@ class Leads
 			return null;
 		}
 
-		$this->db->beginTransaction();
-
 		try {
 			$idCompany = $this->insertRow( 'companies', array(
 				'name' => $fields['name'],
@@ -276,22 +274,9 @@ class Leads
 				'tech_email' => empty( $fields['tech_email'] ) ? null : $fields['tech_email'],
 			) );
 		} catch( Leads_PDOException $e ) {
-			$this->db->rollBack();
-			$pdoException = $e->getPrevious();
-			$this->logError( 'Unable to add company: ' . $pdoException->getMessage() );
+			$this->logError( 'Unable to add company: ' . $e->getMessage() );
 			return null;
 		}
-
-		try {
-			$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "suppression_" . $idCompany ) . " LIKE suppression_global" );
-			$query->execute( );
-		} catch( PDOException $e ) {
-			$this->db->rollBack();
-			$this->logError( 'Unable to create suppression table: ' . $e->getMessage() );
-			return null;
-		}
-
-		$this->db->commit();
 
 		return $idCompany;
 	}
@@ -460,6 +445,20 @@ class Leads
 		return $results;
 	}
 
+	public function getInboundFeedLabel( $label ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM feedinc WHERE label = ?" );
+			$query->execute( array( $label ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound feed info: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function getInboundFeeds( $idCompany = null, $retired = null ) {
 		$results = array();
 
@@ -522,6 +521,21 @@ class Leads
 		}
 
 		return $result;
+	}
+
+	public function getInboundPopulationSettings( $idFeedIn ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT fp.*, fo.label, fo.dailyLimit FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ?" );
+			$query->execute( array( $idFeedIn ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound population settings: ' . $e->getMessage() );
+			return false;
+		}
+
+		return $results;
 	}
 
 	public function getOutboundFeed( $idFeedOut ) {
@@ -628,6 +642,8 @@ class Leads
 				'result' => empty( $error ) ? null : $error,
 				'jobId' => empty( $jobId ) ? null : $jobId,
 			) );
+			$this->logError( 'INBOUND ADD ' . print_r( $_SERVER, true ) );
+
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();
@@ -666,15 +682,15 @@ class Leads
 			return;
 		}
 
-		try {
-			if( !empty( $error ) ) {
+		if( !empty( $error ) ) {
+			try {
 				$query = $this->db->prepare( 'UPDATE stats_inbound SET accepted = accepted - 1, rejected = rejected + 1 WHERE idFeedIn = ? AND url = ? AND stamp = ?' );
+				$query->execute( array( $idFeedIn, $this->parseUrl( $url ), $statsDay ) );
+			} catch( PDOException $e ) {
+				$this->db->rollBack();
+				$this->logError( 'Unable to update stats_inbound record: ' . $e->getMessage() );
+				return;
 			}
-			$query->execute( array( $idFeedIn, $this->parseUrl( $url ), $statsDay ) );
-		} catch( PDOException $e ) {
-			$this->db->rollBack();
-			$this->logError( 'Unable to update stats_inbound record: ' . $e->getMessage() );
-			return;
 		}
 
 		$this->db->commit();
@@ -742,7 +758,7 @@ class Leads
 		return false;
 	}
 
-	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url ) {
+	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url, $processed = 0 ) {
 		$this->db->beginTransaction();
 
 		try {
@@ -751,6 +767,7 @@ class Leads
 				'idRecordLegacy' => $idRecordLegacy,
 				'idFeedIn' => $idFeedIn,
 				'idFeedOut' => $idFeedOut,
+				'processed' => $processed,
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
@@ -1792,6 +1809,25 @@ class Leads
 		return null;
 	}
 
+	public function getOutboundRecord( $idRecord, $idFeedOut, $processed = null ) {
+
+		try {
+			if( !empty( $processed ) ) {
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = ? AND o.idRecord = ? AND o.idFeedOut = ?" );
+				$query->execute( array( intval( $processed ), $idRecord, $idFeedOut ) );
+			} else {
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idRecord = ? AND o.idFeedOut = ?" );
+				$query->execute( array( $idRecord, $idFeedOut ) );
+			}
+			return $query->fetch();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound record: ' . $e->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
 	public function exportRejected( $idFeedOut ) {
 
 		$feed = $this->getOutboundFeed( $idFeedOut );
@@ -1875,6 +1911,52 @@ class Leads
 		return null;
 	}
 
+	public function getOutboundDailyCount( $idFeedOut ) {
+		$cnt = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT COUNT(*) FROM data_outbound o LEFT JOIN data_inbound i ON o.idRecord = i.idRecord WHERE o.idFeedOut = 262 AND i.timestamp >= DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00')" );
+			$query->execute( array( $idFeedOut ) );
+			$cnt = $query->fetchColumn();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check outbound daily count: ' . $e->getMessage() );
+			return $cnt;
+		}
+
+		return $cnt;
+	}
+
+	public function checkSuppression( $email, $idCompany = null ) {
+		$result = false;
+
+		if( empty( $email ) || strpos( $email, '@' ) === false ) {
+			return $result;			
+		}
+
+		list( $local, $domain ) = explode( '@', $email, 2 );
+
+		try {
+/*
+			if( !empty( $idCompany ) ) {
+				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND ( idCompany IS NULL or idCompany = ? )" );
+				$query->execute( array( $email, $domain, $idCompany ) );
+			} else {
+				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND idCompany IS NULL" );
+				$query->execute( array( $email, $domain ) );
+			}
+*/
+			$query = $this->db->prepare( "SELECT 1 FROM suppression_global WHERE ( email = ? OR email = ? )" );
+			$query->execute( array( $email, $domain ) );
+			if( '1' == $query->fetchColumn( ) ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check suppression: ' . $e->getMessage() );
+		}
+
+		return $result;
+	}
+
 	public function exportSuppressions( $idCompany ) {
 		$result = array();
 
@@ -1887,7 +1969,7 @@ class Leads
 		}
 
 		try {
-			$query = $this->db->prepare( "SELECT email FROM " . $this->quoteIdentifier( 'suppression_' . $idCompany ) );
+			$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany = ?" );
 			$query->execute( array( $idCompany ) );
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fwrite( $fh, $row['email'] . PHP_EOL );
@@ -1905,11 +1987,11 @@ class Leads
 	public function validateSuppressions() {
 
 		try {
-			$query = $this->db->prepare( "SELECT email FROM " . $this->quoteIdentifier( 'suppression_global' ) );
+			$query = $this->db->prepare( "SELECT email FROM suppression" );
 			$query->execute( );
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				if( strpos( $row['email'], '@' ) !== FALSE && !filter_var( $row['email'], FILTER_VALIDATE_EMAIL ) ) {
-					$delete = $this->db->prepare( "DELETE FROM suppression_global WHERE email = ?" );
+					$delete = $this->db->prepare( "DELETE FROM suppression WHERE email = ?" );
 					$delete->execute( array( $row['email'] ) );
 					print $row['email'] . PHP_EOL;
 				}
