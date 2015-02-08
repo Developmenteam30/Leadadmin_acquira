@@ -38,6 +38,7 @@ function addFeedOut(
 	, $fieldMap
 	, $successString
 	, $dailyLimit
+	, $delay
 	, $urlassignments
 ){ 
 	$result = array(
@@ -49,7 +50,7 @@ function addFeedOut(
 	if($c){ //Add feed.
 		$addFeed = "INSERT INTO `".DATABASE_NAME."`.`feedout` "
 			."(`label`,`description`,`idCompany`,`feedType`,`postUrl`,`staticFields`,`varFields`,`fieldMap` "
-				.",`enabled`,`cron`,`cronTiming`,`successString`,`dailyLimit`,`throttle`, `urlassignments`) VALUES ( "
+				.",`enabled`,`cron`,`cronTiming`,`successString`,`dailyLimit`,`delay`,`throttle`, `urlassignments`) VALUES ( "
 			."  '".$GLOBALS['dbconnx']->escape_string($label)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($description)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($idCompany)."' "
@@ -61,6 +62,7 @@ function addFeedOut(
 			.", '1', '0', '1' "
 			.", '".$GLOBALS['dbconnx']->escape_string($successString)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($dailyLimit)."' "
+			.", '".$GLOBALS['dbconnx']->escape_string($delay)."' "
 			.", '100' "
 			.", '".$GLOBALS['dbconnx']->escape_string($urlassignments)."' "
 			.");";
@@ -338,6 +340,7 @@ if(isset($_REQUEST['a'])){
 						, $_REQUEST['fieldMap']
 						, $_REQUEST['successString']
 						, $_REQUEST['dailyLimit']
+						, $_REQUEST['delay']
 						, $_REQUEST['urlassignments']
 					);
 					if(!$addResult['success']){ 
@@ -476,11 +479,19 @@ if(isset($_REQUEST['a'])){
 							}
 						}
 					}
-					if($_REQUEST['dailyLimit'] != $feed->dailyLimit){ 
+					$dailyLimit = empty( $_REQUEST['dailyLimit'] ) ? null : abs( intval( $_REQUEST['dailyLimit'] ) );
+					if( $dailyLimit != $feed->dailyLimit ){ 
 						if($c){
-							$alterResult = alterFeedOut(
-								$_REQUEST['idFeedOut'], 'dailyLimit', $_REQUEST['dailyLimit']
-							);
+							$alterResult = alterFeedOut( $_REQUEST['idFeedOut'], 'dailyLimit', $dailyLimit );
+							if(!$alterResult['success']){ 
+								$c = false; $result['error'] = $alterResult['reason'];
+							}
+						}
+					}
+					$delay = empty( $_REQUEST['delay'] ) ? null : abs( intval( $_REQUEST['delay'] ) );
+					if( $delay != $feed->delay ){ 
+						if($c){
+							$alterResult = alterFeedOut( $_REQUEST['idFeedOut'], 'delay', $delay );
 							if(!$alterResult['success']){ 
 								$c = false; $result['error'] = $alterResult['reason'];
 							}
@@ -1302,9 +1313,7 @@ if($populationSettings === false){
 					}
 				}
 			}
-			$feedProps = array('idFeedOut', 'label', 'description', 'idCompany', 'feedType', 'postUrl', 
-				'successString', 'dailyLimit'
-			);
+			$feedProps = array('idFeedOut', 'label', 'description', 'idCompany', 'feedType', 'postUrl', 'successString', 'dailyLimit', 'delay' );
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
 					${"feed_".$feedProp} = $feed->$feedProp;
@@ -1536,11 +1545,20 @@ if($populationSettings === false){
 	<tr>
 		<td><p>Daily Feed Limit</p></td>
 		<td>
-			<p>Leave blank for no limit.  If a value is supplied here, the feed will stop sending records after the daily limit is reached.</p>
+			<p>Leave blank for no limit (default). If a value is supplied here, the feed will stop sending records after the daily limit is reached.</p>
 			<p>
 				<input type='text' name='<?php echo $e; ?>feed_dailyLimit'
 					id='<?php echo $e; ?>feed_dailyLimit'
 					value='<?php echo $feed_dailyLimit; ?>' />
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td><p>Feed Delay</p></td>
+		<td>
+			<p>Leave blank for no delay (default). If a value is supplied here, records will sit in the queue for this number of minutes before being processed.</p>
+			<p>
+				<input type='text' name='<?php echo $e; ?>feed_delay' id='<?php echo $e; ?>feed_delay' value='<?php echo $feed_delay; ?>' /> Minutes
 			</p>
 		</td>
 	</tr>
@@ -2523,6 +2541,8 @@ function manageFeed(action, idFeedOut){
 	successString = $(e+'successString').val();
 	dailyLimit = $(e+'dailyLimit').val();
 	if( dailyLimit == '' ) { dailyLimit = 0; }
+	delay = $(e+'delay').val();
+	if( delay == '' ) { delay = 0; }
 /* 	alert(
 		"idFeedOut: "+idFeedOut
 		+"\n"+"label: "+label
@@ -2574,6 +2594,7 @@ function manageFeed(action, idFeedOut){
 				, "fieldMap":fieldMap
 				, "successString":successString
 				, "dailyLimit":dailyLimit
+				, "delay":delay
 				, "urlassignments":urlassignments
 			})
 		}).done(function(responseText){ 
@@ -2594,6 +2615,7 @@ function manageFeed(action, idFeedOut){
 							, "fieldMap":fieldMap
 							, "successString":successString
 							, "dailyLimit":dailyLimit
+							, "delay":delay
 							, "urlassignments":urlassignments
 						} 
 					);
@@ -2612,6 +2634,7 @@ function manageFeed(action, idFeedOut){
 							, "fieldMap":fieldMap
 							, "successString":successString
 							, "dailyLimit":dailyLimit
+							, "delay":delay
 							, "urlassignments":urlassignments
 						} 
 					);
@@ -2680,6 +2703,7 @@ function manageFeed(action, idFeedOut){
 							, "fieldMap":fieldMap
 							, "successString":successString
 							, "dailyLimit":dailyLimit
+							, "delay":delay
 							, "urlassignments":urlassignments
 						} 
 					);
@@ -2698,6 +2722,7 @@ function manageFeed(action, idFeedOut){
 							, "fieldMap":fieldMap
 							, "successString":successString
 							, "dailyLimit":dailyLimit
+							, "delay":delay
 							, "urlassignments":urlassignments
 						} 
 					);
