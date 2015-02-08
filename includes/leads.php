@@ -2043,26 +2043,26 @@ class Leads
 
 	public function resetQueuedStats() {
 		try {
-			$this->lockTables( "feedout WRITE, data_outbound WRITE" );
+			$query = $this->db->query( "SELECT idFeedOut FROM feedout" );
+			$feeds = $query->fetchAll( PDO::FETCH_OBJ );
+			$query->closeCursor();
 
-			$this->db->query( "UPDATE feedout SET queued = 0" );
-
-			$query = $this->db->prepare( "SELECT idFeedOut,COUNT(*) AS cnt FROM data_outbound WHERE processed = 0 GROUP BY idFeedOut" );
-			$query->execute( );
-			$rows = $query->fetchAll();
-
-			foreach( $rows as $row ) {
-				print "Setting queued to {$row['cnt']} for ID: {$row['idFeedOut']}\n";
-				$query = $this->db->prepare( "UPDATE feedout SET queued = ? WHERE idFeedOut = ?" );
-				$query->execute( array( $row['cnt'], $row['idFeedOut'] ) );
+			foreach( $feeds as $feed ) {
+				print "Resetting queue stats for feed: {$feed->idFeedOut}\n";
+				$this->lockTables( "feedout WRITE, data_outbound WRITE" );
+				$query = $this->db->prepare( "UPDATE feedout SET queued = ( SELECT COUNT(*) AS cnt FROM data_outbound WHERE processed = 0 AND idFeedOut = ? ) WHERE idFeedOut = ?" );
+				$query->execute( array( $feed->idFeedOut, $feed->idFeedOut ) );
+				$this->unlockTables();
+				sleep( 2 );
 			}
 
-			$this->unlockTables();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to reset queued stats: ' . $e->getMessage() );
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to lock/unlock tables: ' . $pdoException->getMessage() );
+		} finally {
+			$this->unlockTables();
 		}
 
 		return null;
