@@ -45,9 +45,11 @@ class LeadsSession
 		LeadsSession::start();
 
 		if( empty( $_SESSION['idCompany'] ) ) {
+			session_write_close();
 			return null;
 		}
 
+		session_write_close();
 		return $_SESSION['idCompany'];
 	}
 
@@ -55,9 +57,11 @@ class LeadsSession
 		LeadsSession::start();
 
 		if( empty( $_SESSION['userId'] ) ) {
+			session_write_close();
 			return null;
 		}
 
+		session_write_close();
 		return $_SESSION['userId'];
 	}
 
@@ -65,13 +69,16 @@ class LeadsSession
 		LeadsSession::start();
 
 		if( empty( $_SESSION['level'] ) ) {
+			session_write_close();
 			return false;
 		}
 
 		if( intval( $_SESSION['level'] ) < $level ) {
+			session_write_close();
 			return false;
 		}
 
+		session_write_close();
 		return true;
 	}
 
