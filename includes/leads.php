@@ -591,8 +591,8 @@ class Leads
 		$results = array( 'accepted' => 0, 'rejected' => 0 );
 
 		try {
-			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_outbound WHERE stamp = DATE_FORMAT(NOW(), '%Y-%m-%d') AND idFeedOut = ?" );
-			$query->execute( array( $idFeedOut ) );
+			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_outbound WHERE stamp = ? AND idFeedOut = ?" );
+			$query->execute( array( date( 'Y-m-d' ), $idFeedOut ) );
 			$results = $query->fetch( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound stats: ' . $e->getMessage() );
@@ -1183,8 +1183,8 @@ class Leads
 		$results = array( 'accepted' => 0, 'rejected' => 0 );
 
 		try {
-			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp = DATE_FORMAT(NOW(), '%Y-%m-%d') AND idFeedIn = ?" );
-			$query->execute( array( $idFeedIn ) );
+			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp = ? AND idFeedIn = ?" );
+			$query->execute( array( date( 'Y-m-d' ), $idFeedIn ) );
 			$results = $query->fetch( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound stats: ' . $e->getMessage() );
@@ -1197,8 +1197,8 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT url,IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp = DATE_FORMAT(NOW(), '%Y-%m-%d') AND idFeedIn = ? GROUP BY url" );
-			$query->execute( array( $idFeedIn ) );
+			$query = $this->db->prepare( "SELECT url,IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp = ? AND idFeedIn = ? GROUP BY url" );
+			$query->execute( array( date( 'Y-m-d' ), $idFeedIn ) );
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound URL stats: ' . $e->getMessage() );
