@@ -642,8 +642,6 @@ class Leads
 				'result' => empty( $error ) ? null : $error,
 				'jobId' => empty( $jobId ) ? null : $jobId,
 			) );
-			$this->logError( 'INBOUND ADD ' . print_r( $_SERVER, true ) );
-
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();
