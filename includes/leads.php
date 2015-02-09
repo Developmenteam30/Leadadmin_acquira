@@ -1658,8 +1658,8 @@ class Leads
 						if( $orFlag ) {
 							$query .= " OR ";
 						}
-						$query .= "url LIKE ?";
-						$fields[] = '%' . $url . '%';
+						$query .= "url = ?";
+						$fields[] = $url;
 						$orFlag = true;
 					}
 				}
