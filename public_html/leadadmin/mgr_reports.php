@@ -492,7 +492,7 @@ function sendReportReady( idCompany, date ){
 	if( $feeds ) {
 		foreach( $feeds as $feed ) {
 			printf(' <option value="%s"%s>%s</option>',
-					$feed['idFeedOut'], ( $idFeedOut == $feed['idFeedOut'] ? ' selected="selected"' : '' ), $feed['idFeedOut'] . ': ' . htmlspecialchars( $feed['inDescription'] ) );
+					$feed['idFeedOut'], ( $idFeedOut == $feed['idFeedOut'] ? ' selected="selected"' : '' ), $feed['idFeedOut'] . ': ' . htmlspecialchars( $feed['outDescription'] ) );
 		}
 	}
 ?>
