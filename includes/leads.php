@@ -1636,7 +1636,7 @@ class Leads
 				$query .= $this->quoteIdentifier( $column );
 				$comma = true;
 			}
-			$query .= " FROM data_inbound WHERE idFeedIn = ? ";
+			$query .= " FROM data_inbound WHERE idFeedIn = ? AND result IS NULL ";
 			$fields[] = $idFeedIn;
 
 			if( !empty( $settings['dateStart'] ) && strtotime( $settings['dateStart'] ) !== FALSE ) {
@@ -1866,8 +1866,8 @@ class Leads
 
 		try {
 
-			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE processed = 1 AND o.idFeedOut = ? AND o.result NOT LIKE ?" );
-			$query->execute( array( '%' . $feed->successString . '%' ) );
+			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE processed = 1 AND o.idFeedOut = ? AND o.result IS NOT NULL" );
+			$query->execute( );
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, array(
 					$row['url'],
@@ -1917,7 +1917,7 @@ class Leads
 		$cnt = null;
 
 		try {
-			$query = $this->db->prepare( "SELECT COUNT(*) FROM data_outbound o LEFT JOIN data_inbound i ON o.idRecord = i.idRecord WHERE o.idFeedOut = 262 AND i.timestamp >= DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00')" );
+			$query = $this->db->prepare( "SELECT COUNT(*) FROM data_outbound o LEFT JOIN data_inbound i ON o.idRecord = i.idRecord WHERE o.idFeedOut = ? AND i.timestamp >= DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00')" );
 			$query->execute( array( $idFeedOut ) );
 			$cnt = $query->fetchColumn();
 		} catch( PDOException $e ) {
@@ -2016,7 +2016,21 @@ class Leads
 		return -1;
 	}
 
-	public function resetOutboundStats( $idFeedOut, $date ) {
+	public function getOutboundStatsDetail( $stamp ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT idFeedOut,url FROM stats_outbound WHERE stamp = ?" );
+			$query->execute( array( $stamp ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound stats details: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function resetOutboundStats( $idFeedOut, $url, $date ) {
 		if( empty( $idFeedOut ) || empty( $date ) ) {
 			return;
 		}
@@ -2024,16 +2038,16 @@ class Leads
 		$this->lockTables( "feedout f WRITE, data_inbound i WRITE, data_outbound o WRITE, stats_outbound WRITE" );
 
 		try {
-			$query = $this->db->prepare( "SELECT i.url,SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp LIKE ? GROUP BY i.url" );
-			$query->execute( array( $idFeedOut, $date . '%' ) );
+			$query = $this->db->prepare( "SELECT SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp >= ? AND o.timestamp <= ? AND i.url = ?" );
+			$query->execute( array( $idFeedOut, $date . ' 00:00:00', $date . ' 23:59:59', $url ) );
 			$records = $query->fetchAll( );
 
 			foreach( $records as $record ) {
 				$query = $this->db->prepare( "REPLACE INTO stats_outbound(idFeedOut,url,stamp,accepted,rejected) VALUES(?,?,?,?,?)" );
-				$query->execute( array( $idFeedOut, $record['url'], $date, $record['accepted'], $record['rejected'] ) );
+				$query->execute( array( $idFeedOut, $url, $date, $record['accepted'], $record['rejected'] ) );
 			}
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to count outbound accepted records: ' . $e->getMessage() );
+			$this->logError( 'Unable to reset outbound stats: ' . $e->getMessage() );
 		}
 
 		$this->unlockTables();

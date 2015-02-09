@@ -17,7 +17,7 @@ class Legacy extends Leads
 			foreach( $tables as $table ) {
 				print "{$table['label']}<br/>\n";
 
-				$this->lockTables( "feedinc_" . $table['label'] . " READ, stats_inbound WRITE, errorlog WRITE" );
+//				$this->lockTables( "data_inbound READ, stats_inbound WRITE, errorlog WRITE" );
 				$query = $this->db->prepare( "DELETE FROM stats_inbound WHERE idFeedIn = ?" );
 				$query->execute( array( $table['idFeedIn'] ) );
 
@@ -28,6 +28,38 @@ class Legacy extends Leads
 				foreach( $stats as $stat ) {
 					$query = $this->db->prepare( "REPLACE INTO stats_inbound(idFeedIn,url,stamp,accepted) VALUES(?,?,?,?)" );
 					$query->execute( array( $table['idFeedIn'], $this->parseUrl( $stat['url'] ), $stat['stamp'], $stat['cnt'] ) );
+				}
+
+//				$this->unlockTables();
+				sleep(5);
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get tables: ' . $e->getMessage() );
+			$this->unlockTables();
+		}
+
+		$this->unlockTables();
+	}
+
+	public function fixOutboundStats() {
+		try {
+			$query = $this->db->prepare( "SELECT idFeedOut,label FROM feedout WHERE idFeedOut = 364" );
+			$query->execute( );
+			$tables = $query->fetchAll( );
+
+			foreach( $tables as $table ) {
+				print "{$table['label']}<br/>\n";
+
+				$this->lockTables( "data_outbound READ, stats_outbound WRITE, errorlog WRITE" );
+
+				$query = $this->db->prepare( "SELECT i.url,LEFT(o.timestamp,10) AS stamp,SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 1 AND o.idFeedOut = ? AND o.timestamp >= '2015-02-09'" );
+				$query->execute( array( $table['idFeedOut'] ) );
+				$stats = $query->fetchAll();
+
+				foreach( $stats as $stat ) {
+					$query = $this->db->prepare( "REPLACE INTO stats_outbound(idFeedOut,url,stamp,accepted,rejected) VALUES(?,?,?,?,?)" );
+					$query->execute( array( $table['idFeedIn'], $this->parseUrl( $stat['url'] ), $stat['stamp'], $stat['accepted'], $stat['rejected'] ) );
 				}
 
 				$this->unlockTables();
