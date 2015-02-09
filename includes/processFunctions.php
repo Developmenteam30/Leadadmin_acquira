@@ -412,56 +412,6 @@ function filterValue($filterType, $value, $filters){
 	return $valueAcceptable;
 }
 
-function checkDuplicate($column, $requestValues, $feedLabel, $dedupeAcross){
-	$days = 120;
-
-	// Override duplicate time check period for InstantCheckMate.com feeds
-	if( 'email' == $column && !empty( $requestValues['email'] ) && !empty( $requestValues['urlTrim'] ) && strpos( $requestValues['urlTrim'], 'instantcheckmate.com' ) !== false ) {
-
-		$leads = Leads::getInstance();
-		$status = $leads->globalEmailSearch( $requestValues['email'] );
-		if( !empty( $status ) ) {
-			return 1;
-		}
-	}
-
-	dbCon();
-	switch($dedupeAcross){
-		case 'all':
-		case 'allGlobal':
-			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
-			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
-		break;
-		case 'url':
-		case 'urlGlobal':
-			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
-			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
-			."AND `urlTrim` = '".$GLOBALS['dbconnx']->escape_string($requestValues['urlTrim'])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
-		break;
-		case 'listcode':
-		case 'listcodeGlobal':
-			$checkDupe = "SELECT count(*) FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
-			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($value)."' "
-			."AND `listcode` = '".$GLOBALS['dbconnx']->escape_string($requestValues['listcode'])."' "
-			."AND received >= DATE_SUB(NOW(), INTERVAL " . $days . " DAY)";
-		break;
-	}
-
-	if( empty( $checkDupe ) ) {
-		return 0;
-	}
-
-	$docheckDupe = dbQry($checkDupe, 'Checking if value is duplicate.', true);
-	dbDcon();
-	if($docheckDupe === false){ return false; }
-	$dupeCount = $docheckDupe->fetch_assoc();
-	$dupeCount = $dupeCount['count(*)'];
-	return $dupeCount;
-	
-}
-
 function checkExists( $column, $requestValues, $feedLabel ){
 	dbCon();
 	$query = "SELECT 1 AS cnt FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
@@ -486,19 +436,6 @@ function checkSuppression( $email, $idCompany ) {
 	if($result === false){ return false; }
 	$count = $result->fetch_assoc();
 	return $count['cnt'];
-}
-
-function lockTables($feedLabel){
-	dbCon();
-	$lockQuery = "LOCK TABLE `".DATABASE_NAME."`.`feedinc_".$feedLabel."` WRITE, `".DATABASE_NAME."`.`feedinc_".$feedLabel."_invalid` WRITE, `".DATABASE_NAME."`.urlcount WRITE, `".DATABASE_NAME."`.urlcount_invalid WRITE, `".DATABASE_NAME."`.suppression_global READ, `".DATABASE_NAME."`.errorlog WRITE, `".DATABASE_NAME."`.notifications WRITE ";
-	dbQry($lockQuery, 'Locking tables.', true);
-	dbDcon();
-}
-
-function unlockTables(){
-	dbCon();
-	dbQry('UNLOCK TABLES', 'Unlocking tables.', true);
-	dbDcon();
 }
 
 function getPopulation( $idFeedOut ){
@@ -710,34 +647,36 @@ function validateIncomingData( $feedParams, &$data ) {
 		}
 	}
 
+	$leads = Leads::getInstance();
+
 	if( $feedParams->dedupeEmail && !empty( $data['email'] ) ) {
-		$dupeCount = checkDuplicate( 'email', $data, $feedParams->label, $feedParams->dedupeAcross );
-		if( $dupeCount === false ) { 
+		$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'email', $data, $feedParams->dedupeAcross );
+		if( $dupeCount === null ) { 
 			$result['valid'] = false;
 			$result['errors'][] = 'Database failure - could not check duplicate email.';
-		} elseif( $dupeCount > 0 ) { 
+		} elseif( $dupeCount === true ) { 
 			$result['valid'] = false;
 			$result['errors'][] = 'Duplicate email.';
 		}
 	}
 
 	if( $feedParams->dedupeLandline && !empty( $data['landline'] ) ) {
-		$dupeCount = checkDuplicate( 'landline', $data, $feedParams->label, $feedParams->dedupeAcross );
-		if( $dupeCount === false ) { 
+		$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'landline', $data, $feedParams->dedupeAcross );
+		if( $dupeCount === null ) { 
 			$result['valid'] = false;
 			$result['errors'][] = 'Database failure - could not check duplicate landline.';
-		} elseif( $dupeCount > 0 ) { 
+		} elseif( $dupeCount === true ) { 
 			$result['valid'] = false;
 			$result['errors'][] = 'Duplicate landline phone.';
 		}
 	}
 
 	if( $feedParams->dedupeCellphone && !empty( $data['cellphone'] ) ) {
-		$dupeCount = checkDuplicate('cellphone', $data, $feedParams->label, $feedParams->dedupeAcross);
-		if( $dupeCount === false ) { 
+		$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'cellphone', $data, $feedParams->dedupeAcross );
+		if( $dupeCount === null ) { 
 			$result['valid'] = false;
 			$result['errors'][] = 'Database failure - could not check duplicate cellphone.';
-		} elseif( $dupeCount > 0 ) { 
+		} elseif( $dupeCount === true ) { 
 			$result['valid'] = false;
 			$result['errors'][] = 'Duplicate cellphone.';
 		}
