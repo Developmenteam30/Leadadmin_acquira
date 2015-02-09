@@ -620,7 +620,6 @@ class Leads
 
 		try {
 			$idRecord = $this->insertRow( 'data_inbound', array(
-				'timestamp' => date( 'Y-m-d H:i:s' ),
 				'idFeedIn' => $idFeedIn,
 				'listcode' => empty( $fields['listcode'] ) ? null : $fields['listcode'],
 				'leadstamp' => empty( $fields['stamp'] ) ? null : date( 'Y-m-d H:i:s', strtotime( $fields['stamp'] ) ),
