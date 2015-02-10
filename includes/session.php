@@ -32,12 +32,16 @@ class LeadsSession
 	public static function logout() {
 		LeadsSession::start();
 
-		$leads = Leads::getInstance();
-		$leads->auditLog( 'LOGOUT', null );
+		//$leads = Leads::getInstance();
+		//$leads->auditLog( 'LOGOUT', null );
 
 		unset( $_SESSION['userId'] );
 		unset( $_SESSION['level'] );
+		unset( $_SESSION['idCompany'] );
 
+		session_unset();
+		session_destroy();
+		$_SESSION = array();
 		session_write_close();
 	}
 
