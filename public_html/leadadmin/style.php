@@ -232,6 +232,19 @@ table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top
 table.standard td p { padding: 0 0 3px 0; }
 table.standard thead { font-weight: bold; text-align: center; }
 
+#results tr.accepted td {
+	background: #C4FFA7;
+}
+#results tr.duplicate td {
+	background: #FFB84D;
+}
+#results tr.rejected td {
+	background: #FF9980;
+}
+#results tr.suppressed td {
+	background: #E0B2F0;
+}
+
 table.revenue-report td { padding: 10px; }
 table.revenue-report tr:nth-child(even) { background-color: #fdfdfd; }
 table.revenue-report thead td { font-weight: bold; background-color: <?php echo $gradientColor3; ?>; color: #fff; }

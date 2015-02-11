@@ -5,13 +5,19 @@ require_once( INCLUDES."leads.php" );
 
 $leads = Leads::getInstance();
 
+$month = new DateTime( '2014-06-01' );
+
 print "Deleting old errorLog entries: ";
 print $leads->archiveErrors() . PHP_EOL;
 
-print "Deleting old incoming invalid entries ...\n";
+print "Archiving old inbound entries ...\n";
 
-print "\tdata_inbound: ";
-print $leads->archiveInbound() . PHP_EOL;
+if( ( $feeds = $leads->getInboundFeeds() ) !== null ) {
+	foreach( $feeds as $feed ) {
+		print "\tdata_inbound: " . $feed->idFeedIn . " - ";
+		print $leads->archiveInbound( $feed->idFeedIn, $month ) . PHP_EOL;
+	}
+}
 
 /*
 if( ( $tables = $leads->getLegacyInboundTables() ) !== null ) {

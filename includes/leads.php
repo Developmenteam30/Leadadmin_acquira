@@ -644,7 +644,7 @@ class Leads
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();
-			$this->logError( 'Unable to add inbound feed: ' . $pdoException->getMessage() );
+			$this->logError( 'Unable to add inbound record: ' . $pdoException->getMessage() );
 			return null;
 		}
 
@@ -1179,6 +1179,77 @@ class Leads
 		return $results;
 	}
 
+	public function addJob( $idFeedIn, $fields, $filename, $records ) {
+		$jobId = null;
+
+		try {
+			$jobId = $this->insertRow( 'jobs', array(
+				'idFeedIn' => $idFeedIn,
+				'fields' => $fields,
+				'filename' => $filename,
+				'records' => $records,
+			) );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add job: ' . $pdoException->getMessage() );
+		}
+
+		return $jobId;
+	}
+
+	public function getPendingJob() {
+		try {
+			$this->lockTables( "jobs WRITE" );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to lock tables: ' . $pdoException->getMessage() );
+		}
+
+		try {
+			$query = $this->db->prepare( "SELECT jobId,idFeedIn,fields,filename FROM jobs WHERE status = ?" );
+			$query->execute( array( 'pending' ) );
+			$rows = $query->fetchAll( PDO::FETCH_OBJ );
+			if( $rows && is_array( $rows ) ) {
+				foreach( $rows as $row ) {
+					if( file_exists( $row->filename ) ) {
+
+						$query = $this->db->prepare( "UPDATE jobs SET status = ? WHERE jobId = ?" );
+						$query->execute( array( 'processing', $row->jobId ) );
+					
+						$this->unlockTables();
+						return $row;
+					}
+				}
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete queued records (1): ' . $e->getMessage() );
+			return;
+		}
+
+		try {
+			$this->unlockTables();
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to unlock tables: ' . $pdoException->getMessage() );
+		}
+
+		return null;
+	}
+
+	public function getInboundJobRecords( $jobId, $idRecord = 0 ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT idRecord,email,url,result FROM data_inbound WHERE jobId = ? AND idRecord > ? ORDER BY idRecord ASC LIMIT 500" );
+			$query->execute( array( $jobId, $idRecord ) );
+			$results = $query->fetchAll( PDO::FETCH_ASSOC );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound job records: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function getOutboundRejections( $idFeedOut, $offset = 0 ) {
 		$results = array();
 
@@ -1496,16 +1567,28 @@ class Leads
 		return -1;
 	}
 
-	public function archiveInbound( ) {
+	public function archiveInbound( $idFeedIn, $datetime ) {
+		$rows = -1;
+
 		try {
-			$query = $this->db->prepare( "DELETE FROM data_inbound WHERE result IS NOT NULL" );
-			$query->execute( );
-			return $query->rowCount();
+			$table = $this->quoteIdentifier( 'data_inbound_' . $datetime->format( 'Ym' ) );
+			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_inbound" );
+
+			$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idFeedIn = ? AND result IS NULL AND timestamp >= ? AND timestamp <= ?" );
+			$query->execute( array( $idFeedIn, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
+			$rows = $query->rowCount();
+
+			$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idFeedIn = ? AND result IS NULL AND timestamp >= ? AND timestamp <= ?" );
+			$query->execute( array( $idFeedIn, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
+
+			$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL AND timestamp >= ? AND timestamp <= ?" );
+			$query->execute( array( $idFeedIn, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
+
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete old data_inbound entries: ' . $e->getMessage() );
 		}
 
-		return -1;
+		return $rows;
 	}
 
 	public function getLegacyInboundTables() {
@@ -2035,7 +2118,7 @@ class Leads
 			return;
 		}
 
-		$this->lockTables( "feedout f WRITE, data_inbound i WRITE, data_outbound o WRITE, stats_outbound WRITE" );
+		$this->db->beginTransaction();
 
 		try {
 			$query = $this->db->prepare( "SELECT SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp >= ? AND o.timestamp <= ? AND i.url = ?" );
@@ -2047,10 +2130,11 @@ class Leads
 				$query->execute( array( $idFeedOut, $url, $date, $record['accepted'], $record['rejected'] ) );
 			}
 		} catch( PDOException $e ) {
+			$this->db->rollBack();
 			$this->logError( 'Unable to reset outbound stats: ' . $e->getMessage() );
 		}
 
-		$this->unlockTables();
+		$this->db->commit();
 
 	}
 

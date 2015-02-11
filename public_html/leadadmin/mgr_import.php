@@ -7,6 +7,17 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
 
+function dieError( $error ) {
+	dieError( '' . $error . '' );
+	print "\t</div>\n";
+	print "</div>\n";
+	print "</body>\n";
+	print "</html>\n";
+	@ob_flush();
+	@flush();
+	exit;
+}
+
 $mysqlErrorSource = 'Manager - File Import';
 require_once(INCLUDES."_connx.php");
 require_once(INCLUDES."f_site.php");
@@ -16,13 +27,24 @@ require_once(INCLUDES."processFunctions.php");
 ini_set("auto_detect_line_endings", true);
 set_time_limit(0);
 
+$title = 'Upload File';
+include(INCLUDES."c_header.php");
+
+?>
+
+<body>
+
+<div class='mainContainer'>
+    <?php include(INCLUDES.'c_nav.php'); ?>
+    <div style='margin: auto;'>
+
+<?php
+
 if( empty( $_REQUEST['idFeedIn'] )) {
-	print '<p class="error">ERROR: No incoming feed ID supplied</p>';
-	exit;
+	dieError( 'No incoming feed ID supplied' );
 }
 
 $idFeedIn = !empty( $_REQUEST['idFeedIn'] ) ? $_REQUEST['idFeedIn'] : 0;
-$jobId = time();
 $leads = Leads::getInstance();
 
 if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
@@ -31,154 +53,102 @@ if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		$idCompany = -9999;
 	}
 	if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
-		die( 'Sorry, you do not have access to this feed.' );
+		dieError( 'Sorry, you do not have access to this feed.' );
 	}
 }
 
-$feedParams = getFeedIn ( $idFeedIn );
+$feedParams = $leads->getInboundFeed( $idFeedIn );
 if($feedParams === false){
-	print '<p class="error">Database failure.  Cannot load feed information.</p>';
-	logError(
-		'Feed '.$idFeedIn
-, 'Database failure when attempting to load feed parameters. Check MySQL log file.'
-, true
-		);
-
-	exit;
+	dieError( 'Database failure.  Cannot load feed information.' );
 } else if( 0 === $feedParams ) {
-	print '<p class="error">ERROR: Invalid incoming feed ID supplied</p>';
-	exit;
+	dieError( 'Invalid incoming feed ID supplied' );
 }
 
 if( empty( $_FILES['import_file']['tmp_name'] ) ) {
-	print '<p class="error">ERROR: You did not select a file to upload</p>';
-	exit;
+	dieError( 'You did not select a file to upload' );
 }
 
 if( $_FILES['import_file']['size'] > MAX_UPLOAD_SIZE ) {
-	print '<p class="error">ERROR: File size cannot exceed ' . (MAX_UPLOAD_SIZE / 1024000) . 'MB</p>';
-	exit;
+	dieError( 'File size cannot exceed ' . (MAX_UPLOAD_SIZE / 1024000) . 'MB' );
 }
 
 if( !empty( $_FILES['import_file']['error'] ) ) {
-	print '<p class="error">ERROR: Upload error (' .  $_FILES['import_file']['error'] . ')</p>';
-	exit;
+	dieError( 'Upload error (' .  $_FILES['import_file']['error'] . ')' );
 }
 
 if( !is_uploaded_file( $_FILES['import_file']['tmp_name'] ) ) {
-	print '<p class="error">ERROR: Possible file upload attack!</p>';
-	exit;
+	dieError( 'Possible file upload attack!' );
 }
-
-$counts = array(
-	'success' => 0,
-	'invalid' => 0,
-	'failures' => 0,
-	'dupe' => 0,
-);
 
 $handle = @fopen( $_FILES['import_file']['tmp_name'], "r" );
 if( !$handle ) {
-	print '<p class="error">ERROR: Cannot open uploaded file for reading</p>';
-	exit;
+	dieError( 'Cannot open uploaded file for reading' );
 }
 
-print "<p>Importing records from: <strong>{$_FILES['import_file']['name']}</strong></p>\n";
+// Turn off output buffering
+ini_set('output_buffering', 'off');
 
-$allowedFields = explode(";", $feedParams->allowedFields);
+// Turn off PHP output compression
+ini_set('zlib.output_compression', false);
 
-$cnt = 1;
+// Flush (send) the output buffer and turn off output buffering
+// ob_end_flush();
+while (@ob_end_flush());
+
+// Implicitly flush the buffer(s)
+ini_set('implicit_flush', true);
+ob_implicit_flush(true);
+
+print '<p>Uploading: ';
+
+@ob_flush();
+@flush();
+
+$cnt = 0;
 while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
-
-	$data = array();
-
-	foreach( $allowedFields as $field ) {
-		if( isset( $_REQUEST['field_' . $field] ) && is_numeric( $_REQUEST['field_' . $field] ) ) {
-			$col = $_REQUEST['field_' . $field];
-			if( !empty( $raw_data[$col] ) ) {
-				if( 'stamp' == $field ) {
-					// Check to see if we're using two separate timestamp columns
-					if( !empty( $_REQUEST['field_time'] ) && is_numeric( $_REQUEST['field_time'] ) ) {
-						$time_col = $_REQUEST['field_time'];
-						// Remove extraneous data from the date field
-						if( strpos( $raw_data[$col], ' ' ) !== FALSE ) {
-							list( $date, $garbage ) = explode( ' ', $raw_data[$col], 2 );
-						} else {
-							$date = $raw_data[$col];
-						}
-						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $date . ( !empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '' ) ) );
-					} else {
-						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
-					}
-				} elseif( 'dob' == $field ) {
-					$data['dob'] = date( "Y-m-d", strtotime( $raw_data[$col] ) );
-				} else {
-					$data[$field] = $raw_data[$col];
-				}
-			}
-		}
-	}
-
-	// Fix zip codes with a missing leading zeros
-	if( !empty( $data['zip'] ) ) {
-		$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT);
-	}
-
-	if( isset( $data['email'] ) ) 
-		print "{$data['email']}";
-	else
-		print " ";
-
-	$result = validateIncomingData( $feedParams, $data );
-
-	if( $result['valid'] ) {
-
-		print " - VALID\n";
-
-		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $jobId );
-		if( null === $inboundId ) {
-			$counts['failures']++;
-		} else {
-			if( LEGACY_DB ) {
-				insertIncomingData( $feedParams, $data, $jobId );
-			}
-			pushIncomingData( $idFeedIn, $data, $inboundId );
-			$counts['success']++;
-		}
-
-	} else {
-
-		$counts['invalid']++;
-
-		print " - ERROR\n";
-		print "<ul>\n";
-		foreach($result['errors'] as $error) {
-			print "<li class=\"error\">{$error}</li>\n";
-		}
-		print "</ul>\n";
-
-		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $jobId );
-
-		if( LEGACY_DB ) {
-			insertIncomingData( $feedParams, $data, $jobId, $result['errors'][0] );
-		}
-
-	}
-
-	print "<br/>\n";
-
-	@ob_flush; flush();
-
-	unset( $data );
-
+	$cnt++;
+	print ". \n";
+	@ob_flush();
+	@flush();
 }
 fclose($handle);
 
-print "<strong>FILE UPLOAD COMPLETE!</strong>\n";
+print 'Done!</p>';
 
-print "<p><strong>Successful: {$counts['success']}</strong></p>\n";
-print "<p><strong>Duplicates: {$counts['dupe']}</strong></p>\n";
-print "<p><strong>Invalid: {$counts['invalid']}</strong></p>\n";
-print "<p><strong>Failures: {$counts['failures']}</strong></p>\n";
+@ob_flush();
+@flush();
 
-$leads->auditLog( 'FEEDINC:IMPORT', $_REQUEST['idFeedIn'] );
+if( 0 === $cnt ) {
+	dieError( 'File contains no records' );
+}
+
+$newFile = SITE_ROOT . 'uploads/' . hash( 'sha256', $_FILES['import_file']['tmp_name'] );
+if( move_uploaded_file( $_FILES['import_file']['tmp_name'], $newFile  ) !== true ) {
+	dieError( 'Cannot move uploaded file for processing' );
+}
+
+$jobId = $leads->addJob( $_REQUEST['idFeedIn'], serialize( $_REQUEST ), $newFile, $cnt );
+if( null === $jobId ) {
+	dieError( 'Cannot add job to database' );
+}
+
+$leads->auditLog( 'FEEDINC:IMPORT', $jobId );
+
+$link = sprintf( '/leadadmin/mgr_job.php?jobId=%d&count=%d',
+		$jobId,
+		$cnt );
+
+?>
+<p><a href="<?php echo $link; ?>">View results</a></p>
+<script>window.location = '<?php echo $link; ?>';</script>
+
+    </div>
+</div>
+
+</body>
+</html>
+
+<?php
+@ob_flush();
+@flush();
+

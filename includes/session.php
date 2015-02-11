@@ -112,6 +112,7 @@ class LeadsSession
 
 		if( isset( $_REQUEST['a'] ) ) {
 
+			Header( 'Content-Type: application/json' );
 			$result = array('status' => 0, 'error'=> 'Sorry, you do not have access to this page. Log back in and try again.');
 			echo json_encode($result);
 			exit;
