@@ -170,7 +170,9 @@ include(INCLUDES."c_header.php");
 					$('#count-suppressed').html( parseInt( $('#count-suppressed').html() ) + parseInt( data.counts.suppressed ) );
 
 					if( resultCount < <?php echo intval( $_REQUEST['count'] ); ?> ) {
-						getNextResult( lastRecord );
+						setTimeout(function() {
+							getNextResult( lastRecord );
+						}, 2000)
 					} else {
 						$('#status').html('Finished');
 					}
