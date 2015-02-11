@@ -53,9 +53,9 @@ if( isset( $_REQUEST['a'] ) ) {
 
 				$response['results'][] = array(
 					'idRecord' => $record['idRecord'],
-					'email' => $record['email'],
-					'url' => $record['url'],
-					'result' => $result,
+					'email' => htmlspecialchars( $record['email'], ENT_NOQUOTES ),
+					'url' => htmlspecialchars( $record['url'], ENT_NOQUOTES ),
+					'result' => htmlspecialchars( $result, ENT_NOQUOTES ),
 					'class' => $class,
 				);
 			}
@@ -149,30 +149,31 @@ include(INCLUDES."c_header.php");
 			success: function(data) {
 				if (data.status == "success") {
 					var lastRecord = 0;
+					var html = [];
 					$.each(data.results, function(index) {
-						var row = $('<tr/>').attr({'class': data.results[index].class });
-						var idRecord = $('<td/>').append( document.createTextNode( data.results[index].idRecord ) );
-						var email = $('<td/>').append( document.createTextNode( data.results[index].email ) );
-						var url = $('<td/>').append( document.createTextNode( data.results[index].url ) );
-						var result = $('<td/>').append( document.createTextNode( data.results[index].result ) );
-						row.append( idRecord );
-						row.append( email );
-						row.append( url );
-						row.append( result );
-						$('#results tbody').append(row);
+						html.push( '<tr class="' + data.results[index].class + '"><td>' + data.results[index].idRecord + '</td><td>' + data.results[index].email + '</td><td>' + data.results[index].url + '</td><td>' + data.results[index].result + '</td></tr>' );
 						resultCount++;
 						lastRecord = data.results[index].idRecord;
-						$('#status').html('Processing');
+						if( $('#status').html() != 'Processing' ) {
+							$('#status').html('Processing');
+						}
 					});
+					$('#results tbody').append( html.join('') );
 					$('#count-accepted').html( parseInt( $('#count-accepted').html() ) + parseInt( data.counts.accepted ) );
 					$('#count-rejected').html( parseInt( $('#count-rejected').html() ) + parseInt( data.counts.rejected ) );
 					$('#count-duplicate').html( parseInt( $('#count-duplicate').html() ) + parseInt( data.counts.duplicate ) );
 					$('#count-suppressed').html( parseInt( $('#count-suppressed').html() ) + parseInt( data.counts.suppressed ) );
 
 					if( resultCount < <?php echo intval( $_REQUEST['count'] ); ?> ) {
-						setTimeout(function() {
-							getNextResult( lastRecord );
-						}, 2000)
+						if( lastRecord == 0 ) {
+							setTimeout(function() {
+								getNextResult( lastRecord );
+							}, 2000 );
+						} else {
+							setTimeout(function() {
+								getNextResult( lastRecord );
+							}, 500 );
+						}
 					} else {
 						$('#status').html('Finished');
 					}
