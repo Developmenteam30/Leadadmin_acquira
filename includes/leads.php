@@ -1188,6 +1188,7 @@ class Leads
 				'fields' => $fields,
 				'filename' => $filename,
 				'records' => $records,
+				'userId' => LeadsSession::getUserId(),
 			) );
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
@@ -1196,6 +1197,36 @@ class Leads
 
 		return $jobId;
 	}
+
+	public function updateJob( $jobId, $fields ) {
+
+		try {
+			$status = $this->update( 'jobs', $fields, array(
+				'jobId' => $jobId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update job: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $null;
+	}
+
+	public function getJobs() {
+		try {
+			$query = $this->db->prepare( "SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.idFeedIn = f.idFeedIn ORDER BY j.jobId DESC" );
+			$query->execute( );
+			return $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to delete queued records (1): ' . $e->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
 
 	public function getPendingJob() {
 		try {
@@ -1206,15 +1237,16 @@ class Leads
 		}
 
 		try {
-			$query = $this->db->prepare( "SELECT jobId,idFeedIn,fields,filename FROM jobs WHERE status = ?" );
+			$query = $this->db->prepare( "SELECT jobId,idFeedIn,fields,filename,records FROM jobs WHERE status = ?" );
 			$query->execute( array( 'pending' ) );
 			$rows = $query->fetchAll( PDO::FETCH_OBJ );
 			if( $rows && is_array( $rows ) ) {
 				foreach( $rows as $row ) {
 					if( file_exists( $row->filename ) ) {
 
-						$query = $this->db->prepare( "UPDATE jobs SET status = ? WHERE jobId = ?" );
-						$query->execute( array( 'processing', $row->jobId ) );
+						$this->updateJob( $row->jobId, array(
+							'status' => 'processing',
+						) );
 					
 						$this->unlockTables();
 						return $row;

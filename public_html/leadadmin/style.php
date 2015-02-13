@@ -232,12 +232,17 @@ table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top
 table.standard td p { padding: 0 0 3px 0; }
 table.standard thead { font-weight: bold; text-align: center; }
 
+#jobs tr.accepted td,
 #results tr.accepted td {
 	background: #C4FFA7;
 }
+
+#jobs tr.duplicate td,
 #results tr.duplicate td {
 	background: #FFB84D;
 }
+
+#jobs tr.rejected td,
 #results tr.rejected td {
 	background: #FF9980;
 }

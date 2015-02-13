@@ -31,6 +31,9 @@ if($feedParams === false){
 
 $handle = @fopen( $job->filename, "r" );
 if( !$handle ) {
+	$leads->updateJob( $job->jobId, array(
+		'status' => 'error',
+	) );
 	print 'ERROR: Cannot open uploaded file for reading';
 	exit;
 }
@@ -130,7 +133,17 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 }
 fclose($handle);
 
-print "FILE UPLOAD COMPLETE!\n";
+if $cnt === $job->records ) {
+	$leads->updateJob( $job->jobId, array(
+		'status' => 'finished',
+	) );
+} else {
+	$leads->updateJob( $job->jobId, array(
+		'status' => 'error',
+	) );
+}
+
+print "FILE IMPORT COMPLETE!\n";
 
 print "Successful: {$counts['success']}\n";
 print "Duplicates: {$counts['dupe']}\n";
