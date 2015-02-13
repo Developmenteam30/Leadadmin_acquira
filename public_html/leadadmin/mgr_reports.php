@@ -81,7 +81,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			$user = $leads->findClientReportingUser( $_REQUEST['idCompany'] );
+			$user = $leads->findClientUser( $_REQUEST['idCompany'] );
 			if( empty( $user ) ) {
 				$result['status'] = 0;
 				$result['error'] = 'Client username/password is not setup.';
