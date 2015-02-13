@@ -887,14 +887,21 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'outgoingFeeds':
+			if( isset( $_REQUEST['options']['retired'] ) && '1' == $_REQUEST['options']['retired'] ) {
+				$retired = true;
+			} else if( isset( $_REQUEST['options']['retired'] ) && '0' == $_REQUEST['options']['retired'] ) {
+				$retired = null;
+			} else {
+				$retired = false;
+			}
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$outgoingFeeds = $leads->getOutboundFeeds( null, false );
+				$outgoingFeeds = $leads->getOutboundFeeds( null, $retired );
 			} else {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
 				}
-				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, false );
+				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, $retired );
 			}
 ?>
 <p>
@@ -1029,7 +1036,7 @@ if($outgoingFeeds === false){
 ?>
 	<tr class='fTORow fTO_Row'>
 		<td class='fTO_idFeedOut'><p><?php echo $feed->idFeedOut; ?></p></td>
-		<td class='fTO_label'><p><?php echo $feed->label; ?></p></td>
+		<td class='fTO_label<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->label; ?></p></td>
 		<td class='fTO_description'><p><?php echo $feed->description; ?></p></td>
 		<td class='fTO_statusPop'>
 			<p>
@@ -3082,6 +3089,10 @@ function feedRetire(idFeedOut, options){
 
 $(document).ready(function(){ 
 	display('outgoingFeeds');
+
+	$('#retired').change(function() {
+		display('outgoingFeeds', { 'retired': $(this).val() } );
+	});
 });
 </script>
 <body>
@@ -3091,6 +3102,11 @@ $(document).ready(function(){
 		<div id='controls'>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 			<a href='#' class='nonLink' onclick="display('dialog_newfeedout');">Add New Feed</a>
+			<select class="fr" id="retired" name="retired">
+				<option value="">Show active feeds</option>
+				<option value="1">Show retired feeds</option>
+				<option value="0">Show all feeds</option>
+			</select>
 <?php } ?>
 		</div>
 		<div id='dialogs'>

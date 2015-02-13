@@ -295,8 +295,13 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'incomingFeeds':
-			if( isset( $_REQUEST['retired'] ) ) $retired = true;
-			else $retired = false;
+			if( isset( $_REQUEST['options']['retired'] ) && '1' == $_REQUEST['options']['retired'] ) {
+				$retired = true;
+			} else if( isset( $_REQUEST['options']['retired'] ) && '0' == $_REQUEST['options']['retired'] ) {
+				$retired = null;
+			} else {
+				$retired = false;
+			}
 
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$incomingFeeds = $leads->getInboundFeeds( null, $retired );
@@ -1708,9 +1713,14 @@ function exportFile(idFeedIn){
 		}
 	});
 	$('#resultExport_'+idFeedIn).html("Processing...");
+
 }
 $(document).ready(function(){ 
 	display('incomingFeeds');
+
+    $('#retired').change(function() {
+        display('incomingFeeds', { 'retired': $(this).val() } );
+    });
 });
 </script>
 <style type="text/css">
@@ -1725,6 +1735,11 @@ table.feedTable th, table.feedTable td { padding: 3px; }
 		<div id='controls'>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 			<a href='#' class='nonLink' onclick="display('dialog_newfeed');" >Add New Feed</a>
+			<select class="fr" id="retired" name="retired">
+				<option value="">Show active feeds</option>
+				<option value="1">Show retired feeds</option>
+				<option value="0">>Show all feeds</option>
+			</select>
 <?php } ?>
 		</div>
 		<div id='dialogs'>
