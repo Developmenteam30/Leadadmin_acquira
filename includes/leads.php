@@ -2054,8 +2054,12 @@ class Leads
 		}
 
 		try {
+/*
 			$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany = ?" );
 			$query->execute( array( $idCompany ) );
+*/
+			$query = $this->db->prepare( "SELECT email FROM " . $this->quoteIdentifier( 'suppression_' . $idCompany ) );
+			$query->execute( );
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fwrite( $fh, $row['email'] . PHP_EOL );
 			}
