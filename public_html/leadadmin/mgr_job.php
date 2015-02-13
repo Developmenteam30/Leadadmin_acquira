@@ -106,9 +106,9 @@ include(INCLUDES."c_header.php");
 			<thead>
 				<tr>
 					<td>Accepted</td>
-					<td>Rejected</td>
-					<td>Duplicate</td>
-					<td>Suppressed</td>
+					<td>Rejected - Invalid</td>
+					<td>Rejected - Duplicate</td>
+					<td>Rejected - Suppressed</td>
 				</tr>
 			</thead>
 			<tbody>
