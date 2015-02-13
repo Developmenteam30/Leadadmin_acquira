@@ -158,7 +158,7 @@ div.navContainer, div.logoutContainer{
 		color: <?php echo $buttonFontColor; ?>;
 		border: 0px;
 		border-right: 1px solid <?php echo $navDividers; ?>;
-		padding: 15px 5px;
+		padding: 15px;
 		margin: 0px;
 		background-image: linear-gradient();
 		background-image: -o-linear-gradient(<?php echo $gradient; ?>);
@@ -180,7 +180,6 @@ div.navContainer, div.logoutContainer{
 		width: 70px; 
 		border-right: 0px;
 	}
-	a.navButton { width: 122px; }
 		img.navIcon{ 
 			vertical-align: middle; margin-right: 5px;
 		}
