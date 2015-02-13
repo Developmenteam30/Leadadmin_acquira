@@ -1220,7 +1220,7 @@ class Leads
 			$query->execute( );
 			return $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete queued records (1): ' . $e->getMessage() );
+			$this->logError( 'Unable to get jobs: ' . $e->getMessage() );
 			return null;
 		}
 
@@ -1254,7 +1254,7 @@ class Leads
 				}
 			}
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete queued records (1): ' . $e->getMessage() );
+			$this->logError( 'Unable to get pending job: ' . $e->getMessage() );
 			return;
 		}
 
