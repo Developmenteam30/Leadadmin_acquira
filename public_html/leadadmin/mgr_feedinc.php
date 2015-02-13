@@ -1738,7 +1738,7 @@ table.feedTable th, table.feedTable td { padding: 3px; }
 			<select class="fr" id="retired" name="retired">
 				<option value="">Show active feeds</option>
 				<option value="1">Show retired feeds</option>
-				<option value="0">>Show all feeds</option>
+				<option value="0">Show all feeds</option>
 			</select>
 <?php } ?>
 		</div>
