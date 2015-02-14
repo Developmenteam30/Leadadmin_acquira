@@ -93,7 +93,7 @@ if($c &&(
 	);
 }
 
-if( $c && '1' == $feedParams->retired ) {
+if( $c && 'retired' == $feedParams->status ) {
 	$c = false; 
 	$result['reason'] = 'This feed has been disabled.';
 }

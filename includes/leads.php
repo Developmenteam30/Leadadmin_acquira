@@ -347,7 +347,7 @@ class Leads
 				'dedupeAcross' => empty( $fields['dedupeAcross'] ) ? null : $fields['dedupeAcross'],
 				'rejectOldLeads' => empty( $fields['rejectOldLeads'] ) ? null : $fields['rejectOldLeads'],
 				'rejectOldLeadsMaxAge' => empty( $fields['rejectOldLeadsMaxAge'] ) ? null : $fields['rejectOldLeadsMaxAge'],
-				'retired' => empty( $fields['retired'] ) ? 0 : 1,
+				'status' => empty( $fields['status'] ) ? 'active' : $fields['status'],
 				'filterTypeUrl' => empty( $fields['filterTypeUrl'] ) ? null : $fields['filterTypeUrl'],
 				'filterUrl' => empty( $fields['filterUrl'] ) ? null : $fields['filterUrl'],
 				'filterTypeSiftLogic' => empty( $fields['filterTypeSiftLogic'] ) ? null : $fields['filterTypeSiftLogic'],
@@ -459,11 +459,11 @@ class Leads
 		return $results;
 	}
 
-	public function getInboundFeeds( $idCompany = null, $retired = null ) {
+	public function getInboundFeeds( $idCompany = null, $status = null ) {
 		$results = array();
 
 		try {
-			if( $retired === null ) {
+			if( $status === null ) {
 
 				if( !empty( $idCompany ) ) {
 					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? ORDER BY f.idFeedIn" );
@@ -476,11 +476,11 @@ class Leads
 			} else {
 
 				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? AND f.retired = ? ORDER BY f.idFeedIn" );
-					$query->execute( array( $idCompany, $retired ? '1' : '0' ) );
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? AND f.status = ? ORDER BY f.idFeedIn" );
+					$query->execute( array( $idCompany, $status ) );
 				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.retired = ? ORDER BY c.name,f.idFeedIn" );
-					$query->execute( array( $retired ? '1' : '0' ) );
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.status = ? ORDER BY c.name,f.idFeedIn" );
+					$query->execute( array( $status ) );
 				}
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );

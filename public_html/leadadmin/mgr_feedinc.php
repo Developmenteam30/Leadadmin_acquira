@@ -188,7 +188,7 @@ if(isset($_REQUEST['a'])){
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
 						'idCompany' => $idCompany,
 						'required' => empty( $_REQUEST['required'] ) ? null : $_REQUEST['required'],
-						'retired' => !empty( $_REQUEST['retired'] ) ? 1 : 0,
+						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'allowedFields' => empty( $_REQUEST['allowedFields'] ) ? null : $_REQUEST['allowedFields'],
 						'dedupeEmail' => empty( $_REQUEST['dedupeEmail'] ) ? null : $_REQUEST['dedupeEmail'],
 						'dedupeLandline' => empty( $_REQUEST['dedupeLandline'] ) ? null : $_REQUEST['dedupeLandline'],
@@ -295,22 +295,20 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'incomingFeeds':
-			if( isset( $_REQUEST['options']['retired'] ) && '1' == $_REQUEST['options']['retired'] ) {
-				$retired = true;
-			} else if( isset( $_REQUEST['options']['retired'] ) && '0' == $_REQUEST['options']['retired'] ) {
-				$retired = null;
+			if( !empty( $_REQUEST['options']['status'] ) ) {
+				$status = $_REQUEST['options']['status'];
 			} else {
-				$retired = false;
+				$status = null;
 			}
 
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$incomingFeeds = $leads->getInboundFeeds( null, $retired );
+				$incomingFeeds = $leads->getInboundFeeds( null, $status );
 			} else {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
 				}
-				$incomingFeeds = $leads->getInboundFeeds( $idCompany, $retired );
+				$incomingFeeds = $leads->getInboundFeeds( $idCompany, $status );
 			}
 ?>
 <?php		
@@ -403,7 +401,7 @@ if($incomingFeeds === false){
 		foreach($companyFeedList as $feed){ 
 ?>
 	<tr>
-		<td colspan="3" class='fTI_description<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</p></td>
+		<td colspan="3" class='fTI_description status-<?php print $feed->status;?>'><p><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</p></td>
 		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
 		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
 		<td class='fTI_options'>
@@ -478,7 +476,7 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		case 'dialog_newfeed':
 			if(!isset($e)){ $e = 'new_'; $d = 'new'; }
 			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'notifications', 'retired', 'rejectOldLeadsMaxAge', 
+				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'notifications', 'status', 'rejectOldLeadsMaxAge', 
 			);
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
@@ -842,8 +840,9 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		<td><p>Feed Status</p></td>
 		<td>
 			<p>
-				<input type='radio' name='<?php echo $e; ?>feed_retired' id='<?php echo $e; ?>feed_retired_no' value='0' <?php if( $feed_retired != '1' ) { ?>checked='checked'<?php } ?>/> Active
-				<input type='radio' name='<?php echo $e; ?>feed_retired' id='<?php echo $e; ?>feed_retired_yes' value='1' <?php if( '1' == $feed_retired ) { ?>checked='checked'<?php } ?>/> Retired
+				<input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_active' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Visible)<br/>
+				<input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_hidden' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
+				<input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_retired' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> status
 			</p>
 		</td>
 	</tr>
@@ -1513,7 +1512,13 @@ foreach($incomingAdditionalRequirementSettings as $f){
 	if($(e+'dedupeEmail').is(":checked")){ dedupeEmail = 1;	} else { dedupeEmail = 0; }
 	if($(e+'dedupeLandline').is(":checked")){ dedupeLandline = 1;	} else { dedupeLandline = 0; }
 	if($(e+'dedupeCellphone').is(":checked")){ dedupeCellphone = 1;	} else { dedupeCellphone = 0; }
-	if($(e+'retired_yes').is(":checked")){ retired = 1; } else { retired = 0; }
+	if($(e+'status_hidden').is(":checked")) {
+		status = 'hidden';
+	} else if($(e+'status_retired').is(":checked")) { 
+		status = 'retired';
+	} else { 
+		status = 'active';
+	}
 	if($(e+'notifications_yes').is(":checked")){ notifications = 1; } else { notifications = 0; }
 	if(c == 'new'){
 		dedupeAcross = $('input[name="'+c+'_feed_dedupeAcross"]:checked').val();
@@ -1558,7 +1563,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 			, "filterUrl": filterUrl
 			, "filterTypeSiftLogic": filterTypeSiftLogic
 			, "filterSiftLogic": filterSiftLogic
-			, "retired": retired
+			, "status": status
 			, "notifications": notifications
 			, "rejectOldLeadsMaxAge": rejectOldLeadsMaxAge
 		})
@@ -1716,10 +1721,10 @@ function exportFile(idFeedIn){
 
 }
 $(document).ready(function(){ 
-	display('incomingFeeds');
+	display('incomingFeeds', { 'status': 'active' } );
 
-    $('#retired').change(function() {
-        display('incomingFeeds', { 'retired': $(this).val() } );
+    $('#status').change(function() {
+        display('incomingFeeds', { 'status': $(this).val() } );
     });
 });
 </script>
@@ -1735,10 +1740,11 @@ table.feedTable th, table.feedTable td { padding: 3px; }
 		<div id='controls'>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 			<a href='#' class='nonLink' onclick="display('dialog_newfeed');" >Add New Feed</a>
-			<select class="fr" id="retired" name="retired">
-				<option value="">Show active feeds</option>
-				<option value="1">Show retired feeds</option>
-				<option value="0">Show all feeds</option>
+			<select class="fr" id="status" name="status">
+				<option value="active">Show active feeds</option>
+				<option value="hidden">Show hidden feeds</option>
+				<option value="retired">Show retired feeds</option>
+				<option value="">Show all feeds</option>
 			</select>
 <?php } ?>
 		</div>

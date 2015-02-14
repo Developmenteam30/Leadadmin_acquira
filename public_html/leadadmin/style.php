@@ -335,7 +335,12 @@ div.dashboardOutgoing { width: 50%; }
 	border: 1px solid #909090;
 }
 
-.retired {
+.status-retired {
+	color: #800000;
+	text-decoration:line-through;
+}
+
+.status-hidden {
 	color: #800000;
 	text-decoration:line-through;
 }
