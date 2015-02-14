@@ -133,7 +133,7 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 }
 fclose($handle);
 
-if( $cnt === $job->records ) {
+if( $cnt == intval( $job->records ) ) {
 	$leads->updateJob( $job->jobId, array(
 		'status' => 'finished',
 	) );
