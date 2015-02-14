@@ -1188,7 +1188,7 @@ class Leads
 				'fields' => $fields,
 				'filename' => $filename,
 				'records' => $records,
-				'userId' => LeadsSession::getUserId(),
+				'idUser' => LeadsSession::getUserId(),
 			) );
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
