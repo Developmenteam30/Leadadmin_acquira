@@ -842,7 +842,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 			<p>
 				<input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_active' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Visible)<br/>
 				<input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_hidden' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
-				<input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_retired' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> status
+				<input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_retired' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> Retired
 			</p>
 		</td>
 	</tr>
