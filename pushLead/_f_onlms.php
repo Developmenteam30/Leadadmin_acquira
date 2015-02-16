@@ -113,9 +113,9 @@ function getOutgoingFeed($idFeedOut){
 function getActiveFeeds( $mod = null ){ 
 	dbCon();
 	if( !empty( $mod ) ) {
-		$getFeed = "SELECT idFeedOut FROM `".DATABASE_NAME."`.`feedout` WHERE enabled = '1' AND cron = '1' AND retired = '0' AND MOD(idFeedOut,2) = " . ( 'even' === $mod ? 0 : 1 );
+		$getFeed = "SELECT idFeedOut FROM `".DATABASE_NAME."`.`feedout` WHERE cron = '1' AND status IN( 'active', 'hidden' ) AND MOD(idFeedOut,2) = " . ( 'even' === $mod ? 0 : 1 );
 	} else {
-		$getFeed = "SELECT idFeedOut FROM `".DATABASE_NAME."`.`feedout` WHERE enabled = '1' AND cron = '1' AND retired = '0';";
+		$getFeed = "SELECT idFeedOut FROM `".DATABASE_NAME."`.`feedout` WHERE cron = '1' AND status IN( 'active', 'hidden' )";
 	}
 	$dogetFeed = dbQry($getFeed, 'Fetching active feeds', true);
 	dbDcon();

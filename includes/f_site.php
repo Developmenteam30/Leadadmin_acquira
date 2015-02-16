@@ -221,47 +221,6 @@ function getIncomingEmails( $label, $email ){
 
 //Outgoing Feed Functions//
 
-function getOutgoingFeeds($subset = 'all'){ 	
-	//Fetches all outgoing feeds into an array of objects.
-	$getFeeds = "SELECT * FROM `".DATABASE_NAME."`.`feedout` ";
-	switch($subset){ 
-		case 'active':
-			$getFeeds .= "WHERE `retired` = 0 ";
-		break;
-		case 'retired':
-			$getFeeds .= "WHERE `retired` = 1 ";
-		break;
-	}
-	$getFeeds .= ";";
-	dbCon();
-	$dogetFeeds = dbQry($getFeeds, 'Fetching feeds.', true);
-	dbDcon();
-	if($dogetFeeds === false){ 
-		return false;
-	}
-	if($dogetFeeds->num_rows == 0){ 
-		return 0;
-	}
-	$feeds = array();
-	while($row = $dogetFeeds->fetch_object()){ 
-		$feeds[] = $row;
-	}
-	return $feeds;
-}
-
-/*
-function getOutgoingFeed($idFeedOut){ 
-	dbCon();
-	$getFeed = "SELECT * FROM `".DATABASE_NAME."`.`feedout` "
-		."WHERE `idFeedOut` = '".$idFeedOut."';";
-	$dogetFeed = dbQry($getFeed, 'Fetching feed information', true);
-	dbDcon();
-	if($dogetFeed === false){ return false; }
-	if($dogetFeed->num_rows == 0){ return 0; }
-	return $dogetFeed->fetch_object();
-}
-*/
-
 function getOutgoingUrls( $label ){
 	$query  = "SELECT DISTINCT(urlTrim),LEFT(MIN(postStamp),10) start ";
 	$query .= "FROM `".DATABASE_NAME."`.`feedout_" . $label . "` ";

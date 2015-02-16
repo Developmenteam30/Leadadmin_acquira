@@ -546,7 +546,7 @@ class Leads
 		$this->db->beginTransaction();
 
 		try {
-			$query = $this->db->prepare( "UPDATE feedout SET cron = '0', enabled = '0' WHERE idFeedOut = ?" );
+			$query = $this->db->prepare( "UPDATE feedout SET cron = '0', status = 'retired' WHERE idFeedOut = ?" );
 			$query->execute( array( $idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
@@ -582,11 +582,11 @@ class Leads
 		return $results;
 	}
 
-	public function getOutboundFeeds( $idCompany = null, $retired = null ) {
+	public function getOutboundFeeds( $idCompany = null, $status = null ) {
 		$results = array();
 
 		try {
-			if( $retired === null ) {
+			if( $status === null ) {
 
 				if( !empty( $idCompany ) ) {
 					$query = $this->db->prepare( "SELECT o.*,co.name FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? ORDER BY o.idFeedOut" );
@@ -599,11 +599,11 @@ class Leads
 			} else {
 
 				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT o.*,co.name FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? AND o.retired = ? ORDER BY o.idFeedOut" );
-					$query->execute( array( $idCompany, $retired ? '1' : '0' ) );
+					$query = $this->db->prepare( "SELECT o.*,co.name FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? AND o.status = ? ORDER BY o.idFeedOut" );
+					$query->execute( array( $idCompany, $status ) );
 				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.retired = ? ORDER BY c.name,f.idFeedOut" );
-					$query->execute( array( $retired ? '1' : '0' ) );
+					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.status = ? ORDER BY c.name,f.idFeedOut" );
+					$query->execute( array( $status ) );
 				}
 
 			}

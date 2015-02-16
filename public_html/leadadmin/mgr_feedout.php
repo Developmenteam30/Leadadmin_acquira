@@ -50,7 +50,7 @@ function addFeedOut(
 	if($c){ //Add feed.
 		$addFeed = "INSERT INTO `".DATABASE_NAME."`.`feedout` "
 			."(`label`,`description`,`idCompany`,`feedType`,`postUrl`,`staticFields`,`varFields`,`fieldMap` "
-				.",`enabled`,`cron`,`cronTiming`,`successString`,`dailyLimit`,`delay`,`throttle`, `urlassignments`) VALUES ( "
+				.",`status`,`cron`,`cronTiming`,`successString`,`dailyLimit`,`delay`,`throttle`, `urlassignments`) VALUES ( "
 			."  '".$GLOBALS['dbconnx']->escape_string($label)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($description)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($idCompany)."' "
@@ -59,7 +59,7 @@ function addFeedOut(
 			.", '".$GLOBALS['dbconnx']->escape_string($staticFields)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($varFields)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($fieldMap)."' "
-			.", '1', '0', '1' "
+			.", 'active', '0', '1' "
 			.", '".$GLOBALS['dbconnx']->escape_string($successString)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($dailyLimit)."' "
 			.", '".$GLOBALS['dbconnx']->escape_string($delay)."' "
@@ -436,8 +436,7 @@ if(isset($_REQUEST['a'])){
 					}
 					if($_REQUEST['status'] != $feed->status){ 
 						if($c){
-							$alterResult = alterFeedOut( $_REQUEST['idFeedOut'], 'status', $_REQUEST['status']
-							);
+							$alterResult = alterFeedOut( $_REQUEST['idFeedOut'], 'status', $_REQUEST['status'] );
 							if(!$alterResult['success']){ 
 								$c = false; $result['error'] = $alterResult['reason'];
 							}
@@ -764,21 +763,6 @@ if(isset($_REQUEST['a'])){
 					}
 					if($c){
 						switch($_REQUEST['param']){
-							case 'enabled':
-								if($feed->enabled){ 
-									$enabled = 0; 
-									$result['enabledText'] = 'Disabled';
-								} else { 
-									$enabled = 1; 
-									$result['enabledText'] = 'Populating';
-								}
-								$alterResult = alterFeedOut(
-									$_REQUEST['idFeedOut'], 'enabled', $enabled
-								);
-								if(!$alterResult){ 
-									$c = false; $result['error'] = $alterResult['reason'];
-								}
-							break;
 							case 'cron':
 								if($feed->cron){ 
 									$cron = 0; 
@@ -935,7 +919,7 @@ if($outgoingFeeds === false){
 			$totalQueued += $feed->queued;
 
 			if($feed->enabled) { $totalActive++; }
-			$companyFeedList[$keyFeed]->statusFeed = ($feed->enabled)?'Processable':'Deactivated';
+			$companyFeedList[$keyFeed]->statusFeed = $feed->status;
 			$companyFeedList[$keyFeed]->statusCron = ($feed->cron)?'Running':'Paused';
 			$companyFeedList[$keyFeed]->statusPop = getPopulationStatus($feed->idFeedOut);
 		}
@@ -988,10 +972,7 @@ if($outgoingFeeds === false){
 		</td>
 		<td class='fTO_statusFeed'>
 			<p>
-				<a href='#' class='nonLink'
-					id='feedset_<?php echo $feed->idFeedOut; ?>_statusFeed'
-					onclick="manageFeedParam('enabled', <?php echo $feed->idFeedOut; ?>, 'toggle', {'sub':<?php echo $feed->idCompany; ?>, 'idFeedOut':<?php echo $feed->idFeedOut; ?>});"
-				><?php echo $feed->statusFeed; ?></a>			
+				<?php echo ucfirst( $feed->status ); ?>
 			</p>
 		</td>
 		<td class='fTO_statusCron'>
@@ -1261,7 +1242,7 @@ if($populationSettings === false){
 					}
 				}
 			}
-			$feedProps = array('idFeedOut', 'label', 'description', 'idCompany', 'feedType', 'postUrl', 'successString', 'dailyLimit', 'delay' );
+			$feedProps = array('idFeedOut', 'label', 'description', 'idCompany', 'feedType', 'postUrl', 'successString', 'status', 'dailyLimit', 'delay' );
 			foreach($feedProps as $feedProp){ 
 				if(isset($feed)){ 
 					${"feed_".$feedProp} = $feed->$feedProp;
@@ -1514,9 +1495,9 @@ if($populationSettings === false){
 	   <td><p>Feed Status</p></td>
 	   <td>
 		   <p>
-			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_active' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) {?>checked='checked'<?php } ?>/> Active (Visible)<br/>
-			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_hidden' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
-			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_retired' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> Retired
+			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) {?>checked='checked'<?php } ?>/> Active (Visible)<br/>
+			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
+			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> Retired
 		   </p>
 	   </td>
 	</tr>
@@ -2501,7 +2482,7 @@ function manageFeed(action, idFeedOut){
 	if( dailyLimit == '' ) { dailyLimit = 0; }
 	delay = $(e+'delay').val();
 	if( delay == '' ) { delay = 0; }
-	status = $(e+'status').val();
+	status = $(e+'status:checked').val();
 /* 	alert(
 		"idFeedOut: "+idFeedOut
 		+"\n"+"label: "+label
