@@ -50,7 +50,7 @@ $counts = array(
 	'dupe' => 0,
 );
 
-$cnt = 1;
+$cnt = 0;
 while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 	$data = array();
@@ -128,6 +128,7 @@ while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
 	print "\n";
 
+	$cnt++;
 	unset( $data );
 
 }
