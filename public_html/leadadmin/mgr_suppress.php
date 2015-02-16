@@ -275,7 +275,7 @@ if(isset($_REQUEST['d'])){
 	<tbody>
 <?php
 			foreach($lists as $suppressionList){ 
-				if( null === $suppressionList->idCompany ) { 
+				if( 0 === intval( $suppressionList->idCompany ) ) { 
 					$suppressionList->idCompany = 0;
 					$suppressionList->name = 'Global';
 				}
