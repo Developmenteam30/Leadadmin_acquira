@@ -2075,6 +2075,10 @@ class Leads
 	}
 
 	public function addSuppression( $idCompany, $email ) {
+		if( empty( $idCompany ) ) {
+			$idCompany = null;
+		}
+
 		try {
 			$idSuppression = $this->insertRow( 'suppression', array(
 				'idCompany' => $idCompany,

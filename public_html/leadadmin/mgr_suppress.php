@@ -397,9 +397,10 @@ if(isset($_REQUEST['d'])){
 <form enctype="multipart/form-data" action="mgr_import.php" method="post" target="_blank">
 <input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>" />
 <input type="hidden" name="type" value="suppression" />
+<input type="hidden" name="destination" value="0" />
 	File: <input type="file" name="import_file" multiple="false" accept="text/csv" />
 	to Suppression List 
-	<select id="suppress_list" name="destination" onchange="checkIfMulti();">
+	<select id="suppress_list" name="list" onchange="checkIfMulti();">
 		<option value="global">Global Suppression</option>
 		<option value="multiple">Multiple Separate Lists</option>
 <?php
