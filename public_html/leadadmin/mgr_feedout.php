@@ -1845,13 +1845,13 @@ if($populationSettings === false){
 			$feed = $leads->getOutboundFeed( $popset_idFeedOut );
 
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$incomingFeeds = $leads->getInboundFeeds( null, false );
+				$incomingFeeds = $leads->getInboundFeeds( null, 'active' );
 			} else {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
 				}
-				$incomingFeeds = $leads->getInboundFeeds( $idCompany, false );
+				$incomingFeeds = $leads->getInboundFeeds( $idCompany, 'active' );
 			}
 ?>
 <input type='hidden' name='<?php echo $e; ?>popset_idAssoc'
