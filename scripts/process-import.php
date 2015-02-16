@@ -20,19 +20,11 @@ if( $job === null ) {
 	exit;
 }
 
-$feedParams = $leads->getInboundFeed( $job->idFeedIn );
-if($feedParams === false){
-	print 'Database failure.  Cannot load feed information.';
-	exit;
-} else if( 0 === $feedParams ) {
-	print 'ERROR: Invalid incoming feed ID supplied';
-	exit;
-}
-
 $handle = @fopen( $job->filename, "r" );
 if( !$handle ) {
 	$leads->updateJob( $job->jobId, array(
 		'status' => 'error',
+		'message' => 'Cannot open uploaded file for reading',
 	) );
 	print 'ERROR: Cannot open uploaded file for reading';
 	exit;
@@ -40,113 +32,217 @@ if( !$handle ) {
 
 print "Importing records from: {$job->filename}\n";
 
-$allowedFields = explode(";", $feedParams->allowedFields);
-$fields = unserialize( $job->fields );
+if( 'feedinc' === $job->type ) {
 
-$counts = array(
-	'success' => 0,
-	'invalid' => 0,
-	'failures' => 0,
-	'dupe' => 0,
-);
+	$feedParams = $leads->getInboundFeed( $job->idFeedIn );
+	if( empty( $feedParams ) ) {
+		print 'ERROR: Invalid incoming feed ID supplied';
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Invalid incoming feed ID supplied',
+		) );
+		exit;
+	}
 
-$cnt = 0;
-while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
+	$allowedFields = explode(";", $feedParams->allowedFields);
+	$fields = unserialize( $job->fields );
 
-	$data = array();
+	$counts = array(
+		'success' => 0,
+		'invalid' => 0,
+		'failures' => 0,
+		'dupe' => 0,
+	);
 
-	foreach( $allowedFields as $field ) {
-		if( isset( $fields['field_' . $field] ) && is_numeric( $fields['field_' . $field] ) ) {
-			$col = $fields['field_' . $field];
-			if( !empty( $raw_data[$col] ) ) {
-				if( 'stamp' == $field ) {
-					// Check to see if we're using two separate timestamp columns
-					if( !empty( $fields['field_time'] ) && is_numeric( $fields['field_time'] ) ) {
-						$time_col = $fields['field_time'];
-						// Remove extraneous data from the date field
-						if( strpos( $raw_data[$col], ' ' ) !== FALSE ) {
-							list( $date, $garbage ) = explode( ' ', $raw_data[$col], 2 );
+	$cnt = 0;
+	while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
+
+		$data = array();
+
+		foreach( $allowedFields as $field ) {
+			if( isset( $fields['field_' . $field] ) && is_numeric( $fields['field_' . $field] ) ) {
+				$col = $fields['field_' . $field];
+				if( !empty( $raw_data[$col] ) ) {
+					if( 'stamp' == $field ) {
+						// Check to see if we're using two separate timestamp columns
+						if( !empty( $fields['field_time'] ) && is_numeric( $fields['field_time'] ) ) {
+							$time_col = $fields['field_time'];
+							// Remove extraneous data from the date field
+							if( strpos( $raw_data[$col], ' ' ) !== FALSE ) {
+								list( $date, $garbage ) = explode( ' ', $raw_data[$col], 2 );
+							} else {
+								$date = $raw_data[$col];
+							}
+							$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $date . ( !empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '' ) ) );
 						} else {
-							$date = $raw_data[$col];
+							$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
 						}
-						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $date . ( !empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '' ) ) );
+					} elseif( 'dob' == $field ) {
+						$data['dob'] = date( "Y-m-d", strtotime( $raw_data[$col] ) );
 					} else {
-						$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
+						$data[$field] = $raw_data[$col];
 					}
-				} elseif( 'dob' == $field ) {
-					$data['dob'] = date( "Y-m-d", strtotime( $raw_data[$col] ) );
-				} else {
-					$data[$field] = $raw_data[$col];
 				}
 			}
 		}
-	}
 
-	// Fix zip codes with a missing leading zeros
-	if( !empty( $data['zip'] ) ) {
-		$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT);
-	}
+		// Fix zip codes with a missing leading zeros
+		if( !empty( $data['zip'] ) ) {
+			$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT);
+		}
 
-	if( isset( $data['email'] ) ) 
-		print "{$data['email']}";
-	else
-		print " ";
-
-	$result = validateIncomingData( $feedParams, $data );
-
-	if( $result['valid'] ) {
-
-		print " - VALID\n";
-
-		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId );
-		if( null === $inboundId ) {
-			$counts['failures']++;
+		if( isset( $data['email'] ) ) {
+			print "{$data['email']}";
 		} else {
-			if( LEGACY_DB ) {
-				insertIncomingData( $feedParams, $data, $job->jobId );
+			print " ";
+		}
+
+		$result = validateIncomingData( $feedParams, $data );
+
+		if( $result['valid'] ) {
+
+			print " - VALID\n";
+
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId );
+			if( null === $inboundId ) {
+				$counts['failures']++;
+			} else {
+				if( LEGACY_DB ) {
+					insertIncomingData( $feedParams, $data, $job->jobId );
+				}
+				pushIncomingData( $job->idFeedIn, $data, $inboundId );
+				$counts['success']++;
 			}
-			pushIncomingData( $job->idFeedIn, $data, $inboundId );
-			$counts['success']++;
+
+		} else {
+
+			$counts['invalid']++;
+
+			print " - ERROR\n";
+			foreach($result['errors'] as $error) {
+				print "\t{$error}\n";
+			}
+
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $job->jobId );
+
+			if( LEGACY_DB ) {
+				insertIncomingData( $feedParams, $data, $job->jobId, $result['errors'][0] );
+			}
+
 		}
 
+		print "\n";
+
+		$cnt++;
+		unset( $data );
+
+	}
+	fclose($handle);
+
+	if( $cnt == intval( $job->records ) ) {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'finished',
+		) );
 	} else {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Record count does not match',
+		) );
+	}
 
-		$counts['invalid']++;
+	print "FILE IMPORT COMPLETE!\n";
 
-		print " - ERROR\n";
-		foreach($result['errors'] as $error) {
-			print "\t{$error}\n";
+	print "Successful: {$counts['success']}\n";
+	print "Duplicates: {$counts['dupe']}\n";
+	print "Invalid: {$counts['invalid']}\n";
+	print "Failures: {$counts['failures']}\n";
+
+} else if( 'suppression' === $job->type ) {
+
+	$fields = unserialize( $job->fields );
+
+	if( empty( $fields['list'] ) ) {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'No list specified',
+		) );
+		exit;
+	}
+
+	$lists = array();
+	if( 'multiple' == $fields['list'] ) {
+		foreach( $fields as $key => $val ) {
+			if( strpos( $key,'suppress_multiselect_' ) !== FALSE && isset( $val ) ) {
+				$lists[] = intval( $val );
+			}
 		}
+	} else if( 'global' == $fields['list'] ) {
+		$lists[] = null;
+	} else {
+		$lists[] = intval( $fields['list'] );
+	}
 
-		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $job->jobId );
+	if( sizeOf( $lists ) == 0 ) {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'No list specified',
+		) );
+		exit;
+	}
 
-		if( LEGACY_DB ) {
-			insertIncomingData( $feedParams, $data, $job->jobId, $result['errors'][0] );
+	$counts = array(
+		'success' => 0,
+		'invalid' => 0,
+		'failures' => 0,
+		'dupe' => 0,
+	);
+
+	$cnt = 0;
+	while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
+
+		$raw_data = trim ( $raw_data );
+
+		if( strpos( $raw_data, '@' ) !== FALSE && !filter_var( $raw_data, FILTER_VALIDATE_EMAIL ) ) {
+			$counts['invalid']++;
+		} else {
+			foreach( $lists as $list ) {
+				$result = $leads->addSuppression( $list, $raw_data );
+				if( null === $result ) {
+					$counts['dupe']++;
+				} else if( false === $result ) {
+					$counts['failures']++;
+				} else {
+					$counts['success']++;
+				}
+			}
 		}
 
 	}
+	fclose($handle);
 
-	print "\n";
+	if( $cnt == intval( $job->records ) ) {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'finished',
+		) );
+	} else {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Record count does not match',
+		) );
+	}
 
-	$cnt++;
-	unset( $data );
+	print "FILE IMPORT COMPLETE!\n";
 
-}
-fclose($handle);
+	print "Successful: {$counts['success']}\n";
+	print "Duplicates: {$counts['dupe']}\n";
+	print "Invalid: {$counts['invalid']}\n";
+	print "Failures: {$counts['failures']}\n";
 
-if( $cnt == intval( $job->records ) ) {
-	$leads->updateJob( $job->jobId, array(
-		'status' => 'finished',
-	) );
 } else {
+
 	$leads->updateJob( $job->jobId, array(
 		'status' => 'error',
+		'message' => 'Unknown job type',
 	) );
+
 }
-
-print "FILE IMPORT COMPLETE!\n";
-
-print "Successful: {$counts['success']}\n";
-print "Duplicates: {$counts['dupe']}\n";
-print "Invalid: {$counts['invalid']}\n";
-print "Failures: {$counts['failures']}\n";

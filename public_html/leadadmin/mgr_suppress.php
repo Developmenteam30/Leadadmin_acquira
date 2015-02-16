@@ -12,36 +12,6 @@ $mysqlErrorSource = 'Manager - Suppression';
 include(INCLUDES."_connx.php");
 include(INCLUDES."f_site.php");
 
-function getSuppressionCount($idCompany){
-	$getCount = "SELECT COUNT(*) FROM `".DATABASE_NAME."`.`suppression_".$idCompany."`;";
-	dbCon();
-	$dogetCount = dbQry($getCount, 'Fetching count of suppressed records.', true);
-	dbDcon();
-	if($dogetCount === false){ return false; }
-	$queryObject = $dogetCount->fetch_assoc();
-	$count = $queryObject['COUNT(*)'];
-	return $count;
-}
-
-function addToSuppressionList($idCompany, $email){
-	dbCon();
-	$insert = "INSERT INTO `".DATABASE_NAME."`.`suppression_".$idCompany."` "
-		."(`email`) VALUES ('".$GLOBALS['dbconnx']->escape_string($email)."');";
-	$doinsert = dbQry($insert, 'Inserting email into suppression', true, true, true); //Verbose result turned on.
-	dbDcon();
-	if($doinsert['result'] === false){
-		return array(
-			'result' => false
-			, 'error' => $doinsert['error']
-		);
-	} else {
-		return array(
-			'result' => true
-			, 'error' => 'Successfully added email to suppression list.'
-		);
-	}
-}
-
 if(isset($_REQUEST['a'])){ 
 	$result = array(
 		'status' => 0
@@ -50,121 +20,139 @@ if(isset($_REQUEST['a'])){
 	switch($_REQUEST['a']){
 
 		case 'Add':
-			$c = true;
 			$result['error'] = 'Failed when trying to import file.';
 
 			if( empty( $_REQUEST['list'] ) ) {
-				$c = false;
 				$result['error'] = 'No list selected!';
+				break;
 			}
 
 			$lists = array();
 
-			if( $c ) {
-				if( 'multiple' == $_REQUEST['list'] ) {
-					foreach( $_REQUEST as $key => $val ) {
-						if( strpos( $key,'suppress_multiselect_' ) !== FALSE && isset( $val ) ) {
-							$lists[] = intval( $val );
-						}
+			if( 'multiple' == $_REQUEST['list'] ) {
+				foreach( $_REQUEST as $key => $val ) {
+					if( strpos( $key,'suppress_multiselect_' ) !== FALSE && isset( $val ) ) {
+						$lists[] = intval( $val );
 					}
-				} else if( 'global' == $_REQUEST['list'] ) {
-					$lists[] = 'global';
-				} else {
-					$lists[] = intval( $_REQUEST['list'] );
 				}
+			} else if( 'global' == $_REQUEST['list'] ) {
+				$lists[] = 'global';
+			} else {
+				$lists[] = intval( $_REQUEST['list'] );
 			}
 
-			if( $c && sizeOf( $lists ) == 0 ) {
-				$c = false;
+			if( sizeOf( $lists ) == 0 ) {
 				$result['error'] = 'No list selected!';
+				break;
 			}
 
-			if( $c && empty( $_FILES['suppress_file']['tmp_name'] ) ) {
-				$c = false;
+			if( empty( $_FILES['suppress_file']['tmp_name'] ) ) {
 				$result['error'] = 'No file uploaded!';
+				break;
 			}
 
-			if( $c && !is_uploaded_file( $_FILES['suppress_file']['tmp_name'] ) ) {
-				$c = false;
+			if( !is_uploaded_file( $_FILES['suppress_file']['tmp_name'] ) ) {
 				$result['error'] = 'Possible file upload attack!';
+				break;
 			}
 
-			if( $c && $_FILES['suppress_file']['size'] > MAX_UPLOAD_SIZE ) {
-				$c = false;
+			if( $_FILES['suppress_file']['size'] > MAX_UPLOAD_SIZE ) {
 				$result['error'] = 'File size cannot exceed ' . (MAX_UPLOAD_SIZE / 1024000) . 'MB';
+				break;
 			}
 
-			$counts = array(
-				'success' => 0,
-				'invalid' => 0,
-				'failures' => 0,
-				'dupe' => 0,
-			);
-
-			if( $c ) {
-				$handle = @fopen( $_FILES['suppress_file']['tmp_name'], "r" );
-				if ( !$handle ) {
-					$c = false;
-					$result['error'] = 'Cannot open file for reading';
-				}
-				if( $c ) {
-    				while ( ( $buffer = fgets($handle, 4096) ) !== false ) {
-
-						$buffer = trim ( $buffer );
-
-						if( strpos( $buffer, '@' ) !== FALSE && !filter_var( $buffer, FILTER_VALIDATE_EMAIL ) ) {
-							$counts['invalid']++;
-						} else {
-							foreach($lists as $list){
-								$addResult = addToSuppressionList( $list, $buffer );
-								if(!$addResult['result']){
-									if(strpos($addResult['error'], "Duplicate") === false){ //Not a duplicate
-										$counts['failures']++;
-									} else { 
-										$counts['dupe']++;
-									}
-								} else { 
-									$counts['success']++;
-								}
-							}
-						}
-
-					} 
-			    	if ( !feof( $handle ) ) {
-			        	$c = false;
-						$result['error'] = 'Error: unexpected fgets() fail';
-			    	}
-			    	fclose( $handle );
-				}
+			$handle = @fopen( $_FILES['suppress_file']['tmp_name'], "r" );
+			if( !$handle ) {
+				$result['error'] = 'Cannot open uploaded file for reading';
+				break;
 			}
 
+			// Turn off output buffering
+			ini_set('output_buffering', 'off');
+
+			// Turn off PHP output compression
+			ini_set('zlib.output_compression', false);
+
+			// Flush (send) the output buffer and turn off output buffering
+			// ob_end_flush();
+			while (@ob_end_flush());
+
+			// Implicitly flush the buffer(s)
+			ini_set('implicit_flush', true);
+			ob_implicit_flush(true);
+
+			print '<p>Uploading: ';
+
+			@ob_flush();
+			@flush();
+
+			$cnt = 0;
+			while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
+				$cnt++;
+				print ". \n";
+				@ob_flush();
+				@flush();
+			}
+			fclose($handle);
+
+			print 'Done!</p>';
+
+			@ob_flush();
+			@flush();
+
+			if( 0 === $cnt ) {
+				$result['error'] = 'Cannot open uploaded file for reading';
+				break;
+			}
+
+			$newFile = SITE_ROOT . 'uploads/' . hash( 'sha256', $_FILES['suppress_file']['tmp_name'] );
+			if( move_uploaded_file( $_FILES['suppress_file']['tmp_name'], $newFile  ) !== true ) {
+				$result['error'] = 'Cannot move uploaded file for processing';
+			}
+
+			$jobId = $leads->addJob( $_REQUEST['idFeedIn'], serialize( $_REQUEST ), $newFile, $cnt );
+			if( null === $jobId ) {
+				dieError( 'Cannot add job to database' );
+			}
+
+			$leads->auditLog( 'SUPPRESS:IMPORT', $jobId );
+
+			$link = sprintf( '/leadadmin/mgr_job.php?jobId=%d&count=%d',
+					$jobId,
+					$cnt );
+
+?>
+			<p><a href="<?php echo $link; ?>">View results</a></p>
+			<script>window.location = '<?php echo $link; ?>';</script>
+
+<?php
 			if( $c ){ 
 				$result['status'] = 1;
 				$result['error'] = 'Successfully added new suppressions.';
-				$result['counts'] = $counts;
+				$result['counts'] = $cnt;
 			}
 
 		break;
 
-        case 'exportData':
-            $c = true; $result['error'] = 'Failed when trying to export data.';
+		case 'exportData':
+			$c = true; $result['error'] = 'Failed when trying to export data.';
 
 			if( empty( $_REQUEST['idCompany'] ) ) {
-				$idCompany = 'global';
+				$idCompany = null;
 			} else {
 				$idCompany = intval ( $_REQUEST['idCompany'] );
 			}
 
 			$export = $leads->exportSuppressions( $idCompany );
 			if( isset( $export['reason'] ) && 'Success' == $export['reason'] ) {
-                $result['status'] = 1;
-                $result['error'] = 'Successfully exported file.';
-                $result['link'] = $export['file'];
+				$result['status'] = 1;
+				$result['error'] = 'Successfully exported file.';
+				$result['link'] = $export['file'];
 			} else {
 				$c = false;
 				$result['error'] = isset( $export['reason'] ) ? $export['reason'] : 'Unknown error';
 			}
-        break;
+		break;
 
 		case 'processSuppression':
 			$c = true; $result['error'] = 'Failed when processing new suppression.';
@@ -196,25 +184,21 @@ if(isset($_REQUEST['a'])){
 							} else {
 								if($_REQUEST['list'] == 'multiple'){
 									foreach($_REQUEST['lists'] as $list){
-										$result = addToSuppressionList($list, $_REQUEST['email']);
-										if(!$result['result']){
-											if(strpos($result['error'], "Duplicate") === false){ //Not a duplicate
-												$counts['failures']++;
-											} else { 
-												$counts['dupe']++;
-											}
+										$result = $leads->addSuppression( $list, $_REQUEST['email'] );
+										if( null === $result ) {
+											$counts['dupe']++;
+										} else if( false === $result ) {
+											$counts['failures']++;
 										} else { 
 											$counts['success']++;
 										}
 									}
 								} else { 
-									$result = addToSuppressionList($_REQUEST['list'], $_REQUEST['email']);
-									if(!$result['result']){
-										if(strpos($result['error'], "Duplicate") === false){ //Not a duplicate
-											$counts['failures']++;
-										} else { 
-											$counts['dupe']++;
-										}
+									$result = $leads->addSuppression( $_REQUEST['list'], $_REQUEST['email'] );
+									if( null === $result ) {
+										$counts['dupe']++;
+									} else if( false === $result ) {
+										$counts['failures']++;
 									} else { 
 										$counts['success']++;
 									}
@@ -235,25 +219,21 @@ if(isset($_REQUEST['a'])){
 								} else {
 									if($_REQUEST['list'] == 'multiple'){
 										foreach($_REQUEST['lists'] as $list){
-											$result = addToSuppressionList($list, $email);
-											if(!$result['result']){
-												if(strpos($result['error'], "Duplicate") === false){ //Not a duplicate
-													$counts['failures']++;
-												} else { 
-													$counts['dupe']++;
-												}
+											$result = $leads->addSuppression( $list, $email );
+											if( null === $result ) {
+												$counts['dupe']++;
+											} else if( false === $result ) {
+												$counts['failures']++;
 											} else { 
 												$counts['success']++;
 											}
 										}
 									} else { 
-										$result = addToSuppressionList($_REQUEST['list'], $email);
-										if(!$result['result']){
-											if(strpos($result['error'], "Duplicate") === false){ //Not a duplicate
-												$counts['failures']++;
-											} else { 
-												$counts['dupe']++;
-											}
+										$result = $leads->addSuppression( $_REQUEST['list'], $email );
+										if( null === $result ) {
+											$counts['dupe']++;
+										} else if( false === $result ) {
+											$counts['failures']++;
 										} else { 
 											$counts['success']++;
 										}
@@ -282,16 +262,7 @@ if(isset($_REQUEST['d'])){
 	include(INCLUDES."d_shared.php");
 	switch($_REQUEST['d']){
 		case 'suppressionCounts':
-			$lists = array('global');
-			$companies = getCompanies();
-			if($companies === false){ 
-			} elseif($companies == 0){
-			} else { 
-				foreach($companies as $company){ 
-					$companyCache[$company->idCompany] = $company;
-					$lists[] = $company->idCompany;
-				}
-			}
+			$lists = $leads->getSuppressionCounts();
 ?>
 <table class="standard">
 	<thead>
@@ -304,20 +275,19 @@ if(isset($_REQUEST['d'])){
 	<tbody>
 <?php
 			foreach($lists as $suppressionList){ 
-				if($suppressionList == 'global'){ $display_listName = 'Global'; $idCompany = 0; }
-				else { $display_listName = $companyCache[$suppressionList]->name; $idCompany = $suppressionList; }
-				$suppressionCount = getSuppressionCount($suppressionList);
-				if($suppressionCount === false){ $display_suppressionCount = 'Error'; }
-				else{ $display_suppressionCount = $suppressionCount; }
+				if( null === $suppressionList->idCompany ) { 
+					$suppressionList->idCompany = 0;
+					$suppressionList->name = 'Global';
+				}
 ?>
 		<tr class="bgGray">
-			<td><p><?php echo $display_listName; ?></p></td>
-			<td><p class='aRight'><?php echo $display_suppressionCount; ?></p></td>
+			<td><p><?php echo htmlentities( $suppressionList->name ); ?></p></td>
+			<td><p class='aRight'><?php echo $suppressionList->cnt; ?></p></td>
 			<td>
 				<p>
-                	<input type='button' value='Export Data' onclick='exportFile(<?php echo $idCompany; ?>);'/>
-                	<a href='#' id='resultExport_<?php echo $idCompany; ?>'></a>
-                	<span id='resultQuery_<?php echo $idCompany; ?>'></span>
+					<input type='button' value='Export Data' onclick='exportFile(<?php echo $suppressionList->idCompany; ?>);'/>
+					<a href='#' id='resultExport_<?php echo $suppressionList->idCompany; ?>'></a>
+					<span id='resultQuery_<?php echo $suppressionList->idCompany; ?>'></span>
 				</p>
 			</td>
 		</tr>
@@ -424,10 +394,12 @@ if(isset($_REQUEST['d'])){
 <p>Upload Suppression File</p>
 <p><strong>Suppression file must be saved in CSV format.  Excel format will not work.  There should only be one column in the spreadsheet and that column will contain the list of email addresses to be added.  Maximum file size is <?php echo (MAX_UPLOAD_SIZE / 1024000);?>MB.</strong></p>
 <p>
-<form enctype="multipart/form-data" action="mgr_suppress.php" method="post">
-	File: <input type="file" name="suppress_file" multiple="false" accept="text/csv" />
+<form enctype="multipart/form-data" action="mgr_import.php" method="post" target="_blank">
+<input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>" />
+<input type="hidden" name="type" value="suppression" />
+	File: <input type="file" name="import_file" multiple="false" accept="text/csv" />
 	to Suppression List 
-	<select id="suppress_list" name="list" onchange="checkIfMulti();">
+	<select id="suppress_list" name="destination" onchange="checkIfMulti();">
 		<option value="global">Global Suppression</option>
 		<option value="multiple">Multiple Separate Lists</option>
 <?php
@@ -590,29 +562,29 @@ function processSuppression(type){
 }
 
 function exportFile(idCompany){
-    var response = $.ajax({
-        url: "mgr_suppress.php",
-        type: "POST",
-        async: true,
-        data: ({
-            "a" : "exportData"
-            , "idCompany": idCompany
-        })
-    }).done(function(responseText){
-        var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-        if(result===null) {
-            alert("JSON Failed: "+responseText);
-            return false;
-        }
-        if(result.status == 1){
-            $('#resultExport_'+idCompany).html('Download File');
-            $('#resultExport_'+idCompany).attr('href', result.link);
-        } else {
-            $('#resultExport_'+idCompany).html('');
-            alert(result.error);
-        }
-    });
-    $('#resultExport_'+idCompany).html("Processing...");
+	var response = $.ajax({
+		url: "mgr_suppress.php",
+		type: "POST",
+		async: true,
+		data: ({
+			"a" : "exportData"
+			, "idCompany": idCompany
+		})
+	}).done(function(responseText){
+		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
+		if(result===null) {
+			alert("JSON Failed: "+responseText);
+			return false;
+		}
+		if(result.status == 1){
+			$('#resultExport_'+idCompany).html('Download File');
+			$('#resultExport_'+idCompany).attr('href', result.link);
+		} else {
+			$('#resultExport_'+idCompany).html('');
+			alert(result.error);
+		}
+	});
+	$('#resultExport_'+idCompany).html("Processing...");
 }
 
 $(document).ready(function(){

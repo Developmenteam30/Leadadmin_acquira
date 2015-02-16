@@ -538,6 +538,36 @@ class Leads
 		return $results;
 	}
 
+	public function retireOutboundFeed( $idFeedOut ) {
+		if( empty( $idFeedOut ) ) {
+			return false;
+		}
+
+		$this->db->beginTransaction();
+
+		try {
+			$query = $this->db->prepare( "UPDATE feedout SET cron = '0', enabled = '0' WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to update feedout retired status: ' . $e->getMessage() );
+			return false;
+		}
+
+		try {
+			$query = $this->db->prepare( "UPDATE feedPopulation SET enabled = '0' WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to update feedPopulation retired status: ' . $e->getMessage() );
+			return false;
+		}
+
+		$this->db->commit();
+
+		return true;
+	}
+
 	public function getOutboundFeed( $idFeedOut ) {
 		$results = array();
 
@@ -1179,12 +1209,13 @@ class Leads
 		return $results;
 	}
 
-	public function addJob( $idFeedIn, $fields, $filename, $records ) {
+	public function addJob( $type, $destination, $fields, $filename, $records ) {
 		$jobId = null;
 
 		try {
 			$jobId = $this->insertRow( 'jobs', array(
-				'idFeedIn' => $idFeedIn,
+				'type' => $type,
+				'destination' => $destination,
 				'fields' => $fields,
 				'filename' => $filename,
 				'records' => $records,
@@ -1216,7 +1247,7 @@ class Leads
 
 	public function getJobs() {
 		try {
-			$query = $this->db->prepare( "SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.idFeedIn = f.idFeedIn ORDER BY j.jobId DESC" );
+			$query = $this->db->prepare( "SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn ORDER BY j.jobId DESC" );
 			$query->execute( );
 			return $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -1237,7 +1268,7 @@ class Leads
 		}
 
 		try {
-			$query = $this->db->prepare( "SELECT jobId,idFeedIn,fields,filename,records FROM jobs WHERE status = ?" );
+			$query = $this->db->prepare( "SELECT jobId,type,destination,fields,filename,records FROM jobs WHERE status = ?" );
 			$query->execute( array( 'pending' ) );
 			$rows = $query->fetchAll( PDO::FETCH_OBJ );
 			if( $rows && is_array( $rows ) ) {
@@ -2043,6 +2074,39 @@ class Leads
 		return $cnt;
 	}
 
+	public function addSuppression( $idCompany, $email ) {
+		try {
+			$idSuppression = $this->insertRow( 'suppression', array(
+				'idCompany' => $idCompany,
+				'email' => $email,
+			) );
+		} catch( Leads_PDOException $e ) {
+			if( strpos( $pdoException->getMessage(), 'SQLSTATE[23000]:' ) !== false ) {
+				return null;
+			} else {
+				$pdoException = $e->getPrevious();
+				$this->logError( 'Unable to add suppression: ' . $pdoException->getMessage() );
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public function getSuppressionCounts() {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT s.idCompany,c.name,COUNT(*) AS cnt FROM suppression s LEFT JOIN companies c ON s.idCompany = c.idCompany GROUP BY s.idCompany" );
+			$query->execute( array( ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get suppression counts: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function checkSuppression( $email, $idCompany = null ) {
 		$result = false;
 
@@ -2053,17 +2117,14 @@ class Leads
 		list( $local, $domain ) = explode( '@', $email, 2 );
 
 		try {
-/*
 			if( !empty( $idCompany ) ) {
-				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND ( idCompany IS NULL or idCompany = ? )" );
+				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND ( idCompany IS NULL OR idCompany = ? )" );
 				$query->execute( array( $email, $domain, $idCompany ) );
 			} else {
 				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND idCompany IS NULL" );
 				$query->execute( array( $email, $domain ) );
 			}
-*/
-			$query = $this->db->prepare( "SELECT 1 FROM suppression_global WHERE ( email = ? OR email = ? )" );
-			$query->execute( array( $email, $domain ) );
+
 			if( '1' == $query->fetchColumn( ) ) {
 				$result = true;
 			}
@@ -2077,7 +2138,11 @@ class Leads
 	public function exportSuppressions( $idCompany ) {
 		$result = array();
 
-		$result['file'] = 'exports/suppression_'.$idCompany."_".time().".csv";
+		if( empty( $idCompany ) ) {
+			$result['file'] = 'exports/suppression_global_' . time() . '.csv';
+		} else {
+			$result['file'] = 'exports/suppression_' . intval( $idCompany ) . '_' . time() . '.csv';
+		}
 		$filePath = ADMIN_ROOT . $result['file'];
 		$fh = fopen( $filePath, 'w' );
 		if( !$fh ) {
@@ -2086,12 +2151,13 @@ class Leads
 		}
 
 		try {
-/*
-			$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany = ?" );
-			$query->execute( array( $idCompany ) );
-*/
-			$query = $this->db->prepare( "SELECT email FROM " . $this->quoteIdentifier( 'suppression_' . $idCompany ) );
-			$query->execute( );
+			if( empty( $idCompany ) ) {
+				$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany IS NULL" );
+				$query->execute( array( ) );
+			} else {
+				$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany = ?" );
+				$query->execute( array( $idCompany ) );
+			}
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fwrite( $fh, $row['email'] . PHP_EOL );
 			}

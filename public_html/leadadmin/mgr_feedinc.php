@@ -907,7 +907,8 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 ?>
 <form enctype="multipart/form-data" action="mgr_import.php" method="post" target="_blank">
 <input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>" />
-<input type="hidden" name="idFeedIn" value="<?php echo intval($idFeedIn); ?>" />
+<input type="hidden" name="destination" value="<?php echo intval( $idFeedIn ); ?>" />
+<input type="hidden" name="type" value="feedinc" />
 
 <table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
 	<tr>

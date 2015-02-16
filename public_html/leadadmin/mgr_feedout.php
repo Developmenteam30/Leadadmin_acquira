@@ -249,51 +249,6 @@ function deletePopulationParam($idAssoc){
 	return true;
 }
 
-function retireFeed($idFeedOut){
-	$result = array(
-		'success' => false
-		, 'reason' => 'None.'
-	);
-	$c = true; $unretire = false;
-	if($c){
-		$alterResult = alterFeedOut($idFeedOut, 'retired', '1');
-		if(!$alterResult['success']){
-			$c = false; $result['reason'] = $alterResult['reason'];
-		}
-	}
-	if($c){ //Successfully retired the entry, now delete population parameters.
-		$populationSettings = getPopulationSettings($idFeedOut);
-		if($populationSettings === false){ 
-			$c = false; $result['reason'] = 'Could not fetch population settings for this feed.';
-		}
-	}
-	if($c && $populationSettings != 0){ //Successfully fetched settings, delete each.
-		foreach($populationSettings as $popSet){ 
-			$deleteResult = deletePopulationParam($popSet->idAssoc);
-			if($deleteResult === false){ 
-				$c = false; $result['reason'] = 'Database failure - could not delete population parameters for this '
-					.'feed.';
-				$unretire = true;
-				break;
-			}
-		}
-	}
-	if(!$c && $unretire){
-		$alterResult = alterFeedOut($idFeedOut, 'retired', '0');
-		if(!$alterResult['success']){
-			$c = false; $result['reason'] = 'Failure when unretiring feed when there was a failure to delete '
-				.'population parameters: '.$alterResult['reason'];
-		}
-	}
-	if($c){ 
-		$result['success'] = true;
-		$result['reason'] = 'Successfully retired feed and removed all population parameters.';
-		$leads = Leads::getInstance();
-		$leads->auditLog( 'FEEDOUT:RETIRE', $idFeedOut );
-	}
-	return $result;
-}
-
 if(isset($_REQUEST['a'])){ 
 	$result = array(
 		'status' => 0
@@ -473,6 +428,15 @@ if(isset($_REQUEST['a'])){
 						if($c){ //Validated, change label, change table names.
 							$alterResult = alterFeedOut(
 								$_REQUEST['idFeedOut'], 'successString', $_REQUEST['successString']
+							);
+							if(!$alterResult['success']){ 
+								$c = false; $result['error'] = $alterResult['reason'];
+							}
+						}
+					}
+					if($_REQUEST['status'] != $feed->status){ 
+						if($c){
+							$alterResult = alterFeedOut( $_REQUEST['idFeedOut'], 'status', $_REQUEST['status']
 							);
 							if(!$alterResult['success']){ 
 								$c = false; $result['error'] = $alterResult['reason'];
@@ -887,21 +851,19 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'outgoingFeeds':
-			if( isset( $_REQUEST['options']['retired'] ) && '1' == $_REQUEST['options']['retired'] ) {
-				$retired = true;
-			} else if( isset( $_REQUEST['options']['retired'] ) && '0' == $_REQUEST['options']['retired'] ) {
-				$retired = null;
+			if( !empty( $_REQUEST['options']['status'] ) ) {
+				$status = $_REQUEST['options']['status'];
 			} else {
-				$retired = false;
+				$status = null;
 			}
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$outgoingFeeds = $leads->getOutboundFeeds( null, $retired );
+				$outgoingFeeds = $leads->getOutboundFeeds( null, $status );
 			} else {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
 				}
-				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, $retired );
+				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, $status );
 			}
 ?>
 <p>
@@ -977,27 +939,6 @@ if($outgoingFeeds === false){
 			$companyFeedList[$keyFeed]->statusCron = ($feed->cron)?'Running':'Paused';
 			$companyFeedList[$keyFeed]->statusPop = getPopulationStatus($feed->idFeedOut);
 		}
-
-/*
-		foreach($companyFeedList as $keyFeed => $feed){ 
-			if($feed->enabled) { $totalActive++; }
-			
-			$companyFeedList[$keyFeed]->accepted = getCount($feed->idFeedOut, 'win');
-			if($companyFeedList[$keyFeed]->accepted === false){ $companyFeedList[$keyFeed]->accepted = 'Error'; }
-			elseif(is_null($companyFeedList[$keyFeed]->accepted)){ $companyFeedList[$keyFeed]->accepted = 0; }
-			else { $totalAccepted += $companyFeedList[$keyFeed]->accepted; }
-			
-			$companyFeedList[$keyFeed]->rejected = getCount($feed->idFeedOut, 'fail');
-			if($companyFeedList[$keyFeed]->rejected === false){ $companyFeedList[$keyFeed]->rejected = 'Error'; }
-			elseif(is_null($companyFeedList[$keyFeed]->rejected)){ $companyFeedList[$keyFeed]->rejected = 0; }
-			else { $totalRejected += $companyFeedList[$keyFeed]->rejected; }
-			
-			$companyFeedList[$keyFeed]->queued = getQueueCount( $feed->label );
-			if($companyFeedList[$keyFeed]->queued === false){ $companyFeedList[$keyFeed]->queued = 'Error'; }
-			elseif(is_null($companyFeedList[$keyFeed]->queued)){ $companyFeedList[$keyFeed]->queued = 0; }
-			else { $totalQueued += $companyFeedList[$keyFeed]->queued; }
-		}
-*/
 ?>
 	<tr class='fTORow fTO_Row bgGray'>
 		<td class='fTO_companyName' colspan='2'><p><?php echo $companyCache[$idCompany]->name; ?></p></td>
@@ -1036,7 +977,7 @@ if($outgoingFeeds === false){
 ?>
 	<tr class='fTORow fTO_Row'>
 		<td class='fTO_idFeedOut'><p><?php echo $feed->idFeedOut; ?></p></td>
-		<td class='fTO_label<?php if('1' == $feed->retired) print " retired";?>'><p><?php echo $feed->label; ?></p></td>
+		<td class='fTO_label status-<?php echo $feed->status; ?>'><p><?php echo $feed->label; ?></p></td>
 		<td class='fTO_description'><p><?php echo $feed->description; ?></p></td>
 		<td class='fTO_statusPop'>
 			<p>
@@ -1568,6 +1509,16 @@ if($populationSettings === false){
 				<input type='text' name='<?php echo $e; ?>feed_delay' id='<?php echo $e; ?>feed_delay' value='<?php echo $feed_delay; ?>' /> Minutes
 			</p>
 		</td>
+	</tr>
+	<tr>
+	   <td><p>Feed Status</p></td>
+	   <td>
+		   <p>
+			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_active' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) {?>checked='checked'<?php } ?>/> Active (Visible)<br/>
+			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_hidden' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
+			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_retired' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> Retired
+		   </p>
+	   </td>
 	</tr>
 	<tr>
 		<td colspan='2'>
@@ -2550,6 +2501,7 @@ function manageFeed(action, idFeedOut){
 	if( dailyLimit == '' ) { dailyLimit = 0; }
 	delay = $(e+'delay').val();
 	if( delay == '' ) { delay = 0; }
+	status = $(e+'status').val();
 /* 	alert(
 		"idFeedOut: "+idFeedOut
 		+"\n"+"label: "+label
@@ -2602,6 +2554,7 @@ function manageFeed(action, idFeedOut){
 				, "successString":successString
 				, "dailyLimit":dailyLimit
 				, "delay":delay
+				, "status":status
 				, "urlassignments":urlassignments
 			})
 		}).done(function(responseText){ 
@@ -3088,10 +3041,10 @@ function feedRetire(idFeedOut, options){
 }
 
 $(document).ready(function(){ 
-	display('outgoingFeeds');
+	display('outgoingFeeds', { 'status': 'active' } );
 
-	$('#retired').change(function() {
-		display('outgoingFeeds', { 'retired': $(this).val() } );
+	$('#status').change(function() {
+		display('outgoingFeeds', { 'status': $(this).val() } );
 	});
 });
 </script>
@@ -3102,10 +3055,11 @@ $(document).ready(function(){
 		<div id='controls'>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 			<a href='#' class='nonLink' onclick="display('dialog_newfeedout');">Add New Feed</a>
-			<select class="fr" id="retired" name="retired">
-				<option value="">Show active feeds</option>
-				<option value="1">Show retired feeds</option>
-				<option value="0">Show all feeds</option>
+			<select class="fr" id="status" name="status">
+				<option value="active">Show active feeds</option>
+				<option value="hidden">Show hidden feeds</option>
+				<option value="retired">Show retired feeds</option>
+				<option value="">Show all feeds</option>
 			</select>
 <?php } ?>
 		</div>

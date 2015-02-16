@@ -7,8 +7,10 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
 
+require_once( INCLUDES . 'display.php' );
+
 function dieError( $error ) {
-	dieError( '' . $error . '' );
+	print "<p>{$error}</p>";
 	print "\t</div>\n";
 	print "</div>\n";
 	print "</body>\n";
@@ -18,18 +20,24 @@ function dieError( $error ) {
 	exit;
 }
 
-$mysqlErrorSource = 'Manager - File Import';
-require_once(INCLUDES."_connx.php");
-require_once(INCLUDES."f_site.php");
-require_once(INCLUDES."_f_validEmail.php");
-require_once(INCLUDES."processFunctions.php");
-
 ini_set("auto_detect_line_endings", true);
 set_time_limit(0);
 
+if( isset( $_REQUEST['d'] ) ) {
+    switch( $_REQUEST['d'] ) {
+        case 'errorCount':
+            Display::errorCount();
+        break;
+
+        case 'errorList':
+            Display::errorList();
+        break;
+	}
+	exit;
+}
+
 $title = 'Upload File';
 include(INCLUDES."c_header.php");
-
 ?>
 
 <body>
@@ -40,28 +48,21 @@ include(INCLUDES."c_header.php");
 
 <?php
 
-if( empty( $_REQUEST['idFeedIn'] )) {
-	dieError( 'No incoming feed ID supplied' );
+if( empty( $_REQUEST['type'] ) ) {
+	dieError( 'No upload type supplied' );
 }
 
-$idFeedIn = !empty( $_REQUEST['idFeedIn'] ) ? $_REQUEST['idFeedIn'] : 0;
-$leads = Leads::getInstance();
+$validTypes = array(
+	'feedinc',
+	'suppression',
+);
 
-if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-	$idCompany = LeadsSession::getCompanyId();
-	if( empty( $idCompany ) ) {
-		$idCompany = -9999;
-	}
-	if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
-		dieError( 'Sorry, you do not have access to this feed.' );
-	}
+if( !in_array( $_REQUEST['type'], $validTypes ) ) {
+	dieError( 'Invalid upload type supplied' );
 }
 
-$feedParams = $leads->getInboundFeed( $idFeedIn );
-if($feedParams === false){
-	dieError( 'Database failure.  Cannot load feed information.' );
-} else if( 0 === $feedParams ) {
-	dieError( 'Invalid incoming feed ID supplied' );
+if( !isset( $_REQUEST['destination'] ) ) {
+	dieError( 'No destination supplied' );
 }
 
 if( empty( $_FILES['import_file']['tmp_name'] ) ) {
@@ -127,7 +128,8 @@ if( move_uploaded_file( $_FILES['import_file']['tmp_name'], $newFile  ) !== true
 	dieError( 'Cannot move uploaded file for processing' );
 }
 
-$jobId = $leads->addJob( $_REQUEST['idFeedIn'], serialize( $_REQUEST ), $newFile, $cnt );
+$leads = Leads::getInstance();
+$jobId = $leads->addJob( $_REQUEST['type'], $_REQUEST['destination'], serialize( $_REQUEST ), $newFile, $cnt );
 if( null === $jobId ) {
 	dieError( 'Cannot add job to database' );
 }
@@ -151,4 +153,3 @@ $link = sprintf( '/leadadmin/mgr_job.php?jobId=%d&count=%d',
 <?php
 @ob_flush();
 @flush();
-
