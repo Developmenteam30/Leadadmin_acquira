@@ -177,7 +177,7 @@ if( 'feedinc' === $job->type ) {
 			}
 		}
 	} else if( 'global' == $fields['list'] ) {
-		$lists[] = null;
+		$lists[] = 0;
 	} else {
 		$lists[] = intval( $fields['list'] );
 	}
@@ -200,7 +200,7 @@ if( 'feedinc' === $job->type ) {
 	$cnt = 0;
 	while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
 
-		$raw_data = trim ( $raw_data );
+		$raw_data = trim ( $raw_data[0] );
 
 		if( strpos( $raw_data, '@' ) !== FALSE && !filter_var( $raw_data, FILTER_VALIDATE_EMAIL ) ) {
 			$counts['invalid']++;
@@ -217,6 +217,7 @@ if( 'feedinc' === $job->type ) {
 			}
 		}
 
+		$cnt++;
 	}
 	fclose($handle);
 
@@ -237,6 +238,28 @@ if( 'feedinc' === $job->type ) {
 	print "Duplicates: {$counts['dupe']}\n";
 	print "Invalid: {$counts['invalid']}\n";
 	print "Failures: {$counts['failures']}\n";
+
+	$body  = "Job Results\r\n";
+	$body .= "\r\n";
+	$body .= "Job ID: {$job->jobId}\r\n";
+	$body .= "Job Type: suppression\r\n";
+	$body .= "\r\n";
+	$body .= "Total Records: {$cnt}\r\n";
+	$body .= "\r\n";
+	$body .= "Successful: {$counts['success']}\r\n";
+	$body .= "Duplicates: {$counts['dupe']}\r\n";
+	$body .= "Invalid: {$counts['invalid']}\r\n";
+	$body .= "Failures: {$counts['failures']}\r\n";
+	$body .= "\r\n";
+
+	$from = 'lmsalerts@'.SITE_URL;
+	$fromName = CONFIG_COMPANY_NAME;
+	$to = MANAGER_EMAIL;
+	$subject = 'Job Results';
+	$header = "From:" . $fromName . " <" . $from . ">\n";
+    $header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
+
 
 } else {
 

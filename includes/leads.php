@@ -2075,20 +2075,16 @@ class Leads
 	}
 
 	public function addSuppression( $idCompany, $email ) {
-		if( empty( $idCompany ) ) {
-			$idCompany = null;
-		}
-
 		try {
 			$idSuppression = $this->insertRow( 'suppression', array(
 				'idCompany' => $idCompany,
 				'email' => $email,
 			) );
 		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
 			if( strpos( $pdoException->getMessage(), 'SQLSTATE[23000]:' ) !== false ) {
 				return null;
 			} else {
-				$pdoException = $e->getPrevious();
 				$this->logError( 'Unable to add suppression: ' . $pdoException->getMessage() );
 				return false;
 			}
