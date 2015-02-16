@@ -527,7 +527,7 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT fp.*, fo.label, fo.dailyLimit FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ?" );
+			$query = $this->db->prepare( "SELECT fp.*, fo.label, fo.dailyLimit FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ? AND fp.enabled = '1'" );
 			$query->execute( array( $idFeedIn ) );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {

@@ -364,27 +364,6 @@ function validate($fieldType, $value, $feedParams){
 	return $result;
 }
 
-function getIncomingPopulationSettings($idFeedIn){ 
-	dbCon();
-	$getSettings = 
-		"SELECT fp.*, fo.label, fo.dailyLimit "
-		."FROM "
-			."`".DATABASE_NAME."`.`feedPopulation` fp "
-			.", `".DATABASE_NAME."`.`feedout` fo "
-		."WHERE "
-			."fp.`idFeedIn` = '".$idFeedIn."' "
-			."AND fp.`idFeedOut` = fo.`idFeedOut` "
-		.";";
-	$dogetSettings = dbQry($getSettings, 'Fetching population settings', true);
-	if($dogetSettings === false){ return false; }
-	if($dogetSettings->num_rows == 0){ return 0; }
-	$settings = array();
-	while($row = $dogetSettings->fetch_object()){ 
-		$settings[] = $row;
-	}
-	return $settings;
-}
-
 function filterValue($filterType, $value, $filters){
 	switch($filterType){ 
 		case 'accept':
@@ -792,10 +771,10 @@ function pushIncomingData( $idFeedIn, $data, $inboundId ) {
 
 	$leads = Leads::getInstance();
 
-	$populations = getIncomingPopulationSettings( $idFeedIn );
+	$populations = $leads->getInboundPopulationSettings( $idFeedIn );
     if( $populations === false ) {
         print "Database error";
-    } else if( $populations == 0 ) {
+    } else if( sizeOf( $populations ) == 0 ) {
         print "No populations for this feed";
     } else {
         foreach( $populations as $population ) {
