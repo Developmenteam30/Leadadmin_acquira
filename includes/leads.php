@@ -2118,10 +2118,10 @@ class Leads
 
 		try {
 			if( !empty( $idCompany ) ) {
-				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND ( idCompany IS NULL OR idCompany = ? )" );
+				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND ( idCompany = 0 OR idCompany = ? )" );
 				$query->execute( array( $email, $domain, $idCompany ) );
 			} else {
-				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND idCompany IS NULL" );
+				$query = $this->db->prepare( "SELECT 1 FROM suppression WHERE ( email = ? OR email = ? ) AND idCompany = 0" );
 				$query->execute( array( $email, $domain ) );
 			}
 
