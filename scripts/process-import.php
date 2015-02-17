@@ -103,14 +103,14 @@ if( 'feedinc' === $job->type ) {
 
 			print " - VALID\n";
 
-			$inboundId = $leads->inboundAdd( $feedParams->destination, $data, date('Y-m-d'), null, $job->jobId );
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId );
 			if( null === $inboundId ) {
 				$counts['failures']++;
 			} else {
 				if( LEGACY_DB ) {
 					insertIncomingData( $feedParams, $data, $job->jobId );
 				}
-				pushIncomingData( $job->destination, $data, $inboundId );
+				pushIncomingData( $feedParams->idFeedIn, $data, $inboundId );
 				$counts['success']++;
 			}
 
@@ -123,7 +123,7 @@ if( 'feedinc' === $job->type ) {
 				print "\t{$error}\n";
 			}
 
-			$inboundId = $leads->inboundAdd( $feedParams->destination, $data, date('Y-m-d'), $result['errors'][0], $job->jobId );
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $job->jobId );
 
 			if( LEGACY_DB ) {
 				insertIncomingData( $feedParams, $data, $job->jobId, $result['errors'][0] );
