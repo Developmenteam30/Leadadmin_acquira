@@ -441,6 +441,9 @@ if(isset($_REQUEST['a'])){
 								$c = false; $result['error'] = $alterResult['reason'];
 							}
 						}
+						if( 'retired' === $_REQUEST['status'] ) {
+							$leads->retireOutboundFeed( $_REQUEST['idFeedOut'] );
+						}
 					}
 					$dailyLimit = empty( $_REQUEST['dailyLimit'] ) ? null : abs( intval( $_REQUEST['dailyLimit'] ) );
 					if( $dailyLimit != $feed->dailyLimit ){ 
@@ -792,32 +795,6 @@ if(isset($_REQUEST['a'])){
 				$result['status'] = 1;
 			}
 		break;
-		case 'feedRetire':
-			$c = true; $result['error'] = 'Failed when attempting to retire feed.';
-
-			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$idCompany = LeadsSession::getCompanyId();
-				if( empty( $idCompany ) ) {
-					$idCompany = -9999;
-				}
-				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
-					$c = false;
-					$result['error'] = 'Sorry, you do not have access to this feed.';
-					break;
-				}
-			}
-
-			if($c){
-				$retireResult = retireFeed( $idFeedOut );
-				if(!$retireResult['success']){
-					$c = false; $result['error'] = $retireResult['reason'];
-				}
-			}
-			if($c){
-				$result['status'] = 1;
-			}
-		break;
 	}
 	echo json_encode($result);
 	exit;
@@ -1010,9 +987,6 @@ if($outgoingFeeds === false){
 						<a href='#' class='nonLink'
 					onclick='display("dialog_testrecord", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
 						>Send one test record</a><br />
-						<a href='#' class='nonLink'
-					onclick="feedRetire(<?php echo $feed->idFeedOut; ?>, { 'sub': '<?php echo $feed->idCompany; ?>'});"
-						>Retire This Feed</a><br />
 						<a href='#' class='nonLink'
 					onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
 						>URL Report</a>
@@ -2979,46 +2953,6 @@ function manageFeedParam(param, idFeedOut, action, options){
 			}			
 		});
 	}
-}
-
-function feedRetire(idFeedOut, options){ 
-	if(confirm("Are you sure you want to retire this feed? Population settings will be removed, but data will "
-	+"still be intact.")){
-		var response = $.ajax({
-			url: "mgr_feedout.php",
-			type: "POST",
-			async: true,
-			data: ({
-				"a" : "feedRetire"
-				, "idFeedOut": idFeedOut
-			})
-		}).done(function(responseText){ 
-			var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-			if(result===null) { 
-				alert("JSON Failed: "+responseText); 
-			} else { 
-				if(result.status == 1){ 
-					display(
-						'outgoingFeeds'
-						, { 
-							'callbackParams': {
-								'sub':options.sub
-							}
-						}
-						, true
-						, function(o){ 
-							toggleHidden(
-								'companyFeedList'
-								, {'sub':o.sub, 'hiddenText':'Show Feeds', 'shownText':'Close' }
-							);
-						}
-					);	
-				} else { 
-					alert(result.error);
-				}
-			}			
-		});
-	}	
 }
 
 $(document).ready(function(){ 
