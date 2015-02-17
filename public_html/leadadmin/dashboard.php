@@ -263,15 +263,13 @@ if($outgoingFeeds === false){
 
 			$companyFeedList[$keyFeed]->dailyCountQueued = $feed->queued;
 			$totalQueued += $feed->queued;
-
-			if($feed->enabled) { $totalActive++; }
 		}
 ?>
 	<tr class='fTORow fTO_Row bgGray'>
 		<td class='fTO_companyName' colspan='2'><p><?php echo $feed->name; ?></p></td>
 		<td class='fTO_feedOverview'>
 			<p>
-				<?php echo count($companyFeedList); ?> (<?php echo $totalActive; ?> Active)
+				<?php echo count($companyFeedList); ?>
 			</p>
 		</td>
 		<td class='fTO_accepted'><p class='aRight'><?php echo $totalAccepted; ?></p></td>
