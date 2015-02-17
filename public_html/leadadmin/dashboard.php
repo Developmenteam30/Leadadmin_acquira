@@ -198,13 +198,13 @@ if( empty( $urls ) ) {
 		break;
 		case 'outgoingFeeds':
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$outgoingFeeds = $leads->getOutboundFeeds( null, false );
+				$outgoingFeeds = $leads->getOutboundFeeds( null, 'active' );
 			} else {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
 				}
-				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, false );
+				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, 'active' );
 			}
 ?>
 <p>
