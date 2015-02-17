@@ -217,7 +217,7 @@ function dbasesettings()
 	
 	if(!$settings['end']) { 
 		//Should this list to mailer association be processed?
-		if(!$settings['feedParams']->enabled) { 
+		if( 'retired' == $settings['feedParams']->status) { 
 			echo "This feed is deactivated. Script exiting.\n";
 			$settings['end'] = true; //List to mailer assoc is inactive, end the script.
 		}
