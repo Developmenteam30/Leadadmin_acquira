@@ -35,8 +35,8 @@ if(isset($_REQUEST['a'])){
 						$lists[] = intval( $val );
 					}
 				}
-			} else if( 'global' == $_REQUEST['list'] ) {
-				$lists[] = 'global';
+			} else if( '0' == $_REQUEST['list'] ) {
+				$lists[] = 0;
 			} else {
 				$lists[] = intval( $_REQUEST['list'] );
 			}
@@ -138,7 +138,7 @@ if(isset($_REQUEST['a'])){
 			$c = true; $result['error'] = 'Failed when trying to export data.';
 
 			if( empty( $_REQUEST['idCompany'] ) ) {
-				$idCompany = null;
+				$idCompany = 0;
 			} else {
 				$idCompany = intval ( $_REQUEST['idCompany'] );
 			}
@@ -312,7 +312,7 @@ if(isset($_REQUEST['d'])){
 	Email: <input type='text' id='suppress_emailS' /> 
 	to Suppression List 
 	<select id='suppress_list' onchange='checkIfMulti();'>
-		<option value='global'>Global Suppression</option>
+		<option value='0'>Global Suppression</option>
 		<option value='multiple'>Multiple Separate Lists</option>
 <?php
 						foreach($companies as $company){ 
@@ -355,7 +355,7 @@ if(isset($_REQUEST['d'])){
 	Emails: <textarea id='suppress_emailM' ></textarea> 
 	to Suppression List 
 	<select name="list" id='suppress_list' onchange='checkIfMulti();'>
-		<option value='global'>Global Suppression</option>
+		<option value='0'>Global Suppression</option>
 		<option value='multiple'>Multiple Separate Lists</option>
 <?php
 						foreach($companies as $company){ 

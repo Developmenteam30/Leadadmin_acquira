@@ -2152,7 +2152,7 @@ class Leads
 
 		try {
 			if( empty( $idCompany ) ) {
-				$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany IS NULL" );
+				$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany = 0" );
 				$query->execute( array( ) );
 			} else {
 				$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany = ?" );
