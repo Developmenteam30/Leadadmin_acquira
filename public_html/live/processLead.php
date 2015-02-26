@@ -240,7 +240,6 @@ if( !empty( $feedParams ) ) {
 
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $c ? null : $result['reason'], null );
 
-var_dump($inboundId);
 }
 
 //Population Portion of the script. 
