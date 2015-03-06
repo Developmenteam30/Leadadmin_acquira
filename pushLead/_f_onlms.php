@@ -430,6 +430,9 @@ function runlead($leaddata, $fP)
 				case 'stampUS_dateOnly':
 					assignValue( $varFields[$count], date("m-d-Y", strtotime($leaddata['stamp'])), $requestdata );
 				break;
+				case 'stamp_YYYYmmdd':
+					assignValue( $varFields[$count], date("Ymd", strtotime($leaddata['stamp'])), $requestdata );
+				break;
 				case 'stampUSAMPM':
 					assignValue( $varFields[$count], date("m-d-Y H:i:sA", strtotime($leaddata['stamp'])), $requestdata );
 				break;
