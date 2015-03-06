@@ -1327,6 +1327,53 @@ class Leads
 		return $results;
 	}
 
+	public function retryOutboundRejections( $idFeedOut, $date ) {
+		$count = 0;
+
+		// Convert date to UTC, since that is how timestamps are stored in data_outbound
+		$utcStart = new DateTime( $date . ' 00:00:00', new DateTimeZone( 'America/New_York' ) );
+		$utcStart->setTimeZone( new DateTimeZone( 'UTC' ) );
+
+		$utcEnd = new DateTime( $date . ' 23:59:59', new DateTimeZone( 'America/New_York' ) );
+		$utcEnd->setTimeZone( new DateTimeZone( 'UTC' ) );
+
+		$this->db->beginTransaction();
+
+		try {
+			$query = $this->db->prepare( "UPDATE data_outbound SET timestamp = NULL, processed = 0, result = NULL WHERE result IS NOT NULL AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?" );
+			$query->execute( array( $idFeedOut, $utcStart->format('c'), $utcEnd->format('c') ) );
+
+			$count = $query->rowCount();
+
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to retry outbound rejections (1): ' . $e->getMessage() );
+			return null;
+		}
+
+		try {
+			$query = $this->db->prepare( "UPDATE feedout SET queued = queued + ? WHERE idFeedOut = ?" );
+			$query->execute( array( $count, $idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to retry outbound rejections (2): ' . $e->getMessage() );
+			return null;
+		}
+
+		try {
+			$query = $this->db->prepare( "UPDATE stats_outbound SET rejected = 0 WHERE idFeedOut = ? AND stamp = ?" );
+			$query->execute( array( $count, $idFeedOut, $date ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to retry outbound rejections (3): ' . $e->getMessage() );
+			return null;
+		}
+
+		$this->db->commit();
+
+		return $count;
+	}
+
 	public function getInboundStats( $idFeedIn ) {
 		$results = array( 'accepted' => 0, 'rejected' => 0 );
 
