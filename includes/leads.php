@@ -228,6 +228,19 @@ class Leads
 		}
 	}
 
+	public function getAuditLog() {
+		try {
+			$query = $this->db->prepare( "SELECT a.logId,a.timestamp,a.ipaddress,a.userId,u.username,a.action,a.notes FROM auditlog a LEFT JOIN users u ON a.userId = u.idUser WHERE a.timestamp >= DATE_SUB(NOW(),INTERVAL 60 DAY) ORDER BY a.logId DESC" );
+			$query->execute( );
+			return $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get auditlog: ' . $e->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
 	public function checkCompanyName( $name, $idCompany = null ) {
 		$result = false;
 
@@ -1257,7 +1270,6 @@ class Leads
 
 		return null;
 	}
-
 
 	public function getPendingJob() {
 		try {
