@@ -595,6 +595,20 @@ class Leads
 		return $results;
 	}
 
+	public function getOutboundFeedPopulation( $idAssoc ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT p.*,o.* FROM feedPopulation p LEFT JOIN feedout o ON o.idFeedOut = p.idFeedOut WHERE idAssoc = ?" );
+			$query->execute( array( $idAssoc ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound feed population info: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function getOutboundFeeds( $idCompany = null, $status = null ) {
 		$results = array();
 

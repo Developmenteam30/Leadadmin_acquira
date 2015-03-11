@@ -210,8 +210,9 @@ function addPopulationParameter(
 		.");";
 	$doaddParameter = dbQry($addParameter, 'Adding new feed.', true);
 	if($doaddParameter === false){ return false; }
+	$idAssoc = $GLOBALS['dbconnx']->insert_id;
 	$leads = Leads::getInstance();
-	$leads->auditLog( 'FEEDOUT:POP:ADD', null /* FIXME */ );
+	$leads->auditLog( 'FEEDOUT:POP:ADD', $idAssoc );
 	return true;
 }
 
@@ -2366,9 +2367,6 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 							?>, "idAssoc": <?php echo $popSet->idAssoc; ?> <?php
 						?> });' 
 					>Edit</a>
-					<a href='#' class='nonLink'
-						onclick="managePopulationParam(<?php echo $popSet->idAssoc; ?>, 'delete', {'sub':<?php echo $feed->idCompany; ?>, 'idFeedOut':<?php echo $feed->idFeedOut; ?>});"
-					>Delete</a>
 				</p>
 			</td>
 		</tr>

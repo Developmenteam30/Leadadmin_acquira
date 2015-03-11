@@ -41,13 +41,28 @@ if( isset( $_REQUEST['d'] ) ) {
 				foreach( $logs as $log ) {
 					$timestamp = new DateTime( $log->timestamp, new DateTimeZone( 'UTC' ) );
 					$timestamp->setTimezone( new DateTimeZone( 'America/New_York' ) );
+
+					$notes = $log->notes;
+					if( !empty( $log->notes ) && 'FEEDINC:IMPORT' == $log->action ) {
+						$notes = '<a href="/leadadmin/mgr_job.php?jobId=21&count=10">Job ' . $log->notes . '</a>';
+					} else if( !empty( $log->notes ) && strpos( $log->action, 'FEEDINC:' ) === 0 ) {
+						$info = $leads->getInboundFeed( $log->notes );
+						$notes = $log->notes . ': ' . $info->label . ' (' . htmlentities( $info->description ) . ')';
+					} else if( !empty( $log->notes ) && strpos( $log->action, 'FEEDOUT:POP:' ) === 0 ) {
+						$info = $leads->getOutboundFeedPopulation( $log->notes );
+						$notes = $log->notes . ': ' . $info->label . ' (' . htmlentities( $info->description ) . ')';
+					} else if( !empty( $log->notes ) && strpos( $log->action, 'FEEDOUT:' ) === 0 ) {
+						$info = $leads->getOutboundFeed( $log->notes );
+						$notes = $log->notes . ': ' . $info->label . ' (' . htmlentities( $info->description ) . ')';
+					}
+
 ?>
 				<tr>
 					<td><?php echo $timestamp->format( 'Y-m-d H:i:s' ); ?></td>
 					<td><?php echo $log->username; ?></td>
 					<td><?php echo $log->ipaddress; ?></td>
 					<td><?php echo $log->action; ?></td>
-					<td><?php echo $log->notes; ?></td>
+					<td><?php echo $notes; ?></td>
 				</tr>
 <?php
 				}
