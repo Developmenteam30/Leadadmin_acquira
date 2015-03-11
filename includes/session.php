@@ -30,10 +30,10 @@ class LeadsSession
 	}
 
 	public static function logout() {
-		LeadsSession::start();
+		$leads = Leads::getInstance();
+		$leads->auditLog( 'LOGOUT', null );
 
-		//$leads = Leads::getInstance();
-		//$leads->auditLog( 'LOGOUT', null );
+		LeadsSession::start();
 
 		unset( $_SESSION['userId'] );
 		unset( $_SESSION['level'] );
