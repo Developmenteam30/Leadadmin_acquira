@@ -44,7 +44,8 @@ if( isset( $_REQUEST['d'] ) ) {
 
 					$notes = $log->notes;
 					if( !empty( $log->notes ) && 'FEEDINC:IMPORT' == $log->action ) {
-						$notes = '<a href="/leadadmin/mgr_job.php?jobId=21&count=10">Job ' . $log->notes . '</a>';
+						$info = $leads->getJob( $log->notes );
+						$notes = '<a href="/leadadmin/mgr_job.php?jobId=' . intval( $log->notes ) . '&amp;count=' . intval( $info->records ) . '">Job ' . $log->notes . '</a>';
 					} else if( !empty( $log->notes ) && strpos( $log->action, 'FEEDINC:' ) === 0 ) {
 						$info = $leads->getInboundFeed( $log->notes );
 						$notes = $log->notes . ': ' . $info->label . ' (' . htmlentities( $info->description ) . ')';

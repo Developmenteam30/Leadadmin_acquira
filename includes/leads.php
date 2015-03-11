@@ -1272,6 +1272,19 @@ class Leads
 		return $null;
 	}
 
+	public function getJob( $jobId ) {
+		try {
+			$query = $this->db->prepare( "SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn WHERE j.jobId = ?" );
+			$query->execute( array( $jobId ) );
+			return $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get job details: ' . $e->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
 	public function getJobs() {
 		try {
 			$query = $this->db->prepare( "SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn ORDER BY j.jobId DESC" );
