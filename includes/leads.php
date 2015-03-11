@@ -1356,12 +1356,12 @@ class Leads
 	public function retryOutboundRejections( $idFeedOut, $date ) {
 		$count = 0;
 
-		// Convert date to UTC, since that is how timestamps are stored in data_outbound
-		$utcStart = new DateTime( $date . ' 00:00:00', new DateTimeZone( 'America/New_York' ) );
-		$utcStart->setTimeZone( new DateTimeZone( 'UTC' ) );
+		// Timestamps in data_outbound may need to be converted to a different timezone
+		$utcStart = new DateTime( $date . ' 00:00:00', new DateTimeZone( LOCAL_TIMEZONE ) );
+		$utcStart->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
 
-		$utcEnd = new DateTime( $date . ' 23:59:59', new DateTimeZone( 'America/New_York' ) );
-		$utcEnd->setTimeZone( new DateTimeZone( 'UTC' ) );
+		$utcEnd = new DateTime( $date . ' 23:59:59', new DateTimeZone( LOCAL_TIMEZONE ) );
+		$utcEnd->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
 
 		$this->db->beginTransaction();
 

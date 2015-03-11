@@ -202,8 +202,8 @@ if( isset( $_REQUEST['d'] ) ) {
 			<tbody>
 <?php
 				foreach( $jobs as $job ) {
-					$timestamp = new DateTime( $job->timestamp, new DateTimeZone( 'UTC' ) );
-					$timestamp->setTimezone( new DateTimeZone( 'America/New_York' ) );
+					$timestamp = new DateTime( $job->timestamp, new DateTimeZone( DB_TIMEZONE ) );
+					$timestamp->setTimezone( new DateTimeZone( LOCAL_TIMEZONE ) );
 
 					if( 'finished' === $job->status ) {
 						$class = 'accepted';

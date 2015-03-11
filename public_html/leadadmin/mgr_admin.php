@@ -39,8 +39,8 @@ if( isset( $_REQUEST['d'] ) ) {
 			<tbody>
 <?php
 				foreach( $logs as $log ) {
-					$timestamp = new DateTime( $log->timestamp, new DateTimeZone( 'UTC' ) );
-					$timestamp->setTimezone( new DateTimeZone( 'America/New_York' ) );
+					$timestamp = new DateTime( $log->timestamp, new DateTimeZone( DB_TIMEZONE ) );
+					$timestamp->setTimezone( new DateTimeZone( LOCAL_TIMEZONE ) );
 
 					$notes = $log->notes;
 					if( !empty( $log->notes ) && 'FEEDINC:IMPORT' == $log->action ) {
