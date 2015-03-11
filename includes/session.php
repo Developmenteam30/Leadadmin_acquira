@@ -30,7 +30,7 @@ class LeadsSession
 	}
 
 	public static function logout() {
-		if( !empty( $this->getUserId() ) {
+		if( !empty( LeadsSession::getUserId() ) ) {
 			$leads = Leads::getInstance();
 			$leads->auditLog( 'LOGOUT', null );
 		}
