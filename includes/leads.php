@@ -800,7 +800,7 @@ class Leads
 				break;
 			}
 
-			if( $query && $query->fetchColumn() ) {
+			if( !empty( $query ) && $query->fetchColumn() ) {
 				return true;
 			}
 
