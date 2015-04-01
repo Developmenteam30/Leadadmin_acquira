@@ -184,20 +184,20 @@ if(isset($_REQUEST['a'])){
 							} else {
 								if($_REQUEST['list'] == 'multiple'){
 									foreach($_REQUEST['lists'] as $list){
-										$result = $leads->addSuppression( $list, $_REQUEST['email'] );
-										if( null === $result ) {
+										$db_result = $leads->addSuppression( $list, $_REQUEST['email'] );
+										if( null === $db_result ) {
 											$counts['dupe']++;
-										} else if( false === $result ) {
+										} else if( false === $db_result ) {
 											$counts['failures']++;
 										} else { 
 											$counts['success']++;
 										}
 									}
 								} else { 
-									$result = $leads->addSuppression( $_REQUEST['list'], $_REQUEST['email'] );
-									if( null === $result ) {
+									$db_result = $leads->addSuppression( $_REQUEST['list'], $_REQUEST['email'] );
+									if( null === $db_result ) {
 										$counts['dupe']++;
-									} else if( false === $result ) {
+									} else if( false === $db_result ) {
 										$counts['failures']++;
 									} else { 
 										$counts['success']++;
@@ -219,20 +219,20 @@ if(isset($_REQUEST['a'])){
 								} else {
 									if($_REQUEST['list'] == 'multiple'){
 										foreach($_REQUEST['lists'] as $list){
-											$result = $leads->addSuppression( $list, $email );
-											if( null === $result ) {
+											$db_result = $leads->addSuppression( $list, $email );
+											if( null === $db_result ) {
 												$counts['dupe']++;
-											} else if( false === $result ) {
+											} else if( false === $db_result ) {
 												$counts['failures']++;
 											} else { 
 												$counts['success']++;
 											}
 										}
 									} else { 
-										$result = $leads->addSuppression( $_REQUEST['list'], $email );
-										if( null === $result ) {
+										$db_result = $leads->addSuppression( $_REQUEST['list'], $email );
+										if( null === $db_result ) {
 											$counts['dupe']++;
-										} else if( false === $result ) {
+										} else if( false === $db_result ) {
 											$counts['failures']++;
 										} else { 
 											$counts['success']++;
