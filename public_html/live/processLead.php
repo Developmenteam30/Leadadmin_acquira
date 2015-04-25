@@ -68,10 +68,10 @@ if( $c ) {
 
 if($c) { 
 	$feedParams = $leads->getInboundFeedLabel( $feedLabel );
-	if($feedParams === false){
+	if($feedParams === null){
 		$c = false; 
 		$result['reason'] = 'Database failure, please try again later.';
-	} else if( 0 === $feedParams ) {
+	} else if( false === $feedParams ) {
 		$c = false;
 		$result['reason'] = 'Invalid feed label';
 		unset( $feedLabel );

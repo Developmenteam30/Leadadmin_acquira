@@ -453,6 +453,7 @@ class Leads
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound feed info: ' . $e->getMessage() );
+			return null;
 		}
 
 		return $results;
