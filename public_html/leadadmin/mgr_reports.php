@@ -93,24 +93,24 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			$message  = "Hi {$first},\r\n";
 			$message .= "\r\n";
-			$message .= "Your {$date} List Mangement Revenue Report is now available.  Your login credentials are listed below:\r\n";
+			$message .= "Your {$date} List Management Revenue Report is now available.  Your login credentials are listed below:\r\n";
 			$message .= "\r\n";
-			$message .= "Link: https://www.qmleads.com/leadadmin/client_reports.php\r\n";
+			$message .= "Link: https://www." . SITE_URL . "/leadadmin/client_reports.php\r\n";
 			$message .= "Username: {$user->username}\r\n";
-			$message .= "Password: [If you forgot your password, please contact your Qatalyst Media Account Manager]\r\n";
+			$message .= "Password: [If you forgot your password, please contact your " . CONFIG_COMPANY_NAME . " Account Manager]\r\n";
 			$message .= "\r\n";
-			$message .= "To ensure prompt payment, please be sure to email all invoices to accounting@qatalystmedia.com.\r\n";
+			$message .= "To ensure prompt payment, please be sure to email all invoices to " . PAYMENT_EMAIL . ".\r\n";
 			$message .= "\r\n";
 			$message .= "Thank you for your business and we look forward to growing our partnership.\r\n";
 			$message .= "\r\n";
 			$message .= "Warmly,\r\n";
 			$message .= "\r\n";
 			$message .= "Accounting\r\n";
-			$message .= "Qatalyst Media, LLC\r\n";
-			$message .= "119 Rockland Center #245\r\n";
-			$message .= "Nanuet, NY 10954\r\n";
+			$message .= COMPANY_LEGAL_NAME . "\r\n";
+			$message .= COMPANY_ADDRESS_1 . "\r\n";
+			$message .= COMPANY_ADDRESS_2 . "\r\n";
 
-			if( mail( $company->acct_email, "{$date} List Management Report Available | Qatalyst Media", $message, "From: \"Qatalyst Media\" <accounting@qatalystmedia.com>\r\nBCC: accounting@qatalystmedia.com", '-faccounting@qatalystmedia.com' ) ) {
+			if( mail( $company->acct_email, "{$date} List Management Report Available | " . CONFIG_COMPANY_NAME, $message, "From: \"" . CONFIG_COMPANY_NAME . "\" <" . PAYMENT_EMAIL . ">\r\nBCC: " . PAYMENT_EMAIL, '-f' . PAYMENT_EMAIL ) ) {
 				$result['status'] = 1;
 				$result['error'] = 'Message sent!';
 				break;
