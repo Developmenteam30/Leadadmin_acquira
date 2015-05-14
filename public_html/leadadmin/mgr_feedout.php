@@ -877,6 +877,10 @@ if($outgoingFeeds === false){
 	</tr>
 	</thead>
 <?php
+	$grandTotalFeeds = 0;
+	$grandTotalAccepted = 0;
+	$grandTotalRejected = 0;
+	$grandTotalQueued = 0;
 	foreach($companyFeedLists as $idCompany => $companyFeedList){ 
 		$totalAccepted = 0;
 		$totalRejected = 0;
@@ -889,18 +893,22 @@ if($outgoingFeeds === false){
 
 			$companyFeedList[$keyFeed]->accepted = $stats['accepted'];
 			$totalAccepted += $stats['accepted'];
+			$grandTotalAccepted += $stats['accepted'];
 
 			$companyFeedList[$keyFeed]->rejected = $stats['rejected'];
 			$totalRejected += $stats['rejected'];
+			$grandTotalRejected += $stats['rejected'];
 
 			$companyFeedList[$keyFeed]->queued = $feed->queued;
 			$totalQueued += $feed->queued;
+			$grandTotalQueued += $feed->queued;
 
 			if($feed->enabled) { $totalActive++; }
 			$companyFeedList[$keyFeed]->statusFeed = $feed->status;
 			$companyFeedList[$keyFeed]->statusCron = ($feed->cron)?'Running':'Paused';
 			$companyFeedList[$keyFeed]->statusPop = getPopulationStatus($feed->idFeedOut);
 		}
+		$grandTotalFeeds += count($companyFeedList);
 ?>
 	<tr class='fTORow fTO_Row bgGray'>
 		<td class='fTO_companyName' colspan='2'><p><?php echo $companyCache[$idCompany]->name; ?></p></td>
@@ -1009,6 +1017,14 @@ if($outgoingFeeds === false){
 <?php
 	}
 ?>
+	<tr class='fTORow fTO_Row bgGray subtotal'>
+		<td class='fTO_companyName' colspan='2'><p>GRAND TOTAL</p></td>
+		<td class='fTO_feedOverview' colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
+		<td class='fTO_accepted'><p class='aRight'><?php echo number_format( $grandTotalAccepted, 0 ); ?></p></td>
+		<td class='fTO_rejected'><p class='aRight'><?php echo number_format( $grandTotalRejected, 0 ); ?></p></td>
+		<td class='fTO_rejected'><p class='aRight'><?php echo number_format( $grandTotalQueued, 0 ); ?></p></td>
+		<td class='fTO_options'></td>
+	</tr>
 </table>
 <?php
 }

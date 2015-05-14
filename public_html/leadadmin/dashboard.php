@@ -61,6 +61,9 @@ if($incomingFeeds === false){
 		//Add feed to list of feeds for the specified company.
 		$companyFeedLists[$feed->idCompany][] = $feed;
 	}
+	$grandTotalAccepted = 0;
+	$grandTotalRejected = 0;
+	$grandTotalFeeds = 0;
 ?>
 <table class='standard'>
 	<thead>
@@ -83,9 +86,11 @@ if($incomingFeeds === false){
 
 			$companyFeedList[$keyFeed]->dailyCount = $stats['accepted'];
 			$totalAccepted += $stats['accepted'];
+			$grandTotalAccepted += $stats['accepted'];
 
 			$companyFeedList[$keyFeed]->dailyCountInvalid = $stats['rejected'];
 			$totalRejected += $stats['rejected'];
+			$grandTotalRejected += $stats['rejected'];
 
 		}
 ?>
@@ -132,11 +137,19 @@ if($incomingFeeds === false){
 	<tr><td class='hidden' id='feedinc_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
 <?php
 		}
+		$grandTotalFeeds += count($companyFeedList);
 ?>
 	</tbody>
 <?php
 	}
 ?>
+	<tr class='bgGray subtotal'>
+		<td class='fTI_companyName' colspan='2'><p>GRAND TOTAL</p></td>
+		<td class='fTI_feedOverview'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
+		<td class='fTI_accepted'><p class='aRight'><?php echo number_format( $grandTotalAccepted, 0 ); ?></p></td>
+		<td class='fTI_rejected'><p class='aRight'><?php echo number_format( $grandTotalRejected, 0 ); ?></p></td>
+		<td class='fTI_options'></td>
+	</tr>
 </table>
 <?php
 }		
@@ -232,6 +245,11 @@ if($outgoingFeeds === false){
 		//Add feed to list of feeds for the specified company.
 		$companyFeedLists[$feed->idCompany][] = $feed;
 	}
+
+	$grandTotalAccepted = 0;
+	$grandTotalRejected = 0;
+	$grandTotalQueued = 0;
+	$grandTotalFeeds = 0;
 ?>
 <table class='standard'>
 	<thead>
@@ -257,13 +275,17 @@ if($outgoingFeeds === false){
 
 			$companyFeedList[$keyFeed]->dailyCount = $stats['accepted'];
 			$totalAccepted += $stats['accepted'];
+			$grandTotalAccepted += $stats['accepted'];
 
 			$companyFeedList[$keyFeed]->dailyCountInvalid = $stats['rejected'];
 			$totalRejected += $stats['rejected'];
+			$grandTotalRejected += $stats['rejected'];
 
 			$companyFeedList[$keyFeed]->dailyCountQueued = $feed->queued;
 			$totalQueued += $feed->queued;
+			$grandTotalQueued += $feed->queued;
 		}
+		$grandTotalFeeds += count($companyFeedList);
 ?>
 	<tr class='fTORow fTO_Row bgGray'>
 		<td class='fTO_companyName' colspan='2'><p><?php echo $feed->name; ?></p></td>
@@ -314,6 +336,14 @@ if($outgoingFeeds === false){
 <?php
 	}
 ?>
+	<tr class='fTORow fTO_Row bgGray subtotal'>
+		<td class='fTO_companyName' colspan='2'><p>GRAND TOTAL</p></td>
+		<td class='fTI_feedOverview'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
+		<td class='fTI_accepted'><p class='aRight'><?php echo number_format( $grandTotalAccepted, 0 ); ?></p></td>
+		<td class='fTI_rejected'><p class='aRight'><?php echo number_format( $grandTotalRejected, 0 ); ?></p></td>
+		<td class='fTI_rejected'><p class='aRight'><?php echo number_format( $grandTotalQueued, 0 ); ?></p></td>
+		<td class='fTI_options'></td>
+	</tr>
 </table>
 <?php
 }

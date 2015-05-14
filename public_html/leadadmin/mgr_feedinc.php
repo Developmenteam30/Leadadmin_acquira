@@ -357,6 +357,9 @@ if($incomingFeeds === false){
 	</tr>
 	</thead>
 <?php
+	$grandTotalFeeds = 0;
+	$grandTotalAccepted = 0;
+	$grandTotalRejected = 0;
 	foreach($companyFeedLists as $idCompany => $companyFeedList){ 
 		$totalAccepted = 0;
 		$totalRejected = 0;
@@ -366,11 +369,14 @@ if($incomingFeeds === false){
 
 			$companyFeedList[$keyFeed]->dailyCount = $stats['accepted'];
 			$totalAccepted += $stats['accepted'];
+			$grandTotalAccepted += $stats['accepted'];
 
 			$companyFeedList[$keyFeed]->dailyCountInvalid = $stats['rejected'];
 			$totalRejected += $stats['rejected'];
+			$grandTotalRejected += $stats['rejected'];
 
 		}
+		$grandTotalFeeds += count($companyFeedList);
 ?>
 	<tr class='bgGray'>
 		<td class='fTI_companyName' colspan='2'><p><?php echo $companyCache[$idCompany]->name; ?></p></td>
@@ -437,6 +443,13 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 <?php
 	}
 ?>
+	<tr class='bgGray subtotal'>
+		<td class='fTI_companyName' colspan='2'><p>GRAND TOTAL</p></td>
+		<td class='fTI_feedOverview'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
+		<td class='fTI_accepted'><p class='aRight'><?php echo number_format( $grandTotalAccepted, 0 ); ?></p></td>
+		<td class='fTI_rejected'><p class='aRight'><?php echo number_format( $grandTotalRejected, 0 ); ?></p></td>
+		<td class='fTI_options'></td>
+	</tr>
 </table>
 <?php
 }
