@@ -35,6 +35,8 @@ if( isset( $_REQUEST['d'] ) ) {
 
 		case 'dialog_revenue_listowners':
 			$gross = $partner = 0;
+			$m_gross = $m_partner = 0;
+			$last_month = '';
 			$mappings = $leads->getRevenueInboundClientMonthMappings( $idCompany );
 			if( $mappings ) {
 				$colspan = 1;
@@ -52,6 +54,20 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
 				foreach( $mappings as $mapping ) {
+					if( empty( $last_month ) ) {
+						$last_month = $mapping['month'];
+					}
+					if( $mapping['month'] !== $last_month ) {
+						if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+							print "\t<tr class=\"bgGray subtotal\">\n";
+							printf( "\t\t<td colspan=\"" . $colspan . "\">MONTHLY TOTAL - " . date( 'Y F', strtotime( $last_month . "01" ) ) . "</td>\n" );
+							printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $m_gross, 2 ) );
+							printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $m_partner, 2 ) );
+							print "\t</tr>\n";
+						}
+						$last_month = $mapping['month'];
+						$m_gross = $m_partner = 0;
+					}
 					print "\t<tr class=\"bgGray\">\n";
 					if( empty( $idCompany ) ) {
 						printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
@@ -61,10 +77,20 @@ if( isset( $_REQUEST['d'] ) ) {
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'] * 0.5, 2 ) ) );
 					print "\t</tr>\n";
 					$gross += floatval( $mapping['revenue'] );
+					$m_gross += floatval( $mapping['revenue'] );
 					$partner += floatval( $mapping['partner'] );
+					$m_partner += floatval( $mapping['partner'] );
 				}
+				if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+					print "\t<tr class=\"bgGray subtotal\">\n";
+					printf( "\t\t<td colspan=\"" . $colspan . "\">MONTHLY TOTAL - " . date( 'Y F', strtotime( $last_month . "01" ) ) . "</td>\n" );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $m_gross, 2 ) );
+					printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $m_partner, 2 ) );
+					print "\t</tr>\n";
+				}
+
 				print "\t<tr class=\"bgGray subtotal\">\n";
-				printf( "\t\t<td colspan=\"" . $colspan . "\">TOTAL REVENUE</td>\n" );
+				printf( "\t\t<td colspan=\"" . $colspan . "\">GRAND TOTAL REVENUE</td>\n" );
 				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $gross, 2 ) );
 				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $partner, 2 ) );
 				print "\t</tr>\n";
