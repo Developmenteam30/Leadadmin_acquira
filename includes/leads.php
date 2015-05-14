@@ -1944,6 +1944,68 @@ class Leads
 		return $result;
 	}
 
+	public function exportComcast() {
+
+		$jobId = time();
+
+		$fileLink = 'exports/' . "comcast_".$jobId.".csv";
+		$filePath = ADMIN_ROOT . $fileLink;
+		$file = fopen( $filePath, 'w' );
+		if( !$file ) {
+			$result['reason'] = 'Unable to create CSV file.';
+			return;
+		}
+
+		try {
+
+			$this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+
+			$fields = array();
+
+			$query  = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE email LIKE '%@comcast.net' AND result IS NULL" );
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fputcsv( $file, $row );
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to export Comcast records: ' . $e->getMessage() );
+			return;
+		}
+
+		fclose( $file );
+	}
+
+	public function exportCable() {
+
+		$jobId = time();
+
+		$fileLink = 'exports/' . "cable_".$jobId.".csv";
+		$filePath = ADMIN_ROOT . $fileLink;
+		$file = fopen( $filePath, 'w' );
+		if( !$file ) {
+			$result['reason'] = 'Unable to create CSV file.';
+			return;
+		}
+
+		try {
+
+			$this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+
+			$fields = array();
+
+			$query  = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE ( email LIKE '%@att.net' OR email LIKE '%@bellsouth.net' OR email LIKE '%@earthlink.net' ) AND result IS NULL" );
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fputcsv( $file, $row );
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to export cable records: ' . $e->getMessage() );
+			return;
+		}
+
+		fclose( $file );
+	}
+
 	public function exportOutboundQueue( $idFeedOut ) {
 
 		$feed = $this->getOutboundFeed( $idFeedOut );
