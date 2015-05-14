@@ -121,7 +121,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			break;
 
-		case 'invoice_paid':
+		case 'invoice_status':
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
 				$result['status'] = 0;
 				$result['error'] = 'Not authorized.';
@@ -147,9 +147,9 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			$leads->setInvoiceStatus( $_REQUEST['date'], $_REQUEST['idCompany'], true );
+			$leads->setInvoiceStatus( $_REQUEST['date'], $_REQUEST['idCompany'], !empty( $_REQUEST['paid'] ) ? true : false );
 			$result['status'] = 1;
-			$result['error'] = 'Invoice marked as paid';
+			$result['error'] = 'Invoice status updated';
 
 			break;
 	}
@@ -346,7 +346,11 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php
 if( !empty( $idCompany ) ) {
 	print '<input class="fr" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
-	print '<input class="fr" type="button" value="Mark Invoice as Paid" onclick="invoicePaid(' . $idCompany . ',' . $reportDate . ')" />';
+	if( $leads->getInvoiceStatus( $reportDate, $idCompany ) ) {
+		print '<input class="fr" type="button" value="Mark Invoice as UNPAID" onclick="invoiceStatus(' . $idCompany . ',' . $reportDate . ', 0, ' . ( empty( $idFeedIn ) ? 0 : $idFeedIn ) . ' , \'' . ( empty( $urlFilter ) ? 0 : $urlFilter )  . '\' )" />';
+	} else {
+		print '<input class="fr" type="button" value="Mark Invoice as Paid" onclick="invoiceStatus(' . $idCompany . ',' . $reportDate . ', 1, ' . ( empty( $idFeedIn ) ? 0 : $idFeedIn ) . ' , \'' . ( empty( $urlFilter ) ? 0 : $urlFilter ) . '\' )" />';
+	}
 }
 ?>
 </p>
@@ -465,15 +469,16 @@ function sendReportReady( idCompany, date ){
 	});
 }
 
-function invoicePaid( idCompany, date ){
+function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
 	var response = $.ajax({
 		url: "mgr_reports.php",
 		type: "POST",
 		async: true,
 		data: ({
-			"a" : "invoice_paid",
+			"a" : "invoice_status",
 			"idCompany" : idCompany,
-			"date" : date
+			"date" : date,
+			"paid" : paid
 		})
 	}).done(function(responseText){
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
@@ -481,11 +486,8 @@ function invoicePaid( idCompany, date ){
 			alert("JSON Failed: "+responseText);
 			return false;
 		}
-		if(result.status == 1){
-			alert("Invoice marked as paid.");
-		} else {
-			alert(result.error);
-		}
+		alert(result.error);
+		display('dialog_revenue_listowners', { 'report_date': date, 'idCompany': idCompany, 'idFeedIn': idFeedIn, 'url': url });
 	});
 }
 </script>
