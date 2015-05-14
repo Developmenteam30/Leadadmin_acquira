@@ -929,6 +929,31 @@ class Leads
 		return $results;
 	}
 
+	public function getInvoiceStatus( $date, $idCompany ) {
+		$paid = false;
+
+		try {
+			$query = $this->db->prepare( "SELECT paid FROM invoices WHERE date = ? AND idCompany = ?" );
+			$query->execute( array( $date, $idCompany ) );
+			$paid = $query->fetchColumn() ? true : false;
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get invoice status: ' . $e->getMessage() );
+		}
+
+		return $paid;
+	}
+
+	public function setInvoiceStatus( $date, $idCompany, $paid = false ) {
+
+		try {
+			$query = $this->db->prepare( "REPLACE INTO invoices( date, idCompany, paid ) VALUES( ?, ?, ? )" );
+			$query->execute( array( $date, $idCompany, $paid ? 1 : 0 ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to update invoice value: ' . $e->getMessage() );
+			return;
+		}
+	}
+
 	public function getRevenueInboundMappings( $date, $idCompany, $idFeedIn, $url ) {
 		$results = array();
 		$fields = array();

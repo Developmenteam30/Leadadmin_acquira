@@ -249,9 +249,10 @@ table.standard thead { font-weight: bold; text-align: center; }
 	background: #E0B2F0;
 }
 
-table.revenue-report td { padding: 10px; }
+table.revenue-report td { padding: 10px; vertical-align: middle; }
 table.revenue-report tr:nth-child(even) { background-color: #fdfdfd; }
 table.revenue-report thead td { font-weight: bold; background-color: <?php echo $gradientColor3; ?>; color: #fff; }
+table.revenue-report .greencheck { text-align: center; }
 
 #dialog_revenue_listowners_detail { margin-top: 30px; }
 

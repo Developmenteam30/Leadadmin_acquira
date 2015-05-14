@@ -120,6 +120,38 @@ if( isset( $_REQUEST['a'] ) ) {
 			$result['error'] = 'Unable to send message.';
 
 			break;
+
+		case 'invoice_paid':
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Not authorized.';
+				break;
+			}
+
+			if( empty( $_REQUEST['idCompany'] ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Company ID is missing.';
+				break;
+			}
+
+			if( empty( $_REQUEST['date'] ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Date is missing.';
+				break;
+			}
+
+			$company = $leads->getCompany( $_REQUEST['idCompany'] );
+			if( empty( $company ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Invalid company ID.';
+				break;
+			}
+
+			$leads->setInvoiceStatus( $_REQUEST['date'], $_REQUEST['idCompany'], true );
+			$result['status'] = 1;
+			$result['error'] = 'Invoice marked as paid';
+
+			break;
 	}
 	echo json_encode($result);
 	exit;
@@ -314,6 +346,7 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php
 if( !empty( $idCompany ) ) {
 	print '<input class="fr" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
+	print '<input class="fr" type="button" value="Mark Invoice as Paid" onclick="invoicePaid(' . $idCompany . ',' . $reportDate . ')" />';
 }
 ?>
 </p>
@@ -426,6 +459,30 @@ function sendReportReady( idCompany, date ){
 		}
 		if(result.status == 1){
 			alert("Report email sent.");
+		} else {
+			alert(result.error);
+		}
+	});
+}
+
+function invoicePaid( idCompany, date ){
+	var response = $.ajax({
+		url: "mgr_reports.php",
+		type: "POST",
+		async: true,
+		data: ({
+			"a" : "invoice_paid",
+			"idCompany" : idCompany,
+			"date" : date
+		})
+	}).done(function(responseText){
+		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
+		if(result===null) {
+			alert("JSON Failed: "+responseText);
+			return false;
+		}
+		if(result.status == 1){
+			alert("Invoice marked as paid.");
 		} else {
 			alert(result.error);
 		}

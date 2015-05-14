@@ -50,6 +50,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "\t\t<td>Month</td>\n";
 				print "\t\t<td>Gross Revenue</td>\n";
 				print "\t\t<td>Partner Revenue</td>\n";
+				print "\t\t<td>Invoice Paid</td>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
@@ -63,6 +64,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							printf( "\t\t<td colspan=\"" . $colspan . "\">MONTHLY TOTAL - " . date( 'Y F', strtotime( $last_month . "01" ) ) . "</td>\n" );
 							printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $m_gross, 2 ) );
 							printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $m_partner, 2 ) );
+							print "\t\t<td></td>\n";
 							print "\t</tr>\n";
 						}
 						$last_month = $mapping['month'];
@@ -75,6 +77,11 @@ if( isset( $_REQUEST['d'] ) ) {
 					printf( "\t\t<td><a href=\"#\" onclick=\"display('dialog_revenue_listowners_detail', { 'report_date': '%s', 'idCompany': '%s' });\">%s</a></td>\n", $mapping['month'], $mapping['idCompany'], date( 'Y F', strtotime( $mapping['month'] . "01" ) ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'], 2 ) ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'] * 0.5, 2 ) ) );
+					if( $leads->getInvoiceStatus( $mapping['month'], $mapping['idCompany'] ) ) {
+						print "\t\t<td class=\"greencheck\"><img alt=\"Green checkmark\" height=\"13\" src=\"images/green_check.png\" width=\"12\" /></td>\n";
+					} else {
+						print "\t\t<td></td>\n";
+					}
 					print "\t</tr>\n";
 					$gross += floatval( $mapping['revenue'] );
 					$m_gross += floatval( $mapping['revenue'] );
@@ -86,6 +93,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					printf( "\t\t<td colspan=\"" . $colspan . "\">MONTHLY TOTAL - " . date( 'Y F', strtotime( $last_month . "01" ) ) . "</td>\n" );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $m_gross, 2 ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $m_partner, 2 ) );
+					print "\t\t<td></td>\n";
 					print "\t</tr>\n";
 				}
 
@@ -93,6 +101,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				printf( "\t\t<td colspan=\"" . $colspan . "\">GRAND TOTAL REVENUE</td>\n" );
 				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $gross, 2 ) );
 				printf( "\t\t<td class=\"revenue\">%s</td>\n", '$' . number_format( $partner, 2 ) );
+				print "\t\t<td></td>\n";
 				print "\t</tr>\n";
 				print "\t</tbody>\n";
 				print "</table>\n";
