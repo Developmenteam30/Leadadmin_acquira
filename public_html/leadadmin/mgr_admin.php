@@ -257,6 +257,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'password',
 					'label' => 'Password (8 chars)',
 					'type' => 'text',
+					'value' => substr( base64_encode(mcrypt_create_iv(64, MCRYPT_DEV_URANDOM ) ), 0, 12 ),
 				),
 				array(
 					'id' => 'level',
