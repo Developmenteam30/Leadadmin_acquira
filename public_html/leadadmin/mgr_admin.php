@@ -59,7 +59,7 @@ if(isset($_REQUEST['a'])){
 			$message .= "Password: " . $_REQUEST['password'] . "\r\n";
 			$message .= "\r\n";
 
-			mail( 'ryan@playnicetogether.com', CONFIG_COMPANY_NAME . ' User Added', $message, 'From: lmsalerts@'.SITE_URL, '-f' . 'lmsalerts@'.SITE_URL );
+			mail( OWNER_EMAIL, CONFIG_COMPANY_NAME . ' User Added', $message, 'From: lmsalerts@'.SITE_URL . "\r\nBCC: " . ADMINISTRATOR_EMAIL, '-f' . 'lmsalerts@'.SITE_URL );
 
 			$leads->auditLog( 'USERS:ADD', $idUser );
 
