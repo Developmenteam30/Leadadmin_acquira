@@ -132,7 +132,7 @@ class Leads
 	public function addUser( $username, $password, $idCompany, $level ) {
 
 		try {
-			$this->insertRow( 'users', array(
+			$idUser = $this->insertRow( 'users', array(
 				'username' => $username,
 				'idCompany' => $idCompany,
 				'level' => $level,
@@ -143,6 +143,8 @@ class Leads
 		}
 
 		$this->setPasswordHash( $username, $password );
+
+		return $idUser;
 	}
 
 	public function getUser( $idUser ) {
@@ -151,7 +153,33 @@ class Leads
 			$query->execute( array( $idUser ) );
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get user information: ' . $e->getMessage() );
+			$this->logError( 'Unable to get user information (idUser): ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getUsername( $username ) {
+		try {
+			$query = $this->db->prepare( "SELECT username,password,idCompany,level FROM users WHERE username = ?" );
+			$query->execute( array( $username ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get user information (username): ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getUsers() {
+		$results = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT idUser,username,idCompany,level FROM users ORDER BY username" );
+			$query->execute();
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get user list: ' . $e->getMessage() );
 		}
 
 		return $results;
