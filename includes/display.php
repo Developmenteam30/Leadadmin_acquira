@@ -32,9 +32,9 @@ class Display
 		} else {
 			foreach( $errorList as $error ) {
 				printf( '<p>(%s) [%s] %s</p>',
-					htmlspecialchars( $error->stamp ),
-					htmlspecialchars( $error->origination ),
-					htmlspecialchars( $error->description ) );
+					htmlentities( $error->stamp ),
+					htmlentities( $error->origination ),
+					htmlentities( $error->description ) );
 			}
 		}
 	}
@@ -43,12 +43,12 @@ class Display
 	{
 		print "<div class=\"form-input\">\n";
 		if( !empty( $title ) ) {
-			printf( '<h3>%s</h5>',
+			printf( '<h3>%s</h3>',
 				htmlentities( $title )
 			);
 		}
 		printf( "<form id=\"%s\">\n",
-			htmlentities( $name )
+			htmlspecialchars( $name, ENT_QUOTES | ENT_HTML5 )
 		);
 
 		foreach( $fields as $field ) {
@@ -58,14 +58,14 @@ class Display
 			if( in_array( $field['type'], array( 'text', 'number', 'tel', 'email', 'password', 'url' ) ) ) {
 
 				printf( "\t<label for=\"%s\">%s</label>\n", 
-						htmlentities( $field['id'] ), 
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ), 
 						htmlentities( $field['label'] )
 				);
 				printf( "\t<input type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s />\n", 
-						htmlentities( $field['type'] ),
-						htmlentities( $field['id'] ),
-						htmlentities( $field['id'] ),
-						( !empty( $field['value'] ) ? htmlentities( $field['value'] ) : '' ),
+						htmlspecialchars( $field['type'], ENT_QUOTES | ENT_HTML5 ),
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+						( !empty( $field['value'] ) ? htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) : '' ),
 						( 'number' == $field['type'] ? ' pattern="[0-9]*"' : '' ),
 						( !empty( $field['required'] ) ? ' required' : '' ),
 						( !empty( $field['readonly'] ) ? ' readonly' : '' )
@@ -74,12 +74,12 @@ class Display
 			} else if( 'textarea' == $field['type'] ) {
 
 				printf( "\t<label for=\"%s\">%s</label>\n", 
-						htmlentities( $field['id'] ), 
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ), 
 						htmlentities( $field['label'] )
 				);
 				printf( "\t<textarea name=\"%s\" id=\"%s\"%s>%s</textarea>\n",
-						htmlentities( $field['id'] ),
-						htmlentities( $field['id'] ),
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						( !empty( $field['required'] ) ? ' required' : '' ),
 						( !empty( $field['value'] ) ? htmlentities( $field['value'] ) : '' )
 				);
@@ -87,17 +87,17 @@ class Display
 			} else if( 'select' == $field['type'] ) {
 
 				printf( "\t<label for=\"%s\">%s</label>\n", 
-						htmlentities( $field['id'] ), 
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ), 
 						htmlentities( $field['label'] )
 				);
 				printf( "\t<select name=\"%s\" id=\"%s\">\n",
-					htmlentities( $field['id'] ),
-					htmlentities( $field['id'] )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 )
 				);
 				printf( "\t\t<option value=\"\"></option>\n" );
 				foreach( $field['choices'] as $key => $val ) {
 					printf( "\t\t<option value=\"%s\"%s>%s</option>\n",
-						htmlentities( $key ),
+						htmlspecialchars( $key, ENT_QUOTES | ENT_HTML5 ),
 						( !empty( $field['value'] ) && $key == $field['value'] ? ' selected="selected"' : '' ),
 						htmlentities( $val )
 					);
@@ -107,22 +107,22 @@ class Display
 			} else if( 'button' == $field['type'] ) {
 
 				printf( "\t<input type=\"button\" value=\"%s\" />\n",
-					htmlentities( $field['label'] )
+					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
 				);
 
 			} else if( 'hidden' == $field['type'] ) {
 
 				printf( "\t<input type=\"hidden\" name=\"%s\" id=\"%s\" value=\"%s\" />\n",
-					htmlentities( $field['id'] ),
-					htmlentities( $field['id'] ),
-					htmlentities( $field['value'] )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 )
 				);
 
 			} else if( 'submit' == $field['type'] ) {
 
 				printf( "\t<label></label>\n" );
 				printf( "\t<input type=\"submit\" value=\"%s\" />\n",
-					htmlentities( $field['label'] )
+					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
 				);
 
 			} else if( '_divider' == $field['type'] ) {
