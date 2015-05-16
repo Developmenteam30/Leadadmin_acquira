@@ -98,7 +98,7 @@ class Display
 				foreach( $field['choices'] as $key => $val ) {
 					printf( "\t\t<option value=\"%s\"%s>%s</option>\n",
 						htmlentities( $key ),
-						( !empty( $field['value'] && $key == $field['value'] ) ? ' selected="selected"' : '' ),
+						( !empty( $field['value'] ) && $key == $field['value'] ? ' selected="selected"' : '' ),
 						htmlentities( $val )
 					);
 				}
