@@ -147,6 +147,22 @@ class Leads
 		return $idUser;
 	}
 
+	public function updateUser( $idUser, $fields ) {
+
+		try {
+			$status = $this->update( 'users', $fields, array(
+				'idUser' => $idUser,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update user: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
 	public function getUser( $idUser ) {
 		try {
 			$query = $this->db->prepare( "SELECT username,password,idCompany,level FROM users WHERE idUser = ?" );
@@ -335,7 +351,7 @@ class Leads
 			return null;
 		}
 
-		return $null;
+		return null;
 	}
 
 	public function getCompany( $idCompany ) {
@@ -1323,7 +1339,7 @@ class Leads
 			return null;
 		}
 
-		return $null;
+		return null;
 	}
 
 	public function getJob( $jobId ) {

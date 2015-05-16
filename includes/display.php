@@ -61,13 +61,14 @@ class Display
 						htmlentities( $field['id'] ), 
 						htmlentities( $field['label'] )
 				);
-				printf( "\t<input type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s />\n", 
+				printf( "\t<input type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s />\n", 
 						htmlentities( $field['type'] ),
 						htmlentities( $field['id'] ),
 						htmlentities( $field['id'] ),
 						( !empty( $field['value'] ) ? htmlentities( $field['value'] ) : '' ),
 						( 'number' == $field['type'] ? ' pattern="[0-9]*"' : '' ),
-						( !empty( $field['required'] ) ? ' required' : '' )
+						( !empty( $field['required'] ) ? ' required' : '' ),
+						( !empty( $field['readonly'] ) ? ' readonly' : '' )
 				);
 
 			} else if( 'textarea' == $field['type'] ) {

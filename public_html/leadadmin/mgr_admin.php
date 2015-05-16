@@ -68,6 +68,60 @@ if(isset($_REQUEST['a'])){
 
 		break;
 
+		case "editUser":
+			$result['error'] = 'Failed when trying to edit user';
+
+			if( ( $user = $leads->getUser( $_REQUEST['idUser'] ) ) === null ) {
+				$result['error'] = 'Cannot find that userId in the database.';
+				break;
+			}
+
+			if( !empty( $_REQUEST['password'] ) && strlen( $_REQUEST['password'] ) < 8 ) {
+				$result['error'] = 'Password must be at least 8 characters.';
+				break;
+			}
+
+			if( ( LEADS_SESSION_LEVEL_CLIENT_REPORTS == $_REQUEST['level'] || LEADS_SESSION_LEVEL_CLIENT_DASHBOARD == $_REQUEST['level'] ) && empty( $_REQUEST['idCompany'] ) ) {
+				$result['error'] = 'Please associate this user with a company.';
+				break;
+			}
+
+			// Do not set a company for staff members and higher
+			if( $_REQUEST['level'] >= LEADS_SESSION_LEVEL_STAFF ) {
+				$_REQUEST['idCompany'] = null;
+			}
+
+			if( !empty( $_REQUEST['password'] ) ) {
+				$leads->setPasswordHash( $user->username, $_REQUEST['password'] );
+			}
+
+			$status = $leads->updateUser( $_REQUEST['idUser'], array(
+				'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
+				'level' => empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'],
+			) );
+			if( null === $status ) {
+				$result['error'] = 'Unable to edit user';
+				break;
+			}
+
+/*
+			$message  = "\r\n";
+			$message .= "A new user was created in the " . CONFIG_COMPANY_NAME . " System.\r\n";
+			$message .= "\r\n";
+			$message .= "Username: " . $_REQUEST['username'] . "\r\n";
+			$message .= "Password: " . $_REQUEST['password'] . "\r\n";
+			$message .= "\r\n";
+
+			mail( OWNER_EMAIL, CONFIG_COMPANY_NAME . ' User Added', $message, 'From: lmsalerts@'.SITE_URL . "\r\nBCC: " . ADMINISTRATOR_EMAIL, '-f' . 'lmsalerts@'.SITE_URL );
+*/
+
+			$leads->auditLog( 'USERS:EDIT', $_REQUEST['idUser'] );
+
+			$result['status'] = 1;
+			$result['error'] = 'Successfully edit user account.';
+
+		break;
+
 		case "alterCompany":
 			$c = true;
 			$result['error'] = 'Failed when trying to edit a company';
@@ -191,6 +245,7 @@ if( isset( $_REQUEST['d'] ) ) {
 ?>
 <p><a href="#" class="nonLink" onclick="display('dialog_newuser');">Add a New User</a></p>
 <div class="hidden" id="dialog_newuser"></div>
+<div class="hidden" id="dialog_edituser"></div>
 <?php
 			$users = $leads->getUsers();
 			if( empty( $users ) || !is_array( $users ) ) {
@@ -229,7 +284,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 ?>
 				<tr>
-					<td><?php echo $user->username; ?></td>
+					<td><a href="#" class="nonLink" onclick="display('dialog_edituser', { 'idUser': <?php echo $user->idUser; ?> } );"><?php echo $user->username; ?></a></td>
 					<td><?php echo $level; ?></td>
 					<td><?php echo $user->idCompany; ?></td>
 				</tr>
@@ -316,6 +371,95 @@ $('#new_user').submit( function(event) {
 </script>
 
 <?php
+		break;
+
+		case "dialog_edituser":
+			$idUser = $_REQUEST['options']['idUser'];
+			$user = $leads->getUser( $idUser );
+			if( empty( $user ) ) {
+?>
+<p>There is no user that exists by that ID.</p>
+<?php
+			} else {
+
+			$companyChoices = array();
+			$companies = $leads->getCompanies();
+			foreach( $companies as $company ) {
+				$companyChoices[$company->idCompany] = $company->name;
+			}
+
+			$fields = array(
+				array(
+					'id' => 'idUser',
+					'type' => 'hidden',
+					'value' => $idUser,
+				),
+				array(
+					'id' => 'password',
+					'label' => 'Password (8 chars)',
+					'type' => 'text',
+				),
+				array(
+					'id' => 'level',
+					'label' => 'Access Level',
+					'type' => 'select',
+					'choices' => array(
+						0 => 'No Access',
+						LEADS_SESSION_LEVEL_CLIENT_REPORTS => 'Client Reporting Access',
+						LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Client Dashboard Access',
+						LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
+						LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
+					),
+					'required' => true,
+					'value' => $user->level,
+				),
+				array(
+					'id' => 'idCompany',
+					'label' => 'Company Access',
+					'type' => 'select',
+					'choices' => $companyChoices,
+					'value' => $user->idCompany,
+				),
+				array(
+					'id' => 'submit',
+					'type' => 'submit',
+					'label' => 'Edit user',
+				),
+			);
+
+			Display::displayForm( 'edit_user', $fields, 'Edit User: ' . $user->username );
+?>
+
+<script type="text/javascript">
+$('#edit_user').submit( function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "mgr_admin.php",
+		type: "POST",
+		async: true,
+		data: ({
+			"a" : "editUser",
+			"idUser": $("#edit_user #idUser").val(),
+			"username": $("#edit_user #username").val(),
+			"password": $("#edit_user #password").val(),
+			"level": $("#edit_user #level").val(),
+			"idCompany": $("#edit_user #idCompany").val(),
+		}),
+		success: function(data) {
+			if (data.status == "1") {
+				closeContent('dialog_edituser');
+				display('dialog_users');
+			} else {
+				alert(data.error);
+			}
+		}
+	});
+});
+</script>
+
+<?php
+		}
 		break;
 
 	}
