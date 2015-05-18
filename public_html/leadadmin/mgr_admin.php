@@ -226,6 +226,11 @@ if( isset( $_REQUEST['d'] ) ) {
 					} else if( !empty( $log->notes ) && strpos( $log->action, 'FEEDOUT:' ) === 0 ) {
 						$info = $leads->getOutboundFeed( $log->notes );
 						$notes = $log->notes . ': ' . $info->label . ' (' . htmlentities( $info->description ) . ')';
+					} else if( !empty( $log->notes ) && strpos( $log->action, 'USERS:' ) === 0 ) {
+						$info = $leads->getUser( $log->notes );
+						if( !empty( $info ) && !empty( $info->username ) ) {
+							$notes = $log->notes . ': ' . $info->username;
+						}
 					}
 
 ?>
