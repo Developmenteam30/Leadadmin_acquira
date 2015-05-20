@@ -222,7 +222,7 @@ function validate($fieldType, $value, $feedParams){
 			}
 		break;
 		case 'ip':
-			if($c && strlen($value) > 16){ 
+			if($c && strlen($value) > 45){ 
 				$c = false; $result['reason'] = 'IP (ip) exceeds maximum allowed length.';
 			}
 			if($c && !filter_var( $value, FILTER_VALIDATE_IP ) ) {
