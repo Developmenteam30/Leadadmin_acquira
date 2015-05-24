@@ -1151,7 +1151,7 @@ if($populationSettings === false){
 			$settings['testrecord'] = 1;
 			$leaddata = array(
 				'stamp' => date( 'Y-m-d H:i:s' ),
-				'url' => 'http://www.qmleads.com/',
+				'url' => 'http://www.' . SITE_URL,
 				'ip' => '1.2.3.4',
 				'email' => 'johndoe@somewhere.com',
 				'fname' => 'John',
