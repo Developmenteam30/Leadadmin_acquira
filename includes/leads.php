@@ -973,6 +973,31 @@ class Leads
 		return $results;
 	}
 
+	public function getInvoiceNumber( $date, $idCompany ) {
+		$invoiceNumber = '';
+
+		try {
+			$query = $this->db->prepare( "SELECT invoiceNumber FROM invoices WHERE date = ? AND idCompany = ?" );
+			$query->execute( array( $date, $idCompany ) );
+			$invoiceNumber = $query->fetchColumn();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get invoice number: ' . $e->getMessage() );
+		}
+
+		return $invoiceNumber;
+	}
+
+	public function setInvoiceNumber( $date, $idCompany, $invoiceNumber ) {
+
+		try {
+			$query = $this->db->prepare( "REPLACE INTO invoices( date, idCompany, invoiceNumber, paid ) VALUES( ?, ?, ?, ? )" );
+			$query->execute( array( $date, $idCompany, !empty( $invoiceNumber ) ? $invoiceNumber : null, !empty( $invoiceNumber ) ? 1 : 0 ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to update invoice value: ' . $e->getMessage() );
+			return;
+		}
+	}
+
 	public function getInvoiceStatus( $date, $idCompany ) {
 		$paid = false;
 
@@ -1046,7 +1071,7 @@ class Leads
 		$fields = array();
 		$fields[] = $date;
 
-		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,SUM(DISTINCT r.value) AS revenue,SUM(DISTINCT ROUND(r.value*0.50,2)) AS partner,IF(SUM(r.value)>0,'0','1'),MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
+		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,SUM(DISTINCT r.value) AS revenue,ROUND(SUM(DISTINCT r.value)*0.50,2) AS partner,IF(SUM(r.value)>0,'0','1'),MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
@@ -1086,7 +1111,7 @@ class Leads
 		$results = array();
 		$fields = array();
 
-		$query  = "SELECT ci.name AS inName,r.date AS month,SUM(r.value) AS revenue,SUM(ROUND(r.value*0.50,2)) AS partner,i.idCompany AS idCompany ";
+		$query  = "SELECT ci.name AS inName,r.date AS month,SUM(r.value) AS revenue,ROUND(SUM(r.value)*0.50,2) AS partner,i.idCompany AS idCompany ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
@@ -1108,6 +1133,39 @@ class Leads
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound client revenue month mappings: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getRevenueInboundClientMonthTotal( $idCompany, $month ) {
+		$results = array();
+		$fields = array();
+
+		$query  = "SELECT SUM(r.value) AS revenue,ROUND(SUM(r.value)*0.50,2) AS partner ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
+		$query .= "AND m.url = r.url ";
+		$query .= "AND m.idFeedOut = r.idFeedOut ";
+		$query .= "WHERE r.value IS NOT NULL ";
+		$query .= "AND r.value > 0.00 ";
+		if( !empty( $idCompany ) ) {
+			$query .= "AND i.idCompany = ? ";
+			$fields[] = $idCompany;
+		}
+		if( !empty( $idCompany ) ) {
+			$query .= "AND r.date = ? ";
+			$fields[] = $month;
+		}
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( $fields );
+			$results = $query->fetchAll( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound client revenue month total: ' . $e->getMessage() );
 		}
 
 		return $results;

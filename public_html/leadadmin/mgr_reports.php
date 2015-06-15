@@ -147,9 +147,60 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			$leads->setInvoiceStatus( $_REQUEST['date'], $_REQUEST['idCompany'], !empty( $_REQUEST['paid'] ) ? true : false );
+			$leads->setInvoiceNumber( $_REQUEST['date'], $_REQUEST['idCompany'], !empty( $_REQUEST['invoiceNumber'] ) ? $_REQUEST['invoiceNumber'] : '' );
 			$result['status'] = 1;
-			$result['error'] = 'Invoice status updated';
+			$result['error'] = 'Invoice number updated.';
+
+			if( !empty( $_REQUEST['email' ] ) && !empty( $_REQUEST['invoiceNumber'] ) ) {
+				if( empty( $company->acct_email ) ) {
+					$result['status'] = 0;
+					$result['error'] = 'Accounting contact email is not setup. No notification sent.';
+					break;
+				}
+
+				if( empty( $company->acct_name ) ) {
+					$result['status'] = 0;
+					$result['error'] = 'Accounting contact name is not setup. No notification sent.';
+					break;
+				}
+
+				$date = date( 'F Y', strtotime( $_REQUEST['date'] . '01' ) );
+				list( $first, $garbage ) = explode( ' ', $company->acct_name, 2 );
+
+				$amounts = $leads->getRevenueInboundClientMonthTotal( $_REQUEST['idCompany'], $_REQUEST['date'] );
+				if( empty( $amounts[0]['partner'] ) ) {
+					$result['status'] = 0;
+					$result['error'] = 'Partner revenue share is zero. No notification sent.';
+					break;
+				}
+
+				$message  = "Hi {$first},\r\n";
+				$message .= "\r\n";
+				$message .= "The invoice below has been paid via ACH. Please let us know if you do not see the money within 24-48 hours.\r\n";
+				$message .= "\r\n";
+				$message .= "Month: {$date}\r\n";
+				$message .= "Invoice #" . $_REQUEST['invoiceNumber'] . "\r\n";
+				$message .= "Amount: \$" . number_format( $amounts[0]['partner'], 2 ) . "\r\n";
+				$message .= "\r\n";
+				$message .= "\r\n";
+				$message .= "Thank you and we appreciate your business.\r\n";
+				$message .= "\r\n";
+				$message .= "Warmly,\r\n";
+				$message .= "\r\n";
+				$message .= "Accounting\r\n";
+				$message .= COMPANY_LEGAL_NAME . "\r\n";
+				$message .= COMPANY_ADDRESS_1 . "\r\n";
+				$message .= COMPANY_ADDRESS_2 . "\r\n";
+
+				if( mail( $company->acct_email, "Invoice #" . $_REQUEST['invoiceNumber'] . " PAID | " . CONFIG_COMPANY_NAME, $message, "From: \"" . CONFIG_COMPANY_NAME . "\" <" . PAYMENT_EMAIL . ">\r\nBCC: " . PAYMENT_EMAIL, '-f' . PAYMENT_EMAIL ) ) {
+					$result['status'] = 1;
+					$result['error'] = 'Invoice number updated AND notification email sent.';
+					break;
+				}
+
+				$result['status'] = 0;
+				$result['error'] = 'Unable to send message.';
+			}
 
 			break;
 	}
@@ -346,11 +397,13 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php
 if( !empty( $idCompany ) ) {
 	print '<input class="fr" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
-	if( $leads->getInvoiceStatus( $reportDate, $idCompany ) ) {
-		print '<input class="fr" type="button" value="Mark Invoice as UNPAID" onclick="invoiceStatus(' . $idCompany . ',' . $reportDate . ', 0, ' . ( empty( $idFeedIn ) ? 0 : $idFeedIn ) . ' , \'' . ( empty( $urlFilter ) ? 0 : $urlFilter )  . '\' )" />';
-	} else {
-		print '<input class="fr" type="button" value="Mark Invoice as Paid" onclick="invoiceStatus(' . $idCompany . ',' . $reportDate . ', 1, ' . ( empty( $idFeedIn ) ? 0 : $idFeedIn ) . ' , \'' . ( empty( $urlFilter ) ? 0 : $urlFilter ) . '\' )" />';
-	}
+
+	print '<p class="fr">';
+	$invoiceNumber = $leads->getInvoiceNumber( $reportDate, $idCompany );
+	print 'Invoice #<input type="text" value="' . htmlspecialchars( $invoiceNumber, ENT_HTML | ENT_NOQUOTES ) . '" id="invoice_number" /> ';
+	print '<input type="checkbox" value="1" id="invoice_email" /> Send Email? ';
+	print '<input type="button" value="Save" onclick="invoiceStatus(' . $idCompany . ',' . $reportDate . ', 0, ' . ( empty( $idFeedIn ) ? 0 : $idFeedIn ) . ' , \'' . ( empty( $urlFilter ) ? 0 : $urlFilter )  . '\' )" />';
+	print '</p>';
 }
 ?>
 </p>
@@ -478,7 +531,8 @@ function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
 			"a" : "invoice_status",
 			"idCompany" : idCompany,
 			"date" : date,
-			"paid" : paid
+			"invoiceNumber" : $("#invoice_number").val(),
+			"email" : $("#invoice_email").prop( "checked" ) ? 1 : 0
 		})
 	}).done(function(responseText){
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
