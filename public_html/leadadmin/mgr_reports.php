@@ -179,7 +179,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				$message .= "The invoice below has been paid via ACH. Please let us know if you do not see the money within 24-48 hours.\r\n";
 				$message .= "\r\n";
 				$message .= "Month: {$date}\r\n";
-				$message .= "Invoice #" . $_REQUEST['invoiceNumber'] . "\r\n";
+				$message .= "Invoice #: " . $_REQUEST['invoiceNumber'] . "\r\n";
 				$message .= "Amount: \$" . number_format( $amounts[0]['partner'], 2 ) . "\r\n";
 				$message .= "\r\n";
 				$message .= "\r\n";
