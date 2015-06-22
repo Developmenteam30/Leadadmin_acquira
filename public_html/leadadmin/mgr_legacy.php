@@ -2,8 +2,8 @@
 
 include("../../includes/c_config.php");
 
-require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+//require_once( INCLUDES . 'session.php' );
+//LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
 $mysqlErrorSource = 'Manager - Suppression';
 include(INCLUDES."_connx.php");
@@ -44,33 +44,37 @@ function legacyPopulate( $feedId, $file = false ) {
 
 			}
 
-			$stamp = getOutboundStamp( $population->outLabel );
+			$leads = Leads::getInstance();
+			$idRecord = $leads->firstOutboundRecord( $feedId, 'instantcheckmate.com' );
 
-	  		$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` ";
-    		$query .= "WHERE stamp >= DATE_SUB(NOW(), INTERVAL 30 DAY) ";
-			if( $stamp ) {
-				$query .= "AND stamp <= '" . $stamp . "' ";
+	  		$sql  = "SELECT * FROM data_inbound ";
+    		$sql .= "WHERE idFeedIn = " . intval( $population->idFeedIn ) . " ";
+			$sql .= "AND timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY) ";
+			if( !empty( $idRecord ) ) {
+				$sql .= "AND idRecord <= '" . $idRecord . "' ";
 			}
-			$query .= "ORDER BY stamp DESC";
+			$sql .= "AND result IS NULL ";
+			$sql .= "AND url = 'instantcheckmate.com' ";
+			$sql .= "ORDER BY timestamp DESC";
 
-	  		//$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId = '1392144291'";
-	  		//$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE urlTrim = 'http://www.rewardcorporation.com'";
-	  		//$query  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE received >= '2014-04-28' AND listcode = '1346'";
-			//$query = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE stamp >= '2014-06-16 22:59' AND urlTrim = 'http://www.instantcheckmate.com'";
-			$query = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE stamp >= '2014-08-01' AND stamp < '2014-08-10 10:16:02' AND listcode = '1382329'";
-			$query = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId IN (1410894753,1410895983)";
+	  		//$sql  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId = '1392144291'";
+	  		//$sql  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE urlTrim = 'http://www.rewardcorporation.com'";
+	  		//$sql  = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE received >= '2014-04-28' AND listcode = '1346'";
+			//$sql = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE stamp >= '2014-06-16 22:59' AND urlTrim = 'http://www.instantcheckmate.com'";
+			//$sql = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE stamp >= '2014-08-01' AND stamp < '2014-08-10 10:16:02' AND listcode = '1382329'";
+			//$sql = "SELECT * FROM `".DATABASE_NAME."`.`feedinc_" . $population->inLabel."` WHERE jobId IN (1410894753,1410895983)";
 
-			dbCon();
-    		$result = dbQry( $query, 'Getting inbound records', true );
+			$query = $leads->exportRecords( $sql );
 
-    		if( $result === false ) { return false; }
-    		if( $result->num_rows == 0 ) { return 0; }
+			if( empty( $query ) ) {
+				return false;
+			}
+
+			//print "Total records found: {$result->num_rows}\n";
+
 	    	$values = array();
-
-			print "Total records found: {$result->num_rows}\n";
-
 			$cnt = 0;
-	    	while( $row = $result->fetch_object() ) {
+			while ( $row = $query->fetch( PDO::FETCH_OBJ ) ) {
 
 				// Ensure the record passes the population parameter filters for this feed
 				if( checkPopulationFilters( $population, $row->url, $row->email, $row->listcode ) ) {
@@ -80,11 +84,11 @@ function legacyPopulate( $feedId, $file = false ) {
 					}
 
 					if( $file ) {
-						if( fputs( $handle, implode( array( 
+						if( fputcsv( $handle, array(
 								$row->email,
-								$row->urlTrim,
+								$row->url,
 								$row->ip,
-								$row->stamp,
+								$row->leadstamp,
 								$row->fname,
 								$row->lname,
 								$row->addr,
@@ -101,25 +105,25 @@ function legacyPopulate( $feedId, $file = false ) {
 								'',
 								'',
 								'',
-							), "\t" ) . "\n" ) === FALSE ) {
+							) ) === FALSE ) {
 							print "Unable to write record to file {$fileName}\n";
 							continue;
 						}
 					}
 
-					$legacyId = addOutboundRecord( $population->outLabel, $row->listcode, $row->urlTrim, $row->url, $row->ip, $row->stamp, $row->email, $row->fname, $row->lname, $row->addr, $row->addr2, $row->city, $row->state, $row->zip, $row->country, $row->dob, $row->gender, $row->landline, $row->cellphone, $processed, $postStamp, $postRequest, $postResponse );
-					if( !empty( $legacyId ) ) {
-						$leads = Leads::getInstance();
-//						$leads->outboundAdd( $inboundId, $legacyId, $population->idFeedIn, $population->idFeedOut, $row->url );
+					$legacyId = null;
+					if( LEGACY_DB ) {
+						$legacyId = addOutboundRecord( $population->outLabel, $row->listcode, $row->urlTrim, $row->url, $row->ip, $row->leadstamp, $row->email, $row->fname, $row->lname, $row->addr, $row->addr2, $row->city, $row->state, $row->zip, $row->country, $row->dob, $row->gender, $row->landline, $row->cellphone, $processed, $postStamp, $postRequest, $postResponse );
 					}
+					$leads->outboundAdd( $row->idRecord, $legacyId, $population->idFeedIn, $population->idFeedOut, $row->url, $file ? 1 : 0 );
 
 					$cnt++;
 
 				}
 
-				//print_r( $row );
     		}
-print "Records that match population filters: {$cnt}\n";
+
+			print "Records that match population filters: {$cnt}\n";
 
 			if( $file ) {
 				fclose( $handle );
@@ -131,4 +135,4 @@ print "Records that match population filters: {$cnt}\n";
 
 }
 
-legacyPopulate( 211, false );
+legacyPopulate( 448, true );

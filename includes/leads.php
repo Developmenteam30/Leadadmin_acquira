@@ -32,7 +32,7 @@ class Leads
 			print "Error connecting to the database";
 			die();
 
-		}  
+		}
 	}
 
 	public function parseUrl( $url ) {
@@ -884,13 +884,15 @@ class Leads
 			return null;
 		}
 
-		try {
-			$query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
-			$query->execute( array( $idFeedOut ) );
-		} catch( PDOException $e ) {
-			$this->db->rollBack();
-			$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
-			return null;
+		if( $processed !== 1 ) {
+			try {
+				$query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
+				$query->execute( array( $idFeedOut ) );
+			} catch( PDOException $e ) {
+				$this->db->rollBack();
+				$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
+				return null;
+			}
 		}
 
 		$this->db->commit();
@@ -1788,6 +1790,21 @@ class Leads
 		return $results;
 	}
 
+
+	public function firstOutboundRecord( $idFeedOut, $url ) {
+		$results = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT MIN(o.idRecord) FROM data_outbound o JOIN data_inbound i ON i.idRecord=o.idRecord WHERE o.idFeedOut = ? AND i.url = ?" );
+			$query->execute( array( $idFeedOut, $url ) );
+			$results = $query->fetchColumn( );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get first outbound record: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function checkInboundURLExists( $idFeedIn, $url ) {
 		try {
 			$query = $this->db->prepare( "SELECT 1 FROM notifications WHERE url = ? AND idFeedIn = ? LIMIT 1" );
@@ -2131,6 +2148,24 @@ class Leads
 		}
 
 		fclose( $file );
+	}
+
+	public function exportRecords( $sql, $fields = array() ) {
+
+		try {
+
+			$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( $fields );
+			return $query;
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to export records: ' . $e->getMessage() );
+			return null;
+		}
+
+		return null;
 	}
 
 	public function exportOutboundQueue( $idFeedOut ) {
