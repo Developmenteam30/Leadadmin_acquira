@@ -403,20 +403,6 @@ function checkExists( $column, $requestValues, $feedLabel ){
 	return $dupeCount['cnt'];
 }
 
-function checkSuppression( $email, $idCompany ) {
-	dbCon();
-	list( $local, $domain ) = explode( '@', $email, 2 );
-	$query = "SELECT 1 AS cnt FROM `".DATABASE_NAME."`.`suppression_".$idCompany."` "
-			."WHERE `email` = '".$GLOBALS['dbconnx']->escape_string( $email )."' "
-			."OR `email` = '".$GLOBALS['dbconnx']->escape_string( $domain )."' "
-			."LIMIT 1";
-	$result = dbQry($query, 'Checking if email is suppressed.', true);
-	dbDcon();
-	if($result === false){ return false; }
-	$count = $result->fetch_assoc();
-	return $count['cnt'];
-}
-
 function getPopulation( $idFeedOut ){
 	$query  = "SELECT p.*,i.label inLabel, o.label outLabel FROM `".DATABASE_NAME."`.`feedPopulation` p ";
 	$query .= "LEFT JOIN `".DATABASE_NAME."`.`feedinc` i ON p.idFeedIn = i.idFeedIn ";
@@ -610,9 +596,11 @@ function validateIncomingData( $feedParams, &$data ) {
 		return $result;
 	}
 
+	$leads = Leads::getInstance();
+
 	if( !empty( $data['email'] ) ) {
-		$exists = checkSuppression( $data['email'], 'global' );
-		if( $exists ) {
+		$exists = $leads->checkSuppression( $data['email'], null );
+		if( $exists === true ) {
 			$result['valid'] = false;
 			$result['errors'][] = 'Email exists in our global suppression file.';
 		}
@@ -625,8 +613,6 @@ function validateIncomingData( $feedParams, &$data ) {
 			$result['errors'][] = 'URL is not allowed on this feed.';
 		}
 	}
-
-	$leads = Leads::getInstance();
 
 	if( $feedParams->dedupeEmail && !empty( $data['email'] ) ) {
 		$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'email', $data, $feedParams->dedupeAcross );
