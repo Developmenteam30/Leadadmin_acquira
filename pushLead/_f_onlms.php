@@ -310,7 +310,7 @@ function process($leadset)
 			'url' => '',
 			'idFeedOut' => $settings['feedParams']->idFeedOut
 		);
-		if($leaddata['email'] != '' && checkSuppression($leaddata['email'], 'global')){
+		if($leaddata['email'] != '' && $leads->checkSuppression($leaddata['email'], null )){
 			$response = array(
 				'text' => 'Email is suppressed (global).'
 				, 'status' => 2
@@ -318,7 +318,7 @@ function process($leadset)
 				, 'idFeedOut' => $settings['feedParams']->idFeedOut
 			);
 			$leads->outboundProcess( $leaddata['idRecord'], $settings['feedParams']->idFeedOut, $leaddata['url'], 'LOCAL REJECTION: Email is suppressed (global)' );
-		} elseif($leaddata['email'] != '' && checkSuppression($leaddata['email'], $settings['feedParams']->idCompany)) {
+		} elseif($leaddata['email'] != '' && $leads->checkSuppression($leaddata['email'], $settings['feedParams']->idCompany)) {
 			$response = array(
 				'text' => 'Email is suppressed (company).'
 				, 'status' => 2
