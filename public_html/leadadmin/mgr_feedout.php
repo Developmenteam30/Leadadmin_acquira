@@ -340,7 +340,7 @@ if(isset($_REQUEST['a'])){
 						)){ $c = false; $result['error'] = 'Label cannot be empty.'; }
 						if($c //Label cannot have invalid characters
 						){
-							$pattern = '/^[a-z][a-z1-9_]*$/';
+							$pattern = '/^[a-z][a-z0-9_]*$/';
 							if(!preg_match($pattern, $_REQUEST['label'])){ 
 								$c = false; $result['error'] = 'Label must start with a letter, can can contain '
 								.'letters, numbers, and underscore only.';
