@@ -129,6 +129,34 @@ class Leads
 		}
 	}
 
+	public function getConfiguration( $config_key ) {
+		$value = null;
+
+		$defaults = array(
+			'notify_interval_1' => 12,
+			'notify_interval_2' => 24,
+		);
+
+		try {
+			$query = $this->db->prepare( "SELECT config_value FROM configuration WHERE config_key = ?" );
+			$query->execute( array( $config_key ) );
+			$value = $query->fetchColumn();
+
+			// If the value was not found in the database, check the hard-coded defaults
+			if( $value === false ) {
+				if( isset( $defaults[$config_key] ) ) {
+					$value = $defaults[$config_key];
+				} else {
+					$value = null;
+				}
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get configuration value for (' . $config_key . '): ' . $e->getMessage() );
+		}
+
+		return $value;
+	}
+
 	public function addUser( $username, $password, $idCompany, $level ) {
 
 		try {
@@ -2254,7 +2282,7 @@ class Leads
 					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
 					$query->execute( array( $idFeedOut, $feed->delay ) );
 				} else {
-					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500" );
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 5000" );
 					$query->execute( array( $idFeedOut ) );
 				}
 			}

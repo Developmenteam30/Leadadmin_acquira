@@ -7,6 +7,7 @@ require( '../includes/c_config.php' );
 $mysqlErrorSource = 'Notification script';
 require( INCLUDES."_connx.php" );
 require( INCLUDES."processFunctions.php" );
+require_once( INCLUDES . 'leads.php' );
 
 function sendNotification( $label, $feedId, $url, $time, $hours ) {
 	$to         = MANAGER_EMAIL;
@@ -31,28 +32,38 @@ function sendNotification( $label, $feedId, $url, $time, $hours ) {
 
 dbCon();
 
-$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL 12 HOUR) AND notifyTime = 0";
+$leads = Leads::getInstance();
+$notifyInterval1 = $leads->getConfiguration( 'notify_interval_1' );
+$notifyInterval2 = $leads->getConfiguration( 'notify_interval_2' );
 
-if( $result = dbQry( $query, 'Getting notification URLs', true ) ) {
-	while ($obj = $result->fetch_object()) {
-		sendNotification( $obj->label, $obj->idFeedIn, $obj->url, $obj->lastTime, 12 );
-		$obj->url = $GLOBALS['dbconnx']->escape_string( $obj->url );
-		$obj->idFeedIn = $GLOBALS['dbconnx']->escape_string( $obj->idFeedIn );
-		dbQry( "UPDATE notifications SET notifyTime = NOW() WHERE url = '{$obj->url}' AND idFeedIn = '{$obj->idFeedIn}'", 'Update URL notification time', true );
+if( !empty( $notifyInterval1 ) ) {
+
+	$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL " . intval( $notifyInterval1 ) . " HOUR) AND notifyTime = 0";
+
+	if( $result = dbQry( $query, 'Getting notification URLs', true ) ) {
+		while ($obj = $result->fetch_object()) {
+			sendNotification( $obj->label, $obj->idFeedIn, $obj->url, $obj->lastTime, $notifyInterval1 );
+			$obj->url = $GLOBALS['dbconnx']->escape_string( $obj->url );
+			$obj->idFeedIn = $GLOBALS['dbconnx']->escape_string( $obj->idFeedIn );
+			dbQry( "UPDATE notifications SET notifyTime = NOW() WHERE url = '{$obj->url}' AND idFeedIn = '{$obj->idFeedIn}'", 'Update URL notification time', true );
+		}
+		$result->close();
 	}
-	$result->close();
 }
 
-$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL 24 HOUR) AND notifyTime < DATE_ADD(lastTime, INTERVAL 24 HOUR)";
+if( !empty( $notifyInterval2 ) ) {
 
-if( $result = dbQry( $query, 'Getting notification URLs', true ) ) {
-	while ($obj = $result->fetch_object()) {
-		sendNotification( $obj->label, $obj->idFeedIn, $obj->url, $obj->lastTime, 24 );
-		$obj->url = $GLOBALS['dbconnx']->escape_string( $obj->url );
-		$obj->idFeedIn = $GLOBALS['dbconnx']->escape_string( $obj->idFeedIn );
-		dbQry( "UPDATE notifications SET notifyTime = NOW() WHERE url = '{$obj->url}' AND idFeedIn = '{$obj->idFeedIn}'", 'Update URL notification time', true );
+	$query = "SELECT f.label,f.idFeedIn,n.url,lastTime FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn WHERE lastTime < DATE_SUB(NOW(), INTERVAL " . intval( $notifyInterval2 ) . " HOUR) AND notifyTime < DATE_ADD(lastTime, INTERVAL " . intval( $notifyInterval2 ) . " HOUR)";
+
+	if( $result = dbQry( $query, 'Getting notification URLs', true ) ) {
+		while ($obj = $result->fetch_object()) {
+			sendNotification( $obj->label, $obj->idFeedIn, $obj->url, $obj->lastTime, $notifyInterval2 );
+			$obj->url = $GLOBALS['dbconnx']->escape_string( $obj->url );
+			$obj->idFeedIn = $GLOBALS['dbconnx']->escape_string( $obj->idFeedIn );
+			dbQry( "UPDATE notifications SET notifyTime = NOW() WHERE url = '{$obj->url}' AND idFeedIn = '{$obj->idFeedIn}'", 'Update URL notification time', true );
+		}
+		$result->close();
 	}
-	$result->close();
 }
 
 dbDCon();
