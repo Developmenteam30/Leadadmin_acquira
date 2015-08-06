@@ -524,11 +524,23 @@ function runlead($leaddata, $fP)
 	$response['url'] = $leaddata['url']; 
 	$response['idFeedOut'] = $fP->idFeedOut;
 	//Check if the response we got is a success for this feed.
-	$sucstr = str_replace('%', '', $fP->successString); //Remove mysql wildcards
-	if(stripos($response['text'], $sucstr) !== false) { 
-		$response['status'] = 1;
-	} else { 
-		$response['status'] = 0;
+
+	if( strpos( $fP->successString, 'REGEX:' ) === 0 ) {
+		// Check for a regular expression match
+		if( preg_match( substr( $fP->successString, 6 ), $response['text'] ) === 1 ) {
+			$response['status'] = 1;
+		} else {
+			$response['status'] = 0;
+		}
+
+	} else {
+		// Check for a direct substring comparison match
+		$sucstr = str_replace('%', '', $fP->successString); //Remove mysql wildcards
+		if(stripos($response['text'], $sucstr) !== false) { 
+			$response['status'] = 1;
+		} else { 
+			$response['status'] = 0;
+		}
 	}
 	
 	if($settings['testing'] == 1) { 
