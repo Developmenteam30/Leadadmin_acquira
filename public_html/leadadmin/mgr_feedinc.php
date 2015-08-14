@@ -1541,7 +1541,7 @@ foreach($incomingAdditionalRequirementSettings as $f){
 	}
 
 	var rejectFilter = /^\d+ Days Ago$/i;
-	if( !rejectFilter.test( rejectOldLeadsMaxAge ) ) {
+	if( rejectOldLeadsMaxAge.length > 0 && !rejectFilter.test( rejectOldLeadsMaxAge ) ) {
 		alert( 'Invalid Lead Rejection Age' );
 		return false;
 	}
