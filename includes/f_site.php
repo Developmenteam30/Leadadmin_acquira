@@ -8,7 +8,7 @@ $recordFields = array(
 	'city', 'state', 'zip', 'dob', 'gender', 'landline', 'cellphone', 'country'
 );
 $additionalMapFields = array(
-	'urlAssign', 'dobUS', 'stampUS', 'stampUS_dateOnly', 'stampUSAMPM', 'stampUS+AMPM', 'stamp_YYYYmmdd'
+	'urlAssign', 'dobUS', 'stampUS', 'stampUS_dateOnly', 'stampUSAMPM', 'stampUS+AMPM', 'stamp_YYYYmmdd', 'stampUS_slashes',
 );
 $incomingAdditionalRequirementSettings = array(
 	'phone'

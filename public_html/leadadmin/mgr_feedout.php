@@ -1173,7 +1173,7 @@ if($populationSettings === false){
 
 			$response = runlead( $leaddata, $feed );
 
-			print "<strong>Query String:</strong> " . $response['querystring'] . "</p>";
+			print "<strong>Query String:</strong> " . htmlspecialchars( $response['querystring'] ) . "</p>";
 
 			print "<strong>Response:</strong> " . htmlspecialchars( stripslashes( $response['text'] ) ) . "</p>";
 

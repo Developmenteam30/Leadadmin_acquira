@@ -420,26 +420,29 @@ function runlead($leaddata, $fP)
 						}
 					}
 					assignValue( $varFields[$count], $urlassignment, $requestdata );
-				break;
+					break;
 				case 'dobUS':
 					assignValue( $varFields[$count], date("m-d-Y", strtotime($leaddata['dob'])), $requestdata );
-				break;
+					break;
 				case 'stampUS':
 					assignValue( $varFields[$count], date("m-d-Y H:i:s", strtotime($leaddata['stamp'])), $requestdata );
-				break;
+					break;
 				case 'stampUS_dateOnly':
 					assignValue( $varFields[$count], date("m-d-Y", strtotime($leaddata['stamp'])), $requestdata );
-				break;
+					break;
 				case 'stamp_YYYYmmdd':
 					assignValue( $varFields[$count], date("Ymd", strtotime($leaddata['stamp'])), $requestdata );
-				break;
+					break;
 				case 'stampUSAMPM':
-					assignValue( $varFields[$count], date("m-d-Y H:i:sA", strtotime($leaddata['stamp'])), $requestdata );
-				break;
+					assignValue( $varFields[$count], date("m-d-Y h:i:sA", strtotime($leaddata['stamp'])), $requestdata );
+					break;
 				case 'stampUS+AMPM':
-					assignValue( $varFields[$count], date("m-d-Y H:i:s A", strtotime($leaddata['stamp'])), $requestdata );
-				break;
-				default: 
+					assignValue( $varFields[$count], date("m-d-Y h:i:s A", strtotime($leaddata['stamp'])), $requestdata );
+					break;
+				case 'stampUS_slashes':
+					assignValue( $varFields[$count], date("m/d/Y H:i:s", strtotime($leaddata['stamp'])), $requestdata );
+					break;
+				default:
 					assignValue( $varFields[$count], $leaddata[$fieldMap[$count]], $requestdata );
 				break;
 			}
