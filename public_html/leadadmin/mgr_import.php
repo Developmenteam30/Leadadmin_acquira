@@ -48,6 +48,26 @@ include(INCLUDES."c_header.php");
 
 <?php
 
+if( !isset( $_FILES['import_file']['error'] ) ) {
+	dieError( 'Cannot determine file error code.' );
+}
+
+if( UPLOAD_ERR_INI_SIZE == $_FILES['import_file']['error'] || UPLOAD_ERR_FORM_SIZE == $_FILES['import_file']['error'] ) {
+	dieError( 'File size cannot exceed ' . (MAX_UPLOAD_SIZE / 1024000) . 'MB' );
+} else if( UPLOAD_ERR_PARTIAL == $_FILES['import_file']['error'] ) {
+	dieError( 'The file upload was interrupted.' );
+} else if( UPLOAD_ERR_NO_TMP_DIR == $_FILES['import_file']['error'] ) {
+	dieError( 'The temporary folder is missing. Contact Ryan.' );
+} else if( UPLOAD_ERR_NO_TMP_DIR == $_FILES['import_file']['error'] ) {
+	dieError( 'The temporary folder is missing. Contact Ryan.' );
+} else if( UPLOAD_ERR_NO_CANT_WRITE == $_FILES['import_file']['error'] ) {
+	dieError( 'Cannot write to the temporary folder. Contact Ryan.' );
+} else if( UPLOAD_ERR_EXTENSION == $_FILES['import_file']['error'] ) {
+	dieError( 'A PHP extension stopped the file upload. Contact Ryan.' );
+} else if( UPLOAD_ERR_OK != $_FILES['import_file']['error'] ) {
+	dieError( 'An unknown upload error was encountered.' );
+}
+
 if( empty( $_REQUEST['type'] ) ) {
 	dieError( 'No upload type supplied' );
 }
