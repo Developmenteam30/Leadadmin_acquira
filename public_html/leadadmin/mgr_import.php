@@ -60,7 +60,7 @@ if( UPLOAD_ERR_INI_SIZE == $_FILES['import_file']['error'] || UPLOAD_ERR_FORM_SI
 	dieError( 'The temporary folder is missing. Contact Ryan.' );
 } else if( UPLOAD_ERR_NO_TMP_DIR == $_FILES['import_file']['error'] ) {
 	dieError( 'The temporary folder is missing. Contact Ryan.' );
-} else if( UPLOAD_ERR_NO_CANT_WRITE == $_FILES['import_file']['error'] ) {
+} else if( UPLOAD_ERR_CANT_WRITE == $_FILES['import_file']['error'] ) {
 	dieError( 'Cannot write to the temporary folder. Contact Ryan.' );
 } else if( UPLOAD_ERR_EXTENSION == $_FILES['import_file']['error'] ) {
 	dieError( 'A PHP extension stopped the file upload. Contact Ryan.' );
