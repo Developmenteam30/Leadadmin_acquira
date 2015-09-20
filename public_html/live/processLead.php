@@ -87,10 +87,7 @@ if($c &&(
 	|| $_REQUEST['pswd'] != $feedParams->password
 )){
 	$c = false; $result['reason'] = 'Unauthorized access.';
-	logError(
-		'Feed '.$feedLabel
-		, 'Unauthorized user at '.$_SERVER["REMOTE_ADDR"]
-	);
+	$leads->logError( 'Feed '. $feedLabel . ' Unauthorized user at '.$_SERVER["REMOTE_ADDR"], true, false );
 }
 
 if( $c && 'retired' == $feedParams->status ) {
@@ -245,13 +242,7 @@ if( !empty( $feedParams ) ) {
 //Population Portion of the script. 
 if($c){ 
 	$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn );
-	if( $feedsOut === false ) { 
-		logError(
-			'Feed '.$feedLabel
-			, 'Database failure when attempting to load outgoing feed population parameters. Check MySQL log file.'
-			, true
-		);
-	} elseif(count($feedsOut) != 0 && $feedsOut != 0) { 
+	if( $feedsOut !== false && count($feedsOut) != 0 && $feedsOut != 0) {
 		foreach($feedsOut as $feed){ 
 			if($feed->enabled){ 
 				$p = true;
@@ -277,7 +268,7 @@ if($c){
 				if($p && !is_null($feed->dailyLimit) && intval($feed->dailyLimit) > 0) {
 					$cnt = $leads->getOutboundDailyCount( $feed->idFeedOut );
 					if( $cnt && $cnt > $feed->dailyLimit ) {
-						logError( 'Feed '.$feed->label, 'Daily feed limit of ' . $feed->dailyLimit . ' reached', false );
+						$leads->logError( 'Feed '.$feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
 						$p = false;
 					}
 				}
@@ -319,13 +310,7 @@ if($c){
 						}
 						$insertToFeedOut .= ");";
 						$doinsertRecord = dbQry($insertToFeedOut, 'Populating '.$feed->label, true);
-						if($doinsertRecord === false){ 
-							logError(
-								'Feed '.$feedLabel
-								, 'Database failure when populate outgoing feed '.$feed->label.'. Check MySQL log file.'
-								, true
-							);
-						} else {
+						if($doinsertRecord !== false){ 
 							$lastRecord = $GLOBALS['dbconnx']->insert_id;
 						}
 
@@ -345,13 +330,7 @@ if($c){
 
 						$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label. "` WHERE `processed` = '-1' AND idRecord = " . $lastRecord;
 						$dogetLead = dbQry($getLead, 'Fetching live lead to process', true);
-						if($dogetLead === false){
-							logError(
-								'Outgoing Feed '.$settings['feedParams']->label
-								, 'Database failure when trying to select leads for processing. View MySQL log.'
-								, true
-							);
-						} else if( $dogetLead->num_rows > 0 ) {
+						if($dogetLead !== false && $dogetLead->num_rows > 0 ) {
 
 							$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
 							while( $c && ( $row = $dogetLead->fetch_array( MYSQLI_ASSOC ) ) ) {
@@ -465,11 +444,6 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 		$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedLabel, true);
 		if($doinsertRecord === false){
 			$c = false; $result['reason'] = 'Database failure, please try again later.';
-			logError(
-				'Feed '.$feedLabel
-				, 'Database failure when attempting to insert valid record. Check MySQL log file.'
-				, true
-			);
 		} else { //Successfully inserted into the data table, now insert into the count table.
 			$date = date("Y-m-d");
 			$insertCountChange = "INSERT INTO "
@@ -483,13 +457,6 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 				.") "
 				."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
 			$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
-			if($doinsertCountChange === false){ 
-				logError(
-					'Feed '.$feedLabel
-					, 'Database failure when attempting to add quantity change. Check MySQL log file.'
-					, true
-				);
-			}
 		}
 	}
 } else if( !empty( $feedLabel ) ) { //There was a failure somewhere, so insert into the invalid database with the query string and the error.
@@ -534,11 +501,6 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 		$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedLabel, true);
 		if($doinsertRecord === false){
 			$c = false; $result['reason'] = 'Database failure, please try again later.';
-			logError(
-				'Feed '.$feedLabel
-				, 'Database failure when attempting to insert invalid record. Check MySQL log file.'
-				, true
-			);
 		} else if( !empty( $_REQUEST['url'] ) && !empty( $_REQUEST['urlTrim'] ) ) { //Successfully inserted into the data table, now insert into the count table.
 			$date = date("Y-m-d");
 			$insertCountChange = "INSERT INTO "
@@ -553,13 +515,6 @@ if($c){ //Inputted information is validated, go ahead and insert the record into
 				."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
 				//echo $insertCountChange;
 			$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
-			if($doinsertCountChange === false){ 
-				logError(
-					'Feed '.$feedLabel
-					, 'Database failure when attempting to add quantity change for invalid record. Check MySQL log file.'
-					, true
-				);
-			}
 		}
 	}
 }
