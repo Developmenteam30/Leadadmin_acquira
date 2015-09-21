@@ -895,7 +895,7 @@ class Leads
 				'idFeedIn' => $idFeedIn,
 				'idFeedOut' => $idFeedOut,
 				'processed' => $processed,
-				'url' => $urlRewritten ? $url : null,
+				'url' => $urlRewritten ? $this->parseUrl( $url ) : null,
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();

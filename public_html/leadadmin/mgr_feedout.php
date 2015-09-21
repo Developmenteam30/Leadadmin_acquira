@@ -2329,7 +2329,8 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 		if($popSet->forceUrl){ $forceUrl = 'On'; } else { $forceUrl = 'Off'; }
 		$forceUrlListArray = explode(";", $popSet->forceUrlList);
 		$forceUrlList = 'No urls assigned for force urls.';
-		if($popSet->forceUrlList != ''){ 
+		if($popSet->forceUrlList != '' && is_arraY( $forceUrlListArray )){ 
+			$forceUrlList = '';
 			foreach($forceUrlListArray as $valuePair){ 
 				list($original, $altered) = explode("=", $valuePair);
 				if($original == 'all'){ $original = 'All Urls'; }

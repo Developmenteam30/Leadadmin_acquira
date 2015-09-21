@@ -451,9 +451,10 @@ function runlead($leaddata, $fP)
 					} else {
 						assignValue( $varFields[$count], $leaddata[$fieldMap[$count]], $requestdata );
 					}
+					break;
 				default:
 					assignValue( $varFields[$count], $leaddata[$fieldMap[$count]], $requestdata );
-				break;
+					break;
 			}
 		}
 	}
