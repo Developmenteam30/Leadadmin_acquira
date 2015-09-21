@@ -310,6 +310,11 @@ function process($leadset)
 			'url' => '',
 			'idFeedOut' => $settings['feedParams']->idFeedOut
 		);
+
+		// Override the outbound URL
+		if( !empty( $leaddata['urlRewrite'] ) ) {
+			$leaddata['url'] = $leaddata['urlRewrite'];
+		}
 		if($leaddata['email'] != '' && $leads->checkSuppression($leaddata['email'], null )){
 			$response = array(
 				'text' => 'Email is suppressed (global).'
@@ -444,13 +449,6 @@ function runlead($leaddata, $fP)
 					break;
 				case 'stampUS_slashes':
 					assignValue( $varFields[$count], date("m/d/Y H:i:s", strtotime($leaddata['stamp'])), $requestdata );
-					break;
-				case 'url':
-					if( !empty( $leaddata['urlRewrite'] ) ) {
-						assignValue( $varFields[$count], $leaddata['urlRewrite'], $requestdata );
-					} else {
-						assignValue( $varFields[$count], $leaddata[$fieldMap[$count]], $requestdata );
-					}
 					break;
 				default:
 					assignValue( $varFields[$count], $leaddata[$fieldMap[$count]], $requestdata );
