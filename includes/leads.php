@@ -1937,10 +1937,19 @@ class Leads
 		return -1;
 	}
 
-	public function archiveOutbound( $idFeedOut, $success ) {
+	public function archiveOutbound( $idFeedOut, $datetime ) {
 		try {
-			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND processed = 1 AND timestamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND result NOT LIKE ?" );
-			$query->execute( array( $idFeedOut, $success ) );
+			
+			$table = $this->quoteIdentifier( 'data_outbound_' . $datetime->format( 'Ym' ) );
+			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
+
+			$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_outbound WHERE idFeedOut = ? AND processed = 1 AND timestamp >= ? AND timestamp <= ?" );
+			$query->execute( array( $idFeedOut, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
+			$rows = $query->rowCount();
+
+			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND timestamp >= ? AND timestamp <= ?" );
+			$query->execute( array( $idFeedOut, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
+
 			return $query->rowCount();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete old data_outbound entries: ' . $e->getMessage() );
