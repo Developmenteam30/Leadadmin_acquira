@@ -445,6 +445,12 @@ function runlead($leaddata, $fP)
 				case 'stampUS_slashes':
 					assignValue( $varFields[$count], date("m/d/Y H:i:s", strtotime($leaddata['stamp'])), $requestdata );
 					break;
+				case 'url':
+					if( !empty( $leaddata['urlRewrite'] ) ) {
+						assignValue( $varFields[$count], $leaddata['urlRewrite'], $requestdata );
+					} else {
+						assignValue( $varFields[$count], $leaddata[$fieldMap[$count]], $requestdata );
+					}
 				default:
 					assignValue( $varFields[$count], $leaddata[$fieldMap[$count]], $requestdata );
 				break;

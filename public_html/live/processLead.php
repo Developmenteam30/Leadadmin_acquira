@@ -272,6 +272,29 @@ if($c){
 						$p = false;
 					}
 				}
+
+				// Handle URL rewriting
+				$urlRewritten = false;
+				if( !empty( $feed->forceUrl ) && !empty( $feed->forceUrlList ) ) {
+
+					$forceUrls = explode( ';', $feed->forceUrlList );
+					if( !empty( $forceUrls ) && is_array( $forceUrls ) && sizeOf( $forceUrls ) > 0 ) {
+						shuffle( $forceUrls ); // Randomize the order of the array incase we are re-writing to multiple URLs
+
+						foreach( $forceUrls as $forceUrl ) {
+							$mapping = explode( '=', $forceUrl, 2 );
+							if( !empty( $mapping[0] ) && !empty( $mapping[1] ) ) {
+								if( parse_url( $_REQUEST['url'], PHP_URL_HOST ) === $mapping[0] ) {
+									$_REQUEST['url'] = 'http://' . $mapping[1];
+									$urlRewritten = true;
+									break;
+								}
+							}
+						}
+					}
+
+				}
+
 				if($p){
 					$lastRecord = null;
 					if( LEGACY_DB ) {
@@ -314,10 +337,10 @@ if($c){
 							$lastRecord = $GLOBALS['dbconnx']->insert_id;
 						}
 
-						$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'] );
+						$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'], 0, $urlRewritten );
 					} else {
 						$lastRecord = 999999999;
-						$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'], ( !empty( $feed->livedata ) ? -1 : 0 ) );
+						$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'], ( !empty( $feed->livedata ) ? -1 : 0 ), $urlRewritten );
 					}
 
 				}

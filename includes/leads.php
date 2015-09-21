@@ -885,7 +885,7 @@ class Leads
 		return false;
 	}
 
-	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url, $processed = 0 ) {
+	public function outboundAdd( $idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url, $processed = 0, $urlRewritten = false ) {
 		$this->db->beginTransaction();
 
 		try {
@@ -895,6 +895,7 @@ class Leads
 				'idFeedIn' => $idFeedIn,
 				'idFeedOut' => $idFeedOut,
 				'processed' => $processed,
+				'url' => $urlRewritten ? $url : null,
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
@@ -2288,10 +2289,10 @@ class Leads
 				$query->execute( );
 			} else {
 				if( !empty( $feed->delay ) ) {
-					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
+					$query = $this->db->prepare( "SELECT i.*,o.url AS urlRewrite FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
 					$query->execute( array( $idFeedOut, $feed->delay ) );
 				} else {
-					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500" );
+					$query = $this->db->prepare( "SELECT i.*,o.url AS urlRewrite FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500" );
 					$query->execute( array( $idFeedOut ) );
 				}
 			}
@@ -2627,7 +2628,7 @@ class Leads
 
 		if( $db ) {
 			try {
-				$this->insertRow( 'errorlog', array( 
+				$this->insertRow( 'errorlog', array(
 					'origination' => 'LEADS',
 					'description' => $message,
 					'stamp' => date( 'Y-m-d H:i:s' ),
