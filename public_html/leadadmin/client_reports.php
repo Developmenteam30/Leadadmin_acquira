@@ -54,6 +54,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
+				$cnt = 0;
 				foreach( $mappings as $mapping ) {
 					if( empty( $last_month ) ) {
 						$last_month = $mapping['month'];
@@ -70,11 +71,11 @@ if( isset( $_REQUEST['d'] ) ) {
 						$last_month = $mapping['month'];
 						$m_gross = $m_partner = 0;
 					}
-					print "\t<tr class=\"bgGray\">\n";
+					printf( "\t<tr class=\"bgGray%s\">\n", $cnt % 2 ? ' reverse' : '' );
 					if( empty( $idCompany ) ) {
 						printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
 					}
-					printf( "\t\t<td><a href=\"#\" onclick=\"display('dialog_revenue_listowners_detail', { 'report_date': '%s', 'idCompany': '%s' });\">%s</a></td>\n", $mapping['month'], $mapping['idCompany'], date( 'Y F', strtotime( $mapping['month'] . "01" ) ) );
+					printf( "\t\t<td><a class=\"nonLink\" onclick=\"display('dialog_revenue_listowners_detail', { 'sub': '%d', 'report_date': '%s', 'idCompany': '%s' });\">%s</a></td>\n", $cnt, $mapping['month'], $mapping['idCompany'], date( 'Y F', strtotime( $mapping['month'] . "01" ) ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'], 2 ) ) );
 					printf( "\t\t<td class=\"revenue\">%s</td>\n", ( empty( $mapping['revenue'] ) ? '' : '$' . number_format( $mapping['revenue'] * 0.5, 2 ) ) );
 					if( $leads->getInvoiceStatus( $mapping['month'], $mapping['idCompany'] ) ) {
@@ -87,6 +88,12 @@ if( isset( $_REQUEST['d'] ) ) {
 					$m_gross += floatval( $mapping['revenue'] );
 					$partner += floatval( $mapping['partner'] );
 					$m_partner += floatval( $mapping['partner'] );
+
+					print "\t<tr>\n";
+					printf( "\t\t<td colspan=\"5\" class=\"hidden\" id=\"dialog_revenue_listowners_detail_%d\">&nbsp;</td>\n", $cnt );
+					print "\t</tr>\n";
+
+					$cnt++;
 				}
 				if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
 					print "\t<tr class=\"bgGray subtotal\">\n";
@@ -113,10 +120,11 @@ if( isset( $_REQUEST['d'] ) ) {
 		case 'dialog_revenue_listowners_detail':
 ?>
 <div class="fr">
-    <a href="#" class="nonLink" onclick="closeContent('dialog_revenue_listowners_detail');">Close [X]</a>
+    <a class="nonLink" onclick="closeContent('dialog_revenue_listowners_detail', { 'sub': '<?php echo intval( $_REQUEST['options']['sub'] ); ?>' } );">Close [X]</a>
 </div>
-<h2>Report Date: <?php echo date( 'Y F', strtotime( $reportDate . "01" ) ); ?></h2>
+<!--<h2>Report Date: <?php echo date( 'Y F', strtotime( $reportDate . "01" ) ); ?></h2>-->
 
+<input type="hidden" id="dialog_revenue_listowners_id" value="<?php echo htmlspecialchars( $_REQUEST['options']['sub'] ); ?>" />
 <input type="hidden" id="dialog_revenue_listowners_date" value="<?php echo htmlspecialchars( $reportDate ); ?>" />
 <input type="hidden" id="dialog_revenue_listowners_company" value="<?php echo htmlspecialchars( $idCompany ); ?>" />
 
@@ -198,6 +206,7 @@ $(document).ready(function(){
 	$('.dialog_revenue_listowners_change').change(function() {
 		var date = $('#dialog_revenue_listowners_date').val();
 		var company = $('#dialog_revenue_listowners_company').val();
+		var sub = $('#dialog_revenue_listowners_id').val();
 		var feed = "";
 		var url = "";
 
@@ -208,7 +217,7 @@ $(document).ready(function(){
 			feed = $('#dialog_revenue_listowners_feed').val();
 		}
 
-		display('dialog_revenue_listowners_detail', { 'report_date': date, 'idCompany': company, 'idFeedIn': feed, 'url': url });
+		display('dialog_revenue_listowners_detail', { 'sub': sub, 'report_date': date, 'idCompany': company, 'idFeedIn': feed, 'url': url });
 	});
 });
 </script>
@@ -230,7 +239,7 @@ $(document).ready(function(){
 
 ?>
 <div class="aRight">
-	<a href="#" class="nonLink" onclick="closeContent('dialog_revenue_mailers');">Close [X]</a>
+	<a class="nonLink" onclick="closeContent('dialog_revenue_mailers');">Close [X]</a>
 </div>
 <p><strong>Report Date:</strong>
 <select name="report_date" id="dialog_revenue_mailers_date" class="dialog_revenue_mailers_change">
@@ -365,7 +374,6 @@ $(document).ready(function(){
 	<div class="content">
 		<p class="payment">Please send all invoices to <a href="mailto:<?php echo PAYMENT_EMAIL;?>"><?php echo PAYMENT_EMAIL; ?></a> to ensure prompt payment.</p>
 		<div class="hidden" id="dialog_revenue_listowners"></div>
-		<div class="hidden" id="dialog_revenue_listowners_detail"></div>
 		<div class="hidden" id="dialog_revenue_mailers"></div>
 	</div>
 	<div class="footer">
