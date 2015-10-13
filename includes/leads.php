@@ -1369,6 +1369,24 @@ class Leads
 		return $results;
 	}
 
+	public function copyRevenueValues( $fromDate, $toDate, $idCompany ) {
+
+		try {
+			$mappings = $this->getRevenueInboundMappings( $fromDate, $idCompany, null, null );
+			if( $mappings && is_array( $mappings ) ) {
+				foreach( $mappings as $mapping ) {
+					$query = $this->db->prepare( "REPLACE INTO revenue( date, idFeedIn, idFeedOut, url, value ) SELECT ?,idFeedIn,idFeedOut,url,value FROM revenue WHERE date = ? AND idFeedIn = ? AND idFeedOut = ? AND url = ?" );
+					$query->execute( array( $toDate, $fromDate, $mapping['idFeedIn'], $mapping['idFeedOut'], $mapping['url'] ) );
+				}
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to copy revenue values: ' . $e->getMessage() );
+			return;
+		}
+
+	}
+
 	public function setRevenueValue( $date, $idFeedIn, $idFeedOut, $url, $value ) {
 
 		try {

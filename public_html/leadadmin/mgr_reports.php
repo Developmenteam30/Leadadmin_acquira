@@ -18,6 +18,26 @@ if( isset( $_REQUEST['a'] ) ) {
 
 	switch($_REQUEST['a']){
 
+		case 'copy_revenue':
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['status'] = 0;
+				$result['error'] = 'Not authorized.';
+				break;
+			}
+
+			$result['status'] = 0;
+			$result['error'] = 'Invalid revenue value.';
+
+			if( empty( $_REQUEST['fromDate'] ) || empty( $_REQUEST['toDate'] ) || empty( $_REQUEST['idCompany'] ) ) {
+				$result['error'] = 'Not all parameters were given.';
+				break;
+			}
+
+			$leads->copyRevenueValues( $_REQUEST['fromDate'], $_REQUEST['toDate'], $_REQUEST['idCompany'] );
+			$result['status'] = 1;
+			$result['error'] = 'Values copied.';
+			break;
+
 		case 'save_revenue':
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
 				$result['status'] = 0;
@@ -32,7 +52,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 				list( $date, $idFeedIn, $idFeedOut, $url ) = explode( '|', $string );
 				$value = $_REQUEST['value'];
-				if( empty( $value ) || !is_numeric( $value ) ) { 
+				if( empty( $value ) || !is_numeric( $value ) ) {
 					$value = null;
 				}
 
@@ -398,6 +418,11 @@ if( isset( $_REQUEST['d'] ) ) {
 if( !empty( $idCompany ) ) {
 	print '<input class="fr" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
 
+	$reportDateObj = new DateTime( $reportDate . '01' );
+	$reportDateObj->sub( new DateInterval( 'P1M' ) );
+
+	printf( '<input class="fr" type="button" value="Copy values from last month" onclick="copyRevenue( \'%s\', \'%s\', \'%s\' )" />', $reportDateObj->format( 'Ym' ), $reportDate, $idCompany );
+
 	print '<p class="fr">';
 	$invoiceNumber = $leads->getInvoiceNumber( $reportDate, $idCompany );
 	print 'Invoice #<input type="text" value="' . htmlspecialchars( $invoiceNumber, ENT_HTML | ENT_NOQUOTES ) . '" id="invoice_number" /> ';
@@ -520,6 +545,37 @@ function sendReportReady( idCompany, date ){
 			alert(result.error);
 		}
 	});
+}
+
+function copyRevenue( fromDate, toDate, idCompany ){
+
+	if( confirm("Are you sure you want to copy all values from last month?") ) {
+
+		var response = $.ajax({
+			url: "mgr_reports.php",
+			type: "POST",
+			async: true,
+			data: ({
+				"a" : "copy_revenue",
+				"idCompany" : idCompany,
+				"fromDate" : fromDate,
+				"toDate" : toDate
+			})
+		}).done(function(responseText){
+			var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
+			if(result===null) {
+				alert("JSON Failed: "+responseText);
+				return false;
+			}
+			if(result.status == 1){
+				alert("Values copied from last month.");
+			} else {
+				alert(result.error);
+			}
+			display('dialog_revenue_listowners', { 'report_date': toDate, 'idCompany': idCompany });
+
+		});
+	}
 }
 
 function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
