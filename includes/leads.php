@@ -1104,8 +1104,8 @@ class Leads
 
 		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,SUM(DISTINCT r.value) AS revenue,ROUND(SUM(DISTINCT r.value)*0.50,2) AS partner,IF(SUM(r.value)>0,'0','1'),MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
-		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
-		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "LEFT JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "LEFT JOIN companies ci ON i.idCompany = ci.idCompany ";
 		$query .= "LEFT JOIN stats_outbound s ON s.url = m.url ";
 		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
 		$query .= "AND m.url = r.url ";
