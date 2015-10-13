@@ -1560,7 +1560,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( "UPDATE stats_outbound SET rejected = 0 WHERE idFeedOut = ? AND stamp = ?" );
-			$query->execute( array( $count, $idFeedOut, $date ) );
+			$query->execute( array( $idFeedOut, $date ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to retry outbound rejections (3): ' . $e->getMessage() );
