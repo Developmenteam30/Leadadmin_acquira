@@ -217,6 +217,9 @@ if( isset( $_REQUEST['d'] ) ) {
 					if( !empty( $log->notes ) && 'FEEDINC:IMPORT' == $log->action ) {
 						$info = $leads->getJob( $log->notes );
 						$notes = '<a href="/leadadmin/mgr_job.php?jobId=' . intval( $log->notes ) . '&amp;count=' . intval( $info->records ) . '">Job ' . $log->notes . '</a>';
+					} else if( !empty( $log->notes ) && 'FEEDOUT:CLEAR-QUEUE' == $log->action ) {
+						$info = $leads->getJob( $log->notes );
+						$notes = '<a href="/leadadmin/mgr_job.php?jobId=' . intval( $log->notes ) . '">Job ' . $log->notes . '</a>';
 					} else if( !empty( $log->notes ) && strpos( $log->action, 'FEEDINC:' ) === 0 ) {
 						$info = $leads->getInboundFeed( $log->notes );
 						$notes = $log->notes . ': ' . $info->label . ' (' . htmlentities( $info->description ) . ')';
