@@ -996,6 +996,7 @@ if($outgoingFeeds === false){
 						<a href='#' class='nonLink'
 					onclick='display("dialog_testrecord", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
 						>Send one test record</a><br />
+						<a href='#' class='nonLink'	onclick='display("dialog_clearqueue", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'>Clear Queue</a><br />
 						<a href='#' class='nonLink'
 					onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
 						>URL Report</a>
@@ -1010,6 +1011,7 @@ if($outgoingFeeds === false){
 	<tr><td class='hidden' id='dialog_urlreport_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 	<tr><td class='hidden' id='dialog_urlreportdetails_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 	<tr><td class='hidden' id='dialog_testrecord_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden' id='dialog_clearqueue_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 <?php
 		}
 ?>
@@ -1176,6 +1178,31 @@ if($populationSettings === false){
 			print "<strong>Query String:</strong> " . htmlspecialchars( $response['querystring'] ) . "</p>";
 
 			print "<strong>Response:</strong> " . htmlspecialchars( stripslashes( $response['text'] ) ) . "</p>";
+
+			break;
+
+		case 'dialog_clearqueue':
+			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
+			$feed = $leads->getOutboundFeed( $idFeedOut );
+
+			$jobId = $leads->addJob( 'clear-outbound-queue', $idFeedOut, serialize( array( 'label' => $feed->label ) ), '', 0 );
+			if( null === $jobId ) {
+				print '<p>ERROR: Cannot add job to database.</p>';
+			} else {
+				$leads->auditLog( 'FEEDOUT:CLEAR-QUEUE', $jobId );
+				printf( '<p>Clear outbound queue job submitted. <a href="/leadadmin/mgr_job.php?jobId=%d">View results</a></p>', $jobId );
+			}
 
 			break;
 

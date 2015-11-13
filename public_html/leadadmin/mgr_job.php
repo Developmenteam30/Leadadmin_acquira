@@ -192,6 +192,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			<thead>
 				<tr>
 					<td>Job ID</td>
+					<td>Type</td>
 					<td>Timestamp</td>
 					<td>Status</td>
 					<td>Feed</td>
@@ -215,6 +216,7 @@ if( isset( $_REQUEST['d'] ) ) {
 ?>
 				<tr class="<?php echo $class; ?>">
 					<td><a class="nonLink" href="#" onclick="closeContent( 'displayAllJobs' ); display( 'displayJob', { 'jobId': <?php echo $job->jobId; ?>, 'count': <?php echo $job->records; ?> });"><?php echo $job->jobId; ?></a></td>
+					<td><?php echo $job->type; ?></td>
 					<td><?php echo $timestamp->format( 'Y-m-d H:i:s' ); ?></td>
 					<td><?php echo $job->status; ?></td>
 					<td><?php echo $job->label; ?></td>

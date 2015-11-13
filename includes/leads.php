@@ -1464,7 +1464,7 @@ class Leads
 
 	public function getJobs() {
 		try {
-			$query = $this->db->prepare( "SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn ORDER BY j.jobId DESC" );
+			$query = $this->db->prepare( "SELECT j.jobId,j.type,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn ORDER BY j.jobId DESC" );
 			$query->execute( );
 			return $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -1489,12 +1489,12 @@ class Leads
 			$rows = $query->fetchAll( PDO::FETCH_OBJ );
 			if( $rows && is_array( $rows ) ) {
 				foreach( $rows as $row ) {
-					if( file_exists( $row->filename ) ) {
+					if( empty( $row->filename ) || file_exists( $row->filename ) ) {
 
 						$this->updateJob( $row->jobId, array(
 							'status' => 'processing',
 						) );
-					
+
 						$this->unlockTables();
 						return $row;
 					}
@@ -1978,6 +1978,8 @@ class Leads
 	}
 
 	public function clearOutboundQueue( $idFeedOut, $label ) {
+		$rows = null;
+
 		try {
 			if( LEGACY_DB ) {
 				$this->lockTables( "feedout WRITE, data_outbound WRITE, " . $this->quoteIdentifier( 'feedout_' . $label ) . " WRITE" );
@@ -1987,14 +1989,16 @@ class Leads
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to lock tables: ' . $pdoException->getMessage() );
+			return null;
 		}
 
 		try {
 			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND processed = 0" );
 			$query->execute( array( $idFeedOut ) );
+			$rows = $query->rowCount();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete queued records (1): ' . $e->getMessage() );
-			return;
+			return null;
 		}
 
 		if( LEGACY_DB ) {
@@ -2003,7 +2007,7 @@ class Leads
 				$query->execute( );
 			} catch( PDOException $e ) {
 				$this->logError( 'Unable to delete queued records (2): ' . $e->getMessage() );
-				return;
+				return null;
 			}
 		}
 
@@ -2012,7 +2016,7 @@ class Leads
 			$query->execute( array( $idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete queued records (3): ' . $e->getMessage() );
-			return;
+			return null;
 		}
 
 		try {
@@ -2020,7 +2024,10 @@ class Leads
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to unlock tables: ' . $pdoException->getMessage() );
+			return null;
 		}
+
+		return $rows;
 	}
 
 	public function exportInboundRecords( $idFeedIn, $settings ) {
