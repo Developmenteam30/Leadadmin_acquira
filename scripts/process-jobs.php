@@ -4,7 +4,7 @@ include( __DIR__ . "/../includes/c_config.php");
 
 require_once( INCLUDES . 'leads.php' );
 
-$mysqlErrorSource = 'Manager - File Import';
+$mysqlErrorSource = 'Process Jobs';
 require_once(INCLUDES."_connx.php");
 require_once(INCLUDES."f_site.php");
 require_once(INCLUDES."_f_validEmail.php");
@@ -20,19 +20,74 @@ if( $job === null ) {
 	exit;
 }
 
-$handle = @fopen( $job->filename, "r" );
-if( !$handle ) {
-	$leads->updateJob( $job->jobId, array(
-		'status' => 'error',
-		'message' => 'Cannot open uploaded file for reading',
-	) );
-	print 'ERROR: Cannot open uploaded file for reading';
-	exit;
-}
+if( 'clear-outbound-queue' === $job->type ) {
 
-print "Importing records from: {$job->filename}\n";
+	$fields = unserialize( $job->fields );
+	$status = 'Unknown error.';
 
-if( 'feedinc' === $job->type ) {
+	if( empty( $job->destination ) || empty( $fields['label'] ) ) {
+
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Missing required fields',
+		) );
+		$status = 'ERROR: Missing required fields.';
+
+	} else {
+
+		print "Clearing outbound queue for: {$job->destination} {$fields['label']}\n";
+
+		$cnt = $leads->clearOutboundQueue( $job->destination, $fields['label'] );
+		if( $cnt === null ) {
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'error',
+				'message' => 'Database error while clearing the outbound queue',
+			) );
+			$status = 'Database error clearing the outbound queue';
+		} else {
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'finished',
+			) );
+			$status = "Successful";
+		}
+
+	}
+
+	$body  = "Job Results\r\n";
+	$body .= "\r\n";
+	$body .= "Job ID: {$job->jobId}\r\n";
+	$body .= "Job Type: clear-outbound-queue\r\n";
+	$body .= "\r\n";
+	$body .= "Feed ID: {$job->destination}\r\n";
+	$body .= "Feed Label: {$fields['label']}\r\n";
+	$body .= "\r\n";
+	$body .= "Job Status: {$status}\r\n";
+	if( $cnt !== null ) {
+		$body .= "Total Records: {$cnt}\r\n";
+	}
+	$body .= "\r\n";
+
+	$from = 'lmsalerts@'.SITE_URL;
+	$fromName = CONFIG_COMPANY_NAME;
+	$to = MANAGER_EMAIL;
+	$subject = 'Job Results - Clear Outbound Queue';
+	$header = "From:" . $fromName . " <" . $from . ">\n";
+	$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
+
+} else if( 'feedinc' === $job->type ) {
+
+	$handle = @fopen( $job->filename, "r" );
+	if( !$handle ) {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Cannot open uploaded file for reading',
+		) );
+		print 'ERROR: Cannot open uploaded file for reading';
+		exit;
+	}
+
+	print "Importing legacy records from: {$job->filename}\n";
 
 	$feedParams = $leads->getInboundFeed( $job->destination );
 	if( empty( $feedParams ) ) {
@@ -159,6 +214,18 @@ if( 'feedinc' === $job->type ) {
 
 } else if( 'suppression' === $job->type ) {
 
+	$handle = @fopen( $job->filename, "r" );
+	if( !$handle ) {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Cannot open uploaded file for reading',
+		) );
+		print 'ERROR: Cannot open uploaded file for reading';
+		exit;
+	}
+
+	print "Importing suppression records from: {$job->filename}\n";
+
 	$fields = unserialize( $job->fields );
 
 	if( empty( $fields['list'] ) ) {
@@ -255,11 +322,10 @@ if( 'feedinc' === $job->type ) {
 	$from = 'lmsalerts@'.SITE_URL;
 	$fromName = CONFIG_COMPANY_NAME;
 	$to = MANAGER_EMAIL;
-	$subject = 'Job Results';
+	$subject = 'Job Results - Suppression Import';
 	$header = "From:" . $fromName . " <" . $from . ">\n";
     $header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
-
 
 } else {
 
