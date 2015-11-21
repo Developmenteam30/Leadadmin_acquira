@@ -377,7 +377,7 @@ $(document).ready(function(){
 		<div class="hidden" id="dialog_revenue_mailers"></div>
 	</div>
 	<div class="footer">
-		<p>Copyright &copy; 2014 <?php echo CONFIG_COMPANY_NAME; ?>, LLC.  All rights reserved.</p>
+		<p>Copyright &copy; <?php echo date( 'Y' ); ?> <?php echo CONFIG_COMPANY_NAME; ?>, LLC.  All rights reserved.</p>
 	</div>
 </div>
 </body>
