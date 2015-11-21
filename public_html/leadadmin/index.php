@@ -37,13 +37,18 @@ if( isset( $_REQUEST['a'] ) ) {
 				}
 			}
 			if($c){
+
 				if( ( $user = $leads->verifyUser( $_REQUEST['username'], $_REQUEST['password'] ) ) !== null ) {
+
+$leads->logError( 'SUCCESS ' . print_r($user,true) );
 
 					$result['status'] = 1;
 					$result['error'] = 'Successfully logged in.';
 					LeadsSession::login( $user['idUser'], $user['level'], $user['idCompany'] );
 
 				} else {
+
+$leads->logError( 'FAIL ');
 
 					$c = false; $result['error'] = 'Invalid username / password.';
 				}
