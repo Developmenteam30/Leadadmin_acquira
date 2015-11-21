@@ -425,7 +425,7 @@ if( !empty( $idCompany ) ) {
 
 	print '<p class="fr">';
 	$invoiceNumber = $leads->getInvoiceNumber( $reportDate, $idCompany );
-	print 'Invoice #<input type="text" value="' . htmlspecialchars( $invoiceNumber, ENT_HTML | ENT_NOQUOTES ) . '" id="invoice_number" /> ';
+	print 'Invoice #<input type="text" value="' . htmlspecialchars( $invoiceNumber, ENT_HTML5 | ENT_NOQUOTES ) . '" id="invoice_number" /> ';
 	print '<input type="checkbox" value="1" id="invoice_email" /> Send Email? ';
 	print '<input type="button" value="Save" onclick="invoiceStatus(' . $idCompany . ',' . $reportDate . ', 0, ' . ( empty( $idFeedIn ) ? 0 : $idFeedIn ) . ' , \'' . ( empty( $urlFilter ) ? 0 : $urlFilter )  . '\' )" />';
 	print '</p>';
