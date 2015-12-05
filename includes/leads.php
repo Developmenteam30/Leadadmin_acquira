@@ -715,6 +715,27 @@ class Leads
 		return $results;
 	}
 
+	public function getOutboundFeedsCron( $mod = null ) {
+
+		$results = array( 'accepted' => 0, 'rejected' => 0 );
+
+		try {
+			if( !empty( $mod ) ) {
+				$query = $this->db->prepare( "SELECT idFeedOut,queued FROM feedout WHERE cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' ) AND MOD(idFeedOut,2) = ?" );
+				$query->execute( array( 'even' === $mod ? 0 : 1 ) );
+			} else {
+				$query = $this->db->prepare( "SELECT idFeedOut,queued FROM feedout WHERE cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' )" );
+				$query->execute();
+			}
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound stats: ' . $e->getMessage() );
+		}
+
+		return $results;
+
+	}
+
 	public function checkOutboundFeedAccess( $idCompany, $idFeedOut ) {
 		$result = false;
 
@@ -895,7 +916,7 @@ class Leads
 				'idFeedIn' => $idFeedIn,
 				'idFeedOut' => $idFeedOut,
 				'processed' => $processed,
-				'url' => $urlRewritten ? $this->parseUrl( $url ) : null,
+				//'url' => $urlRewritten ? $this->parseUrl( $url ) : null,
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
@@ -966,6 +987,26 @@ class Leads
 			$this->db->rollBack();
 			$this->logError( 'Unable to subtract from queue count: ' . $e->getMessage() );
 			return $status;
+		}
+
+		// Only archive successful records. Errors will get deleted after a few days.
+		if( empty( $error ) ) {
+
+			try {
+				$table = $this->quoteIdentifier( 'data_outbound_' . date( 'Ym' ) );
+				$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
+
+				$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
+				$query->execute( array( $idRecord, $idFeedOut ) );
+				$rows = $query->rowCount();
+
+				$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
+				$query->execute( array( $idRecord, $idFeedOut ) );
+			} catch( PDOException $e ) {
+				$this->db->rollBack();
+				$this->logError( 'Unable to archive record: ' . $e->getMessage() );
+				return $status;
+			}
 		}
 
 		$this->db->commit();
@@ -2314,10 +2355,10 @@ class Leads
 				$query->execute( );
 			} else {
 				if( !empty( $feed->delay ) ) {
-					$query = $this->db->prepare( "SELECT i.*,o.url AS urlRewrite FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
 					$query->execute( array( $idFeedOut, $feed->delay ) );
 				} else {
-					$query = $this->db->prepare( "SELECT i.*,o.url AS urlRewrite FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500" );
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500" );
 					$query->execute( array( $idFeedOut ) );
 				}
 			}
@@ -2326,6 +2367,72 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get queued records: ' . $e->getMessage() );
 			return null;
+		}
+
+		return null;
+	}
+
+	public function getOutboundQueueRecord( $idFeedOut ) {
+
+		$feed = $this->getOutboundFeed( $idFeedOut );
+		if( !$feed ) {
+			return;
+		}
+
+		try {
+			$this->lockTables( "data_outbound WRITE, data_outbound o WRITE, data_inbound i READ" );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to lock tables: ' . $pdoException->getMessage() );
+		}
+
+		try {
+			if( !empty( $feed->delay ) ) {
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 250" );
+				$query->execute( array( $idFeedOut, $feed->delay ) );
+			} else {
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 250" );
+				$query->execute( array( $idFeedOut ) );
+			}
+
+			$rows = $query->fetchAll( PDO::FETCH_OBJ );
+			if( $rows && is_array( $rows ) ) {
+				foreach( $rows as $row ) {
+
+					try {
+						$status = $this->update( 'data_outbound',
+							array(
+								'processed' => -2,
+							),
+							array(
+								'idRecord' => $row->idRecord,
+								'processed' => 0,
+								'idFeedOut' => $idFeedOut,
+							)
+						);
+					} catch( PDOException $e ) {
+						$pdoException = $e->getPrevious();
+						$this->logError( 'Unable to update outbound record: ' . $pdoException->getMessage() );
+						$this->unlockTables();
+						return;
+					}
+
+				}
+
+				$this->unlockTables();
+				return $rows;
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get pending outbound queue record: ' . $e->getMessage() );
+			return;
+		}
+
+		try {
+			$this->unlockTables();
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to unlock tables: ' . $pdoException->getMessage() );
 		}
 
 		return null;
@@ -2436,9 +2543,13 @@ class Leads
 	public function getOutboundDailyCount( $idFeedOut ) {
 		$cnt = null;
 
+		// Timestamps in data_outbound may need to be converted to a different timezone
+		$utcDate = new DateTime( 'now', new DateTimeZone( LOCAL_TIMEZONE ) );
+		$utcDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
+
 		try {
-			$query = $this->db->prepare( "SELECT COUNT(*) FROM data_outbound o LEFT JOIN data_inbound i ON o.idRecord = i.idRecord WHERE o.idFeedOut = ? AND i.timestamp >= DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00')" );
-			$query->execute( array( $idFeedOut ) );
+			$query = $this->db->prepare( "SELECT SUM(accepted) FROM stats_outbound WHERE idFeedOut = ? AND stamp = ?" );
+			$query->execute( array( $idFeedOut, $utcDate->format( 'Y-m-d' ) ) );
 			$cnt = $query->fetchColumn();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to check outbound daily count: ' . $e->getMessage() );
