@@ -2379,8 +2379,12 @@ class Leads
 			return;
 		}
 
+		$lockName = 'READQUEUE_' . $idFeedOut;
+
 		try {
-			$this->lockTables( "data_outbound WRITE, data_outbound o WRITE, data_inbound i READ" );
+			//$this->lockTables( "data_outbound WRITE, data_outbound o WRITE, data_inbound i READ" );
+			$query = $this->db->prepare( "SELECT GET_LOCK(?,-1);" );
+			$query->execute( array( $lockName ) );
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to lock tables: ' . $pdoException->getMessage() );
@@ -2388,10 +2392,10 @@ class Leads
 
 		try {
 			if( !empty( $feed->delay ) ) {
-				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 250" );
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 1" );
 				$query->execute( array( $idFeedOut, $feed->delay ) );
 			} else {
-				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 250" );
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 1" );
 				$query->execute( array( $idFeedOut ) );
 			}
 
@@ -2406,20 +2410,23 @@ class Leads
 							),
 							array(
 								'idRecord' => $row->idRecord,
-								'processed' => 0,
 								'idFeedOut' => $idFeedOut,
 							)
 						);
 					} catch( PDOException $e ) {
 						$pdoException = $e->getPrevious();
 						$this->logError( 'Unable to update outbound record: ' . $pdoException->getMessage() );
-						$this->unlockTables();
+						$query = $this->db->prepare( "SELECT RELEASE_LOCK(?);" );
+						$query->execute( array( $lockName ) );
+						//$this->unlockTables();
 						return;
 					}
 
 				}
 
-				$this->unlockTables();
+				$query = $this->db->prepare( "SELECT RELEASE_LOCK(?);" );
+				$query->execute( array( $lockName ) );
+				//$this->unlockTables();
 				return $rows;
 			}
 
@@ -2429,7 +2436,9 @@ class Leads
 		}
 
 		try {
-			$this->unlockTables();
+			$query = $this->db->prepare( "SELECT RELEASE_LOCK(?);" );
+			$query->execute( array( $lockName ) );
+			//$this->unlockTables();
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to unlock tables: ' . $pdoException->getMessage() );
