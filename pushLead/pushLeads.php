@@ -11,9 +11,9 @@ if( empty( $argv[1] ) ) {
 chdir(dirname(__FILE__));
 
 function signalHandler($signal) {
-	global $pidFile;
-	@unlink( $pidFile );
-	die();
+	global $running;
+	// Tell the main loop to stop running so we can exit gracefully
+	$running = false;
 }
 
 function assignValue( $key, $value, &$requestdata ) {
@@ -26,6 +26,7 @@ function assignValue( $key, $value, &$requestdata ) {
 	}
 }
 
+$running = true;
 $debug = true;
 $idFeedOut = $argv[1];
 
@@ -65,7 +66,7 @@ if( empty( $feedOut->cron ) ) {
 
 $empties = 0;
 
-while(true) {
+while($running) {
 
 	$rows = $leads->getOutboundQueueRecord( $feedOut->idFeedOut );
 	
@@ -74,8 +75,7 @@ while(true) {
 		$empties++;
 		if( $empties > 10 ) {
 			print "Too many empty responses ... dying off now\n";
-			@unlink( $pidFile );
-			die();
+			$running = false;
 		}
 		sleep(5);
 		continue;
