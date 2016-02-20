@@ -717,7 +717,7 @@ class Leads
 
 	public function getOutboundFeedsCron( $mod = null ) {
 
-		$results = array( 'accepted' => 0, 'rejected' => 0 );
+		$results = null;
 
 		try {
 			if( !empty( $mod ) ) {
@@ -729,7 +729,7 @@ class Leads
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get outbound stats: ' . $e->getMessage() );
+			$this->logError( 'Unable to get outbound feeds cron: ' . $e->getMessage() );
 		}
 
 		return $results;
