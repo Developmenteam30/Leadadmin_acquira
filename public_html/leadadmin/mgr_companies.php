@@ -155,9 +155,10 @@ if(isset($_REQUEST['d'])){
 				<?php echo htmlentities( $company->note ); ?>
 			</td>
 			<td>
-				<a href='#' class='nonLink' onclick="display('dialog_editcompany', {'idCompany':<?php echo $company->idCompany; ?>});">Edit</a>
+				<a href='#' class='nonLink' onclick="display('dialog_editcompany', { 'sub': <?php echo $company->idCompany; ?>, 'idCompany':<?php echo $company->idCompany; ?>});">Edit</a>
 			</td>
 		</tr>
+		<tr><td class='hidden' id='dialog_editcompany_<?php echo $company->idCompany; ?>' colspan='4'></td></tr>
 <?php
 				}
 ?>
@@ -373,6 +374,11 @@ $('#new_company').submit( function(event) {
 		case "dialog_editcompany":
 			$idCompany = $_REQUEST['options']['idCompany'];
 			$company = $leads->getCompany($idCompany);
+?>
+<div class='fr'>
+    <a href='#' class='nonLink' onclick='closeContent("dialog_editcompany_<?php echo intval( $idCompany ); ?>");' >Close [X]</a>
+</div>
+<?php
 			if( empty( $company ) ) {
 ?>
 <p>There is no company that exists by that ID.</p>
