@@ -473,7 +473,7 @@ if( !empty( $idCompany ) ) {
 					//printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['firstInDate'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['firstDate'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['lastDate'] ) );
-					printf( "\t\t<td class=\"revenue\"><input type=\"number\" min=\"0\" max=\"9999\" step=\"0.01\" id=\"%s\" name=\"%s\" value=\"%s\" /></td>\n", 'A' . ++$row, htmlspecialchars( base64_encode( $reportDate . '|' . $mapping['idFeedIn'] . '|' . $mapping['idFeedOut'] . '|' . $mapping['url'] ) ), ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
+					printf( "\t\t<td class=\"revenue\" data-tf-sortKey=\"%s\"><input type=\"number\" min=\"0\" max=\"9999\" step=\"0.01\" id=\"%s\" name=\"%s\" value=\"%s\" /></td>\n", ( empty( $mapping['revenue'] ) ? '0' : htmlspecialchars( $mapping['revenue'] ) ), 'A' . ++$row, htmlspecialchars( base64_encode( $reportDate . '|' . $mapping['idFeedIn'] . '|' . $mapping['idFeedOut'] . '|' . $mapping['url'] ) ), ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
 					printf( "\t\t<td class=\"revenue\" id=\"B%s\" data-format=\"$0,0.00\" data-formula=\"ROUND((%s*0.5)*100)/100\">%s</td>\n", $row, '$A' . $row, htmlspecialchars( $mapping['lastDate'] ) );
 					print "\t</tr>\n";
 
@@ -496,15 +496,15 @@ var tf = new TableFilter(document.querySelector('#revenue_report'), {
 	base_path: '/leadadmin/js/tablefilter/',
 	grid: false,
 	filters_row_index: 1,
-	extensions: [{ name: 'sort' }],
-	widgets: ['staticRow'],
-	sort: true,
-	sort_config: {
-		sort_types:['String','String','String','String','String','String']
-	}
+	extensions: [{
+		name: 'sort',
+		types: [
+			'String','String','String','String','String','ymddate','ymddate','us','us'
+		],
+	}],
+	sort: true
 });
 tf.init();
-
 
 $(document).ready(function(){
 
@@ -729,7 +729,7 @@ function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['firstDate'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['lastDate'] ) );
-					printf( "\t\t<td class=\"revenue\"><input type=\"number\" min=\"0\" max=\"9999\" step=\"0.01\" name=\"%s\" value=\"%s\" /></td>\n", htmlspecialchars( base64_encode( $reportDate . '|0|' . $mapping['idFeedOut'] . '|' . $mapping['url'] ) ), ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
+					printf( "\t\t<td class=\"revenue\" data-tf-sortKey=\"%s\"><input type=\"number\" min=\"0\" max=\"9999\" step=\"0.01\" name=\"%s\" value=\"%s\" /></td>\n", ( empty( $mapping['revenue'] ) ? '0' : htmlspecialchars( $mapping['revenue'] ) ), htmlspecialchars( base64_encode( $reportDate . '|0|' . $mapping['idFeedOut'] . '|' . $mapping['url'] ) ), ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
 					print "\t</tr>\n";
 
 				}
@@ -739,6 +739,21 @@ function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
 
 ?>
 <script type="text/javascript">
+
+var tf = new TableFilter(document.querySelector('#revenue_report'), {
+	base_path: '/leadadmin/js/tablefilter/',
+	grid: false,
+	filters_row_index: 1,
+	extensions: [{
+		name: 'sort',
+		types: [
+			'String','String','String','ymddate','ymddate','us'
+		],
+	}],
+	sort: true
+});
+tf.init();
+
 $(document).ready(function(){
 	$('.dialog_revenue_mailers_change').change(function() {
 		var date = $('#dialog_revenue_mailers_date').val();
