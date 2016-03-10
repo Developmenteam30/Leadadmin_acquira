@@ -301,29 +301,29 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "</table>\n";
 ?>
 <script type="text/javascript">
-	var props = {  
-		base_path: '/leadadmin/js/TableFilter/',
-		filters_row_index: 1,  
-		sort: true,  
-		sort_config: {  
+	var tf = new TableFilter(document.querySelector('#mapping_report'), {
+		base_path: '/leadadmin/js/tablefilter/',
+		filters_row_index: 1,
+		sort: true,
+		sort_config: {
 			sort_types:['String','String','String','String','String','String']
-		},  
-		remember_grid_values: true,  
-		alternate_rows: true,  
-		btn_reset: true,  
-		btn_reset_text: "Clear",  
-		btn_text: " > ",  
-		loader: true,  
-		loader_text: "Filtering data...",  
-		col_0: "select",  
-		col_1: "select",  
-		col_2: "select",  
-		col_3: "select",  
-		col_4: "select",  
-		col_5: "select",  
-		display_all_text: "< Show all >"  
-	}  
-	var tf = setFilterGrid("mapping_report",props);  
+		},
+		remember_grid_values: true,
+		alternate_rows: true,
+		btn_reset: true,
+		btn_reset_text: "Clear",
+		btn_text: " > ",
+		loader: true,
+		loader_text: "Filtering data...",
+		col_0: "select",
+		col_1: "select",
+		col_2: "select",
+		col_3: "select",
+		col_4: "select",
+		col_5: "select",
+		display_all_text: "< Show all >"
+	});
+	tf.init();
 </script>
 <?php
 			} else {
@@ -451,8 +451,8 @@ if( !empty( $idCompany ) ) {
 				print "\t\t<td>Incoming URL</td>\n";
 				print "\t\t<td>Outgoing Company</td>\n";
 				print "\t\t<td>Outgoing Feed</td>\n";
-				print "\t\t<td>First Lead</td>\n";
-				print "\t\t<td>Last Lead</td>\n";
+				print "\t\t<td>First Out</td>\n";
+				print "\t\t<td>Last Out</td>\n";
 				print "\t\t<td>Gross</td>\n";
 				print "\t\t<td>Partner</td>\n";
 				print "\t</tr>\n";
@@ -470,6 +470,7 @@ if( !empty( $idCompany ) ) {
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
+					//printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['firstInDate'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['firstDate'] ) );
 					printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['lastDate'] ) );
 					printf( "\t\t<td class=\"revenue\"><input type=\"number\" min=\"0\" max=\"9999\" step=\"0.01\" id=\"%s\" name=\"%s\" value=\"%s\" /></td>\n", 'A' . ++$row, htmlspecialchars( base64_encode( $reportDate . '|' . $mapping['idFeedIn'] . '|' . $mapping['idFeedOut'] . '|' . $mapping['url'] ) ), ( empty( $mapping['revenue'] ) ? '' : htmlspecialchars( $mapping['revenue'] ) ) );
@@ -477,18 +478,36 @@ if( !empty( $idCompany ) ) {
 					print "\t</tr>\n";
 
 				}
+				print "\t</tbody>\n";
+				print "\t<tfoot>\n";
 				print "\t<tr class=\"bgGray subtotal\">\n";
 				print "\t\t<td colspan=\"" . $colspan . "\">TOTAL</td>\n";
 				printf( "\t\t<td class=\"revenue\" id=\"A%s\" data-format=\"$0,0.00\" data-formula=\"SUM(\$A1,\$A%s)\"></td>\n", ++$row, (sizeOf( $mappings )) );
 				printf( "\t\t<td class=\"revenue\" id=\"B%s\" data-format=\"$0,0.00\" data-formula=\"ROUND((\$A%s*0.5)*100)/100\"></td>\n", $row, $row );
 				print "\t</tr>\n";
-				print "\t</tbody>\n";
+				print "\t</tfoot>\n";
 				print "</table>\n";
 			}
 
 ?>
 <script type="text/javascript">
+
+var tf = new TableFilter(document.querySelector('#revenue_report'), {
+	base_path: '/leadadmin/js/tablefilter/',
+	grid: false,
+	filters_row_index: 1,
+	extensions: [{ name: 'sort' }],
+	widgets: ['staticRow'],
+	sort: true,
+	sort_config: {
+		sort_types:['String','String','String','String','String','String']
+	}
+});
+tf.init();
+
+
 $(document).ready(function(){
+
 	$('.dialog_revenue_listowners_change').change(function() {
 		var date = $('#dialog_revenue_listowners_date').val();
 		var company = $('#dialog_revenue_listowners_company').val();
@@ -1013,9 +1032,7 @@ $(document).ready(function(){
 		<div class='clr'></div>
 	</div>
 </div>
-<script src="/leadadmin/js/calx-1.1.4/jquery-calx-1.1.4.min.js" language="javascript" type="text/javascript"></script>
-<script src="/leadadmin/js/TableFilter/tablefilter_all_min.js" language="javascript" type="text/javascript"></script>
-<script src="/leadadmin/js/TableFilter/sortabletable.js" language="javascript" type="text/javascript"></script>
-<script src="/leadadmin/js/TableFilter/tfAdapter.sortabletable.js" language="javascript" type="text/javascript"></script> 
+<script src="/leadadmin/js/calx-1.1.4/jquery-calx-1.1.4.min.js" type="text/javascript"></script>
+<script src="/leadadmin/js/tablefilter/tablefilter.js" type="text/javascript"></script>
 </body>
 </html>

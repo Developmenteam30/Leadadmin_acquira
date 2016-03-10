@@ -1098,19 +1098,19 @@ class Leads
 	public function getRevenueInboundMappings( $date, $idCompany, $idFeedIn, $url ) {
 		$results = array();
 		$fields = array();
+		//$fields[] = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-%';
+		$fields[] = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-%';
 		$fields[] = $date;
 
-		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
+		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(so.stamp) AS firstDate,MAX(so.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
 		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
-		$query .= "LEFT JOIN stats_outbound s ON s.url = m.url AND s.idFeedOut = m.idFeedOut ";
-		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
-		$query .= "AND m.url = r.url ";
-		$query .= "AND m.idFeedOut = r.idFeedOut ";
-		$query .= "AND r.date = ? ";
+		//$query .= "INNER JOIN stats_inbound si ON si.url = m.url AND si.idFeedIn = m.idFeedIn AND si.stamp LIKE ? ";
+		$query .= "INNER JOIN stats_outbound so ON so.url = m.url AND so.idFeedOut = m.idFeedOut AND so.stamp LIKE ? ";
+		$query .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn AND m.url = r.url AND m.idFeedOut = r.idFeedOut AND r.date = ? ";
 		$query .= "WHERE 1=1 ";
 		if( !empty( $idCompany ) ) {
 			$query .= "AND i.idCompany = ? ";
