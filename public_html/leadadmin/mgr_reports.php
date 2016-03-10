@@ -244,15 +244,15 @@ if( isset( $_REQUEST['d'] ) ) {
 
 <p><a href="#" class="nonLink" onclick="display('dialog_mapping'); closeContent('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners');">Mapping Report</a></p>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-<p><a href="#" class="nonLink" onclick="display('dialog_revenue_listowners'); closeContent('dialog_revenue_mailers'); closeContent('dialog_mapping');">Revenue Report - List Owners</a></p>
-<p><a href="#" class="nonLink" onclick="display('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners'); closeContent('dialog_mapping');">Revenue Report - Mailers</a></p>
+<div class="bubble">
+	<a href="#" class="nonLink" onclick="display('dialog_revenue_online'); closeContent('dialog_revenue_listowners'); closeContent('dialog_revenue_mailers'); closeContent('dialog_mapping');">Revenue Report - Online</a>
+	<div class="buttle" id="dialog_revenue_online"></div>
+</div>
 <p><a href="/leadadmin/client_reports.php" target="_blank">Master Client Revenue Report</a></p>
 <?php } ?>
 <p><a href="#" class="nonLink" onclick="display('dialog_search_email'); closeContent('dialog_search_email_results');">Email Search Report</a></p>
 <p><a href="#" class="nonLink" onclick="display('dialog_search_url'); closeContent('dialog_search_url_results');">URL Search Report</a></p>
 <div class="hidden" id="dialog_mapping"></div>
-<div class="hidden" id="dialog_revenue_listowners"></div>
-<div class="hidden" id="dialog_revenue_mailers"></div>
 <div class="hidden" id="dialog_search_email"></div>
 <div class="hidden" id="dialog_search_email_results"></div>
 <div class="hidden" id="dialog_search_url"></div>
@@ -332,6 +332,29 @@ if( isset( $_REQUEST['d'] ) ) {
 
 		break;
 
+		case 'dialog_revenue_online':
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				print "You are not authorized to access this section.";
+				break;
+			}
+?>
+
+<div class="aRight">
+	<a href="#" class="nonLink" onclick="closeContent('dialog_revenue_online'); closeContent('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners');">Close [X]</a>
+</div>
+
+<div class="bubble">
+	<p><a href="#" class="nonLink" onclick="display('dialog_revenue_listowners'); closeContent('dialog_revenue_mailers'); closeContent('dialog_mapping');">List Owners</a></p>
+	<div class="bubble hidden" id="dialog_revenue_listowners"></div>
+
+	<p><a href="#" class="nonLink" onclick="display('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners'); closeContent('dialog_mapping');">Mailers</a></p>
+	<div class="bubble hidden" id="dialog_revenue_mailers"></div>
+</div>
+
+
+<?php
+		break;
+
 		case 'dialog_revenue_listowners':
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
 				print "You are not authorized to access this section.";
@@ -351,9 +374,6 @@ if( isset( $_REQUEST['d'] ) ) {
 			else $urlFilter = $_REQUEST['options']['url'];
 
 ?>
-<div class="aRight">
-	<a href="#" class="nonLink" onclick="closeContent('dialog_revenue_listowners');">Close [X]</a>
-</div>
 <p><strong>Report Date:</strong>
 <select name="report_date" id="dialog_revenue_listowners_date" class="dialog_revenue_listowners_change">
 <?php 
@@ -643,9 +663,6 @@ function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
 			else $urlFilter = $_REQUEST['options']['url'];
 
 ?>
-<div class="aRight">
-	<a href="#" class="nonLink" onclick="closeContent('dialog_revenue_mailers');">Close [X]</a>
-</div>
 <p><strong>Report Date:</strong>
 <select name="report_date" id="dialog_revenue_mailers_date" class="dialog_revenue_mailers_change">
 <?php 

@@ -10,7 +10,7 @@ if(!isset($title)){
 <head>	
 
 <title><?php echo $title; ?></title>
-<link href="/v5/leadadmin/style.php" rel="stylesheet" type="text/css" />
+<link href="/v6/leadadmin/style.php" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css" />
 <meta name="viewport" content="initial-scale=1, maximum-scale=1" />
 <script src="//code.jquery.com/jquery-2.2.1.min.js"></script>

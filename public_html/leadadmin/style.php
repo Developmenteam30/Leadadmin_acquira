@@ -298,6 +298,15 @@ div.dashboardOutgoing { width: 50%; }
 	width: 250px;
 }
 
+.bubble {
+	border: 1px solid #000;
+	margin: 0.5em;
+	padding: 0.5em;
+	font-family: Arial;
+	font-size: 1em;
+	border-radius: 5px;
+}
+
 /* Rejections Table */
 .rejectionsTable {
 	border: 1px solid;
