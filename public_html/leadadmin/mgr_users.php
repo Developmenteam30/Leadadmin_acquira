@@ -193,7 +193,7 @@ $('#new_user').submit( function(event) {
 	event.preventDefault();
 
 	var response = $.ajax({
-		url: "mgr_admin.php",
+		url: "mgr_users.php",
 		type: "POST",
 		async: true,
 		data: ({
@@ -280,7 +280,7 @@ $('#edit_user').submit( function(event) {
 	event.preventDefault();
 
 	var response = $.ajax({
-		url: "mgr_admin.php",
+		url: "mgr_users.php",
 		type: "POST",
 		async: true,
 		data: ({
