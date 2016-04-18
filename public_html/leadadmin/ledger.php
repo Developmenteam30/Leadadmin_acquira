@@ -399,7 +399,7 @@ $("#newledger select[name='divisionId']").change( function() {
 					array(
 						'id' => 'checkNum',
 						'label' => ( 0 == $entry->type ) ? 'Client Check #' : 'Payment Method',
-						'type' => ( 0 == $type ) ? 'number' : 'text',
+						'type' => ( 0 == $entry->type ) ? 'number' : 'text',
 						'value' => $entry->checkNum,
 					),
 					array(
@@ -471,7 +471,7 @@ include(INCLUDES."c_header.php");
 
 	} else {
 ?>
-<table class="table table-bordered table-condensed table-striped">
+<table class="table table-bordered table-condensed table-striped" id="ledger">
 	<thead>
 		<tr class="header">
 			<th>Company Name</th>
@@ -628,6 +628,22 @@ $('#editledger').on('show.bs.modal', function(e) {
 $('#newledger, #editledger').on('hide.bs.modal', function(e) {
 	$(this).find('.modal-body').html('');
 });
+
+var tf = new TableFilter(document.querySelector('#ledger'), {
+	base_path: '/leadadmin/libraries/tablefilter/',
+	grid: false,
+	filters_row_index: 1,
+	extensions: [{
+		name: 'sort',
+		types: [
+			'String','String','ymddate','us','String','ymddate','us','String','String'
+		],
+		image_asc_class_name: 'custom-ascending',
+		image_desc_class_name: 'custom-descending'
+	}],
+	sort: true
+});
+tf.init();
 </script>
 
 </body>

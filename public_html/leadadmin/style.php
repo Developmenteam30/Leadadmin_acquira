@@ -477,9 +477,10 @@ input.input-long {
 	color: #fff;
 }
 
+table.TF th,
 .table th {
-	background-color: <?php echo $gradientColor3; ?>;
-	color: #fff;
+	background-color: <?php echo $gradientColor3; ?> !important;
+	color: #fff !important;
 	text-align: center;
 	vertical-align: middle;
 }
@@ -559,6 +560,14 @@ input.input-long {
 		color-stop(0.25, rgb(<?php echo hex2rgb($gradientColor2);?>)),
 		color-stop(0.5, rgb(<?php echo hex2rgb($gradientColor3);?>))
 	);
+}
+
+.custom-descending {
+	background-image: url("/v2/leadadmin/images/downsimple.png");
+}
+
+.custom-ascending {
+	background-image: url("/v2/leadadmin/images/upsimple.png");
 }
 
 #editledger select,
