@@ -53,6 +53,10 @@ class Display
 
 		foreach( $fields as $field ) {
 
+			if( isset( $field['active'] ) && false === $field['active'] ) {
+				continue;
+			}
+
 			printf( "\t<div>\n" );
 
 			if( in_array( $field['type'], array( 'text', 'number', 'tel', 'date', 'email', 'password', 'url' ) ) ) {

@@ -433,7 +433,7 @@ class Leads
 		$sql .= "WHERE type = 1 ";
 		$sql .= "AND l.paymentDate IS NOT NULL ";
 		$sql .= "AND l.paymentAmount IS NOT NULL ";
-		$sql .= "AND l.checkNum IS NOT NULL ";
+		$sql .= "AND l.paymentMethod IS NOT NULL ";
 		if( !empty( $userId ) ) {
 			$sql .= "AND l.userId = ? ";
 		}

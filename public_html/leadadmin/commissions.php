@@ -73,7 +73,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->paymentAmount * 0.02, 2 ); ?></td>
+			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
 		</tr>
 <?php
 				}

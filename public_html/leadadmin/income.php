@@ -63,7 +63,7 @@ include(INCLUDES."c_header.php");
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td><?php echo $entry->username; ?></td>
-			<td><?php echo htmlentities( $entry->checkNum ); ?></td>
+			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 		</tr>
 <?php
 		}

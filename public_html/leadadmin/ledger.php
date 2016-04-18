@@ -13,6 +13,14 @@ $type = !empty( $_REQUEST['type'] ) ? 1 : 0;
 
 require_once( INCLUDES . 'display.php' );
 
+$ledgerMonths = array();
+$date = new DateTime();
+while( $date->format( 'Ym' ) >= '201601' ) {
+	$small = $date->format( 'Ym' );
+	$ledgerMonths[$small] = $date->format( 'M Y' );
+	$date->sub( new DateInterval( 'P1M' ) );
+}
+
 if(isset($_REQUEST['a'])){
 	$result = array(
 		'status' => 0
@@ -55,16 +63,19 @@ if(isset($_REQUEST['a'])){
 
 			if( $c ) {
 
+				$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
+
 				$ledgerId = $leads->addLedger( array(
 					'divisionId' => $divisionId,
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
 					'paymentDate' => empty( $_REQUEST['paymentDate'] ) ? null : $_REQUEST['paymentDate'],
-					'ledgerMonth' => empty( $_REQUEST['ledgerMonth'] ) ? null : $_REQUEST['ledgerMonth'],
+					'paymentMethod' => empty( $_REQUEST['paymentMethod'] ) ? null : $_REQUEST['paymentMethod'],
+					'ledgerMonth' => $ledgerMonth->format( 'Y-m-d' ),
 					'invoiceAmount' => empty( $_REQUEST['invoiceAmount'] ) ? 0.00 : $_REQUEST['invoiceAmount'],
 					'invoiceNum' => empty( $_REQUEST['invoiceNum'] ) ? null : $_REQUEST['invoiceNum'],
 					'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
-					'checkNum' => empty( $_REQUEST['checkNum'] ) ? null : $_REQUEST['checkNum'],
+					'commissionAmount' => empty( $_REQUEST['commissionAmount'] ) ? null : $_REQUEST['commissionAmount'],
 					'type' => $type,
 					'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
 				) );
@@ -116,16 +127,19 @@ if(isset($_REQUEST['a'])){
 
 			if( $c ) {
 
+				$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
+
 				$ledgerId = $leads->updateLedger( $_REQUEST['ledgerId'], array(
 					'divisionId' => $divisionId,
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
 					'paymentDate' => empty( $_REQUEST['paymentDate'] ) ? null : $_REQUEST['paymentDate'],
-					'ledgerMonth' => empty( $_REQUEST['ledgerMonth'] ) ? null : $_REQUEST['ledgerMonth'],
+					'paymentMethod' => empty( $_REQUEST['paymentMethod'] ) ? null : $_REQUEST['paymentMethod'],
+					'ledgerMonth' => $ledgerMonth->format( 'Y-m-d' ),
 					'invoiceAmount' => empty( $_REQUEST['invoiceAmount'] ) ? 0.00 : $_REQUEST['invoiceAmount'],
 					'invoiceNum' => empty( $_REQUEST['invoiceNum'] ) ? null : $_REQUEST['invoiceNum'],
 					'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
-					'checkNum' => empty( $_REQUEST['checkNum'] ) ? null : $_REQUEST['checkNum'],
+					'commissionAmount' => empty( $_REQUEST['commissionAmount'] ) ? null : $_REQUEST['commissionAmount'],
 					'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
 				) );
 
@@ -218,7 +232,8 @@ if(isset($_REQUEST['d'])){
 				array(
 					'id' => 'ledgerMonth',
 					'label' => 'Ledger Month',
-					'type' => 'date',
+					'type' => 'select',
+					'choices' => $ledgerMonths,
 				),
 				array(
 					'id' => 'paymentDate',
@@ -226,9 +241,9 @@ if(isset($_REQUEST['d'])){
 					'type' => 'date',
 				),
 				array(
-					'id' => 'checkNum',
-					'label' => ( 0 == $type ) ? 'Client Check #' : 'Payment Method',
-					'type' => ( 0 == $type ) ? 'number' : 'text',
+					'id' => 'paymentMethod',
+					'label' => 'Payment Method',
+					'type' => 'text',
 				),
 				array(
 					'id' => 'paymentAmount',
@@ -243,6 +258,12 @@ if(isset($_REQUEST['d'])){
 					'required' => true,
 					'placeholder' => 'Select a salesperson',
 					'choices' =>  $leads->getStaffUsers(),
+				),
+				array(
+					'id' => 'commissionAmount',
+					'label' => 'Commission Amt',
+					'type' => 'currency',
+					'active' => ( 1 == $type ) ? true : false,
 				),
 				array(
 					'id' => 'a',
@@ -264,10 +285,6 @@ if(isset($_REQUEST['d'])){
 $('#newledger input[name=paymentDate]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
-});
-
-$('#newledger input[name=ledgerMonth]').datepicker({
-	dateFormat: 'yy-mm-dd',
 });
 
 $("#newledger select[name='divisionId']").select2({
@@ -355,6 +372,8 @@ $("#newledger select[name='divisionId']").change( function() {
 
 			} else {
 
+				$ledgerMonth = new DateTime( $entry->ledgerMonth );
+
 				$fields = array(
 					array(
 						'id' => 'divisionId',
@@ -400,9 +419,10 @@ $("#newledger select[name='divisionId']").change( function() {
 					array(
 						'id' => 'ledgerMonth',
 						'label' => 'Ledger Month',
-						'type' => 'date',
+						'type' => 'select',
 						'required' => true,
-						'value' => $entry->ledgerMonth,
+						'choices' => $ledgerMonths,
+						'value' => $ledgerMonth->format( 'Ym' ),
 					),
 					array(
 						'id' => 'paymentDate',
@@ -411,10 +431,10 @@ $("#newledger select[name='divisionId']").change( function() {
 						'value' => $entry->paymentDate,
 					),
 					array(
-						'id' => 'checkNum',
-						'label' => ( 0 == $entry->type ) ? 'Client Check #' : 'Payment Method',
-						'type' => ( 0 == $entry->type ) ? 'number' : 'text',
-						'value' => $entry->checkNum,
+						'id' => 'paymentMethod',
+						'label' => 'Payment Method',
+						'type' => 'text',
+						'value' => $entry->paymentMethod,
 					),
 					array(
 						'id' => 'paymentAmount',
@@ -430,6 +450,12 @@ $("#newledger select[name='divisionId']").change( function() {
 						'placeholder' => 'Select a salesperson',
 						'choices' =>  $leads->getStaffUsers(),
 						'value' => $entry->userId,
+					),
+					array(
+						'id' => 'commissionAmount',
+						'label' => 'Commission Amt',
+						'type' => 'currency',
+						'active' => ( 1 == $entry->type ) ? true : false,
 					),
 					array(
 						'id' => 'a',
@@ -448,10 +474,6 @@ $("#newledger select[name='divisionId']").change( function() {
 
 <script type="text/javascript">
 $('#editledger input[name=paymentDate]').datepicker({
-	// Consistent format with the HTML5 picker
-	dateFormat: 'yy-mm-dd'
-});
-$('#editledger input[name=ledgerMonth]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
@@ -497,23 +519,31 @@ include(INCLUDES."c_header.php");
 			<th>Payment Amount</th>
 			<th>Method</th>
 			<th>Salesperson</th>
+<?php if( 1 == $type ) { ?>
+			<th>Commissions</th>
+<?php } ?>
 			<th>Options</th>
 		</tr>
 	</thead>
 	<tbody>
 <?php
 		foreach( $entries as $entry ) {
+
+			$ledger = new DateTime( $entry->ledgerMonth );
 ?>
 		<tr>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->verticalName ); ?></td>
-			<td><?php echo $entry->ledgerMonth; ?></td>
+			<td><?php echo $ledger->format( 'M Y' ); ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td><?php echo $entry->paymentDate; ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td><?php echo htmlentities( $entry->checkNum ); ?></td>
+			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td><?php echo $entry->username; ?></td>
+<?php if( 1 == $entry->type ) { ?>
+			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
+<?php } ?>
 			<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
 		</tr>
 <?php
