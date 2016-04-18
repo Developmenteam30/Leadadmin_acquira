@@ -55,6 +55,7 @@ if(isset($_REQUEST['a'])){
 					'tech_name' => empty( $_REQUEST['tech_name'] ) ? null : trim( $_REQUEST['tech_name'] ),
 					'tech_phone' => empty( $_REQUEST['tech_phone'] ) ? null : trim( $_REQUEST['tech_phone'] ),
 					'tech_email' => empty( $_REQUEST['tech_email'] ) ? null : trim( $_REQUEST['tech_email'] ),
+					'accountManager' => empty( $_REQUEST['accountManager'] ) ? null : $_REQUEST['accountManager'],
 				) );
 				if( null === $idCompany ) {
 					$c = false;
@@ -112,6 +113,7 @@ if(isset($_REQUEST['a'])){
 					'tech_name' => empty( $_REQUEST['tech_name'] ) ? null : trim( $_REQUEST['tech_name'] ),
 					'tech_phone' => empty( $_REQUEST['tech_phone'] ) ? null : trim( $_REQUEST['tech_phone'] ),
 					'tech_email' => empty( $_REQUEST['tech_email'] ) ? null : trim( $_REQUEST['tech_email'] ),
+					'accountManager' => empty( $_REQUEST['accountManager'] ) ? null : $_REQUEST['accountManager'],
 				) );
 
 				if($alterCompanyResult === false){
@@ -232,6 +234,14 @@ if(isset($_REQUEST['d'])){
 					'id' => 'url',
 					'label' => 'Web Site',
 					'type' => 'url',
+				),
+				array(
+					'id' => 'accountManager',
+					'label' => 'Account Manager',
+					'type' => 'select',
+					'required' => true,
+					'placeholder' => 'Select an account manager',
+					'choices' =>  $leads->getStaffUsers(),
 				),
 				array(
 					'id' => 'note',
@@ -438,6 +448,15 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Web Site',
 					'type' => 'url',
 					'value' => $company->url,
+				),
+				array(
+					'id' => 'accountManager',
+					'label' => 'Account Manager',
+					'type' => 'select',
+					'required' => true,
+					'placeholder' => 'Select an account manager',
+					'choices' =>  $leads->getStaffUsers(),
+					'value' => $company->accountManager,
 				),
 				array(
 					'id' => 'note',
