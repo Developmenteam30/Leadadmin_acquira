@@ -519,7 +519,5 @@ $(document).ready(function(){
 <div class="hidden-custom" id="dialog_revenue_listowners"></div>
 </div>
 
-<script src="/leadadmin/libraries/calx-1.1.4/jquery-calx-1.1.4.min.js" type="text/javascript"></script>
-<script src="/leadadmin/libraries/tablefilter/tablefilter.js" type="text/javascript"></script>
 </body>
 </html>

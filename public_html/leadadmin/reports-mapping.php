@@ -102,6 +102,5 @@ if( isset( $_REQUEST['d'] ) ) {
 
 </div>
 
-<script src="/leadadmin/libraries/tablefilter/tablefilter.js" type="text/javascript"></script>
 </body>
 </html>
