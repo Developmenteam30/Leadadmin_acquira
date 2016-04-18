@@ -79,6 +79,11 @@ if(isset($_REQUEST['a'])){
 			$c = true;
 			$result['error'] = 'Failed when trying to edit a company';
 
+			if( empty( trim( $_REQUEST['name'] ) ) ) {
+				$result['error'] = 'Company name cannot be blank.';
+				$c = false;
+			}
+
 			if($c){
 				if( $leads->checkCompanyName( trim( $_REQUEST['name'] ), $_REQUEST['idCompany'] ) ) {
 					$c = false;
