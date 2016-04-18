@@ -229,13 +229,18 @@ class Leads
 		return $results;
 	}
 
-	public function getStaffUsers() {
+	public function getStaffUsers( $format = PDO::FETCH_KEY_PAIR ) {
 		$results = null;
 
 		try {
-			$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE level >= ? ORDER BY username" );
-			$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
-			$results = $query->fetchAll( PDO::FETCH_KEY_PAIR  );
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE level >= ? ORDER BY username" );
+				$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
+			} else {
+				$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE idUser = ?" );
+				$query->execute( array( LeadsSession::getUserId() ) );
+			}
+			$results = $query->fetchAll( $format );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get user staff list: ' . $e->getMessage() );
 		}
@@ -416,7 +421,7 @@ class Leads
 		return $results;
 	}
 
-	public function getIncomeLedger() {
+	public function getIncomeLedger( $userId = null ) {
 		$results = array();
 
 		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.username ";
@@ -429,11 +434,18 @@ class Leads
 		$sql .= "AND l.paymentDate IS NOT NULL ";
 		$sql .= "AND l.paymentAmount IS NOT NULL ";
 		$sql .= "AND l.checkNum IS NOT NULL ";
+		if( !empty( $userId ) ) {
+			$sql .= "AND l.userId = ? ";
+		}
 		$sql .= "ORDER BY l.paymentDate DESC";
 
 		try {
 			$query = $this->db->prepare( $sql );
-			$query->execute();
+			if( !empty( $userId ) ) {
+				$query->execute( array( $userId ) );
+			} else {
+				$query->execute();
+			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get income ledger: ' . $e->getMessage() );
