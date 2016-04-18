@@ -1,0 +1,15 @@
+ALTER TABLE feedPopulation ADD COLUMN livedata boolean NOT NULL DEFAULT 0;
+ALTER TABLE feedout MODIFY feedType ENUM('curlPOST','curlGET','JSON');
+ALTER TABLE feedinc ADD COLUMN notifications enum('0','1') default 1;
+ALTER TABLE data_outbound ADD COLUMN `idRecordLegacy` bigint(20) unsigned NOT NULL;
+ALTER TABLE feedout ADD COLUMN queued INT(8) DEFAULT 0;
+DROP TABLE revenue;
+CREATE TABLE `revenue` (
+  `date` char(6) NOT NULL,
+  `idFeedIn` int(11) NOT NULL,
+  `idFeedOut` int(11) NOT NULL,
+  `url` varchar(255) NOT NULL,
+  `value` float(10,2) DEFAULT NULL,
+  PRIMARY KEY (`date`,`idFeedIn`,`url`,`idFeedOut`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+

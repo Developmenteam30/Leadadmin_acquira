@@ -1,0 +1,551 @@
+<?php
+require_once("../../includes/c_config.php");
+require_once( INCLUDES . 'leads.php' );
+require_once( INCLUDES . 'processFunctions.php' );
+
+$leads = Leads::getInstance();
+
+$statsDay = date('Y-m-d');
+
+Header('Content-Type: text/xml');
+
+function updateStats( $idFeedOut, $url, $win, $fail, $skip ) {
+
+	$statsDate = date( 'Ym' );
+	$updateStats =
+                "INSERT INTO `".DATABASE_NAME."`.`statistics_".$statsDate."` "
+                ."( "
+                    ." `idFeedOut` "
+                    .", `url` "
+                    .", `urlRef` "
+                    .", `stamp` "
+                    .", `win` "
+                    .", `fail` "
+                    .", `skip` "
+                .") "
+                ."VALUES "
+                ."( "
+                    ."'".$idFeedOut."' "
+                    .", '".$url."' "
+                    .", '".url_reformat($url)."' "
+                    .", '".date('Y-m-d')."' "
+                    .", '".$win."' "
+                    .", '".$fail."' "
+                    .", '".$skip."' "
+                .") "
+                ."ON DUPLICATE KEY UPDATE "
+                ."`win` = `win`+".$win." "
+                .", `fail` = `fail`+".$fail." "
+                .", `skip` = `skip`+".$skip." "
+                .";";
+            $doupdateStats = dbQry($updateStats, 'Updating statistics.', true);
+}
+
+$c = true; 
+$result = array(
+	'success' => 'false'
+	, 'reason' => 'None.'
+);
+
+$feedLabel = getenv('FEED_LABEL');
+if( empty( $feedLabel ) ) {
+	$c = false;
+	$result['reason'] = "Feed label is not set.";
+}
+
+$pattern = '/^[a-z][a-z0-9_]*$/';
+if( $c && !preg_match( $pattern, $feedLabel ) ) {
+	$c = false;
+	$result['reason'] = "Feed label contains invalid characters";
+	unset( $feedLabel );
+}
+
+if( $c ) {
+	$mysqlErrorSource = 'Incoming Feed '.$feedLabel;
+} else {
+	$mysqlErrorSource = 'Incoming Feed';
+}
+
+if($c) { 
+	$feedParams = $leads->getInboundFeedLabel( $feedLabel );
+	if($feedParams === null){
+		$c = false; 
+		$result['reason'] = 'Database failure, please try again later.';
+	} else if( false === $feedParams ) {
+		$c = false;
+		$result['reason'] = 'Invalid feed label';
+		unset( $feedLabel );
+	} else { 
+		$required = explode(';', $feedParams->required);
+		$allowedFields = explode(';', $feedParams->allowedFields);
+	}
+}
+
+if($c &&( 
+	!isset($_REQUEST['pswd'])
+	|| empty($_REQUEST['pswd'])
+	|| $_REQUEST['pswd'] != $feedParams->password
+)){
+	$c = false; $result['reason'] = 'Unauthorized access.';
+	$leads->logError( 'Feed '. $feedLabel . ' Unauthorized user at '.$_SERVER["REMOTE_ADDR"], true, false );
+}
+
+if( $c && 'retired' == $feedParams->status ) {
+	$c = false; 
+	$result['reason'] = 'This feed has been disabled.';
+}
+
+if($c){ //Validation of incoming data.
+
+	// Special handling for TurnTwo feed that cannot change what URL value is being sent to us
+	if( !empty( $_REQUEST['url'] ) && 'www.5minutemoney.co.uk,www.5minutemoney.co.uk' == $_REQUEST['url'] ) {
+		$_REQUEST['url'] = 'www.5minutemoney.co.uk';
+	}
+
+	// Special handling for Digital Bulldogs feed that contains an invalid URL
+	if( !empty( $_REQUEST['url'] ) && 'https//www.instantcheckmate.com/register' == $_REQUEST['url'] ) {
+		$_REQUEST['url'] = 'https://www.instantcheckmate.com/register';
+	}
+
+	// Fix incoming URLs missing a protocol so they validate properly
+	if( !empty( $_REQUEST['url'] ) && strpos( $_REQUEST['url'], 'http' ) !== 0 ) {
+		$_REQUEST['url'] = 'http://' . $_REQUEST['url'];
+	}
+
+	// Fix cases where gender is set to a blank value
+	if( !empty( $_REQUEST['gender'] ) && ' ' == $_REQUEST['gender'] ) {
+		unset( $_REQUEST['gender'] );
+	}
+
+	// Fix legacy lead timestamp field
+	if( !empty( $_REQUEST['leadstamp'] ) ) {
+		$_REQUEST['stamp'] = $_REQUEST['leadstamp'];
+	}
+
+	if($c){ 
+		foreach($required as $requiredKey){ 
+			switch($requiredKey){
+				case "phone":
+					if(
+						(
+							!isset($_REQUEST['landline'])
+							|| trim($_REQUEST['landline']) == ''
+						) && (
+							!isset($_REQUEST['cellphone'])
+							|| trim($_REQUEST['cellphone']) == ''
+						)
+					){
+						$c = false; $result['reason'] = "A phone number is required, either landline or cellphone. "
+							."They can not both be empty.";
+					}
+				break; 
+				default:
+					if(
+						!isset($_REQUEST[$requiredKey]) 
+						|| trim($_REQUEST[$requiredKey]) == ''
+					){ 
+						$c = false; $result['reason'] = ucfirst($requiredKey).' is a required field, and may not be empty.';
+					}
+			}
+			if(!$c){ break; }
+		}
+	}	
+	if($c){ //All required fields were sent. Check that the sent information is valid.
+		foreach($allowedFields as $allowedField){ 
+			if(	!empty($_REQUEST[$allowedField]) ){ 
+				$validateResult = validate($allowedField, $_REQUEST[$allowedField], $feedParams);
+				if(!$validateResult['valid']){ 
+					$c = false; $result['reason'] = $validateResult['reason'];
+				}
+			}
+			if(!$c){ break; }
+		}
+	}
+}
+if( !empty( $allowedFields ) && in_array('url', $allowedFields ) ) { //URL is expected so trim it and store in the database.
+	if( !empty( $_REQUEST['url'] ) ){ 
+		$_REQUEST['urlTrim'] = url_reformat($_REQUEST['url']);
+	} else { 
+		$_REQUEST['url'] = '';
+		$_REQUEST['urlTrim'] = '';
+	}
+}
+if( $c && !empty( $_REQUEST['email'] ) ) {
+	$exists = $leads->checkSuppression( $_REQUEST['email'], null );
+	if( $exists === true ) {
+		$c = false;
+		$result['reason'] = 'Email exists in our global suppression file.';
+	}
+}
+
+if( $c && !is_null( $feedParams->filterTypeUrl ) ) {
+                    
+	$urlAcceptable = filterValue($feedParams->filterTypeUrl, $_REQUEST['url'], $feedParams->filterUrl);
+	if( !$urlAcceptable ) {
+		$c = false;
+		$result['reason'] = 'URL is not allowed on this feed.';
+	}
+}
+
+if($c && $feedParams->dedupeEmail && isset($_REQUEST['email']) && $_REQUEST['email'] != ''){ 
+	$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'email', $_REQUEST, $feedParams->dedupeAcross );
+	if( $dupeCount === null ){ 
+		$c = false; $result['reason'] = 'Database failure - could not check duplicates.';
+	} elseif( $dupeCount ){ 
+		$c = false; $result['reason'] = 'Duplicate Email';
+	}
+}
+if($c && $feedParams->dedupeLandline && isset($_REQUEST['landline']) && $_REQUEST['landline'] != ''){ 
+	$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'landline', $_REQUEST, $feedParams->dedupeAcross );
+	if( $dupeCount === null ){ 
+		$c = false; $result['reason'] = 'Database failure - could not check duplicates.';
+	} elseif( $dupeCount ){ 
+		$c = false; $result['reason'] = 'Duplicate Phone (landline)';
+	}
+}
+if($c && $feedParams->dedupeCellphone && isset($_REQUEST['cellphone']) && $_REQUEST['cellphone'] != ''){ 
+	$dupeCount = $leads->inboundCheckDuplicates( $feedParams->idFeedIn, 'cellphone', $_REQUEST, $feedParams->dedupeAcross );
+	if( $dupeCount === null ){ 
+		$c = false; $result['reason'] = 'Database failure - could not check duplicates.';
+	} elseif( $dupeCount ){ 
+		$c = false; $result['reason'] = 'Duplicate Phone (cellphone)';
+	}
+}
+if( $c && !empty( $_REQUEST['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_null( $feedParams->filterTypeSiftLogic ) ) {
+	$filter = filterValue($feedParams->filterTypeSiftLogic, $_REQUEST['url'], $feedParams->filterSiftLogic);
+	if( $filter ) {
+		require_once( INCLUDES . 'siftLogic.php' );
+		$sl = new SiftLogic;
+		if( $sl->check( $_REQUEST['email'], 
+						!empty( $_REQUEST['ip'] ) ? $_REQUEST['ip'] : null, 
+						!empty( $_REQUEST['fname'] ) ? $_REQUEST['fname'] : null, 
+						!empty( $_REQUEST['lname'] ) ? $_REQUEST['lname'] : null, 
+						!empty( $_REQUEST['addr'] ) ? $_REQUEST['addr'] : null, 
+						!empty( $_REQUEST['addr2'] ) ? $_REQUEST['addr2'] : null, 
+						!empty( $_REQUEST['city'] ) ? $_REQUEST['city'] : null, 
+						!empty( $_REQUEST['state'] ) ? $_REQUEST['state'] : null, 
+						!empty( $_REQUEST['zip'] ) ? $_REQUEST['zip'] : null, 
+						!empty( $_REQUEST['country'] ) ? $_REQUEST['country'] : null, 
+					false ) === false ) {
+			$c = false;
+			$result['reason'] = 'Email address was rejected by our third-party filters [SL]';
+		}
+	}
+}
+
+if( !empty( $feedParams ) ) {
+
+	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $c ? null : $result['reason'], null );
+
+}
+
+//Population Portion of the script. 
+if($c){ 
+	$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn );
+	if( $feedsOut !== false && count($feedsOut) != 0 && $feedsOut != 0) {
+		foreach($feedsOut as $feed){ 
+			if($feed->enabled){ 
+				$p = true;
+				if($p && !is_null($feed->filterTypeUrl)){
+					$urlAcceptable = filterValue($feed->filterTypeUrl, $_REQUEST['url'], $feed->filterUrl);
+					if(!$urlAcceptable){ 
+						$p = false;
+					}
+				}
+				if($p && !is_null($feed->filterTypeEmail)){
+					$domainAcceptable = filterValue($feed->filterTypeEmail, $_REQUEST['email'], $feed->filterEmail);
+					if(!$domainAcceptable){ 
+						$p = false;
+					}
+				}
+				if($p && !is_null($feed->filterTypeListcode)){
+					$listcodeAcceptable = filterValue($feed->filterTypeListcode, $_REQUEST['listcode'], $feed->filterListcode);
+					if(!$listcodeAcceptable){ 
+						$p = false;
+					}
+				}
+				// Ensure we haven't reached our daily limit of records
+				if($p && !is_null($feed->dailyLimit) && intval($feed->dailyLimit) > 0) {
+					$cnt = $leads->getOutboundDailyCount( $feed->idFeedOut );
+					if( $cnt && $cnt > $feed->dailyLimit ) {
+						$leads->logError( 'Feed '.$feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
+						$p = false;
+					}
+				}
+
+				// Handle URL rewriting
+				$urlRewritten = false;
+				if( !empty( $feed->forceUrl ) && !empty( $feed->forceUrlList ) ) {
+
+					$forceUrls = explode( ';', $feed->forceUrlList );
+					if( !empty( $forceUrls ) && is_array( $forceUrls ) && sizeOf( $forceUrls ) > 0 ) {
+						shuffle( $forceUrls ); // Randomize the order of the array incase we are re-writing to multiple URLs
+
+						foreach( $forceUrls as $forceUrl ) {
+							$mapping = explode( '=', $forceUrl, 2 );
+							if( !empty( $mapping[0] ) && !empty( $mapping[1] ) ) {
+								if( parse_url( $_REQUEST['url'], PHP_URL_HOST ) === $mapping[0] ) {
+									$_REQUEST['url'] = 'http://' . $mapping[1];
+									$urlRewritten = true;
+									break;
+								}
+							}
+						}
+					}
+
+				}
+
+				if($p){
+					$lastRecord = null;
+					if( LEGACY_DB ) {
+						$insertToFeedOut = 
+							"INSERT INTO `".DATABASE_NAME."`.`feedout_".$feed->label."` ( `processed` ";
+						foreach($allowedFields as $allowedField){ 
+							$insertToFeedOut .= ", `".$allowedField."` ";
+							if($allowedField == 'url'){ 
+								$insertToFeedOut .= ", `urlTrim` ";
+							}
+						}
+						if( !empty( $feed->livedata ) ) {
+							$insertToFeedOut .= ") VALUES ( '-1' ";
+						} else {
+							$insertToFeedOut .= ") VALUES ( '0' ";
+						}
+						foreach($allowedFields as $allowedField){ 
+							if(isset($_REQUEST[$allowedField])){ 
+								if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
+									$insertToFeedOut .= ", 'No listcode'";
+								} elseif($allowedField == 'stamp'){ 
+									$insertToFeedOut .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
+								} else { 
+									$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
+								}
+							} else { 
+								if($allowedField == 'listcode'){ 
+									$insertToFeedOut .= ", 'No listcode'";
+								} else { 
+									$insertToFeedOut .= ", ''";
+								}
+							}
+							if($allowedField == 'url'){ 
+								$insertToFeedOut .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+							}
+						}
+						$insertToFeedOut .= ");";
+						$doinsertRecord = dbQry($insertToFeedOut, 'Populating '.$feed->label, true);
+						if($doinsertRecord !== false){ 
+							$lastRecord = $GLOBALS['dbconnx']->insert_id;
+						}
+
+						$leads->outboundAdd( $inboundId, $lastRecord, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'], 0, $urlRewritten );
+					} else {
+						$lastRecord = 999999999;
+						$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $_REQUEST['url'], ( !empty( $feed->livedata ) ? -1 : 0 ), $urlRewritten );
+					}
+
+				}
+
+				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
+				if( $p && !empty( $lastRecord ) && !empty( $feed->livedata ) ) {
+					require_once( SITE_ROOT . FD . 'pushLead/_f_onlms.php' );
+
+					if( LEGACY_DB ) {
+
+						$getLead = "SELECT * FROM `".DATABASE_NAME."`.`feedout_".$feed->label. "` WHERE `processed` = '-1' AND idRecord = " . $lastRecord;
+						$dogetLead = dbQry($getLead, 'Fetching live lead to process', true);
+						if($dogetLead !== false && $dogetLead->num_rows > 0 ) {
+
+							$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
+							while( $c && ( $row = $dogetLead->fetch_array( MYSQLI_ASSOC ) ) ) {
+
+								$status = runlead( $row, $feedOut );
+								if( isset( $status ) ) {
+
+									$update  = "UPDATE `".DATABASE_NAME."`.`feedout_".$feed->label."` ";
+									$update .= "SET processed = '1', poststamp = NOW(), postresponse = " . valueSet( $status['text'] ) . " ";
+									$update .= "WHERE idRecord = " . $lastRecord;
+									dbQry( $update, 'Update processed status of live record' );
+
+									if( isset( $status['status'] ) && $status['status'] != true ) {
+
+										$c = false;
+										$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
+
+										if( !empty( $_REQUEST['url'] ) ) {
+											updateStats( $feed->idFeedOut, $_REQUEST['url'], 0, 1, 0 );
+											$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $statsDay, $result['reason'] );
+										}
+
+									} else {
+
+										if( !empty( $_REQUEST['url'] ) ) {
+											updateStats( $feed->idFeedOut, $_REQUEST['url'], 1, 0, 0 );
+										}
+
+									}
+								}
+							}
+						}
+
+					} else {
+						$record = $leads->getOutboundRecord( $inboundId, $feed->idFeedOut, -1 );
+						if( !empty( $record ) ) {
+							$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
+							$status = runlead( $record, $feedOut );
+							if( isset( $status['status'] ) && $status['status'] != true ) {
+								$c = false;
+								$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
+
+								if( !empty( $_REQUEST['url'] ) ) {
+									$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $statsDay, $result['reason'] );
+								}
+
+							}
+						}
+
+					}
+				}
+			}
+		}
+	}
+}
+
+if($c){ //Inputted information is validated, go ahead and insert the record into the database.
+
+	if( !empty( $_REQUEST['url'] ) ) {
+
+		if( !empty( $feedParams->notifications ) ) {
+
+			// Notify if this is the first time we've seen this URL on this feed
+			$urlExists = $leads->checkInboundURLExists( $feedParams->idFeedIn, $_REQUEST['url'] );
+			if( false === $urlExists ) {
+				// $leads->logError( print_r( $_REQUEST, true ), false, false );
+				notifyManagers( sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
+                                        str_replace( '.', '*', $_REQUEST['url'] ) )
+							);
+			}
+
+			// Add an entry to the notification table to see if this feed goes dormant
+			$leads->addNotification( $feedParams->idFeedIn, $_REQUEST['url'] );
+
+		}
+	}
+
+	if( LEGACY_DB ) {
+		$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."` ( `queryString`, `received` ";
+		dbCon("insertUpdate");
+		foreach($allowedFields as $allowedField){ 
+			$insertRecord .= ", `".$allowedField."` ";
+			if($allowedField == 'url'){ 
+				$insertRecord .= ", `urlTrim` ";
+			}
+		}
+		$insertRecord .= ") VALUES ( "
+			."'".$GLOBALS['dbconnx']->escape_string(serialize($_REQUEST))."', "
+			."'".date("Y-m-d H:i:s")."' ";
+		foreach($allowedFields as $allowedField){ 
+			if(isset($_REQUEST[$allowedField])){ 
+				if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
+					$insertRecord .= ", 'No listcode'";
+				} elseif($allowedField == 'stamp'){ 
+					$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
+				} else { 
+					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
+				}
+			} else { 
+				if($allowedField == 'listcode'){ 
+					$insertRecord .= ", 'No listcode'";
+				} else { 
+					$insertRecord .= ", ''";
+				}
+			}
+			if($allowedField == 'url'){ 
+				$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+			}
+		}
+		$insertRecord .= ");";
+		$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedLabel, true);
+		if($doinsertRecord === false){
+			$c = false; $result['reason'] = 'Database failure, please try again later.';
+		} else { //Successfully inserted into the data table, now insert into the count table.
+			$date = date("Y-m-d");
+			$insertCountChange = "INSERT INTO "
+				."`".DATABASE_NAME."`.`urlcount` (`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) "
+				."VALUES ( "
+					." '".$feedParams->idFeedIn."' "
+					.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' "
+					.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['url'])."' "
+					.",'1' "
+					.",'".$date."' "
+				.") "
+				."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
+			$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
+		}
+	}
+} else if( !empty( $feedLabel ) ) { //There was a failure somewhere, so insert into the invalid database with the query string and the error.
+	if( LEGACY_DB ) {
+		$insertRecord = "INSERT INTO `".DATABASE_NAME."`.`feedinc_".$feedLabel."_invalid` ( `queryString`,`error`,`received` ";
+		dbCon("insertUpdate");
+		foreach($allowedFields as $allowedField){ 
+			$insertRecord .= ", `".$allowedField."` ";
+			if($allowedField == 'url'){ 
+				$insertRecord .= ", `urlTrim` ";
+			}
+		}
+		$insertRecord .= ") VALUES ( "
+			."'".$GLOBALS['dbconnx']->escape_string(serialize($_REQUEST))."', "
+			."'".$result['reason']."', "
+			."'".date("Y-m-d H:i:s")."' ";
+		foreach($allowedFields as $allowedField){ 
+			if(isset($_REQUEST[$allowedField])){ 
+				if($allowedField == 'listcode' && empty($_REQUEST[$allowedField])){ 
+					$insertRecord .= ", 'No listcode'";
+				} elseif($allowedField == 'stamp'){ 
+					$insertRecord .= ", '".date("Y-m-d H:i:s", strtotime($_REQUEST[$allowedField]))."' ";
+				} else { 
+					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST[$allowedField])."' ";
+				}
+			} else { 
+				if($allowedField == 'listcode'){ 
+					$insertRecord .= ", 'No listcode'";
+				} else { 
+					$insertRecord .= ", ''";
+				}
+			}
+			if($allowedField == 'url') {
+ 				if ( !empty( $_REQUEST['urlTrim'] ) ){ 
+					$insertRecord .= ", '".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' ";
+				} else { 
+					$insertRecord .= ", ''";
+				}
+			}
+		}
+		$insertRecord .= ");";
+		$doinsertRecord = dbQry($insertRecord, 'Inserting new record for '.$feedLabel, true);
+		if($doinsertRecord === false){
+			$c = false; $result['reason'] = 'Database failure, please try again later.';
+		} else if( !empty( $_REQUEST['url'] ) && !empty( $_REQUEST['urlTrim'] ) ) { //Successfully inserted into the data table, now insert into the count table.
+			$date = date("Y-m-d");
+			$insertCountChange = "INSERT INTO "
+				."`".DATABASE_NAME."`.`urlcount_invalid` (`idFeedIn`,`urlTrim`,`urlFull`,`quantity`,`stamp`) "
+				."VALUES ( "
+					." '".$feedParams->idFeedIn."' "
+					.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['urlTrim'])."' "
+					.",'".$GLOBALS['dbconnx']->escape_string($_REQUEST['url'])."' "
+					.",'1' "
+					.",'".$date."' "
+				.") "
+				."ON DUPLICATE KEY UPDATE `quantity`=`quantity`+1; ";
+				//echo $insertCountChange;
+			$doinsertCountChange = dbQry($insertCountChange, 'Inserting quantity change', true);
+		}
+	}
+}
+
+if($c){ 
+	$result['success'] = 'true';
+	$result['reason'] = 'Successfully inserted new record.';
+}
+
+$xml = Array2XML::createXML('response', $result);
+echo $xml->saveXML();
