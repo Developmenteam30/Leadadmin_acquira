@@ -46,7 +46,7 @@ if(isset($_REQUEST['a'])){
 				$_REQUEST['idCompany'] = null;
 			}
 
-			$idUser = $leads->addUser( strtolower( $_REQUEST['username'] ), $_REQUEST['password'], empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'], empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'] );
+			$idUser = $leads->addUser( strtolower( trim( $_REQUEST['username'] ) ), $_REQUEST['password'], empty( trim( $_REQUEST['fullName'] ) ) ? null : trim( $_REQUEST['fullName'] ), empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'], empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'] );
 			if( null === $idUser ) {
 				$result['error'] = 'Unable to add new user';
 				break;
@@ -96,6 +96,7 @@ if(isset($_REQUEST['a'])){
 			}
 
 			$status = $leads->updateUser( $_REQUEST['idUser'], array(
+				'fullName' => empty( $_REQUEST['fullName'] ) ? null : $_REQUEST['fullName'],
 				'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
 				'level' => empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'],
 			) );
@@ -160,6 +161,11 @@ if( isset( $_REQUEST['d'] ) ) {
 					'value' => substr( base64_encode(mcrypt_create_iv(64, MCRYPT_DEV_URANDOM ) ), 0, 12 ),
 				),
 				array(
+					'id' => 'fullName',
+					'label' => 'Full Name',
+					'type' => 'text',
+				),
+				array(
 					'id' => 'level',
 					'label' => 'Access Level',
 					'type' => 'select',
@@ -200,6 +206,7 @@ $('#new_user').submit( function(event) {
 			"a" : "addNewUser",
 			"username": $("#new_user #username").val(),
 			"password": $("#new_user #password").val(),
+			"fullName": $("#new_user #fullName").val(),
 			"level": $("#new_user #level").val(),
 			"idCompany": $("#new_user #idCompany").val(),
 		}),
@@ -245,6 +252,12 @@ $('#new_user').submit( function(event) {
 					'type' => 'text',
 				),
 				array(
+					'id' => 'fullName',
+					'label' => 'Full Name',
+					'type' => 'text',
+					'value' => $user->fullName,
+				),
+				array(
 					'id' => 'level',
 					'label' => 'Access Level',
 					'type' => 'select',
@@ -288,6 +301,7 @@ $('#edit_user').submit( function(event) {
 			"idUser": $("#edit_user #idUser").val(),
 			"username": $("#edit_user #username").val(),
 			"password": $("#edit_user #password").val(),
+			"fullName": $("#edit_user #fullName").val(),
 			"level": $("#edit_user #level").val(),
 			"idCompany": $("#edit_user #idCompany").val(),
 		}),
@@ -337,6 +351,7 @@ include(INCLUDES."c_header.php");
 			<thead>
 				<tr>
 					<th>Username</th>
+					<th>Full Name</th>
 					<th>Access Level</th>
 					<th>Company Id</th>
 				</tr>
@@ -366,6 +381,7 @@ include(INCLUDES."c_header.php");
 ?>
 				<tr>
 					<td><a href="#" class="nonLink" onclick="display('dialog_edituser', { 'idUser': <?php echo $user->idUser; ?> } );"><?php echo $user->username; ?></a></td>
+					<td><?php echo htmlentities( $user->fullName ); ?></td>
 					<td><?php echo $level; ?></td>
 					<td><?php echo $user->idCompany; ?></td>
 				</tr>

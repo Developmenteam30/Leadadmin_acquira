@@ -157,11 +157,12 @@ class Leads
 		return $value;
 	}
 
-	public function addUser( $username, $password, $idCompany, $level ) {
+	public function addUser( $username, $password, $fullName, $idCompany, $level ) {
 
 		try {
 			$idUser = $this->insertRow( 'users', array(
 				'username' => $username,
+				'fullName' => $fullName,
 				'idCompany' => $idCompany,
 				'level' => $level,
 			) );
@@ -193,7 +194,7 @@ class Leads
 
 	public function getUser( $idUser ) {
 		try {
-			$query = $this->db->prepare( "SELECT username,password,idCompany,level FROM users WHERE idUser = ?" );
+			$query = $this->db->prepare( "SELECT username,password,fullName,idCompany,level FROM users WHERE idUser = ?" );
 			$query->execute( array( $idUser ) );
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -205,7 +206,7 @@ class Leads
 
 	public function getUsername( $username ) {
 		try {
-			$query = $this->db->prepare( "SELECT username,password,idCompany,level FROM users WHERE username = ?" );
+			$query = $this->db->prepare( "SELECT username,password,fullName,idCompany,level FROM users WHERE username = ?" );
 			$query->execute( array( $username ) );
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -219,7 +220,7 @@ class Leads
 		$results = null;
 
 		try {
-			$query = $this->db->prepare( "SELECT idUser,username,idCompany,level FROM users ORDER BY username" );
+			$query = $this->db->prepare( "SELECT idUser,username,fullName,idCompany,level FROM users ORDER BY username" );
 			$query->execute();
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -234,10 +235,10 @@ class Leads
 
 		try {
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-				$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE level = ? ORDER BY username" );
+				$query = $this->db->prepare( "SELECT idUser,fullName FROM users WHERE level = ? ORDER BY username" );
 				$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
 			} else {
-				$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE idUser = ?" );
+				$query = $this->db->prepare( "SELECT idUser,fullName FROM users WHERE idUser = ?" );
 				$query->execute( array( LeadsSession::getUserId() ) );
 			}
 			$results = $query->fetchAll( $format );
@@ -401,7 +402,7 @@ class Leads
 	public function getLedger( $divisionId, $type ) {
 		$results = array();
 
-		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u.username ";
+		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u.fullName ";
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
@@ -424,7 +425,7 @@ class Leads
 	public function getIncomeLedger( $userId = null ) {
 		$results = array();
 
-		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.username ";
+		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.fullName ";
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
 		$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";

@@ -43,7 +43,7 @@ include(INCLUDES."c_header.php");
 
 		foreach( $users as $user ) {
 
-			printf( '<h3>%s</h3>' . PHP_EOL, htmlentities( $user->username ) );
+			printf( '<h3>%s</h3>' . PHP_EOL, htmlentities( $user->fullName ) );
 
 			$entries = $leads->getIncomeLedger( $user->idUser );
 			if( empty( $entries ) ) {

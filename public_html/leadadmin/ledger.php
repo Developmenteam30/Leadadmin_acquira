@@ -540,7 +540,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo $entry->paymentDate; ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-			<td><?php echo $entry->username; ?></td>
+			<td><?php echo $entry->fullName; ?></td>
 <?php if( 1 == $entry->type ) { ?>
 			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
 <?php } ?>
