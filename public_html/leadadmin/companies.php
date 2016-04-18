@@ -9,6 +9,7 @@ require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
 $divisions = $leads->getDivisions();
+$status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
 
 require_once( INCLUDES . 'display.php' );
 
@@ -137,6 +138,7 @@ if(isset($_REQUEST['a'])){
 					'tech_phone' => empty( $_REQUEST['tech_phone'] ) ? null : trim( $_REQUEST['tech_phone'] ),
 					'tech_email' => empty( $_REQUEST['tech_email'] ) ? null : trim( $_REQUEST['tech_email'] ),
 					'accountManager' => empty( $_REQUEST['accountManager'] ) ? null : $_REQUEST['accountManager'],
+					'status' => empty( $_REQUEST['status'] ) ? null : $_REQUEST['status'],
 				) );
 
 				if($alterCompanyResult === false){
@@ -390,6 +392,18 @@ if(isset($_REQUEST['d'])){
 					'value' => $company->name,
 				),
 				array(
+					'id' => 'status',
+					'label' => 'Status',
+					'type' => 'select',
+					'choices' => array(
+						'active' => 'Active',
+						'hidden' => 'Hidden',
+						'retired' => 'Retired',
+					),
+					'required' => true,
+					'value' => $company->status,
+				),
+				array(
 					'id' => 'address',
 					'label' => 'Address',
 					'type' => 'text',
@@ -613,10 +627,19 @@ include(INCLUDES."c_header.php");
 
 <h2>Companies</h2>
 
+<form class="pull-right" id="status-select" method="get">
+<select id="status" name="status">
+	<option value="active"<?php if( 'active' === $status ) { print ' selected="selected"'; } ?>>Show active companies</option>
+	<option value="hidden"<?php if( 'hidden' === $status ) { print ' selected="selected"'; } ?>>Show hidden companies</option>
+	<option value="retired"<?php if( 'retired' === $status ) { print ' selected="selected"'; } ?>>Show retired companies</option>
+	<option value=""<?php if( null === $status ) { print ' selected="selected"'; } ?>>Show all companies</option>
+</select>
+</form>
+
 <p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newcompany">Add a new company</button></p>
 
 <?php
-	$companies = $leads->getCompanies();
+	$companies = $leads->getCompanies( $status );
 	if( empty( $companies ) ) {
 
 		print '<p>No companies exist in the database.</p>';
@@ -760,6 +783,11 @@ $('#editcompany').on('show.bs.modal', function(e) {
 
 $('#newcompany, #editcompany').on('hide.bs.modal', function(e) {
 	$(this).find('.modal-body').html('');
+});
+
+$('#status-select select').change(function(e) {
+	e.preventDefault();
+	$('#status-select').submit();
 });
 </script>
 

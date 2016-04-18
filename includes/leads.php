@@ -500,12 +500,17 @@ class Leads
 		return $results;
 	}
 
-	public function getCompanies( ) {
+	public function getCompanies( $status = null ) {
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT * FROM companies ORDER BY name" );
-			$query->execute( );
+			if( !empty( $status ) ) {
+				$query = $this->db->prepare( "SELECT * FROM companies WHERE status = ? ORDER BY name" );
+				$query->execute( array( $status ) );
+			} else {
+				$query = $this->db->prepare( "SELECT * FROM companies ORDER BY name" );
+				$query->execute( );
+			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get company list: ' . $e->getMessage() );

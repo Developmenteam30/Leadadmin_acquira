@@ -5,7 +5,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 
 	$nav = array(
 		array( 'name' => 'Dashboard', 'url' => '/leadadmin/dashboard.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
-		array( 'name' => 'Companies', 'url' => '/leadadmin/companies.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+		array( 'name' => 'Companies', 'url' => '/leadadmin/companies.php?status=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Incoming Feeds', 'url' => '/leadadmin/mgr_feedinc.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Outgoing Feeds', 'url' => '/leadadmin/mgr_feedout.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Suppressions', 'url' => '/leadadmin/mgr_suppress.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
