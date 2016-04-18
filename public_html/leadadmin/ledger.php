@@ -477,6 +477,26 @@ $('#editledger input[name=paymentDate]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
+
+$("#editledger select[name='divisionId']").select2({
+	placeholder: "Select a division",
+	allowClear: true
+});
+
+$("#editledger select[name='companyId']").select2({
+	placeholder: "Select a company",
+	allowClear: true
+});
+
+$("#editledger select[name='verticalId']").select2({
+	placeholder: "Select a vertical",
+	allowClear: true
+});
+
+$("#editledger select[name='userId']").select2({
+	placeholder: "Select a salesperson",
+	allowClear: true
+});
 </script>
 
 <?php
