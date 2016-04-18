@@ -29,6 +29,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		array( 'name' => 'Admin', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
 			array( 'name' => 'URL Search', 'url' => '/leadadmin/url-search.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'Email Search', 'url' => '/leadadmin/email-search.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+			array( 'name' => 'Verticals', 'url' => '/leadadmin/verticals.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'Audit Log', 'url' => '/leadadmin/audit-log.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'User Management', 'url' => '/leadadmin/mgr_users.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
