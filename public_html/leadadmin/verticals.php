@@ -13,6 +13,8 @@ $divisions = $leads->getDivisions();
 require_once( INCLUDES . 'display.php' );
 
 if(isset($_REQUEST['a'])){
+	Header( 'Content-Type: application/json' );
+
 	$result = array(
 		'status' => 0,
 		'error' => 'Action does not exist.',
@@ -47,6 +49,8 @@ if(isset($_REQUEST['a'])){
 				if( null === $verticalId ) {
 					$c = false;
 					$result['error'] = $newverticalResult['error'];
+				} else {
+					$leads->auditLog( 'VERTICALS:ADD', $verticalId );
 				}
 			}
 
@@ -80,6 +84,8 @@ if(isset($_REQUEST['a'])){
 				if($alterVerticalResult === false){
 					$c = false;
 					$result['error'] = 'Database failure, could not alter vertical.';
+				} else {
+					$leads->auditLog( 'VERTICALS:EDIT', $_REQUEST['verticalId'] );
 				}
 			}
 
@@ -281,16 +287,11 @@ $('#modal-save-newvertical').click( function(event) {
 		type: "POST",
 		async: true,
 		data: $("#new_vertical").serialize()
-	}).done(function(responseText){
-		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-		if(result===null) { alert("JSON Failed: "+responseText); return false; }
+	}).done(function(result){
 		if(result.status == 1){
-			$('#newvertical').modal('toggle');
-			$('#new_vertical').trigger('reset');
 			window.location.reload(true);
 		} else {
 			alert(result.error);
-			display('dialog_newvertical', { 'name': name, 'note' : note } );
 		}
 	});
 });
@@ -319,11 +320,8 @@ $('#modal-save-editvertical').click(function(event) {
 		type: "POST",
 		async: true,
 		data: $("#edit_vertical").serialize()
-	}).done(function(responseText){
-		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-		if(result===null) { alert("JSON Failed: "+responseText); return false; }
+	}).done(function(result){
 		if(result.status == 1){
-			$('#editvertical').modal('toggle');
 			window.location.reload(true);
 		} else {
 			alert(result.error);

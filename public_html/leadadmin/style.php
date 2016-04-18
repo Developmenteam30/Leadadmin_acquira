@@ -534,14 +534,14 @@ table.TF th,
 
 .form-input label {
 	display: inline-block;
-	width: 125px;
+	width: 150px;
 	text-align: right;
 	margin: 5px 10px;
 	vertical-align: top;
 }
 
 .form-input textarea {
-	width: 400px !important;
+	width: 375px !important;
 	height: 75px !important;
 }
 
@@ -550,8 +550,10 @@ table.TF th,
 	font-family: Verdana, Helvetica, sans-serif;
 }
 
+.form-input input[type='email'],
+.form-input input[type='url'],
 .form-input input[type='text'] {
-	width: 400px;
+	width: 375px;
 }
 
 .form-input input[type="submit"] {

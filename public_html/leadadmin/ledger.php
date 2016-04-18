@@ -25,6 +25,8 @@ while( $date->format( 'Ym' ) >= '201601' ) {
 }
 
 if(isset($_REQUEST['a'])){
+	Header( 'Content-Type: application/json' );
+
 	$result = array(
 		'status' => 0
 		, 'error' => 'Action does not exist.'
@@ -683,15 +685,11 @@ $('#modal-save-newledger').click( function(event) {
 		type: "POST",
 		async: true,
 		data: $("#new_ledger").serialize()
-	}).done(function(responseText){
-		var result = $.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-		if(result===null) { alert("JSON Failed: "+responseText); return false; }
+	}).done(function(result){
 		if(result.status == 1){
-			//$('#newledger').modal('toggle');
 			window.location.reload(true);
 		} else {
 			alert(result.error);
-			display('dialog_newledger', { 'name': name, 'note' : note } );
 		}
 	});
 });
@@ -722,11 +720,8 @@ $('#modal-save-editledger').click(function(event) {
 		type: "POST",
 		async: true,
 		data: $("#edit_ledger").serialize()
-	}).done(function(responseText){
-		var result = $.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-		if(result===null) { alert("JSON Failed: "+responseText); return false; }
+	}).done(function(result){
 		if(result.status == 1){
-			//$('#editcompany').modal('toggle');
 			window.location.reload(true);
 		} else {
 			alert(result.error);

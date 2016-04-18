@@ -22,7 +22,8 @@ if( isset( $_REQUEST['d'] ) ) {
 		break;
 
 		case 'dialog_search_email_results':
-			$email = $_REQUEST['options']['email'];
+			$email = !empty( $_REQUEST['options']['email'] ) ? $_REQUEST['options']['email'] : '';
+			$leads->auditLog( 'SEARCH:EMAIL', $email );
 ?>
 <p>Searching incoming feeds for <strong><?php echo htmlspecialchars( $email ); ?></strong> ...</p>
 

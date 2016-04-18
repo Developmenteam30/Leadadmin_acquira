@@ -13,6 +13,8 @@ $divisions = $leads->getDivisions();
 require_once( INCLUDES . 'display.php' );
 
 if(isset($_REQUEST['a'])){
+	Header( 'Content-Type: application/json' );
+
 	$result = array(
 		'status' => 0,
 		'error' => 'Action does not exist.',
@@ -32,6 +34,26 @@ if(isset($_REQUEST['a'])){
 					$c = false;
 					$result['error'] = 'That company name already exists in the database.';
 				}
+			}
+
+			if( $c && !empty( $_REQUEST['main_email'] ) && !filter_var( $_REQUEST['main_email'], FILTER_VALIDATE_EMAIL ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a valid email address for the Main Contact.';
+			}
+
+			if( $c && !empty( $_REQUEST['returns_email'] ) && !filter_var( $_REQUEST['returns_email'], FILTER_VALIDATE_EMAIL ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a valid email address for the Returns Contact.';
+			}
+
+			if( $c && !empty( $_REQUEST['acct_email'] ) && !filter_var( $_REQUEST['acct_email'], FILTER_VALIDATE_EMAIL ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a valid email address for the Accounting Contact.';
+			}
+
+			if( $c && !empty( $_REQUEST['tech_email'] ) && !filter_var( $_REQUEST['tech_email'], FILTER_VALIDATE_EMAIL ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a valid email address for the Technical Contact.';
 			}
 
 			if($c){
@@ -61,6 +83,7 @@ if(isset($_REQUEST['a'])){
 					$c = false;
 					$result['error'] = $newCompanyResult['error'];
 				} else {
+					$leads->auditLog( 'COMPANIES:ADD', $idCompany );
 					$leads->clearCompanyDivisions( $idCompany );
 					if( !empty( $_REQUEST['divisions'] ) && is_array( $_REQUEST['divisions'] ) ) {
 						foreach( $_REQUEST['divisions'] as $division ) {
@@ -120,6 +143,7 @@ if(isset($_REQUEST['a'])){
 					$c = false;
 					$result['error'] = 'Database failure, could not alter company.';
 				} else {
+					$leads->auditLog( 'COMPANIES:EDIT', $_REQUEST['idCompany'] );
 					$leads->clearCompanyDivisions( $_REQUEST['idCompany'] );
 					if( !empty( $_REQUEST['divisions'] ) && is_array( $_REQUEST['divisions'] ) ) {
 						foreach( $_REQUEST['divisions'] as $division ) {
@@ -673,16 +697,12 @@ $('#modal-save-newcompany').click( function(event) {
 		type: "POST",
 		async: true,
 		data: $("#new_company").serialize()
-	}).done(function(responseText){
-		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-		if(result===null) { alert("JSON Failed: "+responseText); return false; }
+	}).done(function(result){
+console.log(result);
 		if(result.status == 1){
-			$('#newcompany').modal('toggle');
-			$('#new_company').trigger('reset');
 			window.location.reload(true);
 		} else {
 			alert(result.error);
-			display('dialog_newcompany', { 'name': name, 'note' : note } );
 		}
 	});
 });
@@ -711,11 +731,8 @@ $('#modal-save-editcompany').click(function(event) {
 		type: "POST",
 		async: true,
 		data: $("#edit_company").serialize()
-	}).done(function(responseText){
-		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-		if(result===null) { alert("JSON Failed: "+responseText); return false; }
+	}).done(function(result){
 		if(result.status == 1){
-			$('#editcompany').modal('toggle');
 			window.location.reload(true);
 		} else {
 			alert(result.error);

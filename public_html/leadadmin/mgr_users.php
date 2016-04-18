@@ -21,6 +21,11 @@ if(isset($_REQUEST['a'])){
 		case "addNewUser":
 			$result['error'] = 'Failed when trying to add a new user';
 
+			if( empty( $_REQUEST['username'] ) ) {
+				$result['error'] = 'The username field cannot be blank.';
+				break;
+			}
+
 			if( !ctype_alnum( $_REQUEST['username'] ) ) {
 				$result['error'] = 'The username may only contain alphanumeric characters.';
 				break;
@@ -159,6 +164,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'label' => 'Password (8 chars)',
 					'type' => 'text',
 					'value' => substr( base64_encode(mcrypt_create_iv(64, MCRYPT_DEV_URANDOM ) ), 0, 12 ),
+					'required' => true,
 				),
 				array(
 					'id' => 'fullName',
@@ -185,48 +191,18 @@ if( isset( $_REQUEST['d'] ) ) {
 					'choices' => $companyChoices,
 				),
 				array(
-					'id' => 'submit',
-					'type' => 'submit',
-					'label' => 'Add new user',
+					'id' => 'a',
+					'type' => 'hidden',
+					'value' => 'addNewUser',
 				),
 			);
 
-			Display::displayForm( 'new_user', $fields, 'Add a New User' );
-?>
+			Display::displayForm( 'new_user', $fields );
 
-<script type="text/javascript">
-$('#new_user').submit( function(event) {
-	event.preventDefault();
-
-	var response = $.ajax({
-		url: "mgr_users.php",
-		type: "POST",
-		async: true,
-		data: ({
-			"a" : "addNewUser",
-			"username": $("#new_user #username").val(),
-			"password": $("#new_user #password").val(),
-			"fullName": $("#new_user #fullName").val(),
-			"level": $("#new_user #level").val(),
-			"idCompany": $("#new_user #idCompany").val(),
-		}),
-		success: function(data) {
-			if (data.status == "1") {
-				closeContent('dialog_newuser');
-				display('dialog_users');
-			} else {
-				alert(data.error);
-			}
-		}
-	});
-});
-</script>
-
-<?php
 		break;
 
 		case "dialog_edituser":
-			$idUser = $_REQUEST['options']['idUser'];
+			$idUser = $_REQUEST['userId'];
 			$user = $leads->getUser( $idUser );
 			if( empty( $user ) ) {
 ?>
@@ -241,6 +217,12 @@ $('#new_user').submit( function(event) {
 			}
 
 			$fields = array(
+				array(
+					'id' => 'username',
+					'type' => '_text',
+					'label' => 'Username',
+					'value' => $user->username,
+				),
 				array(
 					'id' => 'idUser',
 					'type' => 'hidden',
@@ -279,45 +261,14 @@ $('#new_user').submit( function(event) {
 					'value' => $user->idCompany,
 				),
 				array(
-					'id' => 'submit',
-					'type' => 'submit',
-					'label' => 'Edit user',
+					'id' => 'a',
+					'type' => 'hidden',
+					'value' => 'editUser',
 				),
 			);
 
-			Display::displayForm( 'edit_user', $fields, 'Edit User: ' . $user->username );
-?>
+			Display::displayForm( 'edit_user', $fields );
 
-<script type="text/javascript">
-$('#edit_user').submit( function(event) {
-	event.preventDefault();
-
-	var response = $.ajax({
-		url: "mgr_users.php",
-		type: "POST",
-		async: true,
-		data: ({
-			"a" : "editUser",
-			"idUser": $("#edit_user #idUser").val(),
-			"username": $("#edit_user #username").val(),
-			"password": $("#edit_user #password").val(),
-			"fullName": $("#edit_user #fullName").val(),
-			"level": $("#edit_user #level").val(),
-			"idCompany": $("#edit_user #idCompany").val(),
-		}),
-		success: function(data) {
-			if (data.status == "1") {
-				closeContent('dialog_edituser');
-				display('dialog_users');
-			} else {
-				alert(data.error);
-			}
-		}
-	});
-});
-</script>
-
-<?php
 		}
 		break;
 
@@ -338,9 +289,8 @@ include(INCLUDES."c_header.php");
 
 <h2>User Management</h2>
 
-<p><a href="#" class="btn btn-primary" onclick="display('dialog_newuser');">Add a New User</a></p>
-<div class="hidden-custom" id="dialog_newuser"></div>
-<div class="hidden-custom" id="dialog_edituser"></div>
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newuser">Add a new user</button></p>
+
 <?php
 	$users = $leads->getUsers();
 	if( empty( $users ) || !is_array( $users ) ) {
@@ -354,6 +304,7 @@ include(INCLUDES."c_header.php");
 					<th>Full Name</th>
 					<th>Access Level</th>
 					<th>Company Id</th>
+					<th>Options</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -380,10 +331,11 @@ include(INCLUDES."c_header.php");
 
 ?>
 				<tr>
-					<td><a href="#" class="nonLink" onclick="display('dialog_edituser', { 'idUser': <?php echo $user->idUser; ?> } );"><?php echo $user->username; ?></a></td>
+					<td><?php echo htmlentities( $user->username ); ?></td>
 					<td><?php echo htmlentities( $user->fullName ); ?></td>
 					<td><?php echo $level; ?></td>
 					<td><?php echo $user->idCompany; ?></td>
+					<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#edituser" data-user-id="<?php echo $user->idUser; ?>">Edit</button></td>
 				</tr>
 <?php
 		}
@@ -391,6 +343,113 @@ include(INCLUDES."c_header.php");
 ?>
 
 </div>
+
+<div class="modal fade" id="newuser" tabindex="-1" role="dialog" aria-labelledby="newuser_title">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="newuser_title">Add a new user</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-newuser" type="button" class="btn btn-primary">Add User</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="edituser" tabindex="-1" role="dialog" aria-labelledby="edituser_title">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="edituser_title">Edit a user</h4>
+			</div>
+			<div class="modal-body"></div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-edituser" type="button" class="btn btn-primary">Save changes</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+$('#modal-save-newuser').click( function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "mgr_users.php",
+		type: "POST",
+		async: true,
+		data: $("#new_user").serialize()
+	}).done(function(result){
+		if(result.status == 1){
+			window.location.reload(true);
+		} else {
+			alert(result.error);
+		}
+	});
+});
+
+$('#newuser').on('show.bs.modal', function(e) {
+	var modal = $(this);
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_users.php',
+		data: {
+			'd': 'dialog_newuser'
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-save-edituser').click(function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "mgr_users.php",
+		type: "POST",
+		async: true,
+		data: $("#edit_user").serialize()
+	}).done(function(result){
+		if(result.status == 1){
+			window.location.reload(true);
+		} else {
+			alert(result.error);
+		}
+	});
+});
+
+$('#edituser').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var userId = $(e.relatedTarget).data('user-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_users.php',
+		data: {
+			'd': 'dialog_edituser',
+			'userId': userId
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#newuser, #edituser').on('hide.bs.modal', function(e) {
+	$(this).find('.modal-body').html('');
+});
+</script>
 
 </body>
 </html>

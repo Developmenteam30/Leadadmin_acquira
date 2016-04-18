@@ -22,7 +22,8 @@ if( isset( $_REQUEST['d'] ) ) {
 		break;
 
 		case 'dialog_search_url_results':
-			$url = $_REQUEST['options']['url'];
+			$url = !empty( $_REQUEST['options']['url'] ) ? $_REQUEST['options']['url'] : '';
+			$leads->auditLog( 'SEARCH:URL', $url );
 ?>
 <p>Searching incoming feeds for <strong><?php echo htmlspecialchars( $url ); ?></strong> ...</p>
 <?php
@@ -113,7 +114,7 @@ include(INCLUDES."c_header.php");
 
 <h2>URL Search</h2>
 
-<p class="form-inline">URL: <input class="form-control input-long" type="text" name="search_email" id="search_url" value="" /> <input class="btn btn-primary" type="button" value="Search" onclick="display( 'dialog_search_url_results', { 'url': $('#search_url').val() });" /></p>
+<p class="form-inline">URL: <input class="form-control input-long" type="text" name="search_email" id="search_url" required="required" value="" /> <input class="btn btn-primary" type="button" value="Search" onclick="display( 'dialog_search_url_results', { 'url': $('#search_url').val() });" /></p>
 
 <div class="hidden-custom" id="dialog_search_url_results"></div>
 
