@@ -79,13 +79,13 @@ include(INCLUDES."c_header.php");
 				}
 			}
 ?>
+	</tbody>
 	<tfoot>
 		<tr>
 			<td colspan="6">Totals</td>
 			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>
-	</tbody>
 </table>
 <?php
 		}

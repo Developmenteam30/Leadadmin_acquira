@@ -61,7 +61,7 @@ include(INCLUDES."c_header.php");
 				foreach( $months as $month => $val ) {
 
 ?>
-<table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">>
+<table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
 			<th>Date</th>
@@ -93,6 +93,7 @@ include(INCLUDES."c_header.php");
 						}
 					}
 ?>
+	</tbody>
 	<tfoot>
 		<tr class="bgGray header">
 			<td colspan="4">Totals</td>
@@ -100,7 +101,6 @@ include(INCLUDES."c_header.php");
 			<td class="text-right">$<?php echo number_format( $commissionTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>
-	</tbody>
 </table>
 <?php
 				}
