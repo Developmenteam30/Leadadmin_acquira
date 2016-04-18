@@ -425,7 +425,7 @@ class Leads
 	public function getIncomeLedger( $userId = null ) {
 		$results = array();
 
-		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.fullName ";
+		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.fullName,u.idUser ";
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
 		$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";

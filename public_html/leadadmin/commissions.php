@@ -51,8 +51,17 @@ include(INCLUDES."c_header.php");
 <p>No ledger entries exist in the database.</p>
 <?php
 			} else {
+
+				$months = array();
+				foreach( $entries as $entry ) {
+					$month = substr( $entry->paymentDate, 0, 7 );
+					$months[$month] = true;
+				}
+
+				foreach( $months as $month => $val ) {
+
 ?>
-<table class="table table-bordered table-condensed table-striped">
+<table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">>
 	<thead>
 		<tr class="bgGray header">
 			<th>Date</th>
@@ -65,7 +74,12 @@ include(INCLUDES."c_header.php");
 	</thead>
 	<tbody>
 <?php
-				foreach( $entries as $entry ) {
+					$paymentTotal = 0;
+					$commissionTotal = 0;
+					foreach( $entries as $entry ) {
+						if( substr( $entry->paymentDate, 0, 7 ) == $month ) {
+							$paymentTotal += $entry->paymentAmount;
+							$commissionTotal += $entry->commissionAmount;
 ?>
 		<tr>
 			<td><?php echo $entry->paymentDate; ?></td>
@@ -76,17 +90,46 @@ include(INCLUDES."c_header.php");
 			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
 		</tr>
 <?php
-				}
+						}
+					}
 ?>
+	<tfoot>
+		<tr class="bgGray header">
+			<td colspan="4">Totals</td>
+			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+			<td class="text-right">$<?php echo number_format( $commissionTotal, 2 ); ?></td>
+		</tr>
+	</tfoot>
 	</tbody>
 </table>
 <?php
+				}
 			}
 		}
 	}
 ?>
 
 </div>
+
+<script type="text/javascript">
+$( "table" ).each(function( index ) {
+	var tf = new TableFilter($(this).attr('id'), {
+		base_path: '/leadadmin/libraries/tablefilter/',
+		grid: false,
+		filters_row_index: 1,
+		extensions: [{
+			name: 'sort',
+			types: [
+				'ymddate', 'String', 'String', 'String', 'us', 'us'
+			],
+			image_asc_class_name: 'custom-ascending',
+			image_desc_class_name: 'custom-descending'
+		}],
+		sort: true
+	});
+	tf.init();
+});
+</script>
 
 </body>
 </html>
