@@ -40,17 +40,17 @@ if( isset( $_REQUEST['d'] ) ) {
 			$mappings = $leads->getRevenueInboundClientMonthMappings( $idCompany );
 			if( $mappings ) {
 				$colspan = 1;
-				print "<table id=\"revenue_report\" class=\"standard revenue-report\">\n";
+				print "<table id=\"revenue_report\" class=\"table table-bordered table-condensed table-striped revenue-report\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
 				if( empty( $idCompany ) ) {
-					print "\t\t<td>Company</td>\n";
+					print "\t\t<th>Company</th>\n";
 					$colspan++;
 				}
-				print "\t\t<td>Month</td>\n";
-				print "\t\t<td>Gross Revenue</td>\n";
-				print "\t\t<td>Partner Revenue</td>\n";
-				print "\t\t<td>Invoice Paid</td>\n";
+				print "\t\t<th>Month</th>\n";
+				print "\t\t<th>Gross Revenue</th>\n";
+				print "\t\t<th>Partner Revenue</th>\n";
+				print "\t\t<th>Invoice Paid</th>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
@@ -119,7 +119,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 		case 'dialog_revenue_listowners_detail':
 ?>
-<div class="fr">
+<div class="pull-right">
     <a class="nonLink" onclick="closeContent('dialog_revenue_listowners_detail', { 'sub': '<?php echo intval( $_REQUEST['options']['sub'] ); ?>' } );">Close [X]</a>
 </div>
 <!--<h2>Report Date: <?php echo date( 'Y F', strtotime( $reportDate . "01" ) ); ?></h2>-->
@@ -168,15 +168,15 @@ if( isset( $_REQUEST['d'] ) ) {
 			$gross = $partner = 0;
 			$mappings = $leads->getRevenueInboundClientMappings( $reportDate, $idCompany, $idFeedIn, $urlFilter );
 			if( $mappings ) {
-				print "<table id=\"revenue_report\" class=\"standard revenue-report\">\n";
+				print "<table id=\"revenue_report\" class=\"table table-bordered table-condensed table-striped revenue-report\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
-				print "\t\t<td>Feed Name</td>\n";
-				print "\t\t<td>URL</td>\n";
-				print "\t\t<td>First Seen</td>\n";
-				print "\t\t<td>Last Seen</td>\n";
-				print "\t\t<td>Gross Revenue</td>\n";
-				print "\t\t<td>Partner Revenue</td>\n";
+				print "\t\t<th>Feed Name</th>\n";
+				print "\t\t<th>URL</th>\n";
+				print "\t\t<th>First Seen</th>\n";
+				print "\t\t<th>Last Seen</th>\n";
+				print "\t\t<th>Gross Revenue</th>\n";
+				print "\t\t<th>Partner Revenue</th>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
@@ -305,15 +305,15 @@ $(document).ready(function(){
 <?php
 			$mappings = $leads->getRevenueOutboundMappings( $reportDate, $idCompany, $idFeedOut, $urlFilter );
 			if( $mappings ) {
-				print "<table id=\"revenue_report\" class=\"standard\">\n";
+				print "<table id=\"revenue_report\" class=\"table table-bordered table-condensed table-striped\">\n";
 				print "\t<thead>\n";
 				print "\t<tr class=\"bgGray\">\n";
-				print "\t\t<td>Outgoing Company</td>\n";
-				print "\t\t<td>Outgoing Feed</td>\n";
-				print "\t\t<td>Outgoing URL</td>\n";
-				print "\t\t<td>First Lead</td>\n";
-				print "\t\t<td>Last Lead</td>\n";
-				print "\t\t<td>Amount</td>\n";
+				print "\t\t<th>Outgoing Company</th>\n";
+				print "\t\t<th>Outgoing Feed</th>\n";
+				print "\t\t<th>Outgoing URL</th>\n";
+				print "\t\t<th>First Lead</th>\n";
+				print "\t\t<th>Last Lead</th>\n";
+				print "\t\t<th>Amount</th>\n";
 				print "\t</tr>\n";
 				print "\t</thead>\n";
 				print "\t<tbody>\n";
@@ -369,7 +369,8 @@ $(document).ready(function(){
 	display('dialog_revenue_listowners');
 });
 </script>
-<div class="mainContainer client">
+
+<div class="container-fluid client">
 	<?php include(INCLUDES.'c_nav_client.php'); ?>
 	<div class="content">
 		<p class="payment">Please send all invoices to <a href="mailto:<?php echo PAYMENT_EMAIL;?>"><?php echo PAYMENT_EMAIL; ?></a> to ensure prompt payment.</p>

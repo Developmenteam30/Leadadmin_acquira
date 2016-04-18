@@ -111,6 +111,8 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
+<h2>URL Search</h2>
+
 <p class="form-inline">URL: <input class="form-control input-long" type="text" name="search_email" id="search_url" value="" /> <input class="btn btn-primary" type="button" value="Search" onclick="display( 'dialog_search_url_results', { 'url': $('#search_url').val() });" /></p>
 
 <div class="hidden-custom" id="dialog_search_url_results"></div>

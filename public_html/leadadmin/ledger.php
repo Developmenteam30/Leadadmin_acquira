@@ -461,7 +461,7 @@ include(INCLUDES."c_header.php");
 
 <h2><?php echo ( $type == 0 ? 'Publisher' : 'Advertiser' ) . ' - ' . $leads->getDivisionName( $divisionId ); ?></h2>
 
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newledger">Add a new entry</button>
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newledger">Add a new entry</button></p>
 
 <?php
 	$entries = $leads->getLedger( $divisionId, $type );

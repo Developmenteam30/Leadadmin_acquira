@@ -1016,7 +1016,7 @@ if($outgoingFeeds === false){
 ?>
 <div class='w100'>
 <hr />
-<div class='fr'>
+<div class="pull-right">
 	<a href="#" class="btn btn-primary btn-xs" onclick='closeContent("feedout", { "sub": <?php echo $feed->idFeedOut; ?> });'>Close</a>
 </div>
 <p>Feed Details for <?php echo $feed->label; ?> (ID: <?php echo $feed->idFeedOut; ?>)</p>
@@ -1523,7 +1523,7 @@ if($populationSettings === false){
 
 			$feed = $leads->getOutboundFeed( $idFeedOut );
 ?>
-<div class='fr'>
+<div class="pull-right">
 	<a href="#" class="btn btn-primary btn-xs" onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedOut; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedOut; ?>});'>Close</a>
 </div>
 <?php
@@ -2209,7 +2209,7 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 				}
 			}
 ?>
-<div class='fr'>
+<div class="pull-right">
 	<a href='#' class='nonLink' onclick='closeContent("dialog_editpopulation", {"sub":  <?php echo $idFeedOut; ?>} );' >Close [X]</a>
 </div>
 <?php
@@ -2973,15 +2973,19 @@ $(document).ready(function(){
 <?php include(INCLUDES.'c_nav.php'); ?>
 <div class="container-fluid">
 
+<h2>Outgoing Feeds</h2>
+
 		<div id='controls'>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
-			<a href="#" class="btn btn-primary btn-xs" onclick="display('dialog_newfeedout');">Add New Feed</a>
-			<select class="fr" id="status" name="status">
+			<p>
+			<a href="#" class="btn btn-primary" onclick="display('dialog_newfeedout');">Add New Feed</a>
+			<select class="pull-right" id="status" name="status">
 				<option value="active">Show active feeds</option>
 				<option value="hidden">Show hidden feeds</option>
 				<option value="retired">Show retired feeds</option>
 				<option value="">Show all feeds</option>
 			</select>
+			</p>
 <?php } ?>
 		</div>
 		<div id='dialogs'>

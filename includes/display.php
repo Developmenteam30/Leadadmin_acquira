@@ -177,6 +177,22 @@ class Display
 					htmlentities( $field['label'] )
 				);
 
+			} else if( '_html' == $field['type'] ) {
+
+				printf( "\t<label for=\"%s\">%s</label>\n",
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+						htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
+				);
+				printf( "\t<span>%s</span>\n", $field['value'] );
+
+			} else if( '_text' == $field['type'] ) {
+
+				printf( "\t<label for=\"%s\">%s</label>\n",
+						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+						htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
+				);
+				printf( "\t<span>%s</span>\n", htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) );
+
 			}
 
 			printf( "\t</div>\n" );

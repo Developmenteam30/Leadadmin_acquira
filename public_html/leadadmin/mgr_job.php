@@ -252,6 +252,9 @@ $(document).ready(function(){
 <?php include(INCLUDES.'c_nav.php'); ?>
 
 <div class="container-fluid">
+
+<h2>Jobs</h2>
+
 	<div id='displayAllJobs'></div>
 	<div id='displayJob'></div>
 </div>

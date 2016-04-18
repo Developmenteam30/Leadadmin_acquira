@@ -594,6 +594,9 @@ $(document).ready(function(){
 <?php include(INCLUDES.'c_nav.php'); ?>
 
 <div class="container-fluid">
+
+<h2>Suppressions</h2>
+
 	<div id='controls' class='fl50'>
 		<p>
 			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'single' });">Add Single Email</a>

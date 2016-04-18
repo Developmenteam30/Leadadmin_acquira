@@ -322,6 +322,8 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
+<h2>User Management</h2>
+
 <p><a href="#" class="btn btn-primary" onclick="display('dialog_newuser');">Add a New User</a></p>
 <div class="hidden-custom" id="dialog_newuser"></div>
 <div class="hidden-custom" id="dialog_edituser"></div>

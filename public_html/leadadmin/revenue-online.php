@@ -320,14 +320,14 @@ if( isset( $_REQUEST['d'] ) ) {
 
 <?php
 if( !empty( $idCompany ) ) {
-	print '<input class="fr" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
+	print '<input class="pull-right" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
 
 	$reportDateObj = new DateTime( $reportDate . '01' );
 	$reportDateObj->sub( new DateInterval( 'P1M' ) );
 
-	printf( '<input class="fr" type="button" value="Copy values from last month" onclick="copyRevenue( \'%s\', \'%s\', \'%s\' )" />', $reportDateObj->format( 'Ym' ), $reportDate, $idCompany );
+	printf( '<input class="pull-right" type="button" value="Copy values from last month" onclick="copyRevenue( \'%s\', \'%s\', \'%s\' )" />', $reportDateObj->format( 'Ym' ), $reportDate, $idCompany );
 
-	print '<p class="fr">';
+	print '<p class="pull-right">';
 	$invoiceNumber = $leads->getInvoiceNumber( $reportDate, $idCompany );
 	print 'Invoice #<input type="text" value="' . htmlspecialchars( $invoiceNumber, ENT_HTML5 | ENT_NOQUOTES ) . '" id="invoice_number" /> ';
 	print '<input type="checkbox" value="1" id="invoice_email" /> Send Email? ';

@@ -112,7 +112,6 @@ if(isset($_REQUEST['d'])){
                     'required' => true,
                     'placeholder' => 'Select a division',
                     'choices' => $leads->getDivisions(),
-                    'value' => $divisionId,
                 ),
 				array(
 					'id' => 'name',
@@ -127,7 +126,16 @@ if(isset($_REQUEST['d'])){
 			);
 
 			Display::displayForm( 'new_vertical', $fields );
+?>
 
+<script type="text/javascript">
+$("#newvertical select[name='divisionId']").select2({
+	placeholder: "Select a division",
+	allowClear: true
+});
+</script>
+
+<?php
 		break;
 
 		case "dialog_editvertical":
@@ -141,6 +149,12 @@ if(isset($_REQUEST['d'])){
 			} else {
 
 				$fields = array(
+					array(
+						'id' => 'div_display',
+						'label' => 'Division Name',
+						'type' => '_text',
+						'value' => $leads->getDivisionName( $vertical->divisionId ),
+					),
 					array(
 						'id' => 'name',
 						'label' => 'Vertical Name',
@@ -177,7 +191,9 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newvertical">Add a new vertical</button>
+<h2>Vertical Management</h2>
+
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newvertical">Add a new vertical</button></p>
 
 <?php
 	if( empty( $divisions ) ) {
@@ -307,7 +323,7 @@ $('#modal-save-editvertical').click(function(event) {
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
 		if(result===null) { alert("JSON Failed: "+responseText); return false; }
 		if(result.status == 1){
-			$('#editvertical_<?php echo $vertical->verticalId; ?>').modal('toggle');
+			$('#editvertical').modal('toggle');
 			window.location.reload(true);
 		} else {
 			alert(result.error);

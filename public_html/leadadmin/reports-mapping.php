@@ -32,6 +32,8 @@ if( isset( $_REQUEST['d'] ) ) {
 
 <div class="container-fluid">
 
+<h2>Mapping Report</h2>
+
 <?php
 
 	$mappings = $leads->getUrlMappings();

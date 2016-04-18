@@ -516,6 +516,9 @@ $(document).ready(function(){
 <?php include(INCLUDES.'c_nav.php'); ?>
 
 <div class="container-fluid">
+
+<h2>List Owner - Online</h2>
+
 <div class="hidden-custom" id="dialog_revenue_listowners"></div>
 </div>
 

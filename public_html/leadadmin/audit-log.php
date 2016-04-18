@@ -35,6 +35,8 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
+<h2>Audit Log</h2>
+
 <?php
 	$logs = $leads->getAuditLog();
 	if( empty( $logs ) || !is_array( $logs ) ) {

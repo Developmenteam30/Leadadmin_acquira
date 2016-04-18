@@ -447,6 +447,22 @@ td.revenue span:before { content:'$'; }
 td.revenue input { width: 70px; font-size: 1em; }
 tr.subtotal { font-weight: bold; background-color: #dadada !important; }
 
+div.headerRow.client {
+	background-color: #dcdcdc;
+	overflow: auto;
+	margin-bottom: 20px;
+	padding: 10px 40px;
+}
+
+.client div.logoutContainer {
+	margin: 20px 0 0 0;
+	font-size: 1.50em;
+}
+
+h2 {
+	margin-top: 0;
+}
+
 .hidden-custom {
 	display: none;
 }
@@ -570,6 +586,7 @@ table.TF th,
 	background-image: url("/v2/leadadmin/images/upsimple.png");
 }
 
+#newvertical select,
 #editledger select,
 #newledger select {
 	width: 300px;

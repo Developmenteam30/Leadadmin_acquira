@@ -570,7 +570,9 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newcompany">Add a new company</button>
+<h2>Companies</h2>
+
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newcompany">Add a new company</button></p>
 
 <?php
 	$companies = $leads->getCompanies();
@@ -696,7 +698,7 @@ $('#modal-save-editcompany').click(function(event) {
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
 		if(result===null) { alert("JSON Failed: "+responseText); return false; }
 		if(result.status == 1){
-			$('#editcompany_<?php echo $company->idCompany; ?>').modal('toggle');
+			$('#editcompany').modal('toggle');
 			window.location.reload(true);
 		} else {
 			alert(result.error);

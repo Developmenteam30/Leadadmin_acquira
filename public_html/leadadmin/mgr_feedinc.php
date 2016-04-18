@@ -506,7 +506,7 @@ if($incomingFeeds === false){
 			}
 			$companies = $leads->getCompanies();
 ?>
-<div class='fr'>
+<div class="pull-right">
 	<a href='#' class='nonLink' onclick='<?php
 		?>closeContent(<?php
 			?>"dialog_<?php echo $d; ?>feed<?php 
@@ -874,7 +874,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
-<div class='fr'>
+<div class="pull-right">
 	<a href='#' class="btn btn-primary btn-xs" onclick='closeContent("dialog_import", {"sub": <?php echo $idFeedIn; ?>});'>Close [X]</a>
 </div>
 <?php
@@ -955,7 +955,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
-<div class='fr'>
+<div class="pull-right">
 	<a href='#' class="btn btn-primary btn-xs" onclick='closeContent("dialog_export", {"sub": <?php echo $idFeedIn; ?>});' 
 	>Close [X]</a>
 </div>
@@ -1099,7 +1099,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
-<div class='fr'>
+<div class="pull-right">
 	<a href='#' class='nonLink' onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedIn; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedIn; ?>});' 
 	>Close [X]</a>
 </div>
@@ -1723,15 +1723,19 @@ table.feedTable th, table.feedTable td { padding: 3px; }
 
 <div class="container-fluid">
 
+<h2>Incoming Feeds</h2>
+
 		<div id='controls'>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
-			<a href='#' class="btn btn-primary btn-xs" onclick="display('dialog_newfeed');" >Add New Feed</a>
-			<select class="fr" id="status" name="status">
+			<p>
+			<a href='#' class="btn btn-primary" onclick="display('dialog_newfeed');" >Add New Feed</a>
+			<select class="pull-right" id="status" name="status">
 				<option value="active">Show active feeds</option>
 				<option value="hidden">Show hidden feeds</option>
 				<option value="retired">Show retired feeds</option>
 				<option value="">Show all feeds</option>
 			</select>
+			</p>
 <?php } ?>
 		</div>
 		<div id='dialogs'>

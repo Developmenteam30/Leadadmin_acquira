@@ -180,6 +180,8 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
+<h2>Email Search</h2>
+
 <p class="form-inline">Email Address: <input class="form-control input-long" type="text" name="search_email" id="search_email" value="" /> <input type="button" class="btn btn-primary" value="Search" onclick="display( 'dialog_search_email_results', { 'email': $('#search_email').val() });" /></p>
 
 <div class="hidden-custom" id="dialog_search_email_results"></div>
