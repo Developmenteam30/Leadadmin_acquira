@@ -11,6 +11,9 @@ $leads = Leads::getInstance();
 $divisionId = !empty( $_REQUEST['divisionId'] ) ? $_REQUEST['divisionId'] : '';
 $type = !empty( $_REQUEST['type'] ) ? 1 : 0;
 
+// Remove leading and trailing spaces from all values
+$_REQUEST = array_map( 'trim', $_REQUEST );
+
 require_once( INCLUDES . 'display.php' );
 
 $ledgerMonths = array();
@@ -46,18 +49,48 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
-			if( $c && empty( trim( $_REQUEST['invoiceNum'] ) ) ) {
+			if( $c && empty( $_REQUEST['invoiceNum'] ) ) {
 				$result['error'] = 'Invoice number cannot be blank.';
 				$c = false;
 			}
 
-			if( $c && ( empty( $_REQUEST['invoiceAmount'] ) || $_REQUEST['invoiceAmount'] <= 0.00 ) ) {
+			if( $c && empty( $_REQUEST['invoiceAmount'] ) ) {
 				$result['error'] = 'Invoice amount cannot be blank.';
 				$c = false;
 			}
 
-			if( $c && empty( trim( $_REQUEST['ledgerMonth'] ) ) ) {
+			if( $c && is_numeric( $_REQUEST['invoiceAmount'] ) === FALSE ) {
+				$result['error'] = 'Invoice amount must be a numeric value.';
+				$c = false;
+			}
+
+			if( $c && floatval( $_REQUEST['invoiceAmount'] ) < 0 ) {
+				$result['error'] = 'Invoice amount cannot be less than zero.';
+				$c = false;
+			}
+
+			if( $c && empty( $_REQUEST['ledgerMonth'] ) ) {
 				$result['error'] = 'Ledger month cannot be blank.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === FALSE ) {
+				$result['error'] = 'Payment amount must be a numeric value.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['paymentAmount'] ) && floatval( $_REQUEST['paymentAmount'] ) < 0 ) {
+				$result['error'] = 'Payment amount cannot be less than zero.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['commissionAmount'] ) && is_numeric( $_REQUEST['commissionAmount'] ) === FALSE ) {
+				$result['error'] = 'Commission amount must be a numeric value.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['commissionAmount'] ) && floatval( $_REQUEST['commissionAmount'] ) < 0 ) {
+				$result['error'] = 'Commission amount cannot be less than zero.';
 				$c = false;
 			}
 
@@ -110,18 +143,48 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
-			if( $c && empty( trim( $_REQUEST['invoiceNum'] ) ) ) {
+			if( $c && empty( $_REQUEST['invoiceNum'] ) ) {
 				$result['error'] = 'Invoice number cannot be blank.';
 				$c = false;
 			}
 
-			if( $c && ( empty( $_REQUEST['invoiceAmount'] ) || $_REQUEST['invoiceAmount'] <= 0.00 ) ) {
+			if( $c && empty( $_REQUEST['invoiceAmount'] ) ) {
 				$result['error'] = 'Invoice amount cannot be blank.';
 				$c = false;
 			}
 
-			if( $c && empty( trim( $_REQUEST['ledgerMonth'] ) ) ) {
+			if( $c && is_numeric( $_REQUEST['invoiceAmount'] ) === FALSE ) {
+				$result['error'] = 'Invoice amount must be a numeric value.';
+				$c = false;
+			}
+
+			if( $c && floatval( $_REQUEST['invoiceAmount'] ) < 0 ) {
+				$result['error'] = 'Invoice amount cannot be less than zero.';
+				$c = false;
+			}
+
+			if( $c && empty( $_REQUEST['ledgerMonth'] ) ) {
 				$result['error'] = 'Ledger month cannot be blank.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === FALSE ) {
+				$result['error'] = 'Payment amount must be a numeric value.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['paymentAmount'] ) && floatval( $_REQUEST['paymentAmount'] ) < 0 ) {
+				$result['error'] = 'Payment amount cannot be less than zero.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['commissionAmount'] ) && is_numeric( $_REQUEST['commissionAmount'] ) === FALSE ) {
+				$result['error'] = 'Commission amount must be a numeric value.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['commissionAmount'] ) && floatval( $_REQUEST['commissionAmount'] ) < 0 ) {
+				$result['error'] = 'Commission amount cannot be less than zero.';
 				$c = false;
 			}
 
