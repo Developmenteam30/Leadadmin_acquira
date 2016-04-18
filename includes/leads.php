@@ -234,7 +234,7 @@ class Leads
 
 		try {
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-				$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE level >= ? ORDER BY username" );
+				$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE level = ? ORDER BY username" );
 				$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
 			} else {
 				$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE idUser = ?" );
