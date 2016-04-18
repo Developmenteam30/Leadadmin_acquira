@@ -280,7 +280,7 @@ if( isset( $_REQUEST['d'] ) ) {
 ?>
 <script type="text/javascript">
 	var tf = new TableFilter(document.querySelector('#mapping_report'), {
-		base_path: '/leadadmin/js/tablefilter/',
+		base_path: '/leadadmin/libraries/tablefilter/',
 		filters_row_index: 1,
 		sort: true,
 		sort_config: {
@@ -491,7 +491,7 @@ if( !empty( $idCompany ) ) {
 <script type="text/javascript">
 
 var tf = new TableFilter(document.querySelector('#revenue_report'), {
-	base_path: '/leadadmin/js/tablefilter/',
+	base_path: '/leadadmin/libraries/tablefilter/',
 	grid: false,
 	filters_row_index: 1,
 	extensions: [{
@@ -736,7 +736,7 @@ function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
 <script type="text/javascript">
 
 var tf = new TableFilter(document.querySelector('#revenue_report'), {
-	base_path: '/leadadmin/js/tablefilter/',
+	base_path: '/leadadmin/libraries/tablefilter/',
 	grid: false,
 	filters_row_index: 1,
 	extensions: [{
@@ -1063,7 +1063,7 @@ $(document).ready(function(){
 <div class="hidden" id="dialog_search_url_results"></div>
 </div>
 
-<script src="/leadadmin/js/calx-1.1.4/jquery-calx-1.1.4.min.js" type="text/javascript"></script>
-<script src="/leadadmin/js/tablefilter/tablefilter.js" type="text/javascript"></script>
+<script src="/leadadmin/libraries/calx-1.1.4/jquery-calx-1.1.4.min.js" type="text/javascript"></script>
+<script src="/leadadmin/libraries/tablefilter/tablefilter.js" type="text/javascript"></script>
 </body>
 </html>
