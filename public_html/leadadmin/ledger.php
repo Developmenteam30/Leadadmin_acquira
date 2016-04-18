@@ -56,8 +56,8 @@ if(isset($_REQUEST['a'])){
 			if( $c ) {
 
 				$ledgerId = $leads->addLedger( array(
-					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'divisionId' => $divisionId,
+					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
 					'paymentDate' => empty( $_REQUEST['paymentDate'] ) ? null : $_REQUEST['paymentDate'],
 					'ledgerMonth' => empty( $_REQUEST['ledgerMonth'] ) ? null : $_REQUEST['ledgerMonth'],
@@ -85,6 +85,10 @@ if(isset($_REQUEST['a'])){
 			$c = true;
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
 
+			if( $c && empty( $_REQUEST['divisionId'] ) ) {
+				$result['error'] = 'Please select a division from the list.';
+				$c = false;
+			}
 			if( $c && empty( $_REQUEST['companyId'] ) ) {
 				$result['error'] = 'Please select a company from the list.';
 				$c = false;
@@ -113,6 +117,7 @@ if(isset($_REQUEST['a'])){
 			if( $c ) {
 
 				$ledgerId = $leads->updateLedger( $_REQUEST['ledgerId'], array(
+					'divisionId' => $divisionId,
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
 					'paymentDate' => empty( $_REQUEST['paymentDate'] ) ? null : $_REQUEST['paymentDate'],
@@ -351,6 +356,15 @@ $("#newledger select[name='divisionId']").change( function() {
 			} else {
 
 				$fields = array(
+					array(
+						'id' => 'divisionId',
+						'label' => 'Division',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a division',
+						'choices' => $leads->getDivisions(),
+						'value' => $entry->divisionId,
+					),
 					array(
 						'id' => 'companyId',
 						'label' => 'Company',
