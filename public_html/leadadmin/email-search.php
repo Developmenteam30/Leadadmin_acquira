@@ -25,6 +25,12 @@ if( isset( $_REQUEST['d'] ) ) {
 			$email = $_REQUEST['options']['email'];
 ?>
 <p>Searching incoming feeds for <strong><?php echo htmlspecialchars( $email ); ?></strong> ...</p>
+
+<?php
+		$records = $leads->inboundEmailSearch( $email );
+		if( is_array( $records ) && sizeOf( $records ) > 0 ) {
+?>
+
 <table class="table table-striped table-bordered table-condensed">
 	<thead>
 		<tr>
@@ -51,9 +57,8 @@ if( isset( $_REQUEST['d'] ) ) {
 		</tr>
 	</thead>
 	<tbody>
+
 <?php
-		$records = $leads->inboundEmailSearch( $email );
-		if( is_array( $records ) ) {
 			foreach( $records as $record ) {
 ?>
 	<tr>
@@ -80,13 +85,24 @@ if( isset( $_REQUEST['d'] ) ) {
 	</tr>
 <?php
 			}
-
-		}
 ?>
+
 	</tbody>
 </table>
 
+<?php
+		} else {
+			print '<p>No records found.</p>' . PHP_EOL;
+		}
+?>
+
 <p>Searching outgoing feeds for <strong><?php echo htmlspecialchars( $email ); ?></strong> ...</p>
+
+<?php
+		$records = $leads->outboundEmailSearch( $email );
+		if( is_array( $records ) && sizeOf( $records ) > 0 ) {
+?>
+
 <table class="table table-striped table-bordered table-condensed">
 	<thead>
 		<tr>
@@ -113,9 +129,8 @@ if( isset( $_REQUEST['d'] ) ) {
 		</tr>
 	</thead>
 	<tbody>
+
 <?php
-		$records = $leads->outboundEmailSearch( $email );
-		if( is_array( $records ) ) {
 			foreach( $records as $record ) {
 ?>
 	<tr>
@@ -142,11 +157,14 @@ if( isset( $_REQUEST['d'] ) ) {
 	</tr>
 <?php
 			}
-		}
 ?>
 	</tbody>
 </table>
 <?php
+
+		} else {
+			print '<p>No records found.</p>' . PHP_EOL;
+		}
 		break;
 
 	}
@@ -162,7 +180,7 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
-<p>Email Address: <input type="text" name="search_email" id="search_email" value="" /> <input type="button" class="btn btn-primary" value="Search" onclick="display( 'dialog_search_email_results', { 'email': $('#search_email').val() });" /></p>
+<p class="form-inline">Email Address: <input class="form-control input-long" type="text" name="search_email" id="search_email" value="" /> <input type="button" class="btn btn-primary" value="Search" onclick="display( 'dialog_search_email_results', { 'email': $('#search_email').val() });" /></p>
 
 <div class="hidden-custom" id="dialog_search_email_results"></div>
 

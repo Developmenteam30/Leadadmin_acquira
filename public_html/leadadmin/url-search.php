@@ -25,6 +25,11 @@ if( isset( $_REQUEST['d'] ) ) {
 			$url = $_REQUEST['options']['url'];
 ?>
 <p>Searching incoming feeds for <strong><?php echo htmlspecialchars( $url ); ?></strong> ...</p>
+<?php
+			$records = $leads->inboundURLSearch( $url );
+			if( is_array( $records ) && sizeOf( $records ) > 0 ) {
+?>
+
 <table class="table table-striped table-bordered table-condensed">
 	<thead>
 		<tr>
@@ -34,9 +39,8 @@ if( isset( $_REQUEST['d'] ) ) {
 		</tr>
 	</thead>
 	<tbody>
+
 <?php
-			$records = $leads->inboundURLSearch( $url );
-			if( is_array( $records ) ) {
 				foreach( $records as $record ) {
 					if( $record['cnt'] > 0 ) {
 ?>
@@ -48,13 +52,22 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php
 					}
 				}
-
-			}
 ?>
+
 	</tbody>
 </table>
 
+<?php
+			} else {
+				print '<p>No records found.</p>' . PHP_EOL;
+			}
+?>
+
 <p>Searching outgoing feeds for <strong><?php echo htmlspecialchars( $url ); ?></strong> ...</p>
+<?php
+			$records = $leads->outboundURLSearch( $url );
+			if( is_array( $records ) && sizeOf( $records ) > 0 ) {
+?>
 <table class="table table-striped table-bordered table-condensed">
 	<thead>
 		<tr>
@@ -65,8 +78,6 @@ if( isset( $_REQUEST['d'] ) ) {
 	</thead>
 	<tbody>
 <?php
-			$records = $leads->outboundURLSearch( $url );
-			if( is_array( $records ) ) {
 				foreach( $records as $record ) {
 					if( $record['cnt'] > 0 ) {
 ?>
@@ -78,11 +89,13 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php
 					}
 				}
-			}
 ?>
 	</tbody>
 </table>
 <?php
+			} else {
+				print '<p>No records found.</p>' . PHP_EOL;
+			}
 		break;
 
 	}
@@ -98,7 +111,7 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
-<p>URL: <input type="text" name="search_email" id="search_url" value="" /> <input class="btn btn-primary" type="button" value="Search" onclick="display( 'dialog_search_url_results', { 'url': $('#search_url').val() });" /></p>
+<p class="form-inline">URL: <input class="form-control input-long" type="text" name="search_email" id="search_url" value="" /> <input class="btn btn-primary" type="button" value="Search" onclick="display( 'dialog_search_url_results', { 'url': $('#search_url').val() });" /></p>
 
 <div class="hidden-custom" id="dialog_search_url_results"></div>
 

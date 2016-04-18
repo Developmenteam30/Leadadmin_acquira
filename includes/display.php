@@ -47,7 +47,7 @@ class Display
 				htmlentities( $title )
 			);
 		}
-		printf( "<form id=\"%s\">\n",
+		printf( "<form class=\"form-inline\" id=\"%s\">\n",
 			htmlspecialchars( $name, ENT_QUOTES | ENT_HTML5 )
 		);
 
@@ -61,7 +61,7 @@ class Display
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
-				printf( "\t<input type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s />\n",
+				printf( "\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s />\n",
 						htmlspecialchars( $field['type'], ENT_QUOTES | ENT_HTML5 ),
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
@@ -77,7 +77,7 @@ class Display
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
-				printf( "\t<input type=\"text\" name=\"%s\" id=\"%s\" pattern=\"^\\$?(([1-9](\\d*|\\d{0,2}(,\\d{3})*))|0)(\\.\\d{1,2})?$\" value=\"%s\"%s%s />\n",
+				printf( "\t<input class=\"form-control\" type=\"text\" name=\"%s\" id=\"%s\" pattern=\"^\\$?(([1-9](\\d*|\\d{0,2}(,\\d{3})*))|0)(\\.\\d{1,2})?$\" value=\"%s\"%s%s />\n",
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						( !empty( $field['value'] ) ? htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) : '' ),
@@ -95,7 +95,7 @@ class Display
 				);
 				print '<div class="checkbox-choices">';
 				foreach( $field['choices'] as $key => $val ) {
-					printf( "\t<input type=\"checkbox\" name=\"%s[]\" value=\"%s\"%s /> %s%s\n",
+					printf( "\t<input class=\"form-control\" type=\"checkbox\" name=\"%s[]\" value=\"%s\"%s /> %s%s\n",
 						htmlspecialchars( $field['id'] ),
 						htmlspecialchars( $key ),
 						( !empty( $field['value'][$key] ) ? ' checked="checked"' : '' ),
@@ -111,7 +111,7 @@ class Display
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
-				printf( "\t<textarea name=\"%s\" id=\"%s\"%s>%s</textarea>\n",
+				printf( "\t<textarea class=\"form-control\" name=\"%s\" id=\"%s\"%s>%s</textarea>\n",
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						( !empty( $field['required'] ) ? ' required' : '' ),
@@ -124,7 +124,7 @@ class Display
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
-				printf( "\t<select name=\"%s\" id=\"%s\">\n",
+				printf( "\t<select class=\"form-control\" name=\"%s\" id=\"%s\">\n",
 					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 )
 				);
@@ -139,7 +139,7 @@ class Display
 				foreach( $field['choices'] as $key => $val ) {
 					printf( "\t\t<option value=\"%s\"%s>%s</option>\n",
 						htmlspecialchars( $key, ENT_QUOTES | ENT_HTML5 ),
-						( !empty( $field['value'] ) && $key == $field['value'] ? ' selected="selected"' : '' ),
+						( isset( $field['value'] ) && $key == $field['value'] ? ' selected="selected"' : '' ),
 						htmlentities( $val )
 					);
 				}

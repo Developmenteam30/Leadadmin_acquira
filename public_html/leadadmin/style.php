@@ -451,6 +451,10 @@ tr.subtotal { font-weight: bold; background-color: #dadada !important; }
 	display: none;
 }
 
+input.input-long {
+	width: 300px !important;
+}
+
 .navbar-custom {
 	background-image: linear-gradient();
 	background-image: -o-linear-gradient(<?php echo $gradient; ?>);
@@ -520,8 +524,8 @@ tr.subtotal { font-weight: bold; background-color: #dadada !important; }
 }
 
 .form-input textarea {
-	width: 400px;
-	height: 75px;
+	width: 400px !important;
+	height: 75px !important;
 }
 
 .form-input input[type='text'],
