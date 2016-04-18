@@ -264,12 +264,12 @@ if(isset($_REQUEST['d'])){
 		case 'suppressionCounts':
 			$lists = $leads->getSuppressionCounts();
 ?>
-<table class="standard">
+<table class="table table-bordered table-condensed table-striped">
 	<thead>
 		<tr class="bgGray">
-			<td><p>Suppression List</p></td>
-			<td><p>Record Count</p></td>
-			<td><p>Options</p></td>
+			<th><p>Suppression List</p></th>
+			<th><p>Record Count</p></th>
+			<th><p>Options</p></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -282,13 +282,11 @@ if(isset($_REQUEST['d'])){
 ?>
 		<tr class="bgGray">
 			<td><p><?php echo htmlentities( $suppressionList->name ); ?></p></td>
-			<td><p class='aRight'><?php echo $suppressionList->cnt; ?></p></td>
-			<td>
-				<p>
-					<input type='button' value='Export Data' onclick='exportFile(<?php echo $suppressionList->idCompany; ?>);'/>
+			<td class="text-right"><p class='aRight'><?php echo number_format( $suppressionList->cnt, 0 ); ?></p></td>
+			<td class="text-center">
+					<input class="btn btn-primary btn-xs" type='button' value='Export Data' onclick='exportFile(<?php echo $suppressionList->idCompany; ?>);'/>
 					<a href='#' id='resultExport_<?php echo $suppressionList->idCompany; ?>'></a>
 					<span id='resultQuery_<?php echo $suppressionList->idCompany; ?>'></span>
-				</p>
 			</td>
 		</tr>
 <?php
@@ -592,22 +590,21 @@ $(document).ready(function(){
 	display('suppressionCounts');
 });
 </script>
-<div class='mainContainer'>
-	<?php include(INCLUDES.'c_nav.php'); ?>
-	<div style='margin: auto;'>
-		<div id='controls' class='fl50'>
-			<p>Suppression Manager</p>
-			<p>
-				<a href='#' class='nonLink' onclick="display('dialog_import',{ 'type': 'single' });">Add Single Email</a>
-				| <a href='#' class='nonLink' onclick="display('dialog_import',{ 'type': 'multiple' });">Add Multiple Emails</a>
-				| <a href='#' class='nonLink' onclick="display('dialog_import',{ 'type': 'file' });">Add File</a>
-			</p>
-			<div id='resultImport'><?php  if( !empty( $_REQUEST['a'] ) && 'Add' == $_REQUEST['a'] ) { print "<p style=\"color: blue;\">File import status: {$result['error']}</p><p>Successes: {$counts['success']}</p><p>Invalid emails: {$counts['invalid']}</p><p>Duplicates: {$counts['dupe']}</p><p>Failures: {$counts['failures']}</p>" ; } ?></div>
-			<div id='dialog_import'></div>
-		</div>
-		<div id='suppressionCounts' class='fl50'></div>
-		<div class='clr'></div>
+
+<?php include(INCLUDES.'c_nav.php'); ?>
+
+<div class="container-fluid">
+	<div id='controls' class='fl50'>
+		<p>
+			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'single' });">Add Single Email</a>
+			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'multiple' });">Add Multiple Emails</a>
+			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'file' });">Add File</a>
+		</p>
+		<div id='resultImport'><?php  if( !empty( $_REQUEST['a'] ) && 'Add' == $_REQUEST['a'] ) { print "<p style=\"color: blue;\">File import status: {$result['error']}</p><p>Successes: {$counts['success']}</p><p>Invalid emails: {$counts['invalid']}</p><p>Duplicates: {$counts['dupe']}</p><p>Failures: {$counts['failures']}</p>" ; } ?></div>
+		<div id='dialog_import'></div>
 	</div>
+	<div id='suppressionCounts' class='fl50'></div>
+	<div class='clr'></div>
 </div>
 
 </body>

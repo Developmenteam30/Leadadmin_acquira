@@ -239,28 +239,6 @@ if( isset( $_REQUEST['d'] ) ) {
 			Display::errorList();
 		break;
 
-		case 'reports':
-?>
-
-<p><a href="#" class="nonLink" onclick="display('dialog_mapping'); closeContent('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners');">Mapping Report</a></p>
-<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-<div class="bubble">
-	<a href="#" class="nonLink" onclick="display('dialog_revenue_online'); closeContent('dialog_revenue_listowners'); closeContent('dialog_revenue_mailers'); closeContent('dialog_mapping');">Revenue Report - Online</a>
-	<div class="buttle" id="dialog_revenue_online"></div>
-</div>
-<p><a href="/leadadmin/client_reports.php" target="_blank">Master Client Revenue Report</a></p>
-<?php } ?>
-<p><a href="#" class="nonLink" onclick="display('dialog_search_email'); closeContent('dialog_search_email_results');">Email Search Report</a></p>
-<p><a href="#" class="nonLink" onclick="display('dialog_search_url'); closeContent('dialog_search_url_results');">URL Search Report</a></p>
-<div class="hidden" id="dialog_mapping"></div>
-<div class="hidden" id="dialog_search_email"></div>
-<div class="hidden" id="dialog_search_email_results"></div>
-<div class="hidden" id="dialog_search_url"></div>
-<div class="hidden" id="dialog_search_url_results"></div>
-
-<?php
-		break;
-
 		case 'dialog_mapping':
 ?>
 <div class="aRight">
@@ -1055,15 +1033,36 @@ $(document).ready(function(){
 	display('reports');
 });
 </script>
-<div class='mainContainer'>
-	<?php include(INCLUDES.'c_nav.php'); ?>
-	<div style='margin: auto;'>
-		<div class='fl' style='width: 100%;'>
-			<div id='reports'></div>
-		</div>
-		<div class='clr'></div>
-	</div>
+
+<?php include(INCLUDES.'c_nav.php'); ?>
+
+<div class="container-fluid">
+
+<nav>
+	<ul class="nav nav-tabs">
+		<li role="presentation" class="active"><a href="#">Home</a></li>
+		<li role="presentation"><a href="#">Profile</a></li>
+		<li role="presentation"><a href="#">Messages</a></li>
+	</ul>
+</nav>
+
+<p><a href="#" class="nonLink" onclick="display('dialog_mapping'); closeContent('dialog_revenue_mailers'); closeContent('dialog_revenue_listowners');">Mapping Report</a></p>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+<div class="bubble">
+	<a href="#" class="nonLink" onclick="display('dialog_revenue_online'); closeContent('dialog_revenue_listowners'); closeContent('dialog_revenue_mailers'); closeContent('dialog_mapping');">Revenue Report - Online</a>
+	<div class="buttle" id="dialog_revenue_online"></div>
 </div>
+<p><a href="/leadadmin/client_reports.php" target="_blank">Master Client Revenue Report</a></p>
+<?php } ?>
+<p><a href="#" class="nonLink" onclick="display('dialog_search_email'); closeContent('dialog_search_email_results');">Email Search Report</a></p>
+<p><a href="#" class="nonLink" onclick="display('dialog_search_url'); closeContent('dialog_search_url_results');">URL Search Report</a></p>
+<div class="hidden" id="dialog_mapping"></div>
+<div class="hidden" id="dialog_search_email"></div>
+<div class="hidden" id="dialog_search_email_results"></div>
+<div class="hidden" id="dialog_search_url"></div>
+<div class="hidden" id="dialog_search_url_results"></div>
+</div>
+
 <script src="/leadadmin/js/calx-1.1.4/jquery-calx-1.1.4.min.js" type="text/javascript"></script>
 <script src="/leadadmin/js/tablefilter/tablefilter.js" type="text/javascript"></script>
 </body>

@@ -828,10 +828,7 @@ if(isset($_REQUEST['d'])){
 				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, $status );
 			}
 ?>
-<p>
-	Outgoing Feeds
-</p>
-<?php		
+<?php
 if($outgoingFeeds === false){ 
 ?>
 <p>Error when trying to fetch feeds: database error.</p>
@@ -865,15 +862,15 @@ if($outgoingFeeds === false){
 	}
 	uksort($companyFeedLists,'companyListSort');
 ?>
-<table class='standard'>
+<table class="table table-bordered table-condensed table-striped-custom">
 	<thead>
-	<tr class='fTORow fTO_Row bgGray' style='width: 100%;'>
-		<td class='fTO_companyName' colspan='2'><p>Company</p></td>
-		<td class='fTO_feedOverview' colspan='4'><p>Total Feeds</p></td>
-		<td class='fTO_accepted'><p class='aCenter'>Total Accepted</p></td>
-		<td class='fTO_rejected'><p class='aCenter'>Total Rejected</p></td>
-		<td class='fTO_rejected'><p class='aCenter'>Total Queued</p></td>
-		<td class='fTO_options'><p>Options</p></td>
+	<tr>
+		<th class='fTO_companyName' colspan='2'>Company</th>
+		<th class='fTO_feedOverview' colspan='4'>Total Feeds</th>
+		<th class='fTO_accepted'>Total Accepted</th>
+		<th class='fTO_rejected'>Total Rejected</th>
+		<th class='fTO_rejected'>Total Queued</th>
+		<th class='fTO_options'>Options</th>
 	</tr>
 	</thead>
 <?php
@@ -881,7 +878,7 @@ if($outgoingFeeds === false){
 	$grandTotalAccepted = 0;
 	$grandTotalRejected = 0;
 	$grandTotalQueued = 0;
-	foreach($companyFeedLists as $idCompany => $companyFeedList){ 
+	foreach($companyFeedLists as $idCompany => $companyFeedList){
 		$totalAccepted = 0;
 		$totalRejected = 0;
 		$totalActive = 0;
@@ -903,7 +900,7 @@ if($outgoingFeeds === false){
 			$totalQueued += $feed->queued;
 			$grandTotalQueued += $feed->queued;
 
-			if($feed->enabled) { $totalActive++; }
+			if('active' === $feed->status) { $totalActive++; }
 			$companyFeedList[$keyFeed]->statusFeed = $feed->status;
 			$companyFeedList[$keyFeed]->statusCron = ($feed->cron)?'Running':'Paused';
 			$companyFeedList[$keyFeed]->statusPop = getPopulationStatus($feed->idFeedOut);
@@ -911,76 +908,42 @@ if($outgoingFeeds === false){
 		$grandTotalFeeds += count($companyFeedList);
 ?>
 	<tr class='fTORow fTO_Row bgGray'>
-		<td class='fTO_companyName' colspan='2'><p><?php echo $companyCache[$idCompany]->name; ?></p></td>
-		<td class='fTO_feedOverview' colspan='4'>
-			<p>
-				<?php echo count($companyFeedList); ?> (<?php echo $totalActive; ?> Active)
-			</p>
-		</td>
-		<td class='fTO_accepted'><p class='aRight'><?php echo $totalAccepted; ?></p></td>
-		<td class='fTO_rejected'><p class='aRight'><?php echo $totalRejected; ?></p></td>
-		<td class='fTO_rejected'><p class='aRight'><?php echo $totalQueued; ?></p></td>
-		<td class='fTO_options'>
-			<p>
-				<a href='#' class='nonLink'
-					id='link_companyFeedList_<?php echo $idCompany; ?>'
-					onclick="toggleHidden('companyFeedList', {'sub':<?php echo $idCompany; ?>, 'hiddenText':'Show Feeds', 'shownText':'Close' });"
-				>Show Feeds</a>
-			</p>
-		</td>
+		<td colspan='2'><?php echo $companyCache[$idCompany]->name; ?></td>
+		<td colspan='4'><?php echo count($companyFeedList); ?> (<?php echo $totalActive; ?> Active)</td>
+		<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $totalQueued, 0 ); ?></td>
+		<td class="text-center"><a href='#' class='nonLink btn btn-primary btn-xs' id='link_companyFeedList_<?php echo $idCompany; ?>' onclick="toggleHidden('companyFeedList', {'sub':<?php echo $idCompany; ?>, 'hiddenText':'Show Feeds', 'shownText':'Close' });">Show Feeds</a></td>
 	</tr>
-	<tbody id='companyFeedList_<?php echo $idCompany; ?>' class='fTORow fTO_Row hidden'>
+	<tbody id='companyFeedList_<?php echo $idCompany; ?>' class='fTORow fTO_Row hidden-custom'>
 	<tr>
-		<td class='fTO_idFeedOut'><p>ID</p></td>
-		<td class='fTO_label'><p>Feed Label</p></td>
-		<td class='fTO_description'><p>Description</p></td>
-		<td class='fTO_statusPop'><p>Population</p></td>
-		<td class='fTO_statusFeed'><p>Feed Status</p></td>
-		<td class='fTO_statusCron'><p>Processing</p></td>
-		<td class='fTO_accepted'><p class='aCenter'>Accepted</p></td>
-		<td class='fTO_rejected'><p class='aCenter'>Rejected</p></td>
-		<td class='fTO_rejected'><p class='aCenter'>Queued</p></td>
-		<td class='fTO_options'><p>Options</p></td>
+		<td class='fTO_idFeedOut'>ID</td>
+		<td class='fTO_label'>Feed Label</td>
+		<td class='fTO_description'>Description</td>
+		<td class='fTO_statusPop'>Population</td>
+		<td class='fTO_statusFeed'>Feed Status</td>
+		<td class='fTO_statusCron'>Processing</td>
+		<td class='fTO_accepted'>Accepted</td>
+		<td class='fTO_rejected'>Rejected</td>
+		<td class='fTO_rejected'>Queued</td>
+		<td class='fTO_options'>Options</td>
 	</tr>
 <?php
 		foreach($companyFeedList as $feed){ 
 ?>
 	<tr class='fTORow fTO_Row'>
-		<td class='fTO_idFeedOut'><p><?php echo $feed->idFeedOut; ?></p></td>
-		<td class='fTO_label status-<?php echo $feed->status; ?>'><p><?php echo $feed->label; ?></p></td>
-		<td class='fTO_description'><p><?php echo $feed->description; ?></p></td>
-		<td class='fTO_statusPop'>
-			<p>
-				<a href='#' class='nonLink' 
-				onclick="display('dialog_editpopulation', { 'sub': <?php echo $feed->idFeedOut; ?>, 'idFeedOut': <?php echo $feed->idFeedOut; ?> });" 
-				><?php echo $feed->statusPop; ?></a>					
-			</p>
-		</td>
-		<td class='fTO_statusFeed'>
-			<p>
-				<?php echo ucfirst( $feed->status ); ?>
-			</p>
-		</td>
-		<td class='fTO_statusCron'>
-			<p>
-				<a href='#' class='nonLink'
-					id='feedset_<?php echo $feed->idFeedOut; ?>_statusFeed'
-					onclick="manageFeedParam('cron', <?php echo $feed->idFeedOut; ?>, 'toggle', {'sub':<?php echo $feed->idCompany; ?>, 'idFeedOut':<?php echo $feed->idFeedOut; ?>});"
-				><?php echo $feed->statusCron; ?></a>				
-			</p>
-		</td>
-		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->accepted; ?></p></td>
-		<td class='fTO_rejected'><p class='aRight'><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></p></td>
-		<td class='fTO_accepted'><p class='aRight'><?php echo $feed->queued; ?></p></td>
-		<td class='fTO_options'>
-			<p>
-				<a href='#' class='nonLink'
-					onclick="$('#cM_<?php echo $feed->idFeedOut; ?>').toggle();"
-				>Options</a>
-			</p>
+		<td class='fTO_idFeedOut'><?php echo $feed->idFeedOut; ?></td>
+		<td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo $feed->label; ?></td>
+		<td class='fTO_description'><?php echo $feed->description; ?></td>
+		<td class='fTO_statusPop'><a href='#' class='nonLink' onclick="display('dialog_editpopulation', { 'sub': <?php echo $feed->idFeedOut; ?>, 'idFeedOut': <?php echo $feed->idFeedOut; ?> });"><?php echo $feed->statusPop; ?></a></td>
+		<td class='fTO_statusFeed'><?php echo ucfirst( $feed->status ); ?></td>
+		<td class='fTO_statusCron'><a href='#' class='nonLink' id='feedset_<?php echo $feed->idFeedOut; ?>_statusFeed' onclick="manageFeedParam('cron', <?php echo $feed->idFeedOut; ?>, 'toggle', {'sub':<?php echo $feed->idCompany; ?>, 'idFeedOut':<?php echo $feed->idFeedOut; ?>});"><?php echo $feed->statusCron; ?></a></td>
+		<td class='fTO_accepted'><?php echo $feed->accepted; ?></td>
+		<td class='fTO_rejected'><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
+		<td class='fTO_accepted'><?php echo $feed->queued; ?></td>
+		<td class='fTO_options'><a href='#' class='nonLink' onclick="$('#cM_<?php echo $feed->idFeedOut; ?>').toggle();">Options</a>
 			<div class='absContainer'>
 				<div class='contextMenu' id='cM_<?php echo $feed->idFeedOut; ?>'>
-					<p>
 						<a href='#' class='nonLink' 
 							onclick="display(<?php
 								?>'feedout'<?php
@@ -1000,18 +963,18 @@ if($outgoingFeeds === false){
 						<a href='#' class='nonLink'
 					onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
 						>URL Report</a>
-					</p>
+					
 				</div>
 			</div>
 		</td>
 	</tr>
-	<tr><td class='hidden' id='feedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden' id='dialog_editpopulation_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden' id='dialog_editfeedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden' id='dialog_urlreport_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden' id='dialog_urlreportdetails_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden' id='dialog_testrecord_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden' id='dialog_clearqueue_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden-custom' id='feedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden-custom' id='dialog_editpopulation_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden-custom' id='dialog_editfeedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden-custom' id='dialog_urlreport_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden-custom' id='dialog_urlreportdetails_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden-custom' id='dialog_testrecord_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
+	<tr><td class='hidden-custom' id='dialog_clearqueue_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
 <?php
 		}
 ?>
@@ -1019,14 +982,16 @@ if($outgoingFeeds === false){
 <?php
 	}
 ?>
-	<tr class='fTORow fTO_Row bgGray subtotal'>
-		<td class='fTO_companyName' colspan='2'><p>GRAND TOTAL</p></td>
-		<td class='fTO_feedOverview' colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
-		<td class='fTO_accepted'><p class='aRight'><?php echo number_format( $grandTotalAccepted, 0 ); ?></p></td>
-		<td class='fTO_rejected'><p class='aRight'><?php echo number_format( $grandTotalRejected, 0 ); ?></p></td>
-		<td class='fTO_rejected'><p class='aRight'><?php echo number_format( $grandTotalQueued, 0 ); ?></p></td>
-		<td class='fTO_options'></td>
+	<tfoot>
+	<tr>
+		<td colspan='2'>GRAND TOTAL</td>
+		<td colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $grandTotalQueued, 0 ); ?></td>
+		<td>&nbsp;</td>
 	</tr>
+	</tfoot>
 </table>
 <?php
 }
@@ -1052,8 +1017,7 @@ if($outgoingFeeds === false){
 <div class='w100'>
 <hr />
 <div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("feedout", { "sub": <?php echo $feed->idFeedOut; ?> });' 
-	>Close [X]</a>
+	<a href="#" class="btn btn-primary btn-xs" onclick='closeContent("feedout", { "sub": <?php echo $feed->idFeedOut; ?> });'>Close</a>
 </div>
 <p>Feed Details for <?php echo $feed->label; ?> (ID: <?php echo $feed->idFeedOut; ?>)</p>
 <p>Description - <?php echo $feed->description; ?></p>
@@ -1560,8 +1524,7 @@ if($populationSettings === false){
 			$feed = $leads->getOutboundFeed( $idFeedOut );
 ?>
 <div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedOut; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedOut; ?>});' 
-	>Close [X]</a>
+	<a href="#" class="btn btn-primary btn-xs" onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedOut; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedOut; ?>});'>Close</a>
 </div>
 <?php
 			if($feed === false){ 
@@ -2431,6 +2394,7 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 $title = 'Outgoing Feed Manager';
 include(INCLUDES."c_header.php");
 ?>
+<body>
 <script>
 function manageFeed(action, idFeedOut){ 
 	if(action == "new"){ e = "#new_feed_"; c = 'new'; } else { e = "#edit_"+idFeedOut+"_feed_"; c = 'edit'; }
@@ -3005,13 +2969,13 @@ $(document).ready(function(){
 	});
 });
 </script>
-<body>
-<div class='mainContainer'>
-	<?php include(INCLUDES.'c_nav.php'); ?>
-	<div style='margin: auto;'>
+
+<?php include(INCLUDES.'c_nav.php'); ?>
+<div class="container-fluid">
+
 		<div id='controls'>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
-			<a href='#' class='nonLink' onclick="display('dialog_newfeedout');">Add New Feed</a>
+			<a href="#" class="btn btn-primary btn-xs" onclick="display('dialog_newfeedout');">Add New Feed</a>
 			<select class="fr" id="status" name="status">
 				<option value="active">Show active feeds</option>
 				<option value="hidden">Show hidden feeds</option>
@@ -3032,7 +2996,6 @@ $(document).ready(function(){
 			<div id='outgoingFeeds'></div>
 		</div>
 		<div class='clr'></div>
-	</div>
 </div>
 
 </body>

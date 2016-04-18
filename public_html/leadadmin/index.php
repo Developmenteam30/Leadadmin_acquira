@@ -14,7 +14,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
-if( isset( $_REQUEST['a'] ) ) { 
+if( isset( $_REQUEST['a'] ) ) {
 	$result = array(
 		'status' => 0,
 		'error' => 'Action does not exist.',
@@ -32,7 +32,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					$c = false;
 					$result['error'] = 'Missing expected value: '.$expectedVar;
 				}
-				if(!$c){ 
+				if(!$c){
 					break;
 				}
 			}
@@ -63,7 +63,7 @@ $title = CONFIG_COMPANY_NAME." Admin Panel";
 include( INCLUDES . 'c_header.php' );
 ?>
 <script>
-function logIn(){ 
+function logIn(){
 	var response = $.ajax({
 		url: "index.php",
 		type: "POST",
@@ -73,14 +73,14 @@ function logIn(){
 			, "username": $('#username').val()
 			, "password": $('#password').val()
 		})
-	}).done(function(responseText){ 
+	}).done(function(responseText){
 		var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
 		if(result===null) { alert("JSON Failed: "+responseText); return false; }
 		else { //Processing was a success. Check the result.
 			if(result.status == 1){
 				//alert(result.error);
 				location.reload();
-			} else { 
+			} else {
 				alert(result.error);
 			}
 		}
@@ -91,20 +91,17 @@ function logIn(){
 
 <body>
 
-<div class="mainContainer">
-	<div class="centered loginLogo"><img src="images/logo.png"/></div>
-	<div class="loginContainer">
-		<h1 class="boxTitle siteHeader">Log In</h1>
-		<div class="loginBox siteBorder">
-			<form action="index.php" method="post" onsubmit="logIn(); return false;">
-			<p>User:</p>
-			<p class="aCenter"><input id="username" type="text" name="username" class="loginBox" /></p>
-			<p>Password:</p>
-			<p class="aCenter"><input id="password" type="password" name="password" class="loginBox" /></p>
-			<p class="aRight"><input class="siteButton" type="submit" value="Log In" /></p>
-			</form>
-		</div>
-	</div>
+<div class="container">
+
+<form class="form-signin" onsubmit="logIn(); return false;">
+	<p class="text-center"><img src="images/logo.png"/></p>
+	<label for="inputEmail" class="sr-only">Email address</label>
+	<input type="text" id="username" class="form-control" placeholder="Username" required autofocus>
+	<label for="inputPassword" class="sr-only">Password</label>
+	<input type="password" id="password" class="form-control" placeholder="Password" required>
+	<button class="btn btn-lg btn-primary btn-block" type="submit">Log in</button>
+</form>
+
 </div>
 
 </body>

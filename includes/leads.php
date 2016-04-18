@@ -229,6 +229,20 @@ class Leads
 		return $results;
 	}
 
+	public function getStaffUsers() {
+		$results = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT idUser,username FROM users WHERE level >= ? ORDER BY username" );
+			$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
+			$results = $query->fetchAll( PDO::FETCH_KEY_PAIR  );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get user staff list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function findClientUser( $idCompany ) {
 		try {
 			$query = $this->db->prepare( "SELECT username FROM users WHERE idCompany = ? AND level = ?" );
@@ -334,36 +348,113 @@ class Leads
 		return $result;
 	}
 
-	public function addCompany( $fields ) {
+	public function addLedger( $fields ) {
 
-		if( empty( $fields['name'] ) ) {
-			return null;
-		}
+		$ledgerId = null;
 
 		try {
-			$idCompany = $this->insertRow( 'companies', array(
-				'name' => $fields['name'],
-				'note' => empty( $fields['note'] ) ? null : $fields['note'],
-				'address' => empty( $fields['address'] ) ? null : $fields['address'],
-				'city' => empty( $fields['city'] ) ? null : $fields['city'],
-				'state' => empty( $fields['state'] ) ? null : $fields['state'],
-				'zipcode' => empty( $fields['zipcode'] ) ? null : $fields['zipcode'],
-				'main_name' => empty( $fields['main_name'] ) ? null : $fields['main_name'],
-				'main_phone' => empty( $fields['main_phone'] ) ? null : $fields['main_phone'],
-				'main_email' => empty( $fields['main_email'] ) ? null : $fields['main_email'],
-				'acct_name' => empty( $fields['acct_name'] ) ? null : $fields['acct_name'],
-				'acct_phone' => empty( $fields['acct_phone'] ) ? null : $fields['acct_phone'],
-				'acct_email' => empty( $fields['acct_email'] ) ? null : $fields['acct_email'],
-				'tech_name' => empty( $fields['tech_name'] ) ? null : $fields['tech_name'],
-				'tech_phone' => empty( $fields['tech_phone'] ) ? null : $fields['tech_phone'],
-				'tech_email' => empty( $fields['tech_email'] ) ? null : $fields['tech_email'],
-			) );
+			$ledgerId = $this->insertRow( 'ledger', $fields );
 		} catch( Leads_PDOException $e ) {
-			$this->logError( 'Unable to add company: ' . $e->getMessage() );
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add ledger entry: ' . $pdoException->getMessage() );
 			return null;
 		}
 
-		return $idCompany;
+		return $ledgerId;
+	}
+
+	public function updateLedger( $ledgerId, $fields ) {
+
+		try {
+			$status = $this->update( 'ledger', $fields, array(
+				'ledgerId' => $ledgerId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update ledger: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
+	public function getLedgerById( $ledgerId ) {
+		$results = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM ledger WHERE ledgerId = ?" );
+			$query->execute( array( $ledgerId ) );
+			$results = $query->fetch( PDO::FETCH_OBJ  );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get ledger entry: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getLedger( $divisionId, $type ) {
+		$results = array();
+
+		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u.username ";
+		$sql .= "FROM ledger l ";
+		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
+		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
+		$sql .= "WHERE l.divisionId = ? ";
+		$sql .= "AND l.type = ? ";
+		$sql .= "ORDER BY l.paymentDate DESC";
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute( array( $divisionId, $type ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get ledger: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getIncomeLedger() {
+		$results = array();
+
+		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.username ";
+		$sql .= "FROM ledger l ";
+		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
+		$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
+		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
+		$sql .= "WHERE type = 1 ";
+		$sql .= "AND l.paymentDate IS NOT NULL ";
+		$sql .= "AND l.paymentAmount IS NOT NULL ";
+		$sql .= "AND l.checkNum IS NOT NULL ";
+		$sql .= "ORDER BY l.paymentDate DESC";
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute();
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get income ledger: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function addCompany( $fields ) {
+
+		$companyId = null;
+
+		try {
+			$companyId = $this->insertRow( 'companies', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add company: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $companyId;
 	}
 
 	public function updateCompany( $idCompany, $fields ) {
@@ -405,6 +496,162 @@ class Leads
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get company list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getCompanyDivisions( $companyId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT divisionId FROM companies_divisions WHERE companyId = ?" );
+			$query->execute( array( $companyId ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company division list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getDivisionCompanies( $divisionId, $format = PDO::FETCH_KEY_PAIR ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT c.idCompany,c.name FROM companies_divisions cd LEFT JOIN companies c ON c.idCompany = cd.companyId WHERE cd.divisionId = ? ORDER BY c.name" );
+			$query->execute( array( $divisionId ) );
+			$results = $query->fetchAll( $format );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get division company list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function addVertical( $fields ) {
+
+		$verticalId = null;
+
+		try {
+			$verticalId = $this->insertRow( 'verticals', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add vertical: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $verticalId;
+	}
+
+	public function checkVerticalName( $name, $divisionId, $verticalId = null ) {
+		$result = false;
+
+		try {
+			if( !empty( $verticalId ) ) {
+				$query = $this->db->prepare( "SELECT 1 FROM verticals WHERE name = ? AND divisionId = ? AND verticalId != ?" );
+				$query->execute( array( $name, $divisionId, $verticalId ) );
+			} else {
+				$query = $this->db->prepare( "SELECT 1 FROM verticals WHERE name = ? AND divisionId = ?" );
+				$query->execute( array( $name, $divisionId ) );
+			}
+			if( '1' == $query->fetchColumn( ) ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check vertical name: ' . $e->getMessage() );
+		}
+
+		return $result;
+	}
+
+	public function getVertical( $verticalId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM verticals WHERE verticalId = ?" );
+			$query->execute( array( $verticalId ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get Vertical info: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function updateVertical( $verticalId, $fields ) {
+
+		try {
+			$status = $this->update( 'verticals', $fields, array(
+				'verticalId' => $verticalId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update vertical: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
+	public function getDivisionVerticals( $divisionId, $format = PDO::FETCH_KEY_PAIR ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT verticalId,name FROM verticals WHERE divisionId = ? ORDER BY name" );
+			$query->execute( array( $divisionId ) );
+			$results = $query->fetchAll( $format );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get division vertical list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function addCompanyDivision( $companyId, $divisionId ) {
+		try {
+			$query = $this->db->prepare( "REPLACE INTO companies_divisions(companyId, divisionId) VALUES(?, ?)" );
+			$query->execute( array( $companyId, $divisionId ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to add company division mapping: ' . $e->getMessage() );
+			return;
+		}
+	}
+
+	public function clearCompanyDivisions( $companyId ) {
+		try {
+			$query = $this->db->prepare( "DELETE FROM companies_divisions WHERE companyId = ?" );
+			$query->execute( array( $companyId ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to clear company divisions: ' . $e->getMessage() );
+			return;
+		}
+	}
+
+	public function getDivisionName( $divisionId ) {
+		$results = '';
+
+		try {
+			$query = $this->db->prepare( "SELECT name FROM divisions WHERE divisionId = ?" );
+			$query->execute( array( $divisionId ) );
+			$results = $query->fetchColumn();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get division: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getDivisions( $format = PDO::FETCH_KEY_PAIR ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT divisionId,name FROM divisions ORDER BY name" );
+			$query->execute( );
+			$results = $query->fetchAll( $format );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get division list: ' . $e->getMessage() );
 		}
 
 		return $results;
@@ -1505,7 +1752,7 @@ class Leads
 
 	public function getJobs() {
 		try {
-			$query = $this->db->prepare( "SELECT j.jobId,j.type,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn ORDER BY j.jobId DESC" );
+			$query = $this->db->prepare( "SELECT j.jobId,j.type,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn ORDER BY j.jobId DESC LIMIT 100" );
 			$query->execute( );
 			return $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -2206,7 +2453,7 @@ class Leads
 
 		try {
 
-			$this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+			$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
 
 			$fields = array();
 
@@ -2237,7 +2484,7 @@ class Leads
 
 		try {
 
-			$this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+			$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
 
 			$fields = array();
 

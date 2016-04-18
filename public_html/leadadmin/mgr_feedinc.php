@@ -11,11 +11,11 @@ $leads = Leads::getInstance();
 require_once( INCLUDES . 'display.php' );
 
 $mysqlErrorSource = 'Manager - Incoming Feeds';
-$forceMysqlLogFile = SITE_ROOT."error".FD."log_feedinc"; 
+$forceMysqlLogFile = SITE_ROOT."error".FD."log_feedinc";
 include(INCLUDES."_connx.php");
 include(INCLUDES."f_site.php");
 
-if(isset($_REQUEST['a'])){ 
+if(isset($_REQUEST['a'])){
 	$result = array(
 		'status' => 0
 		, 'error' => 'Action does not exist.'
@@ -345,15 +345,13 @@ if($incomingFeeds === false){
 	}
 	uksort($companyFeedLists,'companyListSort');
 ?>
-<p>Incoming Feeds</p>
-<table class='standard'>
+<table class="table table-bordered table-condensed table-striped-custom">
 	<thead>
 	<tr class='bgGray'>
-		<td class='fTI_companyName' colspan='2'><p>Company</p></td>
-		<td class='fTI_feedOverview'><p>Total Feeds</p></td>
-		<td class='fTI_accepted'><p class='aCenter'>Total Accepted</p></td>
-		<td class='fTI_rejected'><p class='aCenter'>Total Rejected</p></td>
-		<td class='fTI_options'><p>Actions</p></td>
+		<th>Company</td>
+		<th class="text-right">Accepted</td>
+		<th class="text-right">Rejected</td>
+		<th>Actions</td>
 	</tr>
 	</thead>
 <?php
@@ -378,56 +376,27 @@ if($incomingFeeds === false){
 		}
 		$grandTotalFeeds += count($companyFeedList);
 ?>
-	<tr class='bgGray'>
-		<td class='fTI_companyName' colspan='2'><p><?php echo $companyCache[$idCompany]->name; ?></p></td>
-		<td class='fTI_feedOverview'>
-			<p>
-				<?php echo count($companyFeedList); ?>
-			</p>
-		</td>
-		<td class='fTI_accepted'><p class='aRight'><?php echo $totalAccepted; ?></p></td>
-		<td class='fTI_rejected'><p class='aRight'><?php echo $totalRejected; ?></p></td>
-		<td class='fTI_options'>
-			<p>
-				<a href='#' class='nonLink'
-					id='link_companyFeedList_<?php echo $idCompany; ?>'
-					onclick="toggleHidden('companyFeedList', {'sub':<?php echo $idCompany; ?>, 'hiddenText':'Show Feeds', 'shownText':'Close' });"
-				>Show Feeds</a>
-			</p>
-		</td>
+	<tr class="custom-master">
+		<td><?php echo $companyCache[$idCompany]->name; ?> (<?php echo count($companyFeedList); ?>)</td>
+		<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
+		<td class="text-center"><a href='#' class='nonLink btn btn-primary btn-xs' id='link_companyFeedList_<?php echo $idCompany; ?>' onclick="toggleHidden('companyFeedList', {'sub':<?php echo $idCompany; ?>, 'hiddenText':'Show Feeds', 'shownText':'Close' });">Show Feeds</a></td>
 	</tr>
-	<tbody id='companyFeedList_<?php echo $idCompany; ?>' class='hidden'>
-	<tr>
-		<td colspan="3" class='fTI_description'><p>ID / Label</p></td>
-		<td class='fTI_accepted'><p class='aCenter'>Accepted</p></td>
-		<td class='fTI_rejected'><p class='aCenter'>Rejected</p></td>
-		<td class='fTI_options'><p>Options</p></td>
-	</tr>
+	<tr id="companyFeedList_<?php echo $idCompany; ?>" class="hidden-custom">
+		<td colspan="4">
+			<table class="table table-bordered table-condensed table-striped">
 <?php
-		foreach($companyFeedList as $feed){ 
+		foreach($companyFeedList as $feed){
 ?>
 	<tr>
-		<td colspan="3" class='fTI_description status-<?php print $feed->status;?>'><p><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</p></td>
-		<td class='fTI_accepted'><p class='aRight'><?php echo $feed->dailyCount; ?></p></td>
-		<td class='fTI_rejected'><p class='aRight'><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></p></td>
-		<td class='fTI_options'>
-			<p>
-				<a href='apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>' 
-					target='_blank'
-				>API Spec</a> |
-				<a href='#' class='nonLink'
-onclick='display("dialog_editfeed", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'
-				>Edit Feed</a> |
-				<a href='#' class='nonLink'
-onclick='display("dialog_import", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'
-				>Import legacy data</a> |
-				<a href='#' class='nonLink'
-onclick='display("dialog_export", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'
-				>Export Data to File</a> |
-				<a href='#' class='nonLink'
-onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'
-				>URL Report</a>
-			</p>
+		<td colspan="3" class='fTI_description status-<?php print $feed->status;?>'><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</td>
+		<td class='fTI_accepted'><?php echo $feed->dailyCount; ?></td>
+		<td class='fTI_rejected'><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
+		<td class='fTI_options'><a href='apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>' target='_blank'>API Spec</a> |
+			<a href='#' class='nonLink' onclick='display("dialog_editfeed", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'>Edit Feed</a> |
+			<a href='#' class='nonLink' onclick='display("dialog_import", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'>Import legacy data</a> |
+			<a href='#' class='nonLink' onclick='display("dialog_export", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'>Export Data to File</a> |
+			<a href='#' class='nonLink' onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "idFeedIn": <?php echo $feed->idFeedIn; ?> });'>URL Report</a>
 		</td>
 	</tr>
 	<tr><td class='hidden' id='dialog_listcodes_<?php echo $feed->idFeedIn; ?>' colspan='6'></td></tr>
@@ -439,25 +408,26 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 <?php
 		}
 ?>
-	</tbody>
+			</table>
+		</td>
+	</tr>
 <?php
 	}
 ?>
-	<tr class='bgGray subtotal'>
-		<td class='fTI_companyName' colspan='2'><p>GRAND TOTAL</p></td>
-		<td class='fTI_feedOverview'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
-		<td class='fTI_accepted'><p class='aRight'><?php echo number_format( $grandTotalAccepted, 0 ); ?></p></td>
-		<td class='fTI_rejected'><p class='aRight'><?php echo number_format( $grandTotalRejected, 0 ); ?></p></td>
-		<td class='fTI_options'></td>
+	<tfoot>
+	<tr>
+		<td>GRAND TOTAL</td>
+		<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
+		<td></td>
 	</tr>
+	</tfoot>
 </table>
 <?php
 }
 
-			
-			
 		break;
-		
+
 		case 'dialog_editfeed':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
 
@@ -543,11 +513,11 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 				if($d == 'edit'){ ?>_<?php echo $idFeedIn; ?><?php } ?>"<?php
 		?>);' >Close [X]</a>
 </div>
-<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+<table class="table table-bordered table-condensed table-striped">
 	<tr>
-		<td><p>Feed Label</p></td>
+		<td>Feed Label</p></td>
 		<td>
-			<p>	
+				
 				<input type='hidden' name='<?php echo $e; ?>feed_idFeedIn'
 					id='<?php echo $e; ?>feed_idFeedIn'
 					value='<?php echo $feed_idFeedIn; ?>' 
@@ -560,9 +530,9 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		</td>
 	</tr>
 	<tr>
-		<td><p>Description</p></td>
+		<td>Description</p></td>
 		<td>
-			<p>
+			
 				<input type='text' name='<?php echo $e; ?>feed_description'
 					id='<?php echo $e; ?>feed_description'
 					value='<?php echo $feed_description; ?>' 
@@ -571,9 +541,9 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		</td>
 	</tr>
 	<tr>
-		<td><p>Company</p></td>
+		<td>Company</p></td>
 		<td>
-			<p>
+			
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 				<?php if($companies === false){ ?>
 				Database failure - could not fetch company list
@@ -600,9 +570,9 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		</td>
 	</tr>
 	<tr>
-		<td><p>Required Fields</p></td>
+		<td>Required Fields</p></td>
 		<td>
-			<p>
+			
 				<?php foreach($recordFields as $f){ ?>
 				<input type='checkbox' 
 					name='<?php echo $e; ?>feed_required_<?php echo $f; ?>'
@@ -627,9 +597,9 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		</td>
 	</tr>
 	<tr>
-		<td><p>Allowed Fields</p></td>
+		<td>Allowed Fields</p></td>
 		<td>
-			<p>
+			
 				<?php foreach($recordFields as $f){ ?>
 				<input type='checkbox' 
 					name='<?php echo $e; ?>feed_allowedFields_<?php echo $f; ?>'
@@ -644,9 +614,9 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		</td>
 	</tr>
 	<tr>
-		<td><p>Duplicate Filters</p></td>
+		<td>Duplicate Filters</p></td>
 		<td>
-			<p>
+			
 				<input type='checkbox'
 					name='<?php echo $e; ?>feed_dedupeEmail'
 					id='<?php echo $e; ?>feed_dedupeEmail'
@@ -675,9 +645,9 @@ onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedIn; ?>", "
 		</td>
 	</tr>
 	<tr>
-		<td><p>Duplicate Options</p></td>
+		<td>Duplicate Options</p></td>
 		<td>
-			<p>
+			
 				DISABLED: <input type='radio' name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_none' value='none' <?php if($feed_dedupeAcross == 'none'){ ?> 
 checked='checked'<?php } ?> /> Allow duplicate records<br/>
 				THIS FEED: <input type='radio' name='<?php echo $e; ?>feed_dedupeAcross' id='<?php echo $e; ?>feed_dedupeAcross_all' value='all' <?php if($feed_dedupeAcross == 'all'){ ?> 
@@ -696,13 +666,13 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		</td>
 	</tr>
 		<tr>
-				<td><p>URL Filter Options</p></td>
+				<td>URL Filter Options</p></td>
 				<td>
-						<p>
+						
 								Using the 'Accept' option, urls that are listed here are the only ones that will be accepted into
 								the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed here.
 						</p>
-						<p>
+						
 								<input type='radio'
 										name='<?php echo $e; ?>feed_filterTypeUrl'
 										id='<?php echo $e; ?>feed_filterTypeUrl_disabled'
@@ -831,7 +801,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 				</td>
 		</tr>
 	<tr>
-		<td><p>Lead Rejections</p></td>
+		<td>Lead Rejections</p></td>
 		<td>
 			<p>How old are leads allowed to be before we reject them?  This should be a text string like "7 Days Ago" or "30 Days Ago".  Do not enter just a number. A blank value disables this feature.</p>
 			<p>
@@ -840,7 +810,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		</td>
 	</tr>
 	<tr>
-		<td><p>Notifications</p></td>
+		<td>Notifications</p></td>
 		<td>
 			<p>Should we send dormant URL notifications for URLs in this feed?</p>
 			<p>
@@ -850,7 +820,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 		</td>
 	</tr>
 	<tr>
-		<td><p>Feed Status</p></td>
+		<td>Feed Status</p></td>
 		<td>
 			<p>
 				<input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status_active' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Visible)<br/>
@@ -905,7 +875,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("dialog_import", {"sub": <?php echo $idFeedIn; ?>});'>Close [X]</a>
+	<a href='#' class="btn btn-primary btn-xs" onclick='closeContent("dialog_import", {"sub": <?php echo $idFeedIn; ?>});'>Close [X]</a>
 </div>
 <?php
 			if($feed === false){ 
@@ -923,16 +893,16 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 <input type="hidden" name="destination" value="<?php echo intval( $idFeedIn ); ?>" />
 <input type="hidden" name="type" value="feedinc" />
 
-<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+<table class="table table-bordered table-condensed table-striped">
 	<tr>
 		<td colspan='2'><p class='aCenter'>Import Settings</p></td>
 	</tr>
 	<tr>
-		<td><p>File</p></td>
-		<td><p>Please select the file to upload from your computer.  File must be in CSV format.  Limit <?php echo (MAX_UPLOAD_SIZE / 1024000);?>MB.</p><p><input type="file" name="import_file" multiple="false" accept="text/csv" /></p></td>
+		<td>File</p></td>
+		<td>Please select the file to upload from your computer.  File must be in CSV format.  Limit <?php echo (MAX_UPLOAD_SIZE / 1024000);?>MB.</p><input type="file" name="import_file" multiple="false" accept="text/csv" /></p></td>
 	</tr>
 	<tr>
-		<td><p>Field mapping</p></td>
+		<td>Field mapping</p></td>
 		<td>
 <?php
 		$allowedFields = explode(";", $feed->allowedFields);
@@ -986,7 +956,7 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
 <div class='fr'>
-	<a href='#' class='nonLink' onclick='closeContent("dialog_export", {"sub": <?php echo $idFeedIn; ?>});' 
+	<a href='#' class="btn btn-primary btn-xs" onclick='closeContent("dialog_export", {"sub": <?php echo $idFeedIn; ?>});' 
 	>Close [X]</a>
 </div>
 <?php
@@ -1002,13 +972,13 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 ?>
 <p>Exporting Data from Feed (ID:<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
 <input type='hidden' id='export_idFeedIn' value='<?php echo $feed->idFeedIn; ?>' />
-<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+<table class="table table-bordered table-condensed table-striped">
 	<tr>
 		<td colspan='2'><p class='aCenter'>Export Settings</p></td>
 	</tr>
 	<tr>
 		<td>
-			<p>Columns</p>
+			Columns</p>
 		</td>
 		<td>
 			<?php foreach($recordFields as $f){ ?>
@@ -1022,14 +992,14 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 	</tr>
 	<tr>
 		<td>
-			<p>Period</p>
+			Period</p>
 		</td>
 		<td>
-			<p>
+			
 				Period goes from midnight of the first date to midnight of the second date. Leave blank to select
 				from all time records. (This could take a long time.)
 			</p>
-			<p>
+			
 				<input type='text' 
 					name='export_<?php echo $idFeedIn; ?>_dateStart' 
 					id='export_<?php echo $idFeedIn; ?>_dateStart' 
@@ -1047,15 +1017,15 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 	</tr>
 	<tr>
 		<td>
-			<p>
+			
 				URLs
 			</p>
 		</td>
 		<td>
-			<p>
+			
 				URLs to limit the selection by. Leave blank to select all records regardless of URL.
 			</p>
-			<p>
+			
 				<a href='#' class='nonLink' 
 	onclick='element("export_<?php echo $idFeedIn; ?>_urls", "urlField", {"idFeedIn": <?php echo $idFeedIn; ?>} );'
 				>Add URL</a>
@@ -1069,15 +1039,15 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 	</tr>
 	<tr>
 		<td>
-			<p>
+			
 				Email domains
 			</p>
 		</td>
 		<td>
-			<p>
+			
 				Email domains to limit the selection by. Leave blank to select all records regardless of email address.  Do not include the @ symbol.
 			</p>
-			<p>
+			
 				<a href='#' class='nonLink' onclick='element("export_<?php echo $idFeedIn; ?>_emails", "emailField", {"idFeedIn": <?php echo $idFeedIn; ?>} );'>Add email domain</a>
 			</p>
 			<div>
@@ -1089,13 +1059,13 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 	</tr>
 	<tr>
 		<td>
-			<p>Limit</p>
+			Limit</p>
 		</td>
 		<td>
-			<p>
+			
 				Set a limit on the number of records that are returned.  Leave blank to return ALL records.
 			</p>
-			<p>
+			
 				<input type="text" name="export_<?php echo $idFeedIn; ?>_limit" id="export_<?php echo $idFeedIn; ?>_limit" value="" />
 			</p>
 		</td>
@@ -1146,20 +1116,20 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 ?>
 <p>URL Report from Feed (ID:<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
 <input type='hidden' id='urlreport_idFeedIn' value='<?php echo $feed->idFeedIn; ?>' />
-<table class='feedTable table-striped' border='1' cellpadding='0' cellspacing='0'>
+<table class="table table-bordered table-condensed table-striped">
 	<tr>
 		<td colspan='2'><p class='aCenter'>Report Settings</p></td>
 	</tr>
 	<tr>
 		<td>
-			<p>Period</p>
+			Period</p>
 		</td>
 		<td>
-			<p>
+			
 				Period goes from midnight of the first date to midnight of the second date. Leave blank to select
 				from all time records. (This could take a long time.)
 			</p>
-			<p>
+			
 				<input type='text' 
 					name='urlreport_<?php echo $idFeedIn; ?>_dateStart' 
 					id='urlreport_<?php echo $idFeedIn; ?>_dateStart' 
@@ -1177,15 +1147,15 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 	</tr>
 	<tr>
 		<td>
-			<p>
+			
 				URLs
 			</p>
 		</td>
 		<td>
-			<p>
+			
 				URLs to limit the selection by. Leave blank to select all records regardless of URL.
 			</p>
-			<p>
+			
 <?php
 				$urls = $leads->getInboundURLDates( $idFeedIn );
 				if( $urls && is_array( $urls ) ) {
@@ -1201,22 +1171,22 @@ checked='checked'<?php } ?>	/> Dedupe across same listcode of all feeds
 	</tr>
 	<tr>
 		<td>
-			<p>
+			
 				Count By
 			</p>
 		</td>
 		<td>
-			<p><select id="urlreport_<?php echo $idFeedIn; ?>_breakdown"><option value="day" selected="selected">Day</option><option value="month">Month</option><option value="year">Year</option><option value="total">Total</option</select></p>
+			<select id="urlreport_<?php echo $idFeedIn; ?>_breakdown"><option value="day" selected="selected">Day</option><option value="month">Month</option><option value="year">Year</option><option value="total">Total</option</select></p>
 		</td>
 	</tr>
 	<tr>
 		<td>
-			<p>
+			
 				Sort By
 			</p>
 		</td>
 		<td>
-			<p><select id="urlreport_<?php echo $idFeedIn; ?>_sort"><option value="date" selected="selected">Date</option><option value="url">URL</option><option value="count">Count</option></select></p>
+			<select id="urlreport_<?php echo $idFeedIn; ?>_sort"><option value="date" selected="selected">Date</option><option value="url">URL</option><option value="count">Count</option></select></p>
 		</td>
 	</tr>
 	<tr>
@@ -1438,6 +1408,7 @@ id='<?php echo $e; ?>feed_filter<?php echo $t; ?>Multi' ></textarea>
 $title = 'Incoming Feed Manager';
 include(INCLUDES."c_header.php");
 ?>
+<body>
 <script type="text/javascript">
 function splitMultiFilter(e, t){
 	values = $('#'+e+'feed_filter'+t+'Multi').val();
@@ -1747,13 +1718,14 @@ table.urlTable th, table.urlTable td { padding: 3px; }
 table.feedTable { margin-bottom: 20px; }
 table.feedTable th, table.feedTable td { padding: 3px; }
 </style>
-<body>
-<div class='mainContainer'>
-	<?php include(INCLUDES.'c_nav.php'); ?>
-	<div style='margin: auto;'>
+
+<?php include(INCLUDES.'c_nav.php'); ?>
+
+<div class="container-fluid">
+
 		<div id='controls'>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
-			<a href='#' class='nonLink' onclick="display('dialog_newfeed');" >Add New Feed</a>
+			<a href='#' class="btn btn-primary btn-xs" onclick="display('dialog_newfeed');" >Add New Feed</a>
 			<select class="fr" id="status" name="status">
 				<option value="active">Show active feeds</option>
 				<option value="hidden">Show hidden feeds</option>
@@ -1770,7 +1742,7 @@ table.feedTable th, table.feedTable td { padding: 3px; }
 			<div id='incomingFeeds'></div>
 		</div>
 		<div class='clr'></div>
-	</div>
 </div>
+
 </body>
 </html>

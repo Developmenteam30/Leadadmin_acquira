@@ -3,7 +3,9 @@ header("Content-type: text/css; charset: UTF-8");
 include("../../includes/c_config.php");
 include(INCLUDES."f_site.php");
 include(INCLUDES."c_sitecustom.php");
-?>html { 	
+if(0) {
+?>
+html { 	
 	margin: 0px; padding: 0px;
 	height: 100%;
 	overflow-y: scroll;
@@ -364,64 +366,6 @@ div.dashboardOutgoing { width: 50%; }
 	display: none;
 }
 
-.form-input h3 {
-	display: inline-block;
-}
-
-.form-input label {
-	display: inline-block;
-	width: 100px;
-	text-align: right;
-	margin: 5px 10px;
-	vertical-align: top;
-}
-
-.form-input textarea {
-	width: 400px;
-	height: 75px;
-}
-
-.form-input input,
-.form-input select {
-	font-family: Verdana, Helvetica, sans-serif;
-}
-
-.form-input input {
-	width: 400px;
-}
-
-.form-input input[type="submit"] {
-	width: auto;
-	color: <?php echo $buttonFontColor; ?>;
-	border: 0px;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	padding: 5px 10px;
-	margin: 5px 0;
-	background-image: linear-gradient();
-	background-image: -o-linear-gradient(<?php echo $gradient; ?>);
-	background-image: -moz-linear-gradient(<?php echo $gradient; ?>);
-	background-image: -webkit-linear-gradient(<?php echo $gradient; ?>);
-	background-image: -ms-linear-gradient(<?php echo $gradient; ?>);
-
-	background-image: -webkit-gradient(
-		linear,
-		left bottom,
-		left top,
-		color-stop(0.01, rgb(<?php echo hex2rgb($gradientColor1);?>)),
-		color-stop(0.25, rgb(<?php echo hex2rgb($gradientColor2);?>)),
-		color-stop(0.5, rgb(<?php echo hex2rgb($gradientColor3);?>))
-	);
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-	display: none;
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
-}
-
 @media (max-width: 1662px){
 	div.navContainer { margin: 20px auto 0; }
 }
@@ -484,3 +428,166 @@ input::-webkit-inner-spin-button {
 		a.navButton, a.navButtonLogout{ width: 100%; }
 }
 
+<?php } ?>
+
+.hidden-custom {
+	display: none;
+}
+
+.navbar-custom {
+	background-image: linear-gradient();
+	background-image: -o-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -moz-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -webkit-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -ms-linear-gradient(<?php echo $gradient; ?>);
+
+	background-image: -webkit-gradient(
+		linear,
+		left bottom,
+		left top,
+		color-stop(0.01, rgb(<?php echo hex2rgb($gradientColor1);?>)),
+		color-stop(0.25, rgb(<?php echo hex2rgb($gradientColor2);?>)),
+		color-stop(0.5, rgb(<?php echo hex2rgb($gradientColor3);?>))
+	);
+}
+
+.navbar-custom .navbar-nav > li > a,
+.navbar-custom .navbar-nav > li > a:hover {
+	color: #fff;
+}
+
+.table th {
+	background-color: <?php echo $gradientColor3; ?>;
+	color: #fff;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.table tfoot td {
+	font-weight: bold;
+}
+
+.table-striped-custom tbody tr.striped-master:nth-child(4n-1) {
+	background-color: #f9f9f9;
+}
+
+.clickable:hover {
+	cursor: pointer;
+}
+
+.form-signin {
+	max-width: 400px;
+	margin: 0 auto;
+}
+
+.form-signin img {
+	max-width: 400px;
+	height: auto;
+}
+
+.form-input .checkbox-choices,
+.form-input h3 {
+	display: inline-block;
+}
+
+.form-input .checkbox-choices {
+	margin: 5px 0;
+}
+
+.form-input label {
+	display: inline-block;
+	width: 125px;
+	text-align: right;
+	margin: 5px 10px;
+	vertical-align: top;
+}
+
+.form-input textarea {
+	width: 400px;
+	height: 75px;
+}
+
+.form-input input[type='text'],
+.form-input select {
+	font-family: Verdana, Helvetica, sans-serif;
+}
+
+.form-input input[type='text'] {
+	width: 400px;
+}
+
+.form-input input[type="submit"] {
+	width: auto;
+	color: <?php echo $buttonFontColor; ?>;
+	border: 0px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	padding: 5px 10px;
+	margin: 5px 0;
+	background-image: linear-gradient();
+	background-image: -o-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -moz-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -webkit-linear-gradient(<?php echo $gradient; ?>);
+	background-image: -ms-linear-gradient(<?php echo $gradient; ?>);
+
+	background-image: -webkit-gradient(
+		linear,
+		left bottom,
+		left top,
+		color-stop(0.01, rgb(<?php echo hex2rgb($gradientColor1);?>)),
+		color-stop(0.25, rgb(<?php echo hex2rgb($gradientColor2);?>)),
+		color-stop(0.5, rgb(<?php echo hex2rgb($gradientColor3);?>))
+	);
+}
+
+#editledger select,
+#newledger select {
+	width: 300px;
+}
+
+.modal-header {
+	background: <?php echo $gradientColor1; ?>;
+	color: #fff;
+}
+
+.btn-primary {
+	background: #429038;
+}
+
+.close {
+	color: #fff;
+	opacity: 0.6;
+}
+
+.close:focus,
+.close:hover {
+	color: #dadada;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	display: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+
+@media (max-width: 768px){
+
+	.table .hide-mobile {
+		display: none;
+	}
+
+	.form-input textarea,
+	.form-input input {
+		width: auto;
+	}
+
+	.form-input label {
+		display: block;
+		text-align: left;
+		width: auto;
+		margin: 5px 0;
+	}
+}

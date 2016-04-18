@@ -39,17 +39,17 @@ if( isset( $_REQUEST['a'] ) ) {
 			foreach( $records as $record ) {
 				$result = $record['result'];
 				if( 'Email exists in our global suppression file.' == $result ) {
-					$class = 'suppressed';
+					$class = 'bg-warning';
 					$response['counts']['suppressed']++;
 				} else if( strpos( $result, 'Duplicate' ) === 0 ) {
-					$class = 'duplicate';
+					$class = 'bg-info';
 					$response['counts']['duplicate']++;
 				} else if( null === $result ) {
-					$class = 'accepted';
+					$class = 'bg-success';
 					$result = '';
 					$response['counts']['accepted']++;
 				} else {
-					$class = 'rejected';
+					$class = 'bg-danger';
 					$response['counts']['rejected']++;
 				}
 
@@ -88,20 +88,20 @@ if( isset( $_REQUEST['d'] ) ) {
 				print '<p>Error: No record count specified!</p>';
 			} else {
 ?>
-		<div class='fr'>
-			<a href="#" class="nonLink" onclick="request.abort(); closeContent( 'displayJob' ); display('displayAllJobs');">Close [X]</a>
+		<div class="pull-right">
+			<a href="#" class="btn btn-primary btn-xs" onclick="request.abort(); closeContent( 'displayJob' ); display('displayAllJobs');">Close</a>
 		</div>
 		<h1>Upload Job Status</h1>
 		<p><strong>Job ID:</strong> <?php echo htmlentities( $_REQUEST['options']['jobId'] ); ?></p>
 		<p><strong>Status:</strong> <span id="status">Pending - please wait</span></p>
 
-		<table class="standard">
+		<table class="table table-bordered table-condensed">
 			<thead>
 				<tr>
-					<td>Accepted</td>
-					<td>Rejected - Invalid</td>
-					<td>Rejected - Duplicate</td>
-					<td>Rejected - Suppressed</td>
+					<th>Accepted</th>
+					<th>Rejected - Invalid</th>
+					<th>Rejected - Duplicate</th>
+					<th>Rejected - Suppressed</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -116,13 +116,13 @@ if( isset( $_REQUEST['d'] ) ) {
 
 		<br/>
 
-		<table class="standard" id="results">
+		<table class="table table-bordered table-condensed" id="results">
 			<thead>
 				<tr>
-					<td>Record ID</td>
-					<td>Email Address</td>
-					<td>URL</td>
-					<td>Result</td>
+					<th>Record ID</th>
+					<th>Email Address</th>
+					<th>URL</th>
+					<th>Result</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -188,16 +188,16 @@ if( isset( $_REQUEST['d'] ) ) {
 				print "No jobs found.";
 			} else {
 ?>
-		<table class="standard" id="jobs">
+		<table class="table table-bordered table-condensed" id="jobs">
 			<thead>
 				<tr>
-					<td>Job ID</td>
-					<td>Type</td>
-					<td>Timestamp</td>
-					<td>Status</td>
-					<td>Feed</td>
-					<td>Records</td>
-					<td>Username</td>
+					<th>Job ID</th>
+					<th>Type</th>
+					<th>Timestamp</th>
+					<th>Status</th>
+					<th>Feed</th>
+					<th>Records</th>
+					<th>Username</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -207,15 +207,15 @@ if( isset( $_REQUEST['d'] ) ) {
 					$timestamp->setTimezone( new DateTimeZone( LOCAL_TIMEZONE ) );
 
 					if( 'finished' === $job->status ) {
-						$class = 'accepted';
+						$class = 'bg-success';
 					} else if( 'processing' === $job->status ) {
-						$class = 'duplicate';
+						$class = 'bg-warning';
 					} else {
-						$class = 'rejected';
+						$class = 'bg-danger';
 					}
 ?>
 				<tr class="<?php echo $class; ?>">
-					<td><a class="nonLink" href="#" onclick="closeContent( 'displayAllJobs' ); display( 'displayJob', { 'jobId': <?php echo $job->jobId; ?>, 'count': <?php echo $job->records; ?> });"><?php echo $job->jobId; ?></a></td>
+					<td><a href="#" onclick="closeContent( 'displayAllJobs' ); display( 'displayJob', { 'jobId': <?php echo $job->jobId; ?>, 'count': <?php echo $job->records; ?> });"><?php echo $job->jobId; ?></a></td>
 					<td><?php echo $job->type; ?></td>
 					<td><?php echo $timestamp->format( 'Y-m-d H:i:s' ); ?></td>
 					<td><?php echo $job->status; ?></td>
@@ -249,13 +249,11 @@ $(document).ready(function(){
 });
 </script>
 
-<div class='mainContainer'>
-	<?php include(INCLUDES.'c_nav.php'); ?>
-	<div class='fl' style='width: 100%;'>
-		<div id='displayAllJobs'></div>
-		<div id='displayJob'></div>
-	</div>
-	<div class='clr'></div>
+<?php include(INCLUDES.'c_nav.php'); ?>
+
+<div class="container-fluid">
+	<div id='displayAllJobs'></div>
+	<div id='displayJob'></div>
 </div>
 
 </body>
