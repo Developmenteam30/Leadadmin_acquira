@@ -430,6 +430,23 @@ div.dashboardOutgoing { width: 50%; }
 
 <?php } ?>
 
+table.standard { width: 100%; border-collapse: collapse; }
+table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top; }
+table.standard td p { padding: 0 0 3px 0; }
+table.standard thead { font-weight: bold; text-align: center; }
+
+table.revenue-report td { padding: 10px; vertical-align: middle; }
+table.revenue-report tr.reverse { background-color: #fdfdfd; }
+table.revenue-report thead td { font-weight: bold; background-color: <?php echo $gradientColor3; ?>; color: #fff; }
+table.revenue-report .greencheck { text-align: center; }
+
+#dialog_revenue_listowners_detail { margin-top: 30px; }
+
+td.revenue { text-align: center; }
+td.revenue span:before { content:'$'; }
+td.revenue input { width: 70px; font-size: 1em; }
+tr.subtotal { font-weight: bold; background-color: #dadada !important; }
+
 .hidden-custom {
 	display: none;
 }

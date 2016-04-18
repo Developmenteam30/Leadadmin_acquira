@@ -473,7 +473,7 @@ include(INCLUDES."c_header.php");
 ?>
 <table class="table table-bordered table-condensed table-striped">
 	<thead>
-		<tr class="bgGray header">
+		<tr class="header">
 			<th>Company Name</th>
 			<th>Vertical</th>
 			<th>Month</th>

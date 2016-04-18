@@ -14,6 +14,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 			array( 'name' => 'Mapping Report', 'url' => '/leadadmin/reports-mapping.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Mailer - Online', 'url' => '/leadadmin/ledger.php?divisionId=1&amp;type=1', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
+			array( 'name' => '*List Owner - Online', 'url' => '/leadadmin/list-owner.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Publisher - Ping Post', 'url' => '/leadadmin/ledger.php?divisionId=2&amp;type=0', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Advertiser - Ping Post', 'url' => '/leadadmin/ledger.php?divisionId=2&amp;type=1', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
