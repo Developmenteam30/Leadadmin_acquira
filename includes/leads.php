@@ -409,7 +409,7 @@ class Leads
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE l.divisionId = ? ";
 		$sql .= "AND l.type = ? ";
-		$sql .= "ORDER BY l.ledgerMonth DESC,companyName";
+		$sql .= "ORDER BY l.ledgerMonth,companyName";
 
 		try {
 			$query = $this->db->prepare( $sql );
