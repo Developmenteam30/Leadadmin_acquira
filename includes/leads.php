@@ -409,7 +409,7 @@ class Leads
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE l.divisionId = ? ";
 		$sql .= "AND l.type = ? ";
-		$sql .= "ORDER BY l.paymentDate DESC";
+		$sql .= "ORDER BY l.ledgerMonth DESC,companyName";
 
 		try {
 			$query = $this->db->prepare( $sql );
@@ -537,7 +537,7 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT c.idCompany,c.name FROM companies_divisions cd LEFT JOIN companies c ON c.idCompany = cd.companyId WHERE cd.divisionId = ? ORDER BY c.name" );
+			$query = $this->db->prepare( "SELECT c.idCompany,c.name FROM companies_divisions cd LEFT JOIN companies c ON c.idCompany = cd.companyId WHERE cd.divisionId = ? AND c.status = 'active' ORDER BY c.name" );
 			$query->execute( array( $divisionId ) );
 			$results = $query->fetchAll( $format );
 		} catch( PDOException $e ) {

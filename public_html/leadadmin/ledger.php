@@ -619,7 +619,7 @@ include(INCLUDES."c_header.php");
 		<tr>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->verticalName ); ?></td>
-			<td><?php echo $ledger->format( 'M Y' ); ?></td>
+			<td data-tf-sortKey="<?php echo $entry->ledgerMonth; ?>"><?php echo $ledger->format( 'M Y' ); ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td><?php echo $entry->paymentDate; ?></td>
