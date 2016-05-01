@@ -75,6 +75,74 @@ if( 'clear-outbound-queue' === $job->type ) {
 	$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 
+} else if( 'export-incoming' === $job->type ) {
+
+	$fields = unserialize( $job->fields );
+	$status = 'Unknown error.';
+
+	if( empty( $job->destination ) || empty( $fields['columns'] ) ) {
+
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Missing required fields',
+		) );
+		$status = 'ERROR: Missing required fields.';
+
+	} else {
+
+		print "Exporting incoming records for: {$job->destination}\n";
+
+		$result = $leads->exportInboundRecords( $job->destination, $fields );
+
+		if( $result['success'] !== true ) {
+
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'error',
+				'message' => 'Database error while exporting records',
+			) );
+			$status = 'Database error while exporting records';
+
+		} else {
+
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'finished',
+				'records' => $result['cnt'],
+				'filename' => $result['fileLink'],
+				'message' => null,
+			) );
+			$status = "Successful";
+		}
+
+	}
+
+	$body  = "Job Results\r\n";
+	$body .= "\r\n";
+	$body .= "Job ID: {$job->jobId}\r\n";
+	$body .= "Job Type: export-incoming\r\n";
+	$body .= "\r\n";
+	$body .= "Feed ID: {$job->destination}\r\n";
+	$body .= "Feed Label: {$fields['label']}\r\n";
+	$body .= "\r\n";
+	$body .= "Job Status: {$status}\r\n";
+	if( isset( $result['cnt'] ) ) {
+		$body .= "Total Records: {$result['cnt']}\r\n";
+	}
+	if( !empty( $result['cnt'] ) && !empty( $result['fileLink'] ) ) {
+		$body .= sprintf( "\r\nDownload Link: https://www.%s/leadadmin/%s\r\n",
+			SITE_URL,
+			$result['fileLink']
+		);
+	}
+	$body .= "\r\n";
+
+	$from = 'lmsalerts@'.SITE_URL;
+	$fromName = CONFIG_COMPANY_NAME;
+	$to = MANAGER_EMAIL;
+	$subject = 'Job Results - Export Incoming Data';
+	$header = "From:" . $fromName . " <" . $from . ">\n";
+	$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
+
 } else if( 'feedinc' === $job->type ) {
 
 	$handle = @fopen( $job->filename, "r" );

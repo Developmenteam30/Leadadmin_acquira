@@ -430,6 +430,10 @@ div.dashboardOutgoing { width: 50%; }
 
 <?php } ?>
 
+html {
+	overflow-y: scroll;
+}
+
 table.standard { width: 100%; border-collapse: collapse; }
 table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top; }
 table.standard td p { padding: 0 0 3px 0; }
@@ -507,6 +511,10 @@ table.TF th,
 
 .table-striped-custom tbody tr.striped-master:nth-child(4n-1) {
 	background-color: #f9f9f9;
+}
+
+table tr.bg-gray {
+	background: #dadada;
 }
 
 .clickable:hover {

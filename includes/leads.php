@@ -2433,11 +2433,15 @@ class Leads
 				$query .= "LIMIT " . intval( $settings['limit'] );
 			}
 
+			$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
+
 			$result['query'] = $query;
 			$query = $this->db->Prepare( $query );
 
 			$query->execute( $fields );
+			$cnt = 0;
 			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				$cnt++;
 				fputcsv( $file, $row );
 			}
 
@@ -2448,11 +2452,10 @@ class Leads
 
 		fclose( $file );
 
-		$this->auditLog( 'FEEDINC:EXPORT', $idFeedIn );
-
 		$result['success'] = true;
 		$result['reason'] = 'Successfully exported data to file.';
 		$result['fileLink'] = $fileLink;
+		$result['cnt'] = $cnt;
 
 		return $result;
 	}
