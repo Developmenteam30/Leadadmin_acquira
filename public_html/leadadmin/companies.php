@@ -37,6 +37,11 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
+			if( $c && empty( $_REQUEST['status'] ) ) {
+				$c = false;
+				$result['error'] = 'Please select a company status.';
+			}
+
 			if( $c && !empty( $_REQUEST['main_email'] ) && !filter_var( $_REQUEST['main_email'], FILTER_VALIDATE_EMAIL ) ) {
 				$c = false;
 				$result['error'] = 'Please enter a valid email address for the Main Contact.';
@@ -114,6 +119,11 @@ if(isset($_REQUEST['a'])){
 					$c = false;
 					$result['error'] = 'That company name already exists in the database.';
 				}
+			}
+
+			if( $c && empty( $_REQUEST['status'] ) ) {
+				$c = false;
+				$result['error'] = 'Please select a company status.';
 			}
 
 			if($c){
@@ -721,7 +731,6 @@ $('#modal-save-newcompany').click( function(event) {
 		async: true,
 		data: $("#new_company").serialize()
 	}).done(function(result){
-console.log(result);
 		if(result.status == 1){
 			window.location.reload(true);
 		} else {
