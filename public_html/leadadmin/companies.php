@@ -37,11 +37,6 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
-			if( $c && empty( $_REQUEST['status'] ) ) {
-				$c = false;
-				$result['error'] = 'Please select a company status.';
-			}
-
 			if( $c && !empty( $_REQUEST['main_email'] ) && !filter_var( $_REQUEST['main_email'], FILTER_VALIDATE_EMAIL ) ) {
 				$c = false;
 				$result['error'] = 'Please enter a valid email address for the Main Contact.';
