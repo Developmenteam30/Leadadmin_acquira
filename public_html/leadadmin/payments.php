@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_ADMIN );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -23,7 +23,7 @@ if(isset($_REQUEST['d'])){
 	exit;
 }
 
-$title = 'Commissions Report';
+$title = 'Payments Report';
 include(INCLUDES."c_header.php");
 ?>
 <body>
@@ -32,34 +32,22 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
+<h2>Payment Ledger</h2>
+
 <?php
-	$users = $leads->getStaffUsers( PDO::FETCH_OBJ );
-	if( empty( $users ) ) {
-
-?>
-<p>No users exist in the database.</p>
-<?php
-	} else {
-
-		foreach( $users as $user ) {
-
-			printf( '<h3>%s</h3>' . PHP_EOL, htmlentities( $user->fullName ) );
-
-			$entries = $leads->getPaidLedger( 1, $user->idUser );
-			if( empty( $entries ) ) {
+	$entries = $leads->getPaidLedger( 0 );
+	if( empty( $entries ) ) {
 ?>
 <p>No ledger entries exist in the database.</p>
 <?php
-			} else {
+	} else {
+		$months = array();
+		foreach( $entries as $entry ) {
+			$month = substr( $entry->paymentDate, 0, 7 );
+			$months[$month] = true;
+		}
 
-				$months = array();
-				foreach( $entries as $entry ) {
-					$month = substr( $entry->paymentDate, 0, 7 );
-					$months[$month] = true;
-				}
-
-				foreach( $months as $month => $val ) {
-
+		foreach( $months as $month => $val ) {
 ?>
 <table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
@@ -68,43 +56,40 @@ include(INCLUDES."c_header.php");
 			<th>Division</th>
 			<th>Company</th>
 			<th>Invoice #</th>
+			<th>Salesperson</th>
+			<th>Payment Method</th>
 			<th>Payment Amount</th>
-			<th>Commission</th>
 		</tr>
 	</thead>
 	<tbody>
 <?php
-					$paymentTotal = 0;
-					$commissionTotal = 0;
-					foreach( $entries as $entry ) {
-						if( substr( $entry->paymentDate, 0, 7 ) == $month ) {
-							$paymentTotal += $entry->paymentAmount;
-							$commissionTotal += $entry->commissionAmount;
+			$paymentTotal = 0;
+			foreach( $entries as $entry ) {
+				if( substr( $entry->paymentDate, 0, 7 ) == $month ) {
+					$paymentTotal += $entry->paymentAmount;
 ?>
 		<tr>
 			<td><?php echo $entry->paymentDate; ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+			<td><?php echo $entry->fullName; ?></td>
+			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
 		</tr>
 <?php
-						}
-					}
+				}
+			}
 ?>
 	</tbody>
 	<tfoot>
-		<tr class="bgGray header">
-			<td colspan="4">Totals</td>
+		<tr>
+			<td colspan="6">Monthly Total</td>
 			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
-			<td class="text-right">$<?php echo number_format( $commissionTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>
 </table>
 <?php
-				}
-			}
 		}
 	}
 ?>
@@ -120,7 +105,7 @@ $( "table" ).each(function( index ) {
 		extensions: [{
 			name: 'sort',
 			types: [
-				'ymddate', 'String', 'String', 'String', 'us', 'us'
+				'ymddate', 'String', 'String', 'String', 'String', 'String', 'us'
 			],
 			image_asc_class_name: 'custom-ascending',
 			image_desc_class_name: 'custom-descending'

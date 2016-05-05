@@ -32,8 +32,10 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
+<h2>Income Ledger</h2>
+
 <?php
-	$entries = $leads->getIncomeLedger();
+	$entries = $leads->getPaidLedger( 1 );
 	if( empty( $entries ) ) {
 ?>
 <p>No ledger entries exist in the database.</p>
@@ -82,7 +84,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="6">Totals</td>
+			<td colspan="6">Monthly Total</td>
 			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>

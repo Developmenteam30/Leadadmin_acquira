@@ -444,7 +444,7 @@ class Leads
 		return $results;
 	}
 
-	public function getIncomeLedger( $userId = null ) {
+	public function getPaidLedger( $type, $userId = null ) {
 		$results = array();
 
 		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.fullName,u.idUser ";
@@ -453,7 +453,7 @@ class Leads
 		$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
-		$sql .= "WHERE type = 1 ";
+		$sql .= "WHERE type = ? ";
 		$sql .= "AND l.paymentDate IS NOT NULL ";
 		$sql .= "AND l.paymentAmount IS NOT NULL ";
 		$sql .= "AND l.paymentMethod IS NOT NULL ";
@@ -465,9 +465,9 @@ class Leads
 		try {
 			$query = $this->db->prepare( $sql );
 			if( !empty( $userId ) ) {
-				$query->execute( array( $userId ) );
+				$query->execute( array( $type, $userId ) );
 			} else {
-				$query->execute();
+				$query->execute( array( $type ) );
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
