@@ -399,7 +399,7 @@ class Leads
 		return $results;
 	}
 
-	public function getLedger( $divisionId, $type ) {
+	public function getLedgerByDivision( $divisionId, $type ) {
 		$results = array();
 
 		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u.fullName ";
@@ -414,6 +414,28 @@ class Leads
 		try {
 			$query = $this->db->prepare( $sql );
 			$query->execute( array( $divisionId, $type ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get ledger: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getLedger( $type ) {
+		$results = array();
+
+		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u.fullName ";
+		$sql .= "FROM ledger l ";
+		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
+		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
+		$sql .= "WHERE l.type = ? ";
+		$sql .= "ORDER BY l.ledgerMonth,companyName";
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute( array( $type ) );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get ledger: ' . $e->getMessage() );

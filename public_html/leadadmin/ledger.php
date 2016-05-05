@@ -8,7 +8,6 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_ADMIN );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
-$divisionId = !empty( $_REQUEST['divisionId'] ) ? $_REQUEST['divisionId'] : '';
 $type = !empty( $_REQUEST['type'] ) ? 1 : 0;
 
 // Remove leading and trailing spaces from all values
@@ -101,7 +100,7 @@ if(isset($_REQUEST['a'])){
 				$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
 
 				$ledgerId = $leads->addLedger( array(
-					'divisionId' => $divisionId,
+					'divisionId' => empty( $_REQUEST['divisionId'] ) ? null : $_REQUEST['divisionId'],
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
 					'paymentDate' => empty( $_REQUEST['paymentDate'] ) ? null : $_REQUEST['paymentDate'],
@@ -195,7 +194,7 @@ if(isset($_REQUEST['a'])){
 				$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
 
 				$ledgerId = $leads->updateLedger( $_REQUEST['ledgerId'], array(
-					'divisionId' => $divisionId,
+					'divisionId' => empty( $_REQUEST['divisionId'] ) ? null : $_REQUEST['divisionId'],
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
 					'paymentDate' => empty( $_REQUEST['paymentDate'] ) ? null : $_REQUEST['paymentDate'],
@@ -264,7 +263,6 @@ if(isset($_REQUEST['d'])){
 					'required' => true,
 					'placeholder' => 'Select a division',
 					'choices' => $leads->getDivisions(),
-					'value' => $divisionId,
 				),
 				array(
 					'id' => 'companyId',
@@ -272,7 +270,6 @@ if(isset($_REQUEST['d'])){
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a company',
-					'choices' =>  $leads->getDivisionCompanies( $divisionId ),
 				),
 				array(
 					'id' => 'verticalId',
@@ -280,7 +277,6 @@ if(isset($_REQUEST['d'])){
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a vertical',
-					'choices' =>  $leads->getDivisionVerticals( $divisionId ),
 				),
 				array(
 					'id' => 'invoiceNum',
@@ -580,12 +576,12 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
-<h2><?php echo ( $type == 0 ? 'Publisher' : 'Advertiser' ) . ' - ' . $leads->getDivisionName( $divisionId ); ?></h2>
+<h2><?php echo ( $type == 0 ? 'Publisher' : 'Advertiser' ); ?></h2>
 
 <p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newledger">Add a new entry</button></p>
 
 <?php
-	$entries = $leads->getLedger( $divisionId, $type );
+	$entries = $leads->getLedger( $type );
 	if( empty( $entries ) ) {
 
 		print '<p>No ledger entries exist in the database.</p>';
@@ -703,7 +699,6 @@ $('#newledger').on('show.bs.modal', function(e) {
 		url: 'ledger.php',
 		data: {
 			'd': 'newLedger',
-			'divisionId': '<?php echo intval( $divisionId ); ?>',
 			'type': '<?php echo $type; ?>'
 		},
 		success: function(data) {
