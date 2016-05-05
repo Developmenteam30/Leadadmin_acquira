@@ -121,6 +121,26 @@ if(isset($_REQUEST['a'])){
 				$result['error'] = 'Please select a company status.';
 			}
 
+			if( $c && !empty( $_REQUEST['main_email'] ) && !filter_var( $_REQUEST['main_email'], FILTER_VALIDATE_EMAIL ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a valid email address for the Main Contact.';
+			}
+
+			if( $c && !empty( $_REQUEST['returns_email'] ) && !filter_var( $_REQUEST['returns_email'], FILTER_VALIDATE_EMAIL ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a valid email address for the Returns Contact.';
+			}
+
+			if( $c && !empty( $_REQUEST['acct_email'] ) && !filter_var( $_REQUEST['acct_email'], FILTER_VALIDATE_EMAIL ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a valid email address for the Accounting Contact.';
+			}
+
+			if( $c && !empty( $_REQUEST['tech_email'] ) && !filter_var( $_REQUEST['tech_email'], FILTER_VALIDATE_EMAIL ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a valid email address for the Technical Contact.';
+			}
+
 			if($c){
 				$alterCompanyResult = $leads->updateCompany( $_REQUEST['idCompany'], array(
 					'name' => trim( $_REQUEST['name'] ),
