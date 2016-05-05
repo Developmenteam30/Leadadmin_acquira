@@ -723,7 +723,7 @@ $('#newledger').on('show.bs.modal', function(e) {
 			modal.find('.modal-body').html(data);
 		}
 	});
-})
+});
 
 $('#modal-save-editledger').click(function(event) {
 	event.preventDefault();
@@ -758,7 +758,7 @@ $('#editledger').on('show.bs.modal', function(e) {
 			modal.find('.modal-body').html(data);
 		}
 	});
-})
+});
 
 $('#newledger, #editledger').on('hide.bs.modal', function(e) {
 	$(this).find('.modal-body').html('');
