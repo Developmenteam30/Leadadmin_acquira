@@ -75,6 +75,15 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
+			if( $c && !empty( $_REQUEST['paymentDate'] ) ) {
+				try {
+					$paymentDate = new DateTime( $_REQUEST['paymentDate'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid payment date.';
+					$c = false;
+				}
+			}
+
 			if( $c && !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === FALSE ) {
 				$result['error'] = 'Payment amount must be a numeric value.';
 				$c = false;
@@ -103,7 +112,7 @@ if(isset($_REQUEST['a'])){
 					'divisionId' => empty( $_REQUEST['divisionId'] ) ? null : $_REQUEST['divisionId'],
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
-					'paymentDate' => empty( $_REQUEST['paymentDate'] ) ? null : $_REQUEST['paymentDate'],
+					'paymentDate' => !isset( $paymentDate ) ? null : $paymentDate->format( 'Y-m-d' ),
 					'paymentMethod' => empty( $_REQUEST['paymentMethod'] ) ? null : $_REQUEST['paymentMethod'],
 					'ledgerMonth' => $ledgerMonth->format( 'Y-m-d' ),
 					'invoiceAmount' => empty( $_REQUEST['invoiceAmount'] ) ? 0.00 : $_REQUEST['invoiceAmount'],
@@ -169,6 +178,15 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
+			if( $c && !empty( $_REQUEST['paymentDate'] ) ) {
+				try {
+					$paymentDate = new DateTime( $_REQUEST['paymentDate'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid payment date.';
+					$c = false;
+				}
+			}
+
 			if( $c && !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === FALSE ) {
 				$result['error'] = 'Payment amount must be a numeric value.';
 				$c = false;
@@ -197,7 +215,7 @@ if(isset($_REQUEST['a'])){
 					'divisionId' => empty( $_REQUEST['divisionId'] ) ? null : $_REQUEST['divisionId'],
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
-					'paymentDate' => empty( $_REQUEST['paymentDate'] ) ? null : $_REQUEST['paymentDate'],
+					'paymentDate' => !isset( $paymentDate ) ? null : $paymentDate->format( 'Y-m-d' ),
 					'paymentMethod' => empty( $_REQUEST['paymentMethod'] ) ? null : $_REQUEST['paymentMethod'],
 					'ledgerMonth' => $ledgerMonth->format( 'Y-m-d' ),
 					'invoiceAmount' => empty( $_REQUEST['invoiceAmount'] ) ? 0.00 : $_REQUEST['invoiceAmount'],
@@ -299,7 +317,7 @@ if(isset($_REQUEST['d'])){
 				array(
 					'id' => 'paymentDate',
 					'label' => 'Date Paid',
-					'type' => 'date',
+					'type' => 'text',
 				),
 				array(
 					'id' => 'paymentMethod',
@@ -488,7 +506,7 @@ $("#newledger select[name='divisionId']").change( function() {
 					array(
 						'id' => 'paymentDate',
 						'label' => 'Date Paid',
-						'type' => 'date',
+						'type' => 'text',
 						'value' => $entry->paymentDate,
 					),
 					array(
