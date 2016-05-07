@@ -80,55 +80,68 @@ if( isset( $_REQUEST['d'] ) ) {
         case 'errorList':
             Display::errorList();
         break;
+	}
+	exit;
+}
 
-		case 'displayJob':
-			if( empty( $_REQUEST['options']['jobId'] )) {
-				print '<p>Error: No job ID specified!</p>';
-			} else if( empty( $_REQUEST['options']['count'] )) {
-				print '<p>Error: No record count specified!</p>';
-			} else {
+$title = 'Upload Job Status';
+include(INCLUDES."c_header.php");
+
 ?>
-		<div class="pull-right">
-			<a href="#" class="btn btn-primary btn-xs" onclick="request.abort(); closeContent( 'displayJob' ); display('displayAllJobs');">Close</a>
-		</div>
-		<h1>Upload Job Status</h1>
-		<p><strong>Job ID:</strong> <?php echo htmlentities( $_REQUEST['options']['jobId'] ); ?></p>
-		<p><strong>Status:</strong> <span id="status">Pending - please wait</span></p>
 
-		<table class="table table-bordered table-condensed">
-			<thead>
-				<tr>
-					<th>Accepted</th>
-					<th>Rejected - Invalid</th>
-					<th>Rejected - Duplicate</th>
-					<th>Rejected - Suppressed</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr class="aCenter">
-					<td id="count-accepted">0</td>
-					<td id="count-rejected">0</td>
-					<td id="count-duplicate">0</td>
-					<td id="count-suppressed">0</td>
-				</tr>
-			</tbody>
-		</table>
+<body>
 
-		<br/>
+<?php include(INCLUDES.'c_nav.php'); ?>
 
-		<table class="table table-bordered table-condensed" id="results">
-			<thead>
-				<tr>
-					<th>Record ID</th>
-					<th>Email Address</th>
-					<th>URL</th>
-					<th>Result</th>
-				</tr>
-			</thead>
-			<tbody>
-			</tbody>
-		</table>
-<script>
+<div class="container-fluid">
+
+<?php
+
+if( !empty( $_REQUEST['jobId'] ) ) {
+	if( empty( $_REQUEST['count'] ) ) {
+		$_REQUEST['count'] = 0;
+	}
+
+?>
+<h1>Upload Job Status</h1>
+<p><strong>Job ID:</strong> <?php echo htmlentities( $_REQUEST['jobId'] ); ?></p>
+<p><strong>Status:</strong> <span id="status">Pending - please wait</span></p>
+
+<table class="table table-bordered table-condensed">
+	<thead>
+		<tr>
+			<th>Accepted</th>
+			<th>Rejected - Invalid</th>
+			<th>Rejected - Duplicate</th>
+			<th>Rejected - Suppressed</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="aCenter">
+			<td id="count-accepted">0</td>
+			<td id="count-rejected">0</td>
+			<td id="count-duplicate">0</td>
+			<td id="count-suppressed">0</td>
+		</tr>
+	</tbody>
+</table>
+
+<br/>
+
+<table class="table table-bordered table-condensed" id="results">
+	<thead>
+	<tr>
+			<th>Record ID</th>
+			<th>Email Address</th>
+			<th>URL</th>
+			<th>Result</th>
+		</tr>
+	</thead>
+	<tbody>
+	</tbody>
+</table>
+
+<script type="text/javascript">
 	var resultCount = 0;
 	function getNextResult( lastRecord ) {
 		request = $.ajax({
@@ -136,7 +149,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			async: true,
 			data: ({
 				'a': 'jobResults',
-				'jobId': <?php echo intval( $_REQUEST['options']['jobId'] ) ?>,
+				'jobId': <?php echo intval( $_REQUEST['jobId'] ) ?>,
 				'idRecord': lastRecord
 			}),
 			success: function(data) {
@@ -157,7 +170,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					$('#count-duplicate').html( parseInt( $('#count-duplicate').html() ) + parseInt( data.counts.duplicate ) );
 					$('#count-suppressed').html( parseInt( $('#count-suppressed').html() ) + parseInt( data.counts.suppressed ) );
 
-					if( resultCount < <?php echo intval( $_REQUEST['options']['count'] ); ?> ) {
+					if( resultCount < <?php echo intval( $_REQUEST['count'] ); ?> ) {
 						if( lastRecord == 0 ) {
 							setTimeout(function() {
 								getNextResult( lastRecord );
@@ -179,84 +192,63 @@ if( isset( $_REQUEST['d'] ) ) {
 	getNextResult( 0 );
 </script>
 <?php
-			}
-		break;
 
-		case 'displayAllJobs':
-			$jobs = $leads->getJobs();
-			if( empty( $jobs ) || !is_array( $jobs ) ) {
-				print "No jobs found.";
+} else {
+
+?>
+
+<h1>Batch Jobs</h1>
+
+<?php
+	$jobs = $leads->getJobs();
+	if( empty( $jobs ) || !is_array( $jobs ) ) {
+		print "No jobs found.";
+	} else {
+?>
+<table class="table table-bordered table-condensed" id="jobs">
+	<thead>
+		<tr>
+			<th>Job ID</th>
+			<th>Type</th>
+			<th>Timestamp</th>
+			<th>Status</th>
+			<th>Feed</th>
+			<th>Records</th>
+			<th>Username</th>
+		</tr>
+	</thead>
+	<tbody>
+<?php
+		foreach( $jobs as $job ) {
+			$timestamp = new DateTime( $job->timestamp, new DateTimeZone( DB_TIMEZONE ) );
+			$timestamp->setTimezone( new DateTimeZone( LOCAL_TIMEZONE ) );
+
+			if( 'finished' === $job->status ) {
+				$class = 'bg-success';
+			} else if( 'processing' === $job->status ) {
+				$class = 'bg-warning';
 			} else {
-?>
-		<table class="table table-bordered table-condensed" id="jobs">
-			<thead>
-				<tr>
-					<th>Job ID</th>
-					<th>Type</th>
-					<th>Timestamp</th>
-					<th>Status</th>
-					<th>Feed</th>
-					<th>Records</th>
-					<th>Username</th>
-				</tr>
-			</thead>
-			<tbody>
-<?php
-				foreach( $jobs as $job ) {
-					$timestamp = new DateTime( $job->timestamp, new DateTimeZone( DB_TIMEZONE ) );
-					$timestamp->setTimezone( new DateTimeZone( LOCAL_TIMEZONE ) );
-
-					if( 'finished' === $job->status ) {
-						$class = 'bg-success';
-					} else if( 'processing' === $job->status ) {
-						$class = 'bg-warning';
-					} else {
-						$class = 'bg-danger';
-					}
-?>
-				<tr class="<?php echo $class; ?>">
-					<td><a href="#" onclick="closeContent( 'displayAllJobs' ); display( 'displayJob', { 'jobId': <?php echo $job->jobId; ?>, 'count': <?php echo $job->records; ?> });"><?php echo $job->jobId; ?></a></td>
-					<td><?php echo $job->type; ?></td>
-					<td><?php echo $timestamp->format( 'Y-m-d H:i:s' ); ?></td>
-					<td><?php echo $job->status; ?></td>
-					<td><?php echo $job->label; ?></td>
-					<td><?php echo $job->records; ?></td>
-					<td><?php echo $job->username; ?></td>
-				</tr>
-<?php
-				}
+				$class = 'bg-danger';
 			}
-		break;
-	}
-	exit;
-}
-
-$title = 'Upload Job Status';
-include(INCLUDES."c_header.php");
-
 ?>
-
-<body>
-
-<script>
-$(document).ready(function(){
-	var request;
-<?php if( !empty( $_REQUEST['jobId'] ) && !empty( $_REQUEST['count'] ) ) { ?>
-    display( 'displayJob', { 'jobId': <?php echo intval( $_REQUEST['jobId'] ); ?>, 'count': <?php echo intval( $_REQUEST['count'] ); ?> } );
-<?php } else { ?>
-    display( 'displayAllJobs' );
-<?php } ?>
-});
-</script>
-
-<?php include(INCLUDES.'c_nav.php'); ?>
-
-<div class="container-fluid">
-
-<h2>Jobs</h2>
-
-	<div id='displayAllJobs'></div>
-	<div id='displayJob'></div>
+	<tr class="<?php echo $class; ?>">
+		<td><a href="/leadadmin/mgr_job.php?jobId=<?php echo $job->jobId; ?>&amp;count=<?php echo $job->records; ?>"><?php echo $job->jobId; ?></a></td>
+		<td><?php echo $job->type; ?></td>
+		<td><?php echo $timestamp->format( 'Y-m-d H:i:s' ); ?></td>
+		<td><?php echo $job->status; ?></td>
+		<td><?php echo $job->label; ?></td>
+		<td><?php echo $job->records; ?></td>
+		<td><?php echo $job->username; ?></td>
+	</tr>
+<?php
+		}
+?>
+	</tbody>
+	</table>
+<?php
+	}
+}
+?>
 </div>
 
 </body>
