@@ -341,7 +341,7 @@ if(isset($_REQUEST['a'])){
 					break;
 				}
 
-				$leads->auditLog( 'FEEDOUT:ADDPOP', $idAssoc );
+				$leads->auditLog( 'FEEDOUT:POP:ADD', $idAssoc );
 
 				$result['status'] = 1;
 				$result['error'] = 'Successfully created new population parameter.';
@@ -368,7 +368,7 @@ if(isset($_REQUEST['a'])){
 					break;
 				}
 
-				$leads->auditLog( 'FEEDOUT:EDITPOP', $_REQUEST['idAssoc'] );
+				$leads->auditLog( 'FEEDOUT:POP:EDIT', $_REQUEST['idAssoc'] );
 
 				$result['status'] = 1;
 				$result['error'] = 'Successfully edited this population parameter.';
@@ -399,6 +399,8 @@ if(isset($_REQUEST['a'])){
 						if( empty( $alterResult ) ) {
 							$c = false;
 							$result['error'] = 'Unable to update population.';
+						} else {
+							$leads->auditLog( 'FEEDOUT:POP:STATE', $popSet->idAssoc . ':' . ( $enabled ? 'ENABLED' : 'DISABLED' ) );
 						}
 					}
 					if( $c ) {
