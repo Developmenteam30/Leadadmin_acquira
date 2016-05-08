@@ -1002,7 +1002,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT * FROM feedPopulation WHERE idFeedOut = ?" );
 			$query->execute( array( $idFeedOut ) );
-			$results = $query->fetch( PDO::FETCH_OBJ );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get feed populations: ' . $e->getMessage() );
 			return false;
