@@ -90,7 +90,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					$m_partner += floatval( $mapping['partner'] );
 
 					print "\t<tr>\n";
-					printf( "\t\t<td colspan=\"5\" class=\"hidden\" id=\"dialog_revenue_listowners_detail_%d\">&nbsp;</td>\n", $cnt );
+					printf( "\t\t<td colspan=\"5\" class=\"hidden-custom\" id=\"dialog_revenue_listowners_detail_%d\">&nbsp;</td>\n", $cnt );
 					print "\t</tr>\n";
 
 					$cnt++;
@@ -370,12 +370,12 @@ $(document).ready(function(){
 });
 </script>
 
-<div class="container-fluid client">
+<div class="container-XXfluid client">
 	<?php include(INCLUDES.'c_nav_client.php'); ?>
 	<div class="content">
 		<p class="payment">Please send all invoices to <a href="mailto:<?php echo PAYMENT_EMAIL;?>"><?php echo PAYMENT_EMAIL; ?></a> to ensure prompt payment.</p>
-		<div class="hidden" id="dialog_revenue_listowners"></div>
-		<div class="hidden" id="dialog_revenue_mailers"></div>
+		<div class="hidden-custom" id="dialog_revenue_listowners"></div>
+		<div class="hidden-custom" id="dialog_revenue_mailers"></div>
 	</div>
 	<div class="footer">
 		<p>Copyright &copy; <?php echo date( 'Y' ); ?> <?php echo CONFIG_COMPANY_NAME; ?>, LLC.  All rights reserved.</p>

@@ -9,6 +9,6 @@ if( !empty( $user->username ) ) {
 
 ?>
 <div class="headerRow client">
-	<div class="logoContainer navLogo fl"><img alt="logo" id="logo-reports" src="images/logo.png" /></div>
-	<div class="logoutContainer fr">Welcome, <strong><?php echo htmlspecialchars( $name ); ?></strong>! [ <a href="logout.php">Logout</a> ]</div>
+	<div class="logoContainer navLogo pull-left"><img alt="logo" id="logo-reports" src="images/logo.png" /></div>
+	<div class="logoutContainer pull-right">Welcome, <strong><?php echo htmlspecialchars( $name ); ?></strong>! [ <a href="logout.php">Logout</a> ]</div>
 </div>

@@ -5,18 +5,18 @@ include(INCLUDES."f_site.php");
 include(INCLUDES."c_sitecustom.php");
 if(0) {
 ?>
-html { 	
+html {
 	margin: 0px; padding: 0px;
 	height: 100%;
 	overflow-y: scroll;
 }
 
 body { 
-	background: url("images/bg.png"); 
+	background: url("images/bg.png");
 	margin: 0px; padding: 0px;
 	font-family: Verdana, Helvetica, sans-serif;
 	font-size: 0.6em;
-	height: 100%; 
+	height: 100%;
 }
 
 p { margin: 0px 0px 0px 0px; padding: 5px;}
@@ -74,10 +74,6 @@ div.contextMenu { display: none; position: absolute; background: #DDDDDD; border
 	max-height: 47px;
 }
 
-#logo-reports {
-	max-height: 63px;
-}
-
 /*Site Styles*/
 div.siteBorder { 
 	border: 1px solid #414042;
@@ -110,46 +106,6 @@ input.siteButton {
 		color-stop(0.25, rgb(<?php echo hex2rgb($gradientColor2);?>)),
 		color-stop(0.5, rgb(<?php echo hex2rgb($gradientColor3);?>))
 	);
-}
-div.headerRow { 
-	padding: 10px 10px 10px 10px; 
-}
-div.headerRow.client {
-	background-color: #dcdcdc;
-	overflow: auto;
-	margin-bottom: 20px;
-	padding: 10px 40px;
-}
-
-.payment {
-	text-align: center;
-	font-weight: bold;
-	margin: 1em 0;
-}
-
-.footer {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	margin-top: 30px;
-	background-color: #dcdcdc;
-	text-align: center;
-	font-size: 1.25em;
-	padding: 2em 0;
-}
-
-.client div.logoutContainer {
-	margin: 20px 0 0 0;
-	font-size: 1.50em;
-}
-
-div.navContainer, div.logoutContainer{ 
-	/* border: 1px solid #000000; */
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
-	overflow: hidden;
 }
 	a.navButton, a.navButtonLogout { 
 		text-align: center;
@@ -220,10 +176,9 @@ h1.boxTitle {
 	font-weight: normal;
 }
 
-div.logoContainer { width: 225px; }
-	div.loginLogo { margin-top: 20px; margin-bottom: 50px; }
-	div.navLogo { margin-right: 10px; }
-	
+div.loginLogo { margin-top: 20px; margin-bottom: 50px; }
+div.navLogo { margin-right: 10px; }
+
 div.loginContainer { width: 250px; margin: auto; }
 div.loginBox { width: 100%;   }
 input.loginBox { width: 230px; }
@@ -451,18 +406,6 @@ td.revenue span:before { content:'$'; }
 td.revenue input { width: 70px; font-size: 1em; }
 tr.subtotal { font-weight: bold; background-color: #dadada !important; }
 
-div.headerRow.client {
-	background-color: #dcdcdc;
-	overflow: auto;
-	margin-bottom: 20px;
-	padding: 10px 40px;
-}
-
-.client div.logoutContainer {
-	margin: 20px 0 0 0;
-	font-size: 1.50em;
-}
-
 h2 {
 	margin-top: 0;
 }
@@ -629,6 +572,57 @@ input::-webkit-inner-spin-button {
 	-moz-appearance: none;
 	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
+
+div.headerRow { 
+	padding: 10px 10px 10px 10px; 
+}
+div.headerRow.client {
+	background-color: #dcdcdc;
+	overflow: auto;
+	margin-bottom: 20px;
+	padding: 10px 40px;
+}
+
+.payment {
+	text-align: center;
+	font-weight: bold;
+	margin: 1em 0;
+}
+
+.footer {
+	position: relative;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin-top: 30px;
+	background-color: #dcdcdc;
+	text-align: center;
+	font-size: 1.25em;
+	padding: 1em 0;
+}
+
+.client {
+	font-size: 1em;
+}
+
+.client div.logoutContainer {
+	margin: 20px 0 0 0;
+	font-size: 1.50em;
+}
+
+#logo-reports {
+	max-height: 63px;
+}
+
+div.navContainer, div.logoutContainer{
+	/* border: 1px solid #000000; */
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	overflow: hidden;
+}
+
+div.logoContainer { width: 225px; }
 
 @media (min-width: 768px) {
 	.modal-xl {
