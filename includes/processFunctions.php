@@ -105,26 +105,6 @@ function url_reformat($urlstring)
 	
 }
 
-function loadParameters($feedLabel){ 
-	dbCon();
-	$getParameters = "SELECT * FROM `".DATABASE_NAME."`.`feedinc` WHERE `label` = '".$feedLabel."';";
-	$dogetParameters = dbQry($getParameters, 'Fetching parameters for '.$feedLabel, true);
-	if($dogetParameters === false){ return false; }
-	if($dogetParameters->num_rows == 0){ return 0; }
-	$parameters = $dogetParameters->fetch_object();
-	return $parameters;
-}
-
-function getFeedIn($idFeedIn){ 
-	dbCon();
-	$getParameters = "SELECT * FROM `".DATABASE_NAME."`.`feedinc` WHERE `idFeedIn` = " . intval( $idFeedIn );
-	$dogetParameters = dbQry($getParameters, 'Fetching parameters for '.$idFeedIn, true);
-	if($dogetParameters === false){ return false; }
-	if($dogetParameters->num_rows == 0){ return 0; }
-	$parameters = $dogetParameters->fetch_object();
-	return $parameters;
-}
-
 function logError($origination, $description, $notify = false){ 
 	//Store the error in the database.
 	dbCon("insertUpdate");
@@ -389,63 +369,6 @@ function filterValue($filterType, $value, $filters){
 		break;
 	}
 	return $valueAcceptable;
-}
-
-function checkExists( $column, $requestValues, $feedLabel ){
-	dbCon();
-	$query = "SELECT 1 AS cnt FROM `".DATABASE_NAME."`.`feedinc_".$feedLabel."` "
-			."WHERE `".$column."` = '".$GLOBALS['dbconnx']->escape_string($requestValues[$column])."' "
-			."LIMIT 1";
-	$docheckDupe = dbQry($query, 'Checking if value exists.', true);
-	dbDcon();
-	if($docheckDupe === false){ return false; }
-	$dupeCount = $docheckDupe->fetch_assoc();
-	return $dupeCount['cnt'];
-}
-
-function getPopulation( $idFeedOut ){
-	$query  = "SELECT p.*,i.label inLabel, o.label outLabel FROM `".DATABASE_NAME."`.`feedPopulation` p ";
-	$query .= "LEFT JOIN `".DATABASE_NAME."`.`feedinc` i ON p.idFeedIn = i.idFeedIn ";
-	$query .= "LEFT JOIN `".DATABASE_NAME."`.`feedout` o ON p.idFeedOut = o.idFeedOut ";
-    $query .= "WHERE i.label IS NOT NULL ";
-    $query .= "AND o.label IS NOT NULL ";
-    $query .= "AND p.idFeedOut = '" . intval( $idFeedOut ) . "'";
-    
-	dbCon();
-    $result = dbQry( $query, 'Getting population parameters', true );
-
-    if( $result === false ) { return false; }
-    if( $result->num_rows == 0 ) { return 0; }
-    $values = array();
-    while( $row = $result->fetch_object() ){
-        $values[] = $row;
-    }
-    return $values;
-}
-
-function getOutboundStamp( $label ) {
-	$query  = "SELECT MIN(stamp) stamp ";
-	$query .= "FROM `".DATABASE_NAME."`.`feedout_".$label."` ";
-    
-	dbCon();
-    $result = dbQry($query, 'Getting earlist outbound record stamp.', true);
-    if( $result === false ) { return null; }
-    if( $result->num_rows == 0 ) { return null; }
-    $stamp = $result->fetch_assoc();
-    return $stamp['stamp'];
-}
-
-function getOutboundDailyCount( $label ) {
-	$query  = "SELECT COUNT(*) cnt ";
-	$query .= "FROM `".DATABASE_NAME."`.`feedout_".$label."` ";
-	$query .= "WHERE poststamp >= DATE_FORMAT(NOW(), '%Y-%m-%d 00:00:00')";
-    
-	dbCon();
-    $result = dbQry($query, 'Getting outbound record count.', true);
-    if( $result === false ) { return null; }
-    if( $result->num_rows == 0 ) { return null; }
-    $cnt = $result->fetch_assoc();
-    return $cnt['cnt'];
 }
 
 function addOutboundRecord( $label, $listcode, $urlTrim, $url, $ip, $stamp, $email, $fname, $lname, $addr, $addr2, $city, $state, $zip, $country, $dob, $gender, $landline, $cellphone, $processed = '0', $poststamp = null, $postrequest = null, $postresponse = null ) {

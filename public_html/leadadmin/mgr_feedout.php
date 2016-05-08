@@ -12,10 +12,6 @@ $status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
 
 require_once( INCLUDES . 'display.php' );
 
-$mysqlErrorSource = 'Manager - Outgoing Feeds';
-include(INCLUDES."_connx.php");
-include(INCLUDES."f_site.php");
-
 if(isset($_REQUEST['a'])){
 	Header( 'Content-Type: application/json' );
 
@@ -1481,7 +1477,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 
 			$feed = $leads->getOutboundFeed( $idFeedOut );
-			$populationSettings = getPopulationSettings($idFeedOut);
+			$populationSettings = $leads->getPopulations( $idFeedOut );
 			$cacheFeedIn = array();
 ?>
 <p>
@@ -1522,7 +1518,7 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php
 	foreach($populationSettings as $popSet){ 
 		if(!isset($cacheFeedIn[$popSet->idFeedIn])){ 
-			$cacheFeedIn[$popSet->idFeedIn] = getIncomingFeed($popSet->idFeedIn);
+			$cacheFeedIn[$popSet->idFeedIn] = $leads->getInboundFeed($popSet->idFeedIn);
 			if(!is_object($cacheFeedIn[$popSet->idFeedIn])){ 
 				$cacheFeedIn[$popSet->idFeedIn] = new stdClass;
 				$cacheFeedIn[$popSet->idFeedIn]->label = 'Error';
@@ -1725,7 +1721,7 @@ if( $outgoingFeeds === false ) {
 	foreach($outgoingFeeds as $feed){
 		//Add company to the cache list of companies.
 		if(!isset($companyCache[$feed->idCompany])){
-			$company = getCompany($feed->idCompany);
+			$company = $leads->getCompany($feed->idCompany);
 			if(	is_object($company) ){
 				$companyCache[$feed->idCompany] = $company;
 				$companyFeedLists[$feed->idCompany] = array();

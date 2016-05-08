@@ -220,7 +220,7 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'companyList':
-			$companies = getCompanies();
+			$companies = $leads->getCompanies();
 			if($companies === false){
 ?>
 <p>Error getting company list.</p>
@@ -335,7 +335,7 @@ if(isset($_REQUEST['d'])){
 					${"listcode_".$prop} = '';
 				}
 			}
-			$companies = getCompanies();
+			$companies = $leads->getCompanies();
 ?>
 <table class="listcodeTable" border="1" cellpadding="0" cellspacing="0">
 	<tr>

@@ -12,7 +12,7 @@ require_once(INCLUDES."processFunctions.php");
 
 function legacyPopulate( $feedId, $file = false ) {
 
-	$populations = getPopulation( $feedId );
+	$populations = $leads->getPopulations( $feedId );
 	if( $populations === false ) {
 		print "Database error";
 	} else if( $populations == 0 ) {

@@ -8,10 +8,6 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
-$mysqlErrorSource = 'Manager - Suppression';
-include(INCLUDES."_connx.php");
-include(INCLUDES."f_site.php");
-
 if(isset($_REQUEST['a'])){ 
 	$result = array(
 		'status' => 0
@@ -259,8 +255,15 @@ if(isset($_REQUEST['a'])){
 }
 
 if(isset($_REQUEST['d'])){ 
-	include(INCLUDES."d_shared.php");
 	switch($_REQUEST['d']){
+		case 'errorCount':
+			Display::errorCount();
+		break;
+
+		case 'errorList':
+			Display::errorList();
+		break;
+
 		case 'suppressionCounts':
 			$lists = $leads->getSuppressionCounts();
 ?>
@@ -297,7 +300,7 @@ if(isset($_REQUEST['d'])){
 <?php
 		break;
 		case 'dialog_import':
-			$companies = getCompanies();
+			$companies = $leads->getCompanies();
 			switch($_REQUEST['options']['type']){
 				case "single":
 				

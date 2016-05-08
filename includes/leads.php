@@ -996,6 +996,21 @@ class Leads
 		return $results;
 	}
 
+	public function getPopulations( $idFeedOut ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM feedPopulation WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get feed populations: ' . $e->getMessage() );
+			return false;
+		}
+
+		return $results;
+	}
+
 	public function addPopulation( $fields ) {
 
 		if( empty( $fields['idFeedIn'] ) || empty( $fields['idFeedOut'] ) ) {
@@ -2096,10 +2111,7 @@ class Leads
 
 	public function getInboundURLStatsReport( $idFeedIn, $urlList, $breakdown, $dateStart, $dateEnd, $sort ) {
 		$results = array();
-
-		if( !empty( $urlList ) && is_array( $urlList ) ) {
-			$urlList =  implode(',', array_map( 'add_quotes', $urlList ) );
-		}
+		$params = array();
 
 		if( !empty( $breakdown ) && $breakdown == 'month' ) {
 			$query  = "SELECT url,LEFT(stamp,7) date,SUM(accepted) accepted,SUM(rejected) rejected ";
@@ -2113,8 +2125,12 @@ class Leads
 
 		$query .= "FROM stats_inbound ";
 		$query .= "WHERE idFeedIn = ? ";
-		if( !empty( $urlList ) ) {
-			$query .= "AND url IN (" . $urlList . ") ";
+		$params[] = $idFeedIn;
+		if( !empty( $urlList ) && is_array( $urlList ) ) {
+			$query .= "AND url IN (" . substr( str_repeat( '?,', sizeOf( $urlList ) ), 0, -1 ) . ") ";
+			foreach( $urlList as $url ) {
+				$params[] = $url;
+			}
 		}
 
 		if( !empty( $dateStart ) && !empty( $dateEnd ) ) {
@@ -2127,7 +2143,7 @@ class Leads
 			}
 			$query .= "AND stamp >= '".$dateStart."' AND stamp < '".$dateEnd."' ";
 		}
-			
+
 		$query .= "GROUP BY 1,2 ";
 		if( !empty( $sort ) && 'url' == $sort ) {
 			$query .= "ORDER BY 1,2";
@@ -2139,7 +2155,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( $query );
-			$query->execute( array( $idFeedIn ) );
+			$query->execute( $params );
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound URL dates: ' . $e->getMessage() );
@@ -2164,10 +2180,7 @@ class Leads
 
 	public function getOutboundURLStatsReport( $idFeedOut, $urlList, $breakdown, $dateStart, $dateEnd, $sort ) {
 		$results = array();
-
-		if( !empty( $urlList ) && is_array( $urlList ) ) {
-			$urlList =  implode(',', array_map( 'add_quotes', $urlList ) );
-		}
+		$params = array();
 
 		if( !empty( $breakdown ) && $breakdown == 'month' ) {
 			$query  = "SELECT url,LEFT(stamp,7) date,SUM(accepted) accepted,SUM(rejected) rejected ";
@@ -2181,8 +2194,12 @@ class Leads
 
 		$query .= "FROM stats_outbound ";
 		$query .= "WHERE idFeedOut = ? ";
-		if( !empty( $urlList ) ) {
-			$query .= "AND url IN (" . $urlList . ") ";
+		$params[] = $idFeedOut;
+		if( !empty( $urlList ) && is_array( $urlList ) ) {
+			$query .= "AND url IN (" . substr( str_repeat( '?,', sizeOf( $urlList ) ), 0, -1 ) . ") ";
+			foreach( $urlList as $url ) {
+				$params[] = $url;
+			}
 		}
 
 		if( !empty( $dateStart ) && !empty( $dateEnd ) ) {
@@ -2195,7 +2212,7 @@ class Leads
 			}
 			$query .= "AND stamp >= '".$dateStart."' AND stamp < '".$dateEnd."' ";
 		}
-			
+
 		$query .= "GROUP BY 1,2 ";
 		if( !empty( $sort ) && 'url' == $sort ) {
 			$query .= "ORDER BY 1,2";
@@ -2207,7 +2224,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( $query );
-			$query->execute( array( $idFeedOut ) );
+			$query->execute( $params );
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound URL dates: ' . $e->getMessage() );

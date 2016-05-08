@@ -12,9 +12,6 @@ $status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
 
 require_once( INCLUDES . 'display.php' );
 
-$mysqlErrorSource = 'Manager - Incoming Feeds';
-$forceMysqlLogFile = SITE_ROOT."error".FD."log_feedinc";
-include(INCLUDES."_connx.php");
 include(INCLUDES."f_site.php");
 
 if(isset($_REQUEST['a'])){
