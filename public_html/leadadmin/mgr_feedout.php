@@ -8,309 +8,146 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
+$status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
+
 require_once( INCLUDES . 'display.php' );
 
 $mysqlErrorSource = 'Manager - Outgoing Feeds';
 include(INCLUDES."_connx.php");
 include(INCLUDES."f_site.php");
 
-function checkExistsLabelFeedOut($label){ 
-	//Returns quantity of matching records, or false if it fails.
-	dbCon();
-	$checkFeed = "SELECT * FROM `".DATABASE_NAME."`.`feedout` "
-		."WHERE "
-			."`label` = '".$GLOBALS['dbconnx']->escape_string($label)."' "
-		.";";
-	$docheckFeed = dbQry($checkFeed, 'Checking if label exists', true);
-	dbDcon();
-	if($docheckFeed === false){ return false; }
-	return $docheckFeed->num_rows;
-}
+if(isset($_REQUEST['a'])){
+	Header( 'Content-Type: application/json' );
 
-function addFeedOut(
-	$label
-	, $description
-	, $idCompany
-	, $feedType
-	, $postUrl
-	, $staticFields
-	, $varFields
-	, $fieldMap
-	, $successString
-	, $dailyLimit
-	, $delay
-	, $urlassignments
-){ 
-	$result = array(
-		'success' => false
-		, 'reason' => 'None.'
-	);
-	$c = true;
-	dbCon("insertUpdate");
-	if($c){ //Add feed.
-		$addFeed = "INSERT INTO `".DATABASE_NAME."`.`feedout` "
-			."(`label`,`description`,`idCompany`,`feedType`,`postUrl`,`staticFields`,`varFields`,`fieldMap` "
-				.",`status`,`cron`,`cronTiming`,`successString`,`dailyLimit`,`delay`,`throttle`, `urlassignments`) VALUES ( "
-			."  '".$GLOBALS['dbconnx']->escape_string($label)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($description)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($idCompany)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($feedType)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($postUrl)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($staticFields)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($varFields)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($fieldMap)."' "
-			.", 'active', '0', '1' "
-			.", '".$GLOBALS['dbconnx']->escape_string($successString)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($dailyLimit)."' "
-			.", '".$GLOBALS['dbconnx']->escape_string($delay)."' "
-			.", '100' "
-			.", '".$GLOBALS['dbconnx']->escape_string($urlassignments)."' "
-			.");";
-		$doaddFeed = dbQry($addFeed, 'Adding new feed.', true);
-		if($doaddFeed === false){ 
-			$c = false; $result['reason'] = 'Database failure - could not add feed.';
-		} 
-	}
-	if($c && LEGACY_DB ){ //Create feedout table..
-		$createTable = "CREATE TABLE `".DATABASE_NAME."`.`feedout_".$label."` ( "
-			."`idRecord` bigint(20) NOT NULL auto_increment, "
-			."`processed` enum('-1','0','1') default '0', "
-			."`poststamp` datetime default NULL, "
-			."`postrequest` varchar(1000) default NULL, "
-			."`postresponse` varchar(1000) default NULL, "
-			."`listcode` varchar(20) default NULL, "
-			."`urlTrim` varchar(100) default NULL, "
-			."`url` varchar(500) default NULL, "
-			."`ip` varchar(16) default NULL, "
-			."`stamp` datetime default NULL, "
-			."`email` varchar(150) default NULL, "
-			."`fname` varchar(50) default NULL, "
-			."`lname` varchar(50) default NULL, "
-			."`addr` varchar(150) default NULL, "
-			."`addr2` varchar(150) default NULL, "
-			."`city` varchar(75) default NULL, "
-			."`state` varchar(25) default NULL, "
-			."`zip` varchar(20) default NULL, "
-			."`dob` date default NULL, "
-			."`gender` varchar(10) default NULL, "
-			."`landline` varchar(20) default NULL, "
-			."`cellphone` varchar(20) default NULL, "
-			."`country` varchar(75) default NULL, "
-			."PRIMARY KEY  (`idRecord`), "
-			."KEY `email` (`email`), "
-			."KEY `postStamp` (`postStamp`), "
-			."KEY `processed` (`processed`), "
-			."KEY `urlTrimDate` (`urlTrim`,`postStamp`) "
-			.") AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;";
-		$docreateTable = dbQry($createTable, 'Creating table for feed out.', true);
-		if($docreateTable === false){ 
-			$c = false; $result['reason'] = 'Database failure - could not create feed out table.';
-		}
-	}
-	dbDcon();
-	if($c){ 
-		$result['success'] = true;
-		$result['reason'] = 'Successfully added feed and created feed table.';
-	}
-	return $result;
-}
-
-function alterFeedOut($idFeedOut, $property, $newVal){ 
-	$result = array(
-		'success' => false
-		, 'reason' => 'None.'
-	);
-	$c = true;
-	switch($property){
-		case 'label':
-			//Change label in database.
-			if($c){ 
-				$leads = Leads::getInstance();
-				$feed = $leads->getOutboundFeed( $idFeedOut );
-				if($feed === false){ 
-					$c = false; $result['reason'] = 'Database failure - could not fetch feed to alter.';
-				}
-			}
-			dbCon("insertUpdate");
-			if($c){ //Updated feedout entry.
-				$updateLabel = "UPDATE `".DATABASE_NAME."`.`feedout` "
-					."SET `label` = '".$newVal."' "
-					."WHERE `idFeedOut` = '".$idFeedOut."'; ";
-				$doupdateLabel = dbQry($updateLabel, 'Updating feed label', true);
-				if($doupdateLabel === false){ $c = false; $result['reason'] = 'Database failure - could not update '
-					.'label name.';
-				}
-			}
-			if($c && LEGACY_DB ){ //Updating table names.
-				$updateTableNames = 
-					"RENAME TABLE "
-						."`".DATABASE_NAME."`.`feedout_".$feed->label."` "
-							."TO `".DATABASE_NAME."`.`feedout_".$newVal."`; ";
-				$doupdateTableNames = dbQry($updateTableNames, 'Updating table names', true);
-				if($doupdateTableNames === false){ 
-					$c = false; $result['reason'] = 'Database failure - could not update table names.';
-				}
-			}
-			dbDcon();
-			if($c){ $result['success'] = true; $result['reason'] = 'Successfully updated label for outgoing feed.'; }
-		break;
-		default: 
-			dbCon("insertUpdate");
-			if($c){ //Updated feedinc entry.
-				$updateProperty = "UPDATE `".DATABASE_NAME."`.`feedout` "
-					."SET `".$property."` = ". valueEmpty( $newVal ) ." "
-					."WHERE `idFeedOut` = '".$idFeedOut."'; ";
-				$doupdateProperty = dbQry($updateProperty, 'Updating feed property '.$property, true);
-				if($doupdateProperty === false){ $c = false; $result['reason'] = 'Database failure - could not update '
-					.$property.'.';
-				}
-			}
-			if($c){ $result['success'] = true; $result['reason'] = 'Successfully updated '.$property.' for outgoing '
-				.'feed.';
-			}
-		break;
-	}
-	if( $c ) {
-		$leads = Leads::getInstance();
-		$leads->auditLog( 'FEEDOUT:EDIT', $idFeedOut );
-	}
-	return $result;
-}
-
-function addPopulationParameter(
-	$idFeedOut
-	, $idFeedIn
-	, $filterTypeUrl
-	, $filterUrl
-	, $filterTypeEmail
-	, $filterEmail
-	, $filterTypeListcode
-	, $filterListcode
-	, $livedata
-	, $forceUrl
-	, $forceUrlList
-){ 
-	dbCon("insertUpdate");
-	$addParameter = "INSERT INTO `".DATABASE_NAME."`.`feedPopulation` "
-		."( "
-			."`enabled`,`idFeedIn`,`idFeedOut`,`filterTypeUrl`,`filterUrl`,`filterTypeEmail`,`filterEmail` "
-			.", `filterTypeListcode`,`filterListcode`, `livedata`, `forceUrl`, `forceUrlList` "
-		.") VALUES ('1', "
-		."  ".$idFeedIn." "
-		.", ".$idFeedOut." "
-		.", ".$filterTypeUrl." "
-		.", '".$GLOBALS['dbconnx']->escape_string($filterUrl)."' "
-		.", ".$filterTypeEmail." "
-		.", '".$GLOBALS['dbconnx']->escape_string($filterEmail)."' "
-		.", ".$filterTypeListcode." "
-		.", '".$GLOBALS['dbconnx']->escape_string($filterListcode)."' "
-		.", ".$livedata." "
-		.", ".$forceUrl." "
-		.", '".$GLOBALS['dbconnx']->escape_string($forceUrlList)."' "
-		.");";
-	$doaddParameter = dbQry($addParameter, 'Adding new feed.', true);
-	if($doaddParameter === false){ return false; }
-	$idAssoc = $GLOBALS['dbconnx']->insert_id;
-	$leads = Leads::getInstance();
-	$leads->auditLog( 'FEEDOUT:POP:ADD', $idAssoc );
-	return true;
-}
-
-function alterPopulationParameter($idAssoc, $property, $newVal){ 
-	dbCon("insertUpdate");
-	$escapers = array("filterUrl", "filterEmail", "filterListcode", "forceUrlList");
-	if(in_array($property, $escapers)){ 
-		$newVal = $GLOBALS['dbconnx']->escape_string($newVal);
-	}
-	$quoters = array("filterUrl", "filterEmail", "filterListcode", "forceUrlList");
-	if(in_array($property, $quoters)){ 
-		$newVal = "'".$newVal."'";
-	}
-	if( empty( $newVal ) ) {
-		$newVal = "NULL";
-	}
-	$updateProperty = "UPDATE `".DATABASE_NAME."`.`feedPopulation` "
-		."SET `".$property."` = ".$newVal." "
-		."WHERE `idAssoc` = '".$idAssoc."'; ";
-	$doupdateProperty = dbQry($updateProperty, 'Updating feed property '.$property, true);
-	if($doupdateProperty === false){ return false; }
-	$leads = Leads::getInstance();
-	$leads->auditLog( 'FEEDOUT:POP:EDIT', $idAssoc );
-	return true;
-}
-
-function deletePopulationParam($idAssoc){ 
-	dbCon("insertUpdate");
-	$deleteProperty = "DELETE FROM `".DATABASE_NAME."`.`feedPopulation` "
-		."WHERE `idAssoc` = '".$idAssoc."'; ";
-	$dodeleteProperty = dbQry($deleteProperty, 'Deleting feed population paramter.', true);
-	if($dodeleteProperty === false){ return false; }
-	$leads = Leads::getInstance();
-	$leads->auditLog( 'FEEDOUT:POP:DEL', $idAssoc );
-	return true;
-}
-
-if(isset($_REQUEST['a'])){ 
 	$result = array(
 		'status' => 0
 		, 'error' => 'Action does not exist.'
 	);
 	switch($_REQUEST['a']){
-		case "manageFeedOut":
-			$c = true; $result['error'] = 'Failed when attempting to manage feeds.';
-			$action = $_REQUEST['action'];
-			if($action == 'new'){
-				$result['error'] = 'Failed when adding a new feed.';
-				//Validate Input
-				if($c && ( //Label Cannot be empty.
-					$_REQUEST['label'] == ''
-				)){ $c = false; $result['error'] = 'Label cannot be empty.'; }
-				if($c //Label cannot have invalid characters
-				){
-					$pattern = '/^[a-z][a-z0-9_]*$/';
-					if(!preg_match($pattern, $_REQUEST['label'])){ 
-						$c = false; $result['error'] = 'Label must start with a letter, can contain letters, '
-							.'numbers, and underscore only.';
-					}
-				}
-				//Special Validation of Inputs
-				if($c){  //Label can not be already used
-					$checkResult = checkExistsLabelFeedOut($_REQUEST['label']);
-					if($checkResult === false){ 
-						$c = false; $result['error'] = 'Database failure - could not '
-							.'check if label is already in use.'; 
-					}
-					if($c && $checkResult > 0){ 
-						$c = false; $result['error'] = 'Label is already in use.'; 
-					}					
-				}
-				if($c){ //Add entry to the database.
-					$addResult = addFeedOut(
-						$_REQUEST['label']
-						, $_REQUEST['description']
-						, $_REQUEST['idCompany']
-						, $_REQUEST['feedType']
-						, trim( $_REQUEST['postUrl'] )
-						, $_REQUEST['staticFields']
-						, $_REQUEST['varFields']
-						, $_REQUEST['fieldMap']
-						, $_REQUEST['successString']
-						, $_REQUEST['dailyLimit']
-						, $_REQUEST['delay']
-						, $_REQUEST['urlassignments']
+		case "manageFeed":
+			$c = true;
+			$result['error'] = 'Failed when attempting to manage feeds.';
+			$action = !empty( $_REQUEST['action'] ) ? $_REQUEST['action'] : '';
+
+			//Validate Input
+			if( $c && empty( $_REQUEST['label'] ) ) {
+				$c = false;
+				$result['error'] = 'Label cannot be empty.';
+			}
+
+			if( $c && empty( $_REQUEST['idCompany'] ) ) {
+				$c = false;
+				$result['error'] = 'Please select a company from the list.';
+			}
+
+			if( $c && empty( $_REQUEST['feedType'] ) ) {
+				$c = false;
+				$result['error'] = 'Please select a feed type from the list.';
+			}
+
+			if( $c && empty( $_REQUEST['postUrl'] ) ) {
+				$c = false;
+				$result['error'] = 'Please provide a post URL.';
+			}
+
+			$staticFields = '';
+			if( !empty( $_REQUEST['staticFields_field'] ) && is_array( $_REQUEST['staticFields_field'] ) ) {
+				$_REQUEST['staticFields_field'] = array_map( 'trim', $_REQUEST['staticFields_field'] );
+				$_REQUEST['staticFields_value'] = array_map( 'trim', $_REQUEST['staticFields_value'] );
+				$temp = array();
+				for( $i = 0; $i < sizeOf( $_REQUEST['staticFields_field'] ); $i++ ) {
+					// Strip our field delimiters of = and ; out of the input
+					$temp[] = sprintf( '%s=%s',
+						str_replace( array( '=', ';' ), '', $_REQUEST['staticFields_field'][$i] ),
+						!empty( $_REQUEST['staticFields_value'][$i] ) ? str_replace( array( '=', ';' ), '', $_REQUEST['staticFields_value'][$i] ) : ''
 					);
-					if(!$addResult['success']){ 
-						$c = false; $result['error'] = $addResult['reason'];
+				}
+				$staticFields = implode( ';', $temp );
+			}
+
+			$varFields = '';
+			if( !empty( $_REQUEST['varFields'] ) && is_array( $_REQUEST['varFields'] ) ) {
+				$_REQUEST['varFields'] = array_map( 'trim', $_REQUEST['varFields'] );
+				$varFields = implode( ';', $_REQUEST['varFields'] );
+			}
+
+			$fieldMap = '';
+			if( !empty( $_REQUEST['fieldMap'] ) && is_array( $_REQUEST['fieldMap'] ) ) {
+				$_REQUEST['fieldMap'] = array_map( 'trim', $_REQUEST['fieldMap'] );
+				$fieldMap = implode( ';', $_REQUEST['fieldMap'] );
+			}
+
+			$urlAssign = '';
+			if( !empty( $_REQUEST['urlassignments_url'] ) && is_array( $_REQUEST['urlassignments_url'] ) ) {
+				$_REQUEST['urlassignments_url'] = array_map( 'trim', $_REQUEST['urlassignments_url'] );
+				$_REQUEST['urlassignments_id'] = array_map( 'trim', $_REQUEST['urlassignments_id'] );
+				$temp = array();
+				for( $i = 0; $i < sizeOf( $_REQUEST['urlassignments_url'] ); $i++ ) {
+					// Strip our field delimiters of = and ; out of the input
+					$temp[] = sprintf( '%s=%s',
+						str_replace( array( '=', ';' ), '', $_REQUEST['urlassignments_url'][$i] ),
+						!empty( $_REQUEST['urlassignments_id'][$i] ) ? str_replace( array( '=', ';' ), '', $_REQUEST['urlassignments_id'][$i] ) : ''
+					);
+				}
+				$urlAssign = implode( ';', $temp );
+			}
+
+			if( $action == 'new' ) {
+
+				if( $c ) {
+					$pattern = '/^[a-z][a-z0-9_]*$/';
+					if( !preg_match( $pattern, $_REQUEST['label'] ) ) {
+						$c = false;
+						$result['error'] = 'Label must start with a letter, can contain letters, numbers, and underscore only.';
 					}
 				}
-				if($c){ 
-					$result['status'] = 1;
-					$result['error'] = 'Successfully created new feed.';
+
+				if( $c ) {
+					//Label can not be already used
+					$checkResult = $leads->checkOutboundFeedLabelExists( $_REQUEST['label'] );
+					if( true === $checkResult ) {
+						$c = false;
+						$result['error'] = 'That feed label is already being used.';
+					}
 				}
-			} else {			
-				$result['error'] = 'Failed when editing feed.';
+
+				if( $c ) { //Add entry to the database.
+
+					$idFeedOut = $leads->addOutboundFeed( array(
+						'label' => $_REQUEST['label'],
+						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
+						'idCompany' => $_REQUEST['idCompany'],
+						'feedType' => empty( $_REQUEST['feedType'] ) ? 'curlPOST' : $_REQUEST['feedType'],
+						'postUrl' => empty( $_REQUEST['postUrl'] ) ? null : $_REQUEST['postUrl'],
+						'staticFields' => empty( $staticFields ) ? null : $staticFields,
+						'varFields' => empty( $varFields ) ? null : $varFields,
+						'fieldMap' => empty( $fieldMap ) ? null : $fieldMap,
+						'cron' => empty( $_REQUEST['cron'] ) ? 0 : 1,
+						'cronTiming' => empty( $_REQUEST['cronTiming'] ) ? 1 : $_REQUEST['cronTiming'],
+						'successString' => empty( $_REQUEST['successString'] ) ? null : $_REQUEST['successString'],
+						'throttle' => empty( $_REQUEST['throttle'] ) ? 0 : $_REQUEST['throttle'],
+						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
+						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
+						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
+						'queued' => 0,
+						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
+					) );
+
+					if( null === $idFeedOut ) {
+						$c = false;
+						$result['status'] = 0;
+						$result['error'] = 'Failed to create new feed.';
+					} else {
+						$result['status'] = 1;
+						$result['error'] = "Successfully created new feed #{$idFeedOut}.";
+						$leads->auditLog( 'FEEDOUT:ADD', $idFeedOut );
+					}
+				}
+
+			} else {
 
 				$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
+
 				if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 					$idCompany = LeadsSession::getCompanyId();
 					if( empty( $idCompany ) ) {
@@ -323,422 +160,260 @@ if(isset($_REQUEST['a'])){
 					}
 				}
 
-				if($c){ 
+				if( $c ) {
 					$feed = $leads->getOutboundFeed( $idFeedOut );
-					if($feed === false){ 
-						$c = false; $result['error'] = 'Database failure - could not fetch feed information for '
-							.'editing.';
-					}				
-					if($c && !is_object($feed) && $feed == 0){ 
-						$c = false; $result['error'] = 'Could not alter feed - feed does not exist.';
+					if( empty( $feed ) ) {
+						$c = false;
+						$result['error'] = 'Sorry, this feed does not exist.';
 					}
 				}
-				if($c){ 
-					if($_REQUEST['label'] != $feed->label){ //Label is being altered. 
-						if($c && ( //Label Cannot be empty.
-							$_REQUEST['label'] == ''
-						)){ $c = false; $result['error'] = 'Label cannot be empty.'; }
-						if($c //Label cannot have invalid characters
-						){
-							$pattern = '/^[a-z][a-z0-9_]*$/';
-							if(!preg_match($pattern, $_REQUEST['label'])){ 
-								$c = false; $result['error'] = 'Label must start with a letter, can can contain '
-								.'letters, numbers, and underscore only.';
-							}
+
+				if( $c ){
+					if( $_REQUEST['label'] != $feed->label ) { //Label is being altered.
+
+						$pattern = '/^[a-z][a-z0-9_]*$/';
+						if( !preg_match($pattern, $_REQUEST['label'] ) ) {
+							$c = false; $result['error'] = 'Label must start with a letter, can can contain '
+							.'letters, numbers, and underscore only.';
 						}
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut($_REQUEST['idFeedOut'], 'label', $_REQUEST['label']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['description'] != $feed->description){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut($_REQUEST['idFeedOut'], 'description', $_REQUEST['description']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
+
+						if( $c ) {
+							//Label can not be already used
+							$checkResult = $leads->checkOutboundFeedLabelExists( $_REQUEST['label'] );
+							if( true === $checkResult ) {
+								$c = false;
+								$result['error'] = 'That feed label is already being used.';
 							}
 						}
 					}
-					if($_REQUEST['idCompany'] != $feed->idCompany){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut($_REQUEST['idFeedOut'], 'idCompany', $_REQUEST['idCompany']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
+
+					$idFeedOut = $leads->updateOutboundFeed( $idFeedOut, array(
+						'label' => $_REQUEST['label'],
+						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
+						'idCompany' => $_REQUEST['idCompany'],
+						'feedType' => empty( $_REQUEST['feedType'] ) ? 'curlPOST' : $_REQUEST['feedType'],
+						'postUrl' => empty( $_REQUEST['postUrl'] ) ? null : $_REQUEST['postUrl'],
+						'staticFields' => empty( $staticFields ) ? null : $staticFields,
+						'varFields' => empty( $varFields ) ? null : $varFields,
+						'fieldMap' => empty( $fieldMap ) ? null : $fieldMap,
+						'cron' => empty( $_REQUEST['cron'] ) ? 0 : 1,
+						'cronTiming' => empty( $_REQUEST['cronTiming'] ) ? 1 : $_REQUEST['cronTiming'],
+						'successString' => empty( $_REQUEST['successString'] ) ? null : $_REQUEST['successString'],
+						'throttle' => empty( $_REQUEST['throttle'] ) ? 0 : $_REQUEST['throttle'],
+						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
+						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
+						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
+						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
+					) );
+
+					if( null === $idFeedOut ) {
+						$c = false;
+						$result['status'] = 0;
+						$result['error'] = 'Error updating feed settings.';
+					} else {
+						$result['status'] = 1;
+						$result['error'] = "Successfully updated feed #{$idFeedOut}.";
+						$leads->auditLog( 'FEEDOUT:EDIT', $idFeedOut );
 					}
-					if($_REQUEST['feedType'] != $feed->feedType){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut($_REQUEST['idFeedOut'], 'feedType', $_REQUEST['feedType']);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['postUrl'] != $feed->postUrl){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut($_REQUEST['idFeedOut'], 'postUrl', trim( $_REQUEST['postUrl'] ));
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['staticFields'] != $feed->staticFields){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut(
-								$_REQUEST['idFeedOut'], 'staticFields', $_REQUEST['staticFields']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['urlassignments'] != $feed->urlassignments){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut(
-								$_REQUEST['idFeedOut'], 'urlassignments', $_REQUEST['urlassignments']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['varFields'] != $feed->varFields){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut(
-								$_REQUEST['idFeedOut'], 'varFields', $_REQUEST['varFields']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['fieldMap'] != $feed->fieldMap){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut(
-								$_REQUEST['idFeedOut'], 'fieldMap', $_REQUEST['fieldMap']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['successString'] != $feed->successString){ 
-						if($c){ //Validated, change label, change table names.
-							$alterResult = alterFeedOut(
-								$_REQUEST['idFeedOut'], 'successString', $_REQUEST['successString']
-							);
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					if($_REQUEST['status'] != $feed->status){ 
-						if($c){
-							$alterResult = alterFeedOut( $_REQUEST['idFeedOut'], 'status', $_REQUEST['status'] );
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-						if( 'retired' === $_REQUEST['status'] ) {
-							$leads->retireOutboundFeed( $_REQUEST['idFeedOut'] );
-						}
-					}
-					$dailyLimit = empty( $_REQUEST['dailyLimit'] ) ? null : abs( intval( $_REQUEST['dailyLimit'] ) );
-					if( $dailyLimit != $feed->dailyLimit ){ 
-						if($c){
-							$alterResult = alterFeedOut( $_REQUEST['idFeedOut'], 'dailyLimit', $dailyLimit );
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-					$delay = empty( $_REQUEST['delay'] ) ? null : abs( intval( $_REQUEST['delay'] ) );
-					if( $delay != $feed->delay ){ 
-						if($c){
-							$alterResult = alterFeedOut( $_REQUEST['idFeedOut'], 'delay', $delay );
-							if(!$alterResult['success']){ 
-								$c = false; $result['error'] = $alterResult['reason'];
-							}
-						}
-					}
-				}		
-				if($c){ 
+
+				}
+
+				if( $c ) {
 					$result['status'] = 1;
 					$result['error'] = 'Successfully updated feed.';
-				}		
+				}
 			}
 		break;
+
 		case "managePopulation":
-			$c = true; $result['error'] = 'Failed when attempting to manage population.';
-			$action = $_REQUEST['action'];
+			$result['error'] = 'Failed when attempting to manage population.';
+
+			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : '';
+			$idAssoc = !empty( $_REQUEST['idAssoc'] ) ? $_REQUEST['idAssoc'] : '';
+			$action = !empty( $_REQUEST['action'] ) ? $_REQUEST['action'] : '';
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
 				}
-				if( !$leads->checkOutboundFeedAccess( $idCompany, $_REQUEST['idFeedOut'] ) ) {
-					$c = false;
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
 					$result['error'] = 'Sorry, you do not have access to this feed.';
 					break;
 				}
 			}
 
+			// Validate inputs
+			if( empty( $_REQUEST['idFeedIn'] ) ) {
+				$result['error'] = 'Please select an incoming feed from the list.';
+				break;
+			}
+
+			if( !isset( $_REQUEST['filterTypeUrl'] ) ) {
+				$result['error'] = 'Please select a URL filter type.';
+				break;
+			}
+
+			$filterUrl = '';
+			if( !empty( $_REQUEST['filterUrl'] ) && is_array( $_REQUEST['filterUrl'] ) ) {
+				$_REQUEST['filterUrl'] = array_map( 'trim', $_REQUEST['filterUrl'] );
+				$filterUrl = implode( ';', $_REQUEST['filterUrl'] );
+			}
+
+			if( !empty( $_REQUEST['filterTypeUrl'] ) && empty( $filterUrl ) ) {
+				$result['error'] = 'URL filtering is set to accept/reject, but no URLs were provided.';
+				break;
+			}
+
+			if( !isset( $_REQUEST['filterTypeEmail'] ) ) {
+				$result['error'] = 'Please select an email filter type.';
+				break;
+			}
+
+			$filterEmail = '';
+			if( !empty( $_REQUEST['filterEmail'] ) && is_array( $_REQUEST['filterEmail'] ) ) {
+				$_REQUEST['filterEmail'] = array_map( 'trim', $_REQUEST['filterEmail'] );
+				$filterEmail = implode( ';', $_REQUEST['filterEmail'] );
+			}
+
+			if( !empty( $_REQUEST['filterTypeEmail'] ) && empty( $filterEmail ) ) {
+				$result['error'] = 'Email filtering is set to accept/reject, but no emails were provided.';
+				break;
+			}
+
+			if( !isset( $_REQUEST['filterTypeListcode'] ) ) {
+				$result['error'] = 'Please select a listcode filter type.';
+				break;
+			}
+
+			$filterListcode = '';
+			if( !empty( $_REQUEST['filterListcode'] ) && is_array( $_REQUEST['filterListcode'] ) ) {
+				$_REQUEST['filterListcode'] = array_map( 'trim', $_REQUEST['filterListcode'] );
+				$filterListcode = implode( ';', $_REQUEST['filterListcode'] );
+			}
+
+			if( !empty( $_REQUEST['filterTypeListcode'] ) && empty( $filterListcode ) ) {
+				$result['error'] = 'Listcode filtering is set to accept/reject, but no listcodes were provided.';
+				break;
+			}
+
+			$forceUrlList = '';
+			if( !empty( $_REQUEST['forceUrlList_original'] ) && is_array( $_REQUEST['forceUrlList_original'] ) ) {
+				$_REQUEST['forceUrlList_original'] = array_map( 'trim', $_REQUEST['forceUrlList_original'] );
+				$_REQUEST['forceUrlList_altered'] = array_map( 'trim', $_REQUEST['forceUrlList_altered'] );
+				$temp = array();
+				for( $i = 0; $i < sizeOf( $_REQUEST['forceUrlList_original'] ); $i++ ) {
+					if( !empty( $_REQUEST['forceUrlList_original'][$i] ) && !empty( $_REQUEST['forceUrlList_altered'][$i] ) ) {
+						// Strip our field delimiters of = and ; out of the input
+						$temp[] = sprintf( '%s=%s',
+							str_replace( array( '=', ';' ), '', $_REQUEST['forceUrlList_original'][$i] ),
+							!empty( $_REQUEST['forceUrlList_altered'][$i] ) ? str_replace( array( '=', ';' ), '', $_REQUEST['forceUrlList_altered'][$i] ) : ''
+						);
+					}
+				}
+				$forceUrlList = implode( ';', $temp );
+			}
+
+			if( !empty( $_REQUEST['forceUrl'] ) && empty( $forceUrlList ) ) {
+				$result['error'] = 'URL forcing is set to enabled, but no URLs were provided.';
+				break;
+			}
+
 			if($action == 'new'){
-				$result['error'] = 'Failed when adding a new population parameter.';
-				//Validate Input
-				$filters = array("Url", "Email", "Listcode");
-				foreach($filters as $filterType){ 
-					if($c && ( //If filterType is accept or reject, filter{Type} cannot be empty.
-						$_REQUEST['filterType'.$filterType] == 'accept'
-						&& $_REQUEST['filter'.$filterType] == ''
-					)){ 
-						$c = false; $result['error'] = 'If using an accept filter, the filters cannot '
-						.'be empty.'; 
-						break;
-					}
+
+				$idAssoc = $leads->addPopulation( array(
+					'idFeedIn' => $_REQUEST['idFeedIn'],
+					'idFeedOut' => $_REQUEST['idFeedOut'],
+					'enabled' => 1,
+					'filterTypeUrl' => !empty( $_REQUEST['filterTypeUrl'] ) ? $_REQUEST['filterTypeUrl'] : null,
+					'filterUrl' => !empty( $filterUrl ) ? $filterUrl : null,
+					'filterTypeEmail' => !empty( $_REQUEST['filterTypeEmail'] ) ? $_REQUEST['filterTypeEmail'] : null,
+					'filterEmail' => !empty( $filterEmail ) ? $filterEmail : null,
+					'filterTypeListcode' => !empty( $_REQUEST['filterTypeListcode'] ) ? $_REQUEST['filterTypeListcode'] : null,
+					'filterListcode' => !empty( $filterListcode ) ? $filterListcode : null,
+					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
+					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
+					'livedata' => !empty( $_REQUEST['livedata'] ) ? 1 : 0,
+				) );
+
+				if( empty( $idAssoc ) ) {
+					$result['error'] = 'Database failure, could not create population.';
+					break;
 				}
-				if($c){ //Add entry to the database.
-					if($_REQUEST['filterTypeUrl'] == 'null'){ $filterTypeUrl = "NULL"; } 
-					else { $filterTypeUrl = "'".$_REQUEST['filterTypeUrl']."'"; }
-					if($_REQUEST['filterTypeEmail'] == 'null'){ $filterTypeEmail = "NULL"; } 
-					else { $filterTypeEmail = "'".$_REQUEST['filterTypeEmail']."'"; }
-					if($_REQUEST['filterTypeListcode'] == 'null'){ $filterTypeListcode = "NULL"; } 
-					else { $filterTypeListcode = "'".$_REQUEST['filterTypeListcode']."'"; }
-					$addResult = addPopulationParameter(
-						$_REQUEST['idFeedOut']
-						, $_REQUEST['idFeedIn']
-						, $filterTypeUrl
-						, $_REQUEST['filterUrl']
-						, $filterTypeEmail
-						, $_REQUEST['filterEmail']
-						, $filterTypeListcode
-						, $_REQUEST['filterListcode']
-						, $_REQUEST['livedata']
-						, $_REQUEST['forceUrl']
-						, $_REQUEST['forceUrlList']
-					);
-					if(!$addResult){ 
-						$c = false; $result['error'] = 'Database failure, could not create parameter.';
-					}
+
+				$leads->auditLog( 'FEEDOUT:ADDPOP', $idAssoc );
+
+				$result['status'] = 1;
+				$result['error'] = 'Successfully created new population parameter.';
+				break;
+
+			} else {
+
+				$dbResult = $leads->updatePopulation( $_REQUEST['idAssoc'], array(
+					'idFeedIn' => $_REQUEST['idFeedIn'],
+					'idFeedOut' => $_REQUEST['idFeedOut'],
+					'filterTypeUrl' => !empty( $_REQUEST['filterTypeUrl'] ) ? $_REQUEST['filterTypeUrl'] : null,
+					'filterUrl' => !empty( $filterUrl ) ? $filterUrl : null,
+					'filterTypeEmail' => !empty( $_REQUEST['filterTypeEmail'] ) ? $_REQUEST['filterTypeEmail'] : null,
+					'filterEmail' => !empty( $filterEmail ) ? $filterEmail : null,
+					'filterTypeListcode' => !empty( $_REQUEST['filterTypeListcode'] ) ? $_REQUEST['filterTypeListcode'] : null,
+					'filterListcode' => !empty( $filterListcode ) ? $filterListcode : null,
+					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
+					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
+					'livedata' => !empty( $_REQUEST['livedata'] ) ? 1 : 0,
+				) );
+
+				if( empty( $dbResult ) ) {
+					$result['error'] = 'Database failure, could not create population.';
+					break;
 				}
-				if($c){ 
-					$result['status'] = 1;
-					$result['error'] = 'Successfully created new population parameter.';
-				}
-			} else {			
-				$result['error'] = 'Failed when editing population parameter.';
-				//Validate Input
-				$filters = array("Url", "Email", "Listcode");
-				foreach($filters as $filterType){ 
-					if($c && ( //If filterType is accept or reject, filter{Type} cannot be empty.
-						$_REQUEST['filterType'.$filterType] == 'accept'
-						&& $_REQUEST['filter'.$filterType] == ''
-					)){ 
-						$c = false; $result['error'] = 'If using an accept filter, the filters cannot '
-						.'be empty.'; 
-						break;
-					}
-				}
-				if($c){ 
-					$feed = getPopulationSetting($_REQUEST['idAssoc']);
-					if($feed === false){ 
-						$c = false; $result['error'] = 'Database failure - could not fetch population '
-							.'information for editing.';
-					}				
-					if($c && !is_object($feed) && $feed == 0){ 
-						$c = false; $result['error'] = 'Could not alter parameter - paramter does not exist.';
-					}
-				}
-				if($c){ 
-					if($_REQUEST['idFeedIn'] != $feed->idFeedIn){ 
-						if($c){ 
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'idFeedIn', $_REQUEST['idFeedIn']
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter. (idFeedIn)';
-							}
-						}
-					}
-					if($_REQUEST['filterTypeUrl'] != $feed->filterTypeUrl){ 
-						if($c){ 
-							if($_REQUEST['filterTypeUrl'] == 'null'){ $filterTypeUrl = NULL; } 
-							else { $filterTypeUrl = "'".$_REQUEST['filterTypeUrl']."'"; }
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'filterTypeUrl', $filterTypeUrl
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (filterTypeUrl)';
-							}
-						}
-					}
-					if($_REQUEST['filterUrl'] != $feed->filterUrl){ 
-						if($c){ 
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'filterUrl', $_REQUEST['filterUrl']
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (filterUrl)';
-							}
-						}
-					}
-					if($_REQUEST['filterTypeEmail'] != $feed->filterTypeEmail){ 
-						if($c){ 
-							if($_REQUEST['filterTypeEmail'] == 'null'){ $filterTypeEmail = NULL; } 
-							else { $filterTypeEmail = "'".$_REQUEST['filterTypeEmail']."'"; }
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'filterTypeEmail', $filterTypeEmail
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (filterTypeEmail)';
-							}
-						}
-					}
-					if($_REQUEST['filterEmail'] != $feed->filterEmail){ 
-						if($c){ 
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'filterEmail', $_REQUEST['filterEmail']
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (filterEmail)';
-							}
-						}
-					}
-					if($_REQUEST['filterTypeListcode'] != $feed->filterTypeListcode){ 
-						if($c){ 
-							if($_REQUEST['filterTypeListcode'] == 'null'){ $filterTypeListcode = NULL; } 
-							else { $filterTypeListcode = "'".$_REQUEST['filterTypeListcode']."'"; }
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'filterTypeListcode', $filterTypeListcode
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (filterTypeListcode)';
-							}
-						}
-					}
-					if($_REQUEST['filterListcode'] != $feed->filterListcode){ 
-						if($c){ 
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'filterListcode', $_REQUEST['filterListcode']
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (filterListcode)';
-							}
-						}
-					}
-					if($_REQUEST['forceUrlList'] != $feed->forceUrlList){ 
-						if($c){ 
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'forceUrlList', $_REQUEST['forceUrlList']
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (forceUrlList)';
-							}
-						}
-					}
-					if($_REQUEST['forceUrl'] != $feed->forceUrl){ 
-						if($c){ 
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'forceUrl', $_REQUEST['forceUrl']
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (forceUrl)';
-							}
-						}
-					}
-					if($_REQUEST['livedata'] != $feed->livedata){ 
-						if($c){ 
-							$alterResult = alterPopulationParameter(
-								$_REQUEST['idAssoc'], 'livedata', $_REQUEST['livedata']
-							);
-							if(!$alterResult){ 
-								$c = false; $result['error'] = 'Database failure, could not update population '
-									.'parameter (livedata)';
-							}
-						}
-					}
-				}		
-				if($c){ 
-					$result['status'] = 1;
-					$result['error'] = 'Successfully updated parameter.';
-				}		
+
+				$leads->auditLog( 'FEEDOUT:EDITPOP', $_REQUEST['idAssoc'] );
+
+				$result['status'] = 1;
+				$result['error'] = 'Successfully edited this population parameter.';
+				break;
+
 			}
 		break;
 		case "managePopulationParam":
 			$c = true; $result['error'] = 'Failed when attempting to manage population params.';
-			switch($_REQUEST['action']){ 
+			switch( $_REQUEST['action'] ) {
 				case "toggle":
-					if($c){ 
-						$popSet = getPopulationSetting($_REQUEST['idAssoc']);
-						if($popSet === false){ 
-							$c = false; $result['error'] = 'Database failure - could not fetch population '
-								.'information for editing.';
-						}				
-						if($c && !is_object($popSet) && $popSet == 0){ 
-							$c = false; $result['error'] = 'Could not alter parameter - parameter does not exist.';
+					if( $c ) {
+						$popSet = $leads->getPopulationSetting( $_REQUEST['idAssoc'] );
+						if( empty( $popSet ) ) {
+							$c = false;
+							$result['error'] = 'Database failure - could not fetch population information for editing.';
 						}
 					}
-					if($c){ 
-						if($popSet->enabled){ 
-							$enabled = 0; 
-							$result['enabledText'] = 'Disabled';
-						} else { 
-							$enabled = 1; 
-							$result['enabledText'] = 'Populating';
+					if( $c ) {
+						if( $popSet->enabled ) {
+							$enabled = 0;
+						} else {
+							$enabled = 1;
 						}
-						$alterResult = alterPopulationParameter(
-							$_REQUEST['idAssoc'], 'enabled', "'".$enabled."'"
-						);
-						if(!$alterResult){ 
-							$c = false; $result['error'] = $alterResult['reason'];
+
+						$alterResult = $leads->updatePopulation( $_REQUEST['idAssoc'], array( 'enabled' => $enabled ) );
+
+						if( empty( $alterResult ) ) {
+							$c = false;
+							$result['error'] = 'Unable to update population.';
 						}
 					}
-					if($c){ 
+					if( $c ) {
 						$result['error'] = 'Successfully toggled population.';
 					}
 				break;
-				case "delete":
-					if($c){ 
-						$popSet = getPopulationSetting($_REQUEST['idAssoc']);
-						if($popSet === false){ 
-							$c = false; $result['error'] = 'Database failure - could not fetch population '
-								.'information for editing.';
-						}				
-						if($c && !is_object($popSet) && $popSet == 0){ 
-							$c = false; $result['error'] = 'Could not alter parameter - parameter does not exist.';
-						}
-					}
-					if($c){ 
-						$actionResult = deletePopulationParam($_REQUEST['idAssoc']);
-						if(!$actionResult){ 
-							$c = false; $result['error'] = 'Database failure - failed to delete parameter.';
-						}
-					}
-					if($c){ 
-						$result['error'] = 'Successfully deleted population parameter.';
-						$result['idFeedOut'] = $popSet->idFeedOut;
-					}
-				break;
 			}
-			if($c){ 
+			if( $c ) {
 				$result['status'] = 1;
 			}
 		break;
+
 		case 'manageFeedParam':
-			$c = true; $result['error'] = 'Failed when attempting to manage feed params.';
+			$c = true;
+			$result['error'] = 'Failed when attempting to manage feed params.';
 
 			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
@@ -753,46 +428,44 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
-
-			switch($_REQUEST['action']){ 
+			switch( $_REQUEST['action'] ) {
 				case "toggle":
-					if($c){ 
+					if( $c ) {
 						$feed = $leads->getOutboundFeed( $_REQUEST['idFeedOut'] );
-						if($feed === false){ 
-							$c = false; $result['error'] = 'Database failure - could not fetch feed for editing.';
-						}				
-						if($c && !is_object($feed) && $feed == 0){ 
-							$c = false; $result['error'] = 'Could not alter feed - feed does not exist.';
+						if( empty( $feed ) ) {
+							$c = false;
+							$result['error'] = 'Database failure - could not fetch feed for editing.';
 						}
 					}
-					if($c){
-						switch($_REQUEST['param']){
+					if( $c ) {
+						switch( $_REQUEST['param'] ) {
 							case 'cron':
-								if($feed->cron){ 
-									$cron = 0; 
-									$result['enabledText'] = 'Disabled';
-								} else { 
-									$cron = 1; 
-									$result['enabledText'] = 'Populating';
+								if( !empty( $feed->cron ) ) {
+									$cron = 0;
+								} else {
+									$cron = 1;
 								}
-								$alterResult = alterFeedOut(
-									$_REQUEST['idFeedOut'], 'cron', $cron
-								);
-								if(!$alterResult){ 
-									$c = false; $result['error'] = $alterResult['reason'];
+
+								$alterResult = $leads->updateOutboundFeed( $feed->idFeedOut, array( 'cron' => $cron ) );
+								if( empty( $alterResult ) ) {
+									$c = false;
+									$result['error'] = 'Unable to update the database.';
+								} else {
+									$leads->auditLog( 'FEEDOUT:CRON', $feed->idFeedOut . ':' . ( $cron ? 'RUNNING' : 'PAUSED' ) );
 								}
 							break;
-							default: 
-								$c = false; $result['error'] = 'Could not alter feed, invalid parameter';
+							default:
+								$c = false;
+								$result['error'] = 'Could not alter feed, invalid parameter';
 							break;
 						}
 					}
-					if($c){ 
+					if( $c ) {
 						$result['error'] = 'Successfully toggled feed.';
 					}
 				break;
 			}
-			if($c){ 
+			if( $c ) {
 				$result['status'] = 1;
 			}
 		break;
@@ -801,8 +474,8 @@ if(isset($_REQUEST['a'])){
 	exit;
 }
 
-if(isset($_REQUEST['d'])){ 
-	switch($_REQUEST['d']){
+if( isset( $_REQUEST['d'] ) ) {
+	switch( $_REQUEST['d'] ) {
 
 		case 'errorCount':
 			Display::errorCount();
@@ -812,293 +485,8 @@ if(isset($_REQUEST['d'])){
 			Display::errorList();
 		break;
 
-		case 'outgoingFeeds':
-			if( !empty( $_REQUEST['options']['status'] ) ) {
-				$status = $_REQUEST['options']['status'];
-			} else {
-				$status = null;
-			}
-			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$outgoingFeeds = $leads->getOutboundFeeds( null, $status );
-			} else {
-				$idCompany = LeadsSession::getCompanyId();
-				if( empty( $idCompany ) ) {
-					$idCompany = -9999;
-				}
-				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, $status );
-			}
-?>
-<?php
-if($outgoingFeeds === false){ 
-?>
-<p>Error when trying to fetch feeds: database error.</p>
-<?php
-} else if($outgoingFeeds == 0){ 
-?>
-<p>Error when trying to fetch feeds: there are no feeds.</p>
-<?php
-} else { 
-	//Go through each and compile the company list.
-	$companyFeedLists = array();
-	foreach($outgoingFeeds as $feed){ 
-		//Add company to the cache list of companies.
-		if(!isset($companyCache[$feed->idCompany])){
-			$company = getCompany($feed->idCompany);
-			if(	is_object($company) ){
-				$companyCache[$feed->idCompany] = $company;
-				$companyFeedLists[$feed->idCompany] = array();
-			}
-		}
-		//Add feed to list of feeds for the specified company.
-		$companyFeedLists[$feed->idCompany][] = $feed;
-	}	
-	//print_r($companyFeedLists);
-	function companyListSort($item1,$item2)
-	{
-		global $companyCache;
-		//print_r($companyCache[$item1]->name);
-		//print_r($companyCache[$item2]->name);
-		return strcasecmp ( $companyCache[$item1]->name , $companyCache[$item2]->name );
-	}
-	uksort($companyFeedLists,'companyListSort');
-?>
-<table class="table table-bordered table-condensed table-striped-custom">
-	<thead>
-	<tr>
-		<th class='fTO_companyName' colspan='2'>Company</th>
-		<th class='fTO_feedOverview' colspan='4'>Total Feeds</th>
-		<th class='fTO_accepted'>Total Accepted</th>
-		<th class='fTO_rejected'>Total Rejected</th>
-		<th class='fTO_rejected'>Total Queued</th>
-		<th class='fTO_options'>Options</th>
-	</tr>
-	</thead>
-<?php
-	$grandTotalFeeds = 0;
-	$grandTotalAccepted = 0;
-	$grandTotalRejected = 0;
-	$grandTotalQueued = 0;
-	foreach($companyFeedLists as $idCompany => $companyFeedList){
-		$totalAccepted = 0;
-		$totalRejected = 0;
-		$totalActive = 0;
-		$totalQueued = 0;
-
-		foreach($companyFeedList as $keyFeed => $feed){
-
-			$stats = $leads->getOutboundStats( $feed->idFeedOut );
-
-			$companyFeedList[$keyFeed]->accepted = $stats['accepted'];
-			$totalAccepted += $stats['accepted'];
-			$grandTotalAccepted += $stats['accepted'];
-
-			$companyFeedList[$keyFeed]->rejected = $stats['rejected'];
-			$totalRejected += $stats['rejected'];
-			$grandTotalRejected += $stats['rejected'];
-
-			$companyFeedList[$keyFeed]->queued = $feed->queued;
-			$totalQueued += $feed->queued;
-			$grandTotalQueued += $feed->queued;
-
-			if('active' === $feed->status) { $totalActive++; }
-			$companyFeedList[$keyFeed]->statusFeed = $feed->status;
-			$companyFeedList[$keyFeed]->statusCron = ($feed->cron)?'Running':'Paused';
-			$companyFeedList[$keyFeed]->statusPop = getPopulationStatus($feed->idFeedOut);
-		}
-		$grandTotalFeeds += count($companyFeedList);
-?>
-	<tr class='fTORow fTO_Row bgGray'>
-		<td colspan='2'><?php echo $companyCache[$idCompany]->name; ?></td>
-		<td colspan='4'><?php echo count($companyFeedList); ?> (<?php echo $totalActive; ?> Active)</td>
-		<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
-		<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
-		<td class="text-right"><?php echo number_format( $totalQueued, 0 ); ?></td>
-		<td class="text-center"><a href='#' class='nonLink btn btn-primary btn-xs' id='link_companyFeedList_<?php echo $idCompany; ?>' onclick="toggleHidden('companyFeedList', {'sub':<?php echo $idCompany; ?>, 'hiddenText':'Show Feeds', 'shownText':'Close' });">Show Feeds</a></td>
-	</tr>
-	<tbody id='companyFeedList_<?php echo $idCompany; ?>' class='fTORow fTO_Row hidden-custom'>
-	<tr>
-		<td class='fTO_idFeedOut'>ID</td>
-		<td class='fTO_label'>Feed Label</td>
-		<td class='fTO_description'>Description</td>
-		<td class='fTO_statusPop'>Population</td>
-		<td class='fTO_statusFeed'>Feed Status</td>
-		<td class='fTO_statusCron'>Processing</td>
-		<td class='fTO_accepted'>Accepted</td>
-		<td class='fTO_rejected'>Rejected</td>
-		<td class='fTO_rejected'>Queued</td>
-		<td class='fTO_options'>Options</td>
-	</tr>
-<?php
-		foreach($companyFeedList as $feed){ 
-?>
-	<tr class='fTORow fTO_Row'>
-		<td class='fTO_idFeedOut'><?php echo $feed->idFeedOut; ?></td>
-		<td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo $feed->label; ?></td>
-		<td class='fTO_description'><?php echo $feed->description; ?></td>
-		<td class='fTO_statusPop'><a href='#' class='nonLink' onclick="display('dialog_editpopulation', { 'sub': <?php echo $feed->idFeedOut; ?>, 'idFeedOut': <?php echo $feed->idFeedOut; ?> });"><?php echo $feed->statusPop; ?></a></td>
-		<td class='fTO_statusFeed'><?php echo ucfirst( $feed->status ); ?></td>
-		<td class='fTO_statusCron'><a href='#' class='nonLink' id='feedset_<?php echo $feed->idFeedOut; ?>_statusFeed' onclick="manageFeedParam('cron', <?php echo $feed->idFeedOut; ?>, 'toggle', {'sub':<?php echo $feed->idCompany; ?>, 'idFeedOut':<?php echo $feed->idFeedOut; ?>});"><?php echo $feed->statusCron; ?></a></td>
-		<td class='fTO_accepted'><?php echo $feed->accepted; ?></td>
-		<td class='fTO_rejected'><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
-		<td class='fTO_accepted'><?php echo $feed->queued; ?></td>
-		<td class='fTO_options'><a href='#' class='nonLink' onclick="$('#cM_<?php echo $feed->idFeedOut; ?>').toggle();">Options</a>
-			<div class='absContainer'>
-				<div class='contextMenu' id='cM_<?php echo $feed->idFeedOut; ?>'>
-						<a href='#' class='nonLink' 
-							onclick="display(<?php
-								?>'feedout'<?php
-								?>, { <?php
-								?>'sub': '<?php echo $feed->idFeedOut; ?>' <?php
-								?>, 'idFeedOut':'<?php echo $feed->idFeedOut; ?>'<?php
-								?>}<?php
-								?>); $('#cM_<?php echo $feed->idFeedOut; ?>').toggle();"
-						>Show Details</a><br />
-						<a href='#' class='nonLink' 
-					onclick="display('dialog_newfeedout', { 'idFeedOut':'<?php echo $feed->idFeedOut; ?>'}, true);  $('#cM_<?php echo $feed->idFeedOut; ?>').toggle();" 
-						>Create New Feed From This Feed</a><br />
-						<a href='#' class='nonLink'
-					onclick='display("dialog_testrecord", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
-						>Send one test record</a><br />
-						<a href='#' class='nonLink'	onclick='display("dialog_clearqueue", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'>Clear Queue</a><br />
-						<a href='#' class='nonLink'
-					onclick='display("dialog_urlreport", { "sub":"<?php echo $feed->idFeedOut; ?>", "idFeedOut": <?php echo $feed->idFeedOut; ?> });'
-						>URL Report</a>
-					
-				</div>
-			</div>
-		</td>
-	</tr>
-	<tr><td class='hidden-custom' id='feedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden-custom' id='dialog_editpopulation_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden-custom' id='dialog_editfeedout_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden-custom' id='dialog_urlreport_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden-custom' id='dialog_urlreportdetails_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden-custom' id='dialog_testrecord_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-	<tr><td class='hidden-custom' id='dialog_clearqueue_<?php echo $feed->idFeedOut; ?>' colspan='9'></td></tr>
-<?php
-		}
-?>
-	</tbody>
-<?php
-	}
-?>
-	<tfoot>
-	<tr>
-		<td colspan='2'>GRAND TOTAL</td>
-		<td colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
-		<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
-		<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
-		<td class="text-right"><?php echo number_format( $grandTotalQueued, 0 ); ?></td>
-		<td>&nbsp;</td>
-	</tr>
-	</tfoot>
-</table>
-<?php
-}
-	
-		break;
-		case 'feedout':
-			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
-
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$idCompany = LeadsSession::getCompanyId();
-				if( empty( $idCompany ) ) {
-					$idCompany = -9999;
-				}
-				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
-					die( 'Sorry, you do not have access to this feed.' );
-				}
-			}
-
-			$feed = $leads->getOutboundFeed( $idFeedOut );
-			$populationSettings = getPopulationSettings($idFeedOut);	
-			$cacheFeedIn = array();
-?>
-<div class='w100'>
-<hr />
-<div class="pull-right">
-	<a href="#" class="btn btn-primary btn-xs" onclick='closeContent("feedout", { "sub": <?php echo $feed->idFeedOut; ?> });'>Close</a>
-</div>
-<p>Feed Details for <?php echo $feed->label; ?> (ID: <?php echo $feed->idFeedOut; ?>)</p>
-<p>Description - <?php echo $feed->description; ?></p>
-<p>
-	Population
-	<a href='#' class='nonLink' 
-		onclick="display('dialog_editpopulation', { 'sub':  <?php echo $feed->idFeedOut; ?>, 'idFeedOut': <?php echo $feed->idFeedOut; ?> });" 
-	>Edit</a>
-</p>
-<?php
-if($populationSettings === false){ 
-?>
-<p>Error getting population settings.</p>
-<?php
-} elseif($populationSettings == 0){ 
-?>
-<p>No settings found.</p>
-<?php
-} else { 
-?>
-<table class='populationTable' border='1' cellpadding='0' cellspacing='0'>
-	<thead>
-		<tr>
-			<th>Populating Feed</th>
-			<th>Population Status</th>
-		</tr>
-	</thead>
-	<tbody>
-<?php
-	foreach($populationSettings as $popSet){ 
-		if(!isset($cacheFeedIn[$popSet->idFeedIn])){ 
-			$cacheFeedIn[$popSet->idFeedIn] = getIncomingFeed($popSet->idFeedIn);
-			if(!is_object($cacheFeedIn[$popSet->idFeedIn])){ 
-				$cacheFeedIn[$popSet->idFeedIn] = new stdClass;
-				$cacheFeedIn[$popSet->idFeedIn]->label = 'Error';
-			}
-		}
-		$statusPopulation = ($popSet->enabled)?'Populating':'Disabled';
-?>
-		<tr>
-			<td>
-				(<?php echo $popSet->idFeedIn; ?>) 
-				<?php echo $cacheFeedIn[$popSet->idFeedIn]->label; ?>
-			</td>
-			<td>
-				<?php echo $statusPopulation; ?>
-			</td>
-		</tr>
-<?php
-	}
-?>
-	</tbody>
-</table>
-<?php
-}
-?>
-<p>
-	Posting Instructions 
-	<a href='#' class='nonLink' 
-		onclick="display('dialog_editfeedout', { 'sub': <?php echo $feed->idFeedOut; ?>, 'idFeedOut': <?php echo $feed->idFeedOut; ?> });" 
-	>Edit</a>
-</p>
-<p>
-	Posting Type: <?php echo $feed->feedType; ?><br />
-	Posting URL: <?php echo $feed->postUrl; ?><br />
-	Static Fields: <?php echo $feed->staticFields; ?><br />
-	Mapped Fields: <?php echo $feed->varFields; ?><br />
-	Mapping: <?php echo $feed->fieldMap; ?><br />
-	URL Assignments: <?php echo $feed->urlassignments; ?><br />
-</p>
-<hr />
-</div>
-<?php
-		break;
-		default:
-?>
-<p>Requested information doesn't exist.</p>
-<?php
-		break;
 		case 'dialog_testrecord':
-			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
@@ -1111,6 +499,10 @@ if($populationSettings === false){
 			}
 
 			$feed = $leads->getOutboundFeed( $idFeedOut );
+			if( empty( $feed ) ) {
+				print '<p>Sorry, the feed you specified does not exist.</p>';
+				break;
+			}
 
 			require_once( SITE_ROOT . '/pushLead/_f_onlms.php' );
 			$settings['testing'] = 0;
@@ -1143,10 +535,12 @@ if($populationSettings === false){
 
 			print "<strong>Response:</strong> " . htmlspecialchars( stripslashes( $response['text'] ) ) . "</p>";
 
+			$leads->auditLog( 'FEEDOUT:TEST-RECORD', $idFeedOut );
+
 			break;
 
 		case 'dialog_clearqueue':
-			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
@@ -1159,19 +553,23 @@ if($populationSettings === false){
 			}
 
 			$feed = $leads->getOutboundFeed( $idFeedOut );
+			if( empty( $feed ) ) {
+				print '<p>Sorry, the feed you specified does not exist.</p>';
+				break;
+			}
 
 			$jobId = $leads->addJob( 'clear-outbound-queue', $idFeedOut, serialize( array( 'label' => $feed->label ) ), '', 0 );
 			if( null === $jobId ) {
 				print '<p>ERROR: Cannot add job to database.</p>';
 			} else {
 				$leads->auditLog( 'FEEDOUT:CLEAR-QUEUE', $jobId );
-				printf( '<p>Clear outbound queue job submitted. <a href="/leadadmin/mgr_job.php?jobId=%d">View results</a></p>', $jobId );
+				printf( '<p>Clear outbound queue job submitted.</p><p><a class="btn btn-primary" href="/leadadmin/mgr_job.php?jobId=%d&amp;count=0">View results</a></p>', $jobId );
 			}
 
 			break;
 
-		case 'dialog_editfeedout':
-			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+		case 'dialog_editfeed':
+			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
@@ -1183,73 +581,70 @@ if($populationSettings === false){
 				}
 			}
 
-			$e = 'edit_'.$idFeedOut.'_';
+			$id = 'edit_feed';
+			$mode = 'edit';
 			$feed = $leads->getOutboundFeed( $idFeedOut );
-			if($feed === false){ 
+			if( empty( $feed ) ){
 ?>
 <p>Database failure - could not fetch requested feed information.</p>
 <?php
 				exit;
-			} elseif(!is_object($feed) && $feed == 0){ 
-?>
-<p>Could not fetch requested feed information - feed does not exist.</p>
-<?php
-				exit;
 			}
-			if(!is_null($feed->staticFields) && $feed->staticFields != ''){ 
-				$staticFields = explode(";", $feed->staticFields);
+
+			if(!is_null($feed->staticFields) && $feed->staticFields != ''){
+				$staticFields = explode( ";", $feed->staticFields );
 			}
-			$varFields = explode(";", $feed->varFields);
-			$fieldMap = explode(";", $feed->fieldMap);
-		case 'dialog_newfeedout':
-			if(!isset($e)){ 
-				$e = 'new_'; 
-				if(isset($_REQUEST['options']['idFeedOut'])){
-					if($_REQUEST['options']['idFeedOut'] != ''){
-						$idFeedOut = $_REQUEST['options']['idFeedOut'];
-						$feed = $leads->getOutboundFeed( $idFeedOut );
-						if($feed === false){ 
-							$feed->label = 'Error! Could not copy.';
-						} elseif(!is_object($feed) && $feed == 0){ 
-							$feed->label = 'Error! Could not copy.';
-						} else {
-							$feed->label = (isset($_REQUEST['options']['label']))?$_REQUEST['options']['label']:'';
-							$feed->description = (isset($_REQUEST['options']['description']))?$_REQUEST['options']['description']:'';
-							if(!is_null($feed->staticFields) && $feed->staticFields != ''){ 
-								$staticFields = explode(";", $feed->staticFields);
-							}
-							$varFields = explode(";", $feed->varFields);
-							$fieldMap = explode(";", $feed->fieldMap);
-						}
+			$varFields = explode( ";", $feed->varFields );
+			$fieldMap = explode( ";", $feed->fieldMap );
+		case 'dialog_newfeed':
+			if( empty( $idFeedOut ) ) {
+				$idFeedOut = '';
+			}
+			if( empty( $id ) ) {
+				$id = 'new_feed';
+			}
+			if( empty( $mode ) ) {
+				$mode = 'new';
+			}
+			if( 'new' === $mode && !empty( $_REQUEST['idFeedOut'] ) ) {
+				$idFeedOut = $_REQUEST['idFeedOut'];
+				$feed = $leads->getOutboundFeed( $idFeedOut );
+				if( !empty( $feed ) ) {
+					$feed->label = '';
+					$feed->description = '';
+					if( !empty( $feed->staticFields ) ) {
+						$staticFields = explode( ";", $feed->staticFields );
 					}
+					$varFields = explode( ";", $feed->varFields );
+					$fieldMap = explode( ";", $feed->fieldMap );
 				}
 			}
 			$feedProps = array('idFeedOut', 'label', 'description', 'idCompany', 'feedType', 'postUrl', 'successString', 'status', 'dailyLimit', 'delay' );
-			foreach($feedProps as $feedProp){ 
-				if(isset($feed)){ 
+			foreach($feedProps as $feedProp){
+				if(isset($feed)){
 					${"feed_".$feedProp} = $feed->$feedProp;
-				}elseif(isset($_REQUEST['options'][$feedProp])){ 
-					${"feed_".$feedProp} = $_REQUEST['options'][$feedProp];
-				}else { 
+				}elseif(isset($_REQUEST[$feedProp])){
+					${"feed_".$feedProp} = $_REQUEST[$feedProp];
+				}else {
 					${"feed_".$feedProp} = '';
 				}
 			}
-			
+
 			$explodableProperties = array(
 				'staticFields', 'varFields', 'fieldMap', 'urlassignments'
 			);
 			foreach($explodableProperties as $eP){
-				if( !isset($_REQUEST['options'][$eP]) ){ 
-					if(!isset($feed->$eP) || $feed->$eP == ''){ 
-						${"feed_".$eP} = array(); 
+				if( !isset($_REQUEST[$eP]) ){
+					if(!isset($feed->$eP) || $feed->$eP == ''){
+						${"feed_".$eP} = array();
 					} else {
 						${"feed_".$eP} = explode(";", $feed->$eP);
 					}
 				} else {
-					if($_REQUEST['options'][$eP] == ''){ 
-						${"feed_".$eP} = array(); 
-					} else { 
-						${"feed_".$eP} = explode(";", $_REQUEST['options'][$eP]); 
+					if( $_REQUEST[$eP] == '' ) {
+						${"feed_".$eP} = array();
+					} else {
+						${"feed_".$eP} = explode(";", $_REQUEST[$eP]);
 					}
 				}
 			}
@@ -1260,18 +655,16 @@ if($populationSettings === false){
 				$companies = $leads->getCompanies();
 			}
 ?>
-<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+<form id="<?php echo $id; ?>">
+<input type='hidden' name='idFeedOut' value='<?php echo $feed_idFeedOut; ?>' />
+<input type="hidden" name="a" value="manageFeed" />
+<input type="hidden" name="action" value="<?php echo $mode; ?>" />
+<table class="table table-bordered table-condensed table-striped">
 	<tr>
 		<td><p>Feed Label</p></td>
 		<td>
-			<p>	
-				<input type='hidden' name='<?php echo $e; ?>feed_idFeedOut'
-					id='<?php echo $e; ?>feed_idFeedOut'
-					value='<?php echo $feed_idFeedOut; ?>' 
-				/>
-				<input type='text' name='<?php echo $e; ?>feed_label'
-					id='<?php echo $e; ?>feed_label'
-					value='<?php echo $feed_label; ?>' 
+			<p>
+				<input type='text' name='label' value='<?php echo $feed_label; ?>'
 				/>
 			</p>
 		</td>
@@ -1280,10 +673,7 @@ if($populationSettings === false){
 		<td><p>Description</p></td>
 		<td>
 			<p>
-				<input type='text' name='<?php echo $e; ?>feed_description'
-					id='<?php echo $e; ?>feed_description'
-					value='<?php echo $feed_description; ?>' 
-				class='long' />
+				<input type='text' name='description' value='<?php echo htmlentities( $feed_description ); ?>' class='long' />
 			</p>
 		</td>
 	</tr>
@@ -1297,14 +687,13 @@ if($populationSettings === false){
 				There are no companies in the database. Please create a company before
 				creating a feed.
 				<?php } else { ?>
-				<select name='<?php echo $e; ?>feed_idCompany' 
-					id='<?php echo $e; ?>feed_idCompany'
-				>
+				<select name='idCompany'>
+				<option></option>
 				<?php foreach($companies as $company){ ?>
 					<option value='<?php echo $company->idCompany; ?>'
 					<?php if($company->idCompany == $feed_idCompany){ 
 					?>selected='selected'<?php } ?>
-					><?php echo $company->name; ?></option>
+					><?php echo htmlentities( $company->name ); ?></option>
 				<?php } ?>
 				</select>
 				<?php } ?>
@@ -1315,9 +704,7 @@ if($populationSettings === false){
 		<td><p>Feed Type</p></td>
 		<td>
 			<p>
-				<select name='<?php echo $e; ?>feed_feedType' 
-					id='<?php echo $e; ?>feed_feedType'
-				>
+				<select name='feedType'>
 					<option value='curlGET'<?php if($feed_feedType == 'curlGET'){ ?>selected='selected'<?php } ?>>HTTP GET</option>
 					<option value='curlPOST'<?php if($feed_feedType == 'curlPOST'){ ?>selected='selected'<?php } ?>>HTTP POST</option>
 					<option value='JSON'<?php if($feed_feedType == 'JSON'){ ?>selected='selected'<?php } ?>>JSON</option>
@@ -1330,10 +717,7 @@ if($populationSettings === false){
 		<td><p>Post URL</p></td>
 		<td>
 			<p>
-				<input type='text' name='<?php echo $e; ?>feed_postUrl'
-					id='<?php echo $e; ?>feed_postUrl'
-					value='<?php echo $feed_postUrl; ?>' 
-				class='long' />
+				<input type='text' name='postUrl' value='<?php echo $feed_postUrl; ?>' class='long' />
 			</p>
 		</td>
 	</tr>
@@ -1345,21 +729,20 @@ if($populationSettings === false){
 				client.
 			</p>
 			<p>
-				<a href='#' class='nonLink' 
-	onclick='element("<?php echo $e; ?>feed_staticFields_container", "staticField", { "e": "<?php echo $e; ?>" });'
+				<a href='#' class='nonLink' onclick='element("staticFields_container", "staticField", {});'
 				>Add New Static Field</a>
 			</p>
 			<div>
-				<div id='<?php echo $e; ?>feed_staticFields_container' >
+				<div id='staticFields_container' >
 				<?php foreach($feed_staticFields as $sF){ 
 					$valuePair = explode("=", $sF);
 				?>
 					<div>
 						<input type='text' 
-							name='<?php echo $e; ?>feed_staticFields_field[]'
+							name='staticFields_field[]'
 							value='<?php echo $valuePair[0]; ?>'
 						/> = <input type='text'
-							name='<?php echo $e; ?>feed_staticFields_value[]'
+							name='staticFields_value[]'
 							value='<?php echo $valuePair[1]; ?>'
 						/>
 						<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
@@ -1376,19 +759,18 @@ if($populationSettings === false){
 				client's API spec, and select the lead value to be mapped from the drop-down.
 			</p>
 			<p>
-				<a href='#' class='nonLink' 
-	onclick='element("<?php echo $e; ?>feed_varFields_container", "varField", { "e": "<?php echo $e; ?>" });'
+				<a href='#' class='nonLink' onclick='element("varFields_container", "varField", {});'
 				>Add New Mapped Field</a>
 			</p>
 			<div>
-				<div id='<?php echo $e; ?>feed_varFields_container' >
+				<div id='varFields_container' >
 				<?php $sFCount = 0; foreach($feed_varFields as $vF){ ?>
 					<div>
 						API Field: <input type='text' 
-							name='<?php echo $e; ?>feed_varFields[]'
+							name='varFields[]'
 							value='<?php echo $vF; ?>'
 						/> Mapped To: <select
-							name='<?php echo $e; ?>feed_fieldMap[]'
+							name='fieldMap[]'
 						>
 							<?php foreach($recordFields as $rF){ ?>
 							<option value='<?php echo $rF; ?>'
@@ -1417,21 +799,20 @@ if($populationSettings === false){
 				unique id's per url within the same feed.
 			</p>
 			<p>
-				<a href='#' class='nonLink' 
-	onclick='element("<?php echo $e; ?>feed_urlassignments_container", "urlassignment", { "e": "<?php echo $e; ?>" });'
+				<a href='#' class='nonLink' onclick='element("urlassignments_container", "urlassignment", {});'
 				>Add New URL Assignment</a>
 			</p>
 			<div>
-				<div id='<?php echo $e; ?>feed_urlassignments_container' >
+				<div id='urlassignments_container'>
 				<?php foreach($feed_urlassignments as $uA){ 
 					$valuePair = explode("=", $uA);
 				?>
 					<div>
 						<input type='text' 
-							name='<?php echo $e; ?>feed_urlassignments_url[]'
+							name='urlassignments_url[]'
 							value='<?php echo $valuePair[0]; ?>'
 						/> = <input type='text'
-							name='<?php echo $e; ?>feed_urlassignments_id[]'
+							name='urlassignments_id[]'
 							value='<?php echo $valuePair[1]; ?>'
 						/>
 						<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
@@ -1446,10 +827,7 @@ if($populationSettings === false){
 		<td>
 			<p>This is the smallest form of the success response from the receiving client's API spec.</p>
 			<p>
-				<input type='text' name='<?php echo $e; ?>feed_successString'
-					id='<?php echo $e; ?>feed_successString'
-					value='<?php echo $feed_successString; ?>' 
-				class='long' />
+				<input type='text' name='successString' value='<?php echo htmlentities( $feed_successString ); ?>' class='long' />
 			</p>
 		</td>
 	</tr>
@@ -1458,9 +836,7 @@ if($populationSettings === false){
 		<td>
 			<p>Leave blank for no limit (default). If a value is supplied here, the feed will stop sending records after the daily limit is reached.</p>
 			<p>
-				<input type='text' name='<?php echo $e; ?>feed_dailyLimit'
-					id='<?php echo $e; ?>feed_dailyLimit'
-					value='<?php echo $feed_dailyLimit; ?>' />
+				<input type='text' name='dailyLimit' value='<?php echo $feed_dailyLimit; ?>' />
 			</p>
 		</td>
 	</tr>
@@ -1469,7 +845,7 @@ if($populationSettings === false){
 		<td>
 			<p>Leave blank for no delay (default). If a value is supplied here, records will sit in the queue for this number of minutes before being processed.</p>
 			<p>
-				<input type='text' name='<?php echo $e; ?>feed_delay' id='<?php echo $e; ?>feed_delay' value='<?php echo $feed_delay; ?>' /> Minutes
+				<input type='text' name='delay' value='<?php echo $feed_delay; ?>' /> Minutes
 			</p>
 		</td>
 	</tr>
@@ -1477,39 +853,19 @@ if($populationSettings === false){
 	   <td><p>Feed Status</p></td>
 	   <td>
 		   <p>
-			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) {?>checked='checked'<?php } ?>/> Active (Visible)<br/>
-			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
-			   <input type='radio' name='<?php echo $e; ?>feed_status' id='<?php echo $e; ?>feed_status' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> Retired
+			   <input type='radio' name='status' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) {?>checked='checked'<?php } ?>/> Active (Visible)<br/>
+			   <input type='radio' name='status' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
+			   <input type='radio' name='status' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> Retired
 		   </p>
 	   </td>
 	</tr>
-	<tr>
-		<td colspan='2'>
-			<p class='aRight'>
-		<?php if(isset($idFeedOut) && $e == 'edit_'.$idFeedOut.'_'){ ?>
-				<input type='button' value='Cancel Changes'  
-					onclick='closeContent("dialog_editfeedout", { "sub": <?php echo $feed_idFeedOut; ?>});'
-				/> 
-				<input type='button' value='Save Changes' 
-					onclick='manageFeed("update", <?php echo $feed_idFeedOut; ?>);'
-				/>
-		<?php } else { ?>
-				<input type='button' value='Cancel'  
-					onclick='closeContent("dialog_newfeedout");'
-				/> 
-				<input type='button' value='Add New Feed' 
-					onclick='manageFeed("new");'
-				/>
-		<?php } ?>
-			</p>
-		</td>
-	</tr>
 </table>
+</form>
 <?php
 		break;
 
 		case 'dialog_urlreport':
-			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+			$idFeedOut = !empty( $_REQUEST['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
@@ -1521,25 +877,37 @@ if($populationSettings === false){
 				}
 			}
 
+			if( empty( $_REQUEST['submit'] ) ) {
+				$_REQUEST['dateStart'] = date("Y-m-d");
+				$_REQUEST['dateEnd'] = date("Y-m-d", strtotime('Tomorrow'));
+				$_REQUEST['urlList'] = array();
+				$_REQUEST['breakdown'] = 'day';
+				$_REQUEST['sort'] = 'date';
+			}
+			$_REQUEST['dateStart'] = !empty( $_REQUEST['dateStart'] ) ? $_REQUEST['dateStart'] : '';
+			$_REQUEST['dateEnd'] = !empty( $_REQUEST['dateEnd'] ) ? $_REQUEST['dateEnd'] : '';
+			$_REQUEST['urlList'] = !empty( $_REQUEST['urlList'] ) && is_array( $_REQUEST['urlList'] ) ? $_REQUEST['urlList'] : array();
+			$_REQUEST['breakdown'] = !empty( $_REQUEST['breakdown'] ) ? $_REQUEST['breakdown'] : 'day';
+			$_REQUEST['sort'] = !empty( $_REQUEST['sort'] ) ? $_REQUEST['sort'] : 'date';
+
 			$feed = $leads->getOutboundFeed( $idFeedOut );
-?>
-<div class="pull-right">
-	<a href="#" class="btn btn-primary btn-xs" onclick='closeContent("dialog_urlreport", {"sub": <?php echo $idFeedOut; ?>}); closeContent("dialog_urlreportdetails", {"sub": <?php echo $idFeedOut; ?>});'>Close</a>
-</div>
-<?php
-			if($feed === false){ 
+
+			if($feed === false){
 ?>
 <p>Database failure - could not fetch feed information.</p>
 <?php 
-			} elseif(!is_object($feed) && $feed == 0){ 
+			} elseif(!is_object($feed) && $feed == 0){
 ?>
 <p>Error fetching feed information - feed does not exist.</p>
 <?php
-			} else { 
+			} else {
 ?>
 <p>URL Report from Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
-<input type='hidden' id='urlreport_idFeedOut' value='<?php echo $feed->idFeedOut; ?>' />
-<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+<form id="form-urlreport">
+<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>" />
+<input type="hidden" name="d" value="dialog_urlreport" />
+<input type="hidden" name="submit" value="submit" />
+<table class="table table-bordered table-condensed table-striped">
 	<tr>
 		<td colspan='2'><p class='aCenter'>Report Settings</p></td>
 	</tr>
@@ -1553,18 +921,8 @@ if($populationSettings === false){
 				from all time records. (This could take a long time.)
 			</p>
 			<p>
-				<input type='text' 
-					name='urlreport_<?php echo $idFeedOut; ?>_dateStart' 
-					id='urlreport_<?php echo $idFeedOut; ?>_dateStart' 
-					class='dateSelector' 
-					value='<?php echo date("Y-m-d"); ?>'
-				/>
-				to <input type='text' 
-					name='urlreport_<?php echo $idFeedOut; ?>_dateEnd' 
-					id='urlreport_<?php echo $idFeedOut; ?>_dateEnd' 
-					class='dateSelector' 
-					value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'
-				/>
+				<input type='text' name='dateStart' class='dateSelector' value='<?php echo date("Y-m-d"); ?>' />
+				to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>' />
 			</p>
 		</td>
 	</tr>
@@ -1582,7 +940,7 @@ if($populationSettings === false){
 <?php
 				$urls = $leads->getOutboundURLDates( $idFeedOut );
 				if( $urls && is_array( $urls ) ) {
-					printf( "<select multiple=\"multiple\" id=\"urlreport_%s_urls\" size=\"%d\">\n", $idFeedOut, sizeOf( $urls ) );
+					printf( "<select multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n", sizeOf( $urls ) );
 					foreach( $urls as $url ) {
 						printf( "<option value=\"%s\">%s (%s)</option>\n", htmlspecialchars( $url['url'] ), htmlspecialchars( $url['url'] ), $url['date'] );
 					}
@@ -1599,7 +957,7 @@ if($populationSettings === false){
 			</p>
 		</td>
 		<td>
-			<p><select id="urlreport_<?php echo $idFeedOut; ?>_breakdown"><option value="day" selected="selected">Day</option><option value="month">Month</option><option value="year">Year</option><option value="total">Total</option</select></p>
+			<p><select name="breakdown"><option value="day" selected="selected">Day</option><option value="month">Month</option><option value="year">Year</option><option value="total">Total</option</select></p>
 		</td>
 	</tr>
 	<tr>
@@ -1609,53 +967,15 @@ if($populationSettings === false){
 			</p>
 		</td>
 		<td>
-			<p><select id="urlreport_<?php echo $idFeedOut; ?>_sort"><option value="date" selected="selected">Date</option><option value="url">URL</option><option value="count">Count</option></select></p>
-		</td>
-	</tr>
-	<tr>
-		<td colspan='2'>
-			<p class='aRight'>
-				<input type="button" value="Run Report" onclick="display( 'dialog_urlreportdetails', { 'sub': <?php echo $idFeedOut; ?>, 
-					'idFeedOut': <?php echo $idFeedOut; ?>, 
-					'dateStart': $('#urlreport_<?php echo $idFeedOut; ?>_dateStart').val(),
-					'dateEnd': $('#urlreport_<?php echo $idFeedOut; ?>_dateEnd').val(),
-					'urlList': $('#urlreport_<?php echo $idFeedOut; ?>_urls').val(),
-					'sort': $('#urlreport_<?php echo $idFeedOut; ?>_sort').val(),
-					'breakdown': $('#urlreport_<?php echo $idFeedOut; ?>_breakdown').val() });" />
-			</p>
+			<p><select name="sort"><option value="date" selected="selected">Date</option><option value="url">URL</option><option value="count">Count</option></select></p>
 		</td>
 	</tr>
 </table>
 <?php
-			}
-		break;
-		case 'dialog_urlreportdetails':
 
-			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+			if( !empty( $_REQUEST['submit'] ) ) {
 
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$idCompany = LeadsSession::getCompanyId();
-				if( empty( $idCompany ) ) {
-					$idCompany = -9999;
-				}
-				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
-					die( 'Sorry, you do not have access to this feed.' );
-				}
-			}
-
-			$feed = $leads->getOutboundFeed( $idFeedOut );
-			if($feed === false){ 
-?>
-<p>Database failure - could not fetch feed information.</p>
-<?php 
-
-			} else if( !is_object($feed) && $feed == 0 ) { 
-?>
-<p>Error - could not fetch feed. Feed does not exist.</p>
-<?php 
-			} else {
-
-				$stats = $leads->getOutboundURLStatsReport( $_REQUEST['options']['idFeedOut'], $_REQUEST['options']['urlList'], $_REQUEST['options']['breakdown'], $_REQUEST['options']['dateStart'], $_REQUEST['options']['dateEnd'], $_REQUEST['options']['sort'] );
+				$stats = $leads->getOutboundURLStatsReport( $_REQUEST['idFeedOut'], $_REQUEST['urlList'], $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'] );
 
 				if( empty( $stats ) ) {
 ?>
@@ -1671,14 +991,14 @@ if($populationSettings === false){
 <p>Failed to create CSV report file.</p>
 <?php
 					} else {
-						fputcsv( $file, array( 'URL', 'Date', 'Accepted', 'Rejected' ) );
-						print "<table class='urlTable'>\n";
+			 			fputcsv( $file, array( 'URL', 'Date', 'Accepted', 'Rejected' ) );
+						print "<table class=\"table table-bordered table-condensed table-striped\">\n";
 						print "<thead>\n";
 						print "\t<tr>\n";
-						print "\t<td>URL</td>\n";
-						print "\t<td>Date</td>\n";
-						print "\t<td>Accepted</td>\n";
-						print "\t<td>Rejected</td>\n";
+						print "\t<th>URL</th>\n";
+						print "\t<th>Date</th>\n";
+						print "\t<th>Accepted</th>\n";
+						print "\t<th>Rejected</th>\n";
 						print "\t</tr>\n";
 						print "</thead>\n";
 						print "<tbody>\n";
@@ -1695,61 +1015,41 @@ if($populationSettings === false){
 						fclose($file);
 						print "</tbody>\n";
 						print "</table>\n";
-						printf( '<p><a href="%s">Download this report</a></p>', $fileLink );
+						printf( '<p><a <a class="btn btn-primary" href="%s">Export this report</a></p>', $fileLink );
 					}
 				}
 			}
+		}
 		break;
 
 		case 'staticField':
-			$e = $_REQUEST['options']['e'];
+			$e = $_REQUEST['e'];
 ?>
 <div>
-	<input type='text' 
-		name='<?php echo $e; ?>feed_staticFields_field[]'
-		value=''
-	/> = <input type='text'
-		name='<?php echo $e; ?>feed_staticFields_value[]'
-		value=''
-	/>
+	<input type='text' name='staticFields_field[]' value='' /> = <input type='text' name='staticFields_value[]' value='' />
 	<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
 </div>
 <?php
 		break;
 		case 'urlassignment':
-			$e = $_REQUEST['options']['e'];
+			$e = $_REQUEST['e'];
 ?>
 <div>
-	<input type='text' 
-		name='<?php echo $e; ?>feed_urlassignments_url[]'
-		value=''
-		placeholder='URL'
-	/> = <input type='text'
-		name='<?php echo $e; ?>feed_urlassignments_id[]'
-		value=''
-		placeholder='Unique ID'
-	/>
+	<input type='text' name='urlassignments_url[]' value='' placeholder='URL'/> = <input type='text' name='urlassignments_id[]' value='' placeholder='Unique ID' />
 	<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
 </div>
 <?php
 		break;
 		case 'varField':
-			$e = $_REQUEST['options']['e'];
+			$e = $_REQUEST['e'];
 ?>
 <div>
-	API Field: <input type='text' 
-		name='<?php echo $e; ?>feed_varFields[]'
-		value=''
-	/> Mapped To: <select
-		name='<?php echo $e; ?>feed_fieldMap[]'
-	>
+	API Field: <input type='text' name='varFields[]' value='' /> Mapped To: <select	name='fieldMap[]'>
 		<?php foreach($recordFields as $rF){ ?>
-		<option value='<?php echo $rF; ?>'
-		><?php echo $rF; ?></option>
+		<option value='<?php echo $rF; ?>'><?php echo $rF; ?></option>
 		<?php } ?>
 		<?php foreach($additionalMapFields as $aF){ ?>
-		<option value='<?php echo $aF; ?>'
-		><?php echo $aF; ?></option>
+		<option value='<?php echo $aF; ?>'><?php echo $aF; ?></option>
 		<?php } ?>
 	</select>
 	<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
@@ -1757,50 +1057,56 @@ if($populationSettings === false){
 <?php
 		break;
 		case 'dialog_editpopsetting':
-			$e = 'edit_';
-			$idAssoc = $_REQUEST['options']['idAssoc'];
-			$popset = getPopulationSetting($idAssoc);
-			if($popset === false){ 
+			$mode = 'edit';
+			$idAssoc = !empty( $_REQUEST['idAssoc'] ) ? $_REQUEST['idAssoc'] : 0;
+			$popset = $leads->getPopulationSetting( $idAssoc );
+			if( empty( $popset ) ) {
 ?>
 <p>Database failure - could not fetch population setting.</p>
 <?php
 				exit;
-			} elseif(!is_object($popset) && $popset == 0){ 
-?>
-<p>Could not fetch requested population setting - setting does not exist.</p>
-<?php
-				exit;
 			}
 		case 'dialog_newpopsetting':
-			if(!isset($e)){ $e = 'new_'; }
+			if( empty( $mode ) ) {
+				$mode = 'new';
+			}
 			$populationProperties = array(
-				'idAssoc', 'idFeedOut', 'idFeedIn', 'filterTypeUrl', 'filterTypeEmail'
-				, 'filterTypeListcode', 'forceUrl', 'livedata'
+				'idAssoc',
+				'idFeedOut',
+				'idFeedIn',
+				'filterTypeUrl',
+				'filterTypeEmail',
+				'filterTypeListcode',
+				'forceUrl',
+				'livedata',
 			);
-			foreach($populationProperties as $pP){ 
-				if(isset($popset)){ 
+			foreach( $populationProperties as $pP ) {
+				if( isset( $popset ) ) {
 					${"popset_".$pP} = $popset->$pP;
-				}elseif(isset($_REQUEST['options'][$pP])){ 
-					${"popset_".$pP} = $_REQUEST['options'][$pP];
-				}else { 
+				} elseif( isset( $_REQUEST[$pP] ) ) {
+					${"popset_".$pP} = $_REQUEST[$pP];
+				} else {
 					${"popset_".$pP} = '';
 				}
-			}		
+			}
 			$explodableProperties = array(
-				'filterUrl', 'filterEmail', 'filterListcode', 'forceUrlList'
+				'filterUrl',
+				'filterEmail',
+				'filterListcode',
+				'forceUrlList',
 			);
-			foreach($explodableProperties as $eP){
-				if( !isset($_REQUEST['options'][$eP]) ){ 
-					if(!isset($popset->$eP)){ 
-						${"popset_".$eP} = array(); 
+			foreach( $explodableProperties as $eP ) {
+				if( !isset( $_REQUEST[$eP] ) ){
+					if( !isset( $popset->$eP ) ) {
+						${"popset_".$eP} = array();
 					} else {
-						${"popset_".$eP} = explode(";", $popset->$eP);
+						${"popset_".$eP} = explode( ";", $popset->$eP );
 					}
 				} else {
-					if($_REQUEST['options'][$eP] == ''){ 
-						${"popset_".$eP} = array(); 
-					} else { 
-						${"popset_".$eP} = explode(";", $_REQUEST['options'][$eP]); 
+					if( $_REQUEST[$eP] == '' ) {
+						${"popset_".$eP} = array();
+					} else {
+						${"popset_".$eP} = explode( ";", $_REQUEST[$eP] );
 					}
 				}
 			}
@@ -1816,26 +1122,24 @@ if($populationSettings === false){
 				$incomingFeeds = $leads->getInboundFeeds( $idCompany, 'active' );
 			}
 ?>
-<input type='hidden' name='<?php echo $e; ?>popset_idAssoc'
-	id='<?php echo $e; ?>popset_idAssoc'
-	value='<?php echo $popset_idAssoc; ?>'
-/>
-<input type='hidden' name='<?php echo $e; ?>popset_idFeedOut'
-	id='<?php echo $e; ?>popset_idFeedOut'
-	value='<?php echo $popset_idFeedOut; ?>'
-/>
-<table class='feedTable' border='1' cellpadding='0' cellspacing='0'>
+<form id="<?php echo $mode; ?>_pop">
+<input type="hidden" name="idAssoc"	value="<?php echo $popset_idAssoc; ?>" />
+<input type="hidden" name="idFeedOut" value="<?php echo $popset_idFeedOut; ?>" />
+<input type="hidden" name="a" value="managePopulation" />
+<input type="hidden" name="action" value="<?php echo $mode; ?>" />
+<table class="table table-bordered table-condensed table-striped">
 	<tr>
 		<td><p>Incoming Feed (To Populate From)</p></td>
 		<td>
-			<p>	
-				<select id='<?php echo $e; ?>popset_idFeedIn'>
-				<?php 
-				foreach($incomingFeeds as $fI){ 
+			<p>
+				<select name="idFeedIn">
+				<option></option>
+				<?php
+				foreach( $incomingFeeds as $fI) {
 				?>
 					<option value='<?php echo $fI->idFeedIn; ?>'
 						<?php if($fI->idFeedIn == $popset_idFeedIn){ echo "selected='selected'"; } ?>
-					>(<?php echo $fI->idFeedIn; ?>) <?php echo $fI->label; ?></option>
+					>(<?php echo $fI->idFeedIn; ?>) <?php echo htmlentities( $fI->label ); ?></option>
 				<?php
 				}
 				?>
@@ -1852,39 +1156,39 @@ if($populationSettings === false){
 			</p>
 			<p>
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeUrl'
-					id='<?php echo $e; ?>popset_filterTypeUrl_disabled'
-					value='true'
+					name='filterTypeUrl'
+					id='filterTypeUrl_disabled'
+					value=''
 					<?php if(
 						empty($popset_filterTypeUrl)
 					){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeUrl').hide(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterUrl_descriptor').html('Do nothing with');"
+					onclick="$('#toggler_filterTypeUrl').hide(); <?php 
+					?>$('#filterUrl_descriptor').html('Do nothing with');"
 				/> Disabled<br />
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeUrl'
-					id='<?php echo $e; ?>popset_filterTypeUrl_accept'
-					value='true'
+					name='filterTypeUrl'
+					id='filterTypeUrl_accept'
+					value='accept'
 					<?php if($popset_filterTypeUrl == 'accept'){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeUrl').show(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterUrl_descriptor').html('Accept');"
+					onclick="$('#toggler_filterTypeUrl').show(); <?php 
+					?>$('#filterUrl_descriptor').html('Accept');"
 				/> Accept<br />
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeUrl'
-					id='<?php echo $e; ?>popset_filterTypeUrl_reject'
-					value='true'
+					name='filterTypeUrl'
+					id='filterTypeUrl_reject'
+					value='reject'
 					<?php if($popset_filterTypeUrl == 'reject'){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeUrl').show(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterUrl_descriptor').html('Reject');"
+					onclick="$('#toggler_filterTypeUrl').show(); <?php 
+					?>$('#filterUrl_descriptor').html('Reject');"
 				/> Reject<br />
 			</p>
-			<div id='<?php echo $e; ?>popset_toggler_filterTypeUrl' 
+			<div id='toggler_filterTypeUrl' 
 				style='display:<?php 
 					if(empty($popset_filterTypeUrl)){ echo "none"; }
 					else { echo "block"; } 
@@ -1893,21 +1197,20 @@ if($populationSettings === false){
 				<p>The following urls:</p>
 				<p>
 					<a href='#' class='nonLink' 
-		onclick='element("<?php echo $e; ?>popset_filterUrl_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Url" });'
-					>Add New URL to <span id='<?php echo $e; ?>popset_filterUrl_descriptor'></span></a>
+		onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Url" });'
+					>Add New URL to <span id='filterUrl_descriptor'></span></a>
 					| <a href='#' class='nonLink'
-						onclick='element("<?php echo $e; ?>popset_filterUrl_multipleInsert"<?php
+						onclick='element("filterUrl_multipleInsert"<?php
 						?>, "element_multifilter"<?php
-						?>, { "e": "<?php echo $e; ?>"<?php
-						?>, "type": "Url" });'
+						?>, { "type": "Url" });'
 					>Add Multiple</a>
 				</p>
-				<div id='<?php echo $e; ?>popset_filterUrl_multipleInsert'></div>
-				<div id='<?php echo $e; ?>popset_filterUrl_container'>
+				<div id='filterUrl_multipleInsert'></div>
+				<div id='filterUrl_container'>
 				<?php foreach($popset_filterUrl as $filterUrl){ ?>
 					<div>
 						<input type='text' 
-							name='<?php echo $e; ?>popset_filterUrl[]'
+							name='filterUrl[]'
 							value='<?php echo $filterUrl; ?>'
 						/>
 						<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
@@ -1927,39 +1230,39 @@ if($populationSettings === false){
 			</p>
 			<p>
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeEmail'
-					id='<?php echo $e; ?>popset_filterTypeEmail_disabled'
-					value='true'
+					name='filterTypeEmail'
+					id='filterTypeEmail_disabled'
+					value=''
 					<?php if(
 						empty($popset_filterTypeEmail)
 					){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeEmail').hide(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterEmail_descriptor').html('Do nothing with');"
+					onclick="$('#toggler_filterTypeEmail').hide(); <?php 
+					?>$('#filterEmail_descriptor').html('Do nothing with');"
 				/> Disabled<br />
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeEmail'
-					id='<?php echo $e; ?>popset_filterTypeEmail_accept'
-					value='true'
+					name='filterTypeEmail'
+					id='filterTypeEmail_accept'
+					value='accept'
 					<?php if($popset_filterTypeEmail == 'accept'){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeEmail').show(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterEmail_descriptor').html('Accept');"
+					onclick="$('#toggler_filterTypeEmail').show(); <?php 
+					?>$('#filterEmail_descriptor').html('Accept');"
 				/> Accept<br />
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeEmail'
-					id='<?php echo $e; ?>popset_filterTypeEmail_reject'
-					value='true'
+					name='filterTypeEmail'
+					id='filterTypeEmail_reject'
+					value='reject'
 					<?php if($popset_filterTypeEmail == 'reject'){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeEmail').show(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterEmail_descriptor').html('Reject');"
+					onclick="$('#toggler_filterTypeEmail').show(); <?php 
+					?>$('#filterEmail_descriptor').html('Reject');"
 				/> Reject<br />
 			</p>
-			<div id='<?php echo $e; ?>popset_toggler_filterTypeEmail' 
+			<div id='toggler_filterTypeEmail' 
 				style='display:<?php 
 					if(empty($popset_filterTypeEmail)){ echo "none"; }
 					else { echo "block"; } 
@@ -1968,14 +1271,14 @@ if($populationSettings === false){
 				<p>The following email domains:</p>
 				<p>
 					<a href='#' class='nonLink' 
-		onclick='element("<?php echo $e; ?>popset_filterEmail_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Email"});'
-					>Add New Email Domain to <span id='<?php echo $e; ?>popset_filterEmail_descriptor'></span></a>
+		onclick='element("filterEmail_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Email"});'
+					>Add New Email Domain to <span id='filterEmail_descriptor'></span></a>
 				</p>
-				<div id='<?php echo $e; ?>popset_filterEmail_container'>
+				<div id='filterEmail_container'>
 				<?php foreach($popset_filterEmail as $filterEmail){ ?>
 					<div>
 						<input type='text' 
-							name='<?php echo $e; ?>popset_filterEmail[]'
+							name='filterEmail[]'
 							value='<?php echo $filterEmail; ?>'
 						/>
 						<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
@@ -1995,39 +1298,39 @@ if($populationSettings === false){
 			</p>
 			<p>
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeListcode'
-					id='<?php echo $e; ?>popset_filterTypeListcode_disabled'
-					value='true'
+					name='filterTypeListcode'
+					id='filterTypeListcode_disabled'
+					value=''
 					<?php if(
 						empty($popset_filterTypeListcode)
 					){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeListcode').hide(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterListcode_descriptor').html('Do nothing with');"
+					onclick="$('#toggler_filterTypeListcode').hide(); <?php 
+					?>$('#filterListcode_descriptor').html('Do nothing with');"
 				/> Disabled<br />
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeListcode'
-					id='<?php echo $e; ?>popset_filterTypeListcode_accept'
-					value='true'
+					name='filterTypeListcode'
+					id='filterTypeListcode_accept'
+					value='accept'
 					<?php if($popset_filterTypeListcode == 'accept'){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeListcode').show(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterListcode_descriptor').html('Accept');"
+					onclick="$('#toggler_filterTypeListcode').show(); <?php 
+					?>$('#filterListcode_descriptor').html('Accept');"
 				/> Accept<br />
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_filterTypeListcode'
-					id='<?php echo $e; ?>popset_filterTypeListcode_reject'
-					value='true'
+					name='filterTypeListcode'
+					id='filterTypeListcode_reject'
+					value='reject'
 					<?php if($popset_filterTypeListcode == 'reject'){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_filterTypeListcode').show(); <?php 
-					?>$('#<?php echo $e; ?>popset_filterListcode_descriptor').html('Reject');"
+					onclick="$('#toggler_filterTypeListcode').show(); <?php 
+					?>$('#filterListcode_descriptor').html('Reject');"
 				/> Reject<br />
 			</p>
-			<div id='<?php echo $e; ?>popset_toggler_filterTypeListcode' 
+			<div id='toggler_filterTypeListcode' 
 				style='display:<?php 
 					if(empty($popset_filterTypeListcode)){ echo "none"; }
 					else { echo "block"; } 
@@ -2036,14 +1339,14 @@ if($populationSettings === false){
 				<p>The following email domains:</p>
 				<p>
 					<a href='#' class='nonLink' 
-		onclick='element("<?php echo $e; ?>popset_filterListcode_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Listcode"});'
-					>Add New Listcode to <span id='<?php echo $e; ?>popset_filterListcode_descriptor'></span></a>
+		onclick='element("filterListcode_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Listcode"});'
+					>Add New Listcode to <span id='filterListcode_descriptor'></span></a>
 				</p>
-				<div id='<?php echo $e; ?>popset_filterListcode_container'>
+				<div id='filterListcode_container'>
 				<?php foreach($popset_filterListcode as $filterListcode){ ?>
 					<div>
 						<input type='text' 
-							name='<?php echo $e; ?>popset_filterListcode[]'
+							name='filterListcode[]'
 							value='<?php echo $filterListcode; ?>'
 						/>
 						<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
@@ -2062,25 +1365,25 @@ if($populationSettings === false){
 			</p>
 			<p>
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_forceUrl'
-					id='<?php echo $e; ?>popset_forceUrl_disabled'
-					value='true'
+					name='forceUrl'
+					id='forceUrl_disabled'
+					value='0'
 					<?php if($popset_forceUrl != '1'){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_forceUrlList').hide();"
+					onclick="$('#toggler_forceUrlList').hide();"
 				/> Disabled<br />
 				<input type='radio' 
-					name='<?php echo $e; ?>popset_forceUrl'
-					id='<?php echo $e; ?>popset_forceUrl_enabled'
-					value='true'
+					name='forceUrl'
+					id='forceUrl_enabled'
+					value='1'
 					<?php if($popset_forceUrl == '1'){ ?>
 					checked='checked'
 					<?php } ?>
-					onclick="$('#<?php echo $e; ?>popset_toggler_forceUrlList').show();"
+					onclick="$('#toggler_forceUrlList').show();"
 				/> Enabled
 			</p>
-			<div id='<?php echo $e; ?>popset_toggler_forceUrlList' 
+			<div id='toggler_forceUrlList' 
 				style='display:<?php 
 					if($popset_forceUrl){ echo "block"; }
 					else { echo "none"; } 
@@ -2093,20 +1396,19 @@ if($populationSettings === false){
 				<div>
 					<p>Force Populating URLs to: </p>
 					<p>
-						<a href='#' class='nonLink' 
-onclick='element("<?php echo $e; ?>popset_filterUrlList_container", "element_forceUrl", { "e": "<?php echo $e; ?>"});'
+						<a href='#' class='nonLink' onclick='element("filterUrlList_container", "element_forceUrl", { "e": "<?php echo $e; ?>"});'
 						>Add URL To Force</a>
 					</p>
-					<div id='<?php echo $e; ?>popset_filterUrlList_container'>
+					<div id='filterUrlList_container'>
 						<?php foreach($popset_forceUrlList as $fU){ 
 							$valuePair = explode("=", $fU);
 						?>
 						<div>
 							URL: <input type='text' 
-								name='<?php echo $e; ?>popset_forceUrlList_original[]'
+								name='forceUrlList_original[]'
 								value='<?php echo $valuePair[0]; ?>'
 							/> Will be populated as: <input type='text'
-								name='<?php echo $e; ?>popset_forceUrlList_altered[]'
+								name='forceUrlList_altered[]'
 								value='<?php echo $valuePair[1]; ?>'
 							>
 							<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
@@ -2124,80 +1426,47 @@ onclick='element("<?php echo $e; ?>popset_filterUrlList_container", "element_for
 				Incoming records will be sent to this provider in REAL TIME as they come in.  Do not use this option unless authorized.  Most feeds have this option disabled.
 			</p>
 			<p>
-				<input type='radio' name='<?php echo $e; ?>popset_livedata' id='<?php echo $e; ?>popset_livedata_disabled' value='true'
+				<input type='radio' name='livedata' id='livedata_disabled' value='1'
 					<?php if($popset_livedata != '1'){ ?> checked='checked' <?php } ?>/> Disabled (DEFAULT)<br />
-				<input type='radio' name='<?php echo $e; ?>popset_livedata' id='<?php echo $e; ?>popset_livedata_enabled' value='true'
+				<input type='radio' name='livedata' id='livedata_enabled' value='0'
 					<?php if($popset_livedata == '1'){ ?> checked='checked' <?php } ?>/> Enabled
 			</p>
 		</td>
 	</tr>
-	<tr>
-		<td colspan='2'>
-			<p class='aRight'>
-		<?php if($e == 'edit_'){ ?>
-				<input type='button' value='Cancel Changes'  
-					onclick='closeContent("dialog_editpopsetting");'
-				/> 
-				<input type='button' value='Save Changes' 
-					onclick='managePopulation("update", {"sub": <?php echo $feed->idCompany; ?>});'
-				/>
-		<?php } else { ?>
-				<input type='button' value='Cancel'  
-					onclick='closeContent("dialog_newpopsetting");'
-				/> 
-				<input type='button' value='Add New Population Parameter' 
-					onclick='managePopulation("new", {"sub": <?php echo $feed->idCompany; ?>});'
-				/>
-		<?php } ?>
-			</p>
-		</td>
-	</tr>
 </table>
+</form>
 <?php
 		break;
+
 		case 'element_filter':
-			$e = $_REQUEST['options']['e'];
 			$t = $_REQUEST['options']['type'];
 ?>
 <div>
-	<input type='text' 
-		name='<?php echo $e; ?>popset_filter<?php echo $t; ?>[]'
-		value='<?php if(isset($_REQUEST['options']['value'])){ 
-			echo $_REQUEST['options']['value']; 
-		} ?>'
-	/>
+	<input type='text' name='filter<?php echo $t; ?>[]' value='<?php if(isset($_REQUEST['value'])){ echo $_REQUEST['value']; } ?>' />
 	<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
 </div>
 <?php
 		break;
+
 		case 'element_forceUrl':
-			$e = $_REQUEST['options']['e'];
 ?>
 <div>
-	URL: <input type='text' 
-		name='<?php echo $e; ?>popset_forceUrlList_original[]'
-		value=''
-	/> Will be populated as: <input type='text'
-		name='<?php echo $e; ?>popset_forceUrlList_altered[]'
-		value=''
-	>
+	URL: <input type='text' name='forceUrlList_original[]' value='' /> Will be populated as: <input type='text' name='forceUrlList_altered[]' value='' />
 	<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;' >[X]</a>
 </div>
 <?php
 		break;
+
 		case 'element_multifilter':
-			$e = $_REQUEST['options']['e'];
 			$t = $_REQUEST['options']['type'];
 ?>
-<textarea name='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi'
-id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
-<input type='button' value='Add Multiple Urls' 
-	onclick="splitMultiFilter('<?php echo $e; ?>', '<?php echo $t; ?>');"
-/>
+<textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi' ></textarea>
+<input type='button' value='Add Multiple Urls' onclick="splitMultiFilter('<?php echo $e; ?>', '<?php echo $t; ?>');" />
 <?php
 		break;
+
 		case 'dialog_editpopulation':
-			$idFeedOut = !empty( $_REQUEST['options']['idFeedOut'] ) ? $_REQUEST['options']['idFeedOut'] : 0;
+			$idFeedOut = !empty( ['idFeedOut'] ) ? $_REQUEST['idFeedOut'] : 0;
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
@@ -2208,22 +1477,18 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 					die( 'Sorry, you do not have access to this feed.' );
 				}
 			}
-?>
-<div class="pull-right">
-	<a href='#' class='nonLink' onclick='closeContent("dialog_editpopulation", {"sub":  <?php echo $idFeedOut; ?>} );' >Close [X]</a>
-</div>
-<?php
+
 			$feed = $leads->getOutboundFeed( $idFeedOut );
-			$populationSettings = getPopulationSettings($idFeedOut);	
+			$populationSettings = getPopulationSettings($idFeedOut);
 			$cacheFeedIn = array();
 ?>
 <p>
-	Population Settings for (ID: <?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?><br />
-	Description: <?php echo $feed->description; ?>
+	Feed ID: <?php echo $feed->idFeedOut; ?><br/>
+	Label: <?php echo htmlentities( $feed->label ); ?><br/>
+	Description: <?php echo htmlentities( $feed->description ); ?>
 </p>
-<p><a href='#' class='nonLink' onclick='display("dialog_newpopsetting", {"idFeedOut": <?php echo $feed->idFeedOut; ?>});' >Add New Population Parameter</a></p>
-<div id='dialog_newpopsetting'></div>
-<div id='dialog_editpopsetting'></div>
+
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-newpop" data-dismiss="modal" data-feed-id="<?php echo $feed->idFeedOut; ?>">Add a new population parameter</button></p>
 <?php
 			if($populationSettings === false){ 
 ?>
@@ -2235,7 +1500,7 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 <?php
 			} else { 
 ?>
-<table class='populationTable' border='1' cellpadding='0' cellspacing='0'>
+<table class="table table-bordered table-condensed table-striped">
 	<thead>
 		<tr>
 			<th><p>Populating Feed</p></th>
@@ -2335,11 +1600,8 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 					<?php echo $cacheFeedIn[$popSet->idFeedIn]->label; ?>
 				</p>
 			</td>
-			<td valign='top'>
-				<p><a href='#' class='nonLink'
-					id='popset_<?php echo $popSet->idAssoc; ?>_enabled'
-					onclick="managePopulationParam(<?php echo $popSet->idAssoc; ?>, 'toggle', {'sub':<?php echo $feed->idCompany; ?>, 'idFeedOut':<?php echo $feed->idFeedOut; ?>});"
-				><?php echo $statusPopulation; ?></a></p>
+			<td valign='top' class="text-center">
+				<input class="population-toggle" <?php if( !empty( $popSet->enabled ) ) { print ' checked="checked"'; } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Enabled" data-onstyle="success" data-off="Disabled" data-offstyle="danger" data-assoc-id="<?php echo $popSet->idAssoc; ?>" type="checkbox" /></td>
 			</td>
 			<td valign='top'>
 				<p><?php echo $filterTypeUrl; ?></p>
@@ -2365,16 +1627,8 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 			<td valign='top'>
 				<p><?php echo $forceUrlList; ?></p>
 			</td>
-			<td valign='top'>
-				<p>
-					<a href='#' class='nonLink' 
-						onclick='display("dialog_editpopsetting", <?php
-						?>{ <?php
-							?>"idFeedOut": <?php echo $feed->idFeedOut; ?> <?php
-							?>, "idAssoc": <?php echo $popSet->idAssoc; ?> <?php
-						?> });' 
-					>Edit</a>
-				</p>
+			<td valign='top' class="text-center">
+				<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#modal-editpop" data-feed-id="<?php echo $feed->idFeedOut; ?>" data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Edit</button>
 			</td>
 		</tr>
 <?php
@@ -2382,9 +1636,34 @@ id='<?php echo $e; ?>popset_filter<?php echo $t; ?>Multi' ></textarea>
 ?>
 	</tbody>
 </table>
+<script type="text/javascript">
+$('.population-toggle').bootstrapToggle();
+
+$('.population-toggle').change( function() {
+	var idAssoc = $(this).data('assoc-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'a': 'managePopulationParam',
+			'idAssoc': idAssoc,
+			'action': 'toggle',
+			'param': 'enabled'
+		}
+	});
+});
+</script>
 <?php
 }
 ?>
+<?php
+		break;
+
+		default:
+?>
+<p>Requested information doesn't exist.</p>
 <?php
 		break;
 	}
@@ -2395,612 +1674,586 @@ $title = 'Outgoing Feed Manager';
 include(INCLUDES."c_header.php");
 ?>
 <body>
-<script>
-function manageFeed(action, idFeedOut){ 
-	if(action == "new"){ e = "#new_feed_"; c = 'new'; } else { e = "#edit_"+idFeedOut+"_feed_"; c = 'edit'; }
-	idFeedOut = $(e+'idFeedOut').val();
-	label = $(e+'label').val();
-	description = $(e+'description').val();
-	idCompany = $(e+'idCompany').val();
-	feedType = $(e+'feedType').val();
-	postUrl = $(e+'postUrl').val();
-	if(c == 'new'){
-		staticFields_labels = $("input[name='"+c+"_feed_staticFields_field\\[\\]']")
-			.map(function(){return $(this).val().trim();});
-		staticFields_values = $("input[name='"+c+"_feed_staticFields_value\\[\\]']")
-			.map(function(){return $(this).val().trim();});
-		staticFields = ''; colonFlag = false;
-		for(count = 0; count < staticFields_labels.length; count++){ 
-			if(colonFlag) staticFields += ';';
-			staticFields += staticFields_labels[count]+"="+staticFields_values[count];
-			colonFlag = true;
-		}
-		
-		urlassignments_urls = $("input[name='"+c+"_feed_urlassignments_url\\[\\]']")
-			.map(function(){return $(this).val().trim();});
-		urlassignments_ids = $("input[name='"+c+"_feed_urlassignments_id\\[\\]']")
-			.map(function(){return $(this).val().trim();});
-		urlassignments = ''; colonFlag = false;
-		for(count = 0; count < urlassignments_urls.length; count++){ 
-			if(colonFlag) urlassignments += ';';
-			urlassignments += urlassignments_urls[count]+"="+urlassignments_ids[count];
-			colonFlag = true;
-		}
-		
-		varFields = $("input[name='"+c+"_feed_varFields\\[\\]']")
-			.map(function(){return $(this).val().trim();}).get().join(";");
-		fieldMap = $("select[name='"+c+"_feed_fieldMap\\[\\]']")
-			.map(function(){return $(this).val().trim();}).get().join(";");
-	} else {
-		staticFields_labels = $("input[name='edit_"+idFeedOut+"_feed_staticFields_field\\[\\]']")
-			.map(function(){return $(this).val().trim();});
-		staticFields_values = $("input[name='edit_"+idFeedOut+"_feed_staticFields_value\\[\\]']")
-			.map(function(){return $(this).val().trim();});
-		staticFields = ''; colonFlag = false;
-		for(count = 0; count < staticFields_labels.length; count++){ 
-			if(colonFlag) staticFields += ';';
-			staticFields += staticFields_labels[count]+"="+staticFields_values[count];
-			colonFlag = true;
-		}
-		urlassignments_urls = $("input[name='edit_"+idFeedOut+"_feed_urlassignments_url\\[\\]']")
-			.map(function(){return $(this).val().trim();});
-		urlassignments_ids = $("input[name='edit_"+idFeedOut+"_feed_urlassignments_id\\[\\]']")
-			.map(function(){return $(this).val().trim();});
-		urlassignments = ''; colonFlag = false;
-		for(count = 0; count < urlassignments_urls.length; count++){ 
-			if(colonFlag) urlassignments += ';';
-			urlassignments += urlassignments_urls[count]+"="+urlassignments_ids[count];
-			colonFlag = true;
-		}
-		varFields = $("input[name='edit_"+idFeedOut+"_feed_varFields\\[\\]']")
-			.map(function(){return $(this).val().trim();}).get().join(";");
-		fieldMap = $("select[name='edit_"+idFeedOut+"_feed_fieldMap\\[\\]']")
-			.map(function(){return $(this).val().trim();}).get().join(";");
-	}
-	successString = $(e+'successString').val();
-	dailyLimit = $(e+'dailyLimit').val();
-	if( dailyLimit == '' ) { dailyLimit = 0; }
-	delay = $(e+'delay').val();
-	if( delay == '' ) { delay = 0; }
-	status = $(e+'status:checked').val();
-/* 	alert(
-		"idFeedOut: "+idFeedOut
-		+"\n"+"label: "+label
-		+"\n"+"description: "+description
-		+"\n"+"idCompany: "+idCompany
-		+"\n"+"feedType: "+feedType
-		+"\n"+"postUrl: "+postUrl
-		+"\n"+"staticFields: "+staticFields
-		+"\n"+"urlassignments: "+urlassignments
-		+"\n"+"varFields: "+varFields
-		+"\n"+"fieldMap: "+fieldMap
-		+"\n"+"successString: "+successString
-	);	  */
-	v = true;
-	if(v && staticFields.length > 1000){ 
-		v = false; alert("Maximum length reached for staticFields.");	
-	}
-	if(v && urlassignments.length > 1000){ 
-		v = false;
-		alert(
-			"Maximum length reached for url assignments, remove "
-			+"some url assignments and consider creating a new feed."
-		);
-	}
-	if(v && varFields.length > 1000){ 
-		v = false; 
-		alert("Maximum length reached for field mapping (field names).");
-	}
-	if(v && fieldMap.length > 1000){ 
-		v = false; 
-		alert("Maximum length reached for field mapping (field values).");
-	}
-	if(v){ 
-		var response = $.ajax({
-			url: "mgr_feedout.php",
-			type: "POST",
-			async: true,
-			data: ({
-				"a" : "manageFeedOut"
-				, "action" : action
-				, "idFeedOut": idFeedOut
-				, "label":label
-				, "description":description
-				, "idCompany":idCompany
-				, "feedType":feedType
-				, "postUrl": postUrl
-				, "staticFields":staticFields
-				, "varFields":varFields
-				, "fieldMap":fieldMap
-				, "successString":successString
-				, "dailyLimit":dailyLimit
-				, "delay":delay
-				, "status":status
-				, "urlassignments":urlassignments
-			})
-		}).done(function(responseText){ 
-			var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-			if(result===null) { 
-				alert("JSON Failed: "+responseText); 
-				if(c == 'new'){
-					display('dialog_'+c+'feedout'
-						, { 
-							  "idFeedOut": idFeedOut
-							, "label":label
-							, "description":description
-							, "idCompany":idCompany
-							, "feedType":feedType
-							, "postUrl": postUrl
-							, "staticFields":staticFields
-							, "varFields":varFields
-							, "fieldMap":fieldMap
-							, "successString":successString
-							, "dailyLimit":dailyLimit
-							, "delay":delay
-							, "urlassignments":urlassignments
-						} 
-					);
-				} else { 
-					display('dialog_'+c+'feedout'
-						, { 
-							"sub": idFeedOut
-							, "idFeedOut": idFeedOut
-							, "label":label
-							, "description":description
-							, "idCompany":idCompany
-							, "feedType":feedType
-							, "postUrl": postUrl
-							, "staticFields":staticFields
-							, "varFields":varFields
-							, "fieldMap":fieldMap
-							, "successString":successString
-							, "dailyLimit":dailyLimit
-							, "delay":delay
-							, "urlassignments":urlassignments
-						} 
-					);
-				}
-			}
-			if(result.status == 1){ 
-				if(c == 'new'){
-					alert("Successfully created new feed.");
-					closeContent('dialog_'+c+'feedout');
-					display(
-						'outgoingFeeds'
-						, {
-							'callbackParams': {
-								'idCompany': idCompany
-							}
-						}
-						, true
-						, function(o){ 
-							toggleHidden(
-								'companyFeedList'
-								, {'sub':o.idCompany, 'hiddenText':'Show Feeds', 'shownText':'Close' }
-							);
-						}
-					);
-				} else { 
-					alert("Successfully saved updated settings.");
-					//alert("Editing feed");
-					closeContent('dialog_'+c+'feedout', { "sub": idFeedOut });
-					display(
-						'outgoingFeeds'
-						, {
-							'callbackParams': {
-								'idCompany': idCompany
-								, 'idFeedOut': idFeedOut
-							}
-						}
-						, true
-						, function(o){ 
-							toggleHidden(
-								'companyFeedList'
-								, {'sub':o.idCompany, 'hiddenText':'Show Feeds', 'shownText':'Close' }
-							);
-							display(
-								'feedout'
-								, { 
-									'sub': o.idFeedOut
-									, 'idFeedOut': o.idFeedOut
-								}
-							); 
-						}
-					);
-				}
-			} else { 
-				alert(result.error);
-				if(c == 'new'){
-					display('dialog_'+c+'feedout'
-						, { 
-							  "idFeedOut": idFeedOut
-							, "label":label
-							, "description":description
-							, "idCompany":idCompany
-							, "feedType":feedType
-							, "postUrl": postUrl
-							, "staticFields":staticFields
-							, "varFields":varFields
-							, "fieldMap":fieldMap
-							, "successString":successString
-							, "dailyLimit":dailyLimit
-							, "delay":delay
-							, "urlassignments":urlassignments
-						} 
-					);
-				} else { 
-					display('dialog_'+c+'feedout'
-						, { 
-							"sub": idFeedOut
-							, "idFeedOut": idFeedOut
-							, "label":label
-							, "description":description
-							, "idCompany":idCompany
-							, "feedType":feedType
-							, "postUrl": postUrl
-							, "staticFields":staticFields
-							, "varFields":varFields
-							, "fieldMap":fieldMap
-							, "successString":successString
-							, "dailyLimit":dailyLimit
-							, "delay":delay
-							, "urlassignments":urlassignments
-						} 
-					);
-				}
-			}
-		});
-		$('#dialog_'+c+'feedout').html("Processing...");
-	}
-}
-function managePopulation(action, options){ 
-	if(action == "new"){ e = "#new_popset_"; c = 'new'; } else { e = "#edit_popset_"; c = 'edit'; }
-	idAssoc = $(e+'idAssoc').val();
-	idFeedOut = $(e+'idFeedOut').val();
-	idFeedIn = $(e+'idFeedIn').val();
-	if($(e+'filterTypeUrl_disabled').is(":checked")){
-		filterTypeUrl = 'null';
-	}else if($(e+'filterTypeUrl_accept').is(":checked")){ 
-		filterTypeUrl = 'accept';
-	}else if($(e+'filterTypeUrl_reject').is(":checked")){ 
-		filterTypeUrl = 'reject';
-	}
-	if($(e+'filterTypeEmail_disabled').is(":checked")){
-		filterTypeEmail = 'null';
-	}else if($(e+'filterTypeEmail_accept').is(":checked")){ 
-		filterTypeEmail = 'accept';
-	}else if($(e+'filterTypeEmail_reject').is(":checked")){ 
-		filterTypeEmail = 'reject';
-	}
-	if($(e+'filterTypeListcode_disabled').is(":checked")){
-		filterTypeListcode = 'null';
-	}else if($(e+'filterTypeListcode_accept').is(":checked")){ 
-		filterTypeListcode = 'accept';
-	}else if($(e+'filterTypeListcode_reject').is(":checked")){ 
-		filterTypeListcode = 'reject';
-	}
-	filterUrl = $("input[name='"+c+"_popset_filterUrl\\[\\]']")
-		.map(function(){return $(this).val().trim();}).get().join(";");
-	filterEmail = $("input[name='"+c+"_popset_filterEmail\\[\\]']")
-		.map(function(){return $(this).val().trim();}).get().join(";");
-	filterListcode = $("input[name='"+c+"_popset_filterListcode\\[\\]']")
-		.map(function(){return $(this).val().trim();}).get().join(";");
-	
-	if($(e+'forceUrl_disabled').is(":checked")){ forceUrl = '0'; }
-	else { forceUrl = '1'; }	
-	forceUrlList_originals = $("input[name='"+c+"_popset_forceUrlList_original\\[\\]']")
-		.map(function(){return $(this).val().trim();});
-	forceUrlList_altereds = $("input[name='"+c+"_popset_forceUrlList_altered\\[\\]']")
-		.map(function(){return $(this).val().trim();});
-	forceUrlList = ''; colonFlag = false;
-	for(count = 0; count < forceUrlList_originals.length; count++){ 
-		if(colonFlag) forceUrlList += ';';
-		forceUrlList += forceUrlList_originals[count]+"="+forceUrlList_altereds[count];
-		colonFlag = true;
-	}
-	if($(e+'livedata_disabled').is(":checked")){ livedata = '0'; }
-	else { livedata = '1'; }	
 
-	/* alert(
-		"idAssoc:"+idAssoc
-		+"\n"+"idFeedOut: "+idFeedOut
-		+"\n"+"idFeedIn: "+idFeedIn
-		+"\n"+"filterTypeUrl: "+filterTypeUrl
-		+"\n"+"filterUrl: "+filterUrl
-		+"\n"+"filterTypeEmail: "+filterTypeEmail
-		+"\n"+"filterEmail: "+filterEmail
-		+"\n"+"filterTypeListcode: "+filterTypeListcode
-		+"\n"+"filterListcode: "+filterListcode
-		+"\n"+"forceUrl: "+forceUrl
-		+"\n"+"forceUrlList: "+forceUrlList
-	);	 */
-	c = true;
-	if(c && filterUrl.length > 5000){ alert("Maximum length reached for url filters, remove some <?php
-		?>filters and consider creating a new feed, or consider changing the filtering type.");
-		c = false;
-	}
-	if(c && filterEmail.length > 5000){ alert("Maximum length reached for email filters, remove <?php
-	?>some filters and consider creating a new feed, or consider changing the filtering type.");
-		c = false;
-	}
-	if(c && filterListcode.length > 1000){ alert("Maximum length reached for listcode filters, <?php
-	?>remove some filters and consider creating a new feed, or consider changing the filtering type.");
-		c = false;
-	}
-	if(c && forceUrlList.length > 5000){ alert("Maximum length reached for url forcing, remove <?php
-	?>some urls to force, and consider creating a new feed.");
-		c = false;
-	}
-	if(c){ 
-		var response = $.ajax({
-			url: "mgr_feedout.php",
-			type: "POST",
-			async: true,
-			data: ({
-				"a" : "managePopulation"
-				, "action" : action
-				, "idAssoc": idAssoc
-				, "idFeedOut":idFeedOut
-				, "idFeedIn":idFeedIn
-				, "filterTypeUrl":filterTypeUrl
-				, "filterUrl":filterUrl
-				, "filterTypeEmail": filterTypeEmail
-				, "filterEmail":filterEmail
-				, "filterTypeListcode":filterTypeListcode
-				, "filterListcode":filterListcode
-				, "livedata":livedata
-				, "forceUrl":forceUrl
-				, "forceUrlList":forceUrlList
-			})
-		}).done(function(responseText){ 
-			var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-			if(result===null) { 
-				alert("JSON Failed: "+responseText); 
-				display('dialog_'+c+'popsetting'
-					, { 
-						"sub": idFeedOut
-						, "idAssoc": idAssoc
-						, "idFeedOut":idFeedOut
-						, "idFeedIn":idFeedIn
-						, "filterTypeUrl":filterTypeUrl
-						, "filterUrl":filterUrl
-						, "filterTypeEmail": filterTypeEmail
-						, "filterEmail":filterEmail
-						, "filterTypeListcode":filterTypeListcode
-						, "filterListcode":filterListcode
-						, "livedata":livedata
-						, "forceUrl":forceUrl
-						, "forceUrlList":forceUrlList
-					} 
-				);
-			}
-			if(result.status == 1){ 
-				closeContent('dialog_'+c+'popsetting');
-				display(
-					'outgoingFeeds'
-					, { 
-						'callbackParams': {
-							'sub':options.sub
-							, 'idFeedOut':idFeedOut
-						}
-					}
-					, true
-					, function(o){ 
-						toggleHidden(
-							'companyFeedList'
-							, {'sub':o.sub, 'hiddenText':'Show Feeds', 'shownText':'Close' }
-						);
-						display(
-							'dialog_editpopulation'
-							, { 'sub': o.idFeedOut, 'idFeedOut': o.idFeedOut }
-						);
-					}
-				);	
-			} else { 
-				alert(result.error);
-				display('dialog_'+c+'popsetting'
-					, { 
-						"sub": idFeedOut
-						, "idAssoc": idAssoc
-						, "idFeedOut":idFeedOut
-						, "idFeedIn":idFeedIn
-						, "filterTypeUrl":filterTypeUrl
-						, "filterUrl":filterUrl
-						, "filterTypeEmail": filterTypeEmail
-						, "filterEmail":filterEmail
-						, "filterTypeListcode":filterTypeListcode
-						, "filterListcode":filterListcode
-						, "livedata":livedata
-						, "forceUrl":forceUrl
-						, "forceUrlList":forceUrlList
-					} 
-				);
-			}
-		});
-		$('#dialog_'+c+'feedout').html("Processing..."); 
-	}
-}
+<?php include(INCLUDES.'c_nav.php'); ?>
 
-function splitMultiFilter(e, t){ 
+<div class="container-fluid">
+
+<h2>Outgoing Feeds</h2>
+
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
+
+<form class="pull-right" id="status-select" method="get">
+<select id="status" name="status">
+	<option value="active"<?php if( 'active' === $status ) { print ' selected="selected"'; } ?>>Show active feeds</option>
+	<option value="hidden"<?php if( 'hidden' === $status ) { print ' selected="selected"'; } ?>>Show hidden feeds</option>
+	<option value="retired"<?php if( 'retired' === $status ) { print ' selected="selected"'; } ?>>Show retired feeds</option>
+	<option value=""<?php if( null === $status ) { print ' selected="selected"'; } ?>>Show all feeds</option>
+</select>
+</form>
+
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newfeed" data-feed-id="">Add a new feed</button></p>
+
+<?php } ?>
+
+<?php
+
+if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+	$outgoingFeeds = $leads->getOutboundFeeds( null, $status );
+} else {
+	$idCompany = LeadsSession::getCompanyId();
+	if( empty( $idCompany ) ) {
+		$idCompany = -9999;
+	}
+	$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, $status );
+}
+?>
+<?php
+if( $outgoingFeeds === false ) {
+?>
+<p>Error when trying to fetch feeds: database error.</p>
+<?php
+} else if( $outgoingFeeds == 0 ){
+?>
+<p>Error when trying to fetch feeds: there are no feeds.</p>
+<?php
+} else {
+	//Go through each and compile the company list.
+	$companyFeedLists = array();
+	foreach($outgoingFeeds as $feed){
+		//Add company to the cache list of companies.
+		if(!isset($companyCache[$feed->idCompany])){
+			$company = getCompany($feed->idCompany);
+			if(	is_object($company) ){
+				$companyCache[$feed->idCompany] = $company;
+				$companyFeedLists[$feed->idCompany] = array();
+			}
+		}
+		//Add feed to list of feeds for the specified company.
+		$companyFeedLists[$feed->idCompany][] = $feed;
+	}
+	//print_r($companyFeedLists);
+	function companyListSort($item1,$item2)
+	{
+		global $companyCache;
+		//print_r($companyCache[$item1]->name);
+		//print_r($companyCache[$item2]->name);
+		return strcasecmp ( $companyCache[$item1]->name , $companyCache[$item2]->name );
+	}
+	uksort($companyFeedLists,'companyListSort');
+?>
+<table class="table table-bordered table-condensed table-striped-custom">
+	<thead>
+	<tr>
+		<th class='fTO_companyName' colspan='2'>Company</th>
+		<th class='fTO_feedOverview' colspan='4'>Total Feeds</th>
+		<th class='fTO_accepted'>Total Accepted</th>
+		<th class='fTO_rejected'>Total Rejected</th>
+		<th class='fTO_rejected'>Total Queued</th>
+		<th class='fTO_options'>Options</th>
+	</tr>
+	</thead>
+<?php
+	$grandTotalFeeds = 0;
+	$grandTotalAccepted = 0;
+	$grandTotalRejected = 0;
+	$grandTotalQueued = 0;
+	foreach($companyFeedLists as $idCompany => $companyFeedList){
+		$totalAccepted = 0;
+		$totalRejected = 0;
+		$totalActive = 0;
+		$totalQueued = 0;
+
+		foreach($companyFeedList as $keyFeed => $feed){
+
+			$stats = $leads->getOutboundStats( $feed->idFeedOut );
+
+			$companyFeedList[$keyFeed]->accepted = $stats['accepted'];
+			$totalAccepted += $stats['accepted'];
+			$grandTotalAccepted += $stats['accepted'];
+
+			$companyFeedList[$keyFeed]->rejected = $stats['rejected'];
+			$totalRejected += $stats['rejected'];
+			$grandTotalRejected += $stats['rejected'];
+
+			$companyFeedList[$keyFeed]->queued = $feed->queued;
+			$totalQueued += $feed->queued;
+			$grandTotalQueued += $feed->queued;
+
+			if('active' === $feed->status) { $totalActive++; }
+			$companyFeedList[$keyFeed]->statusFeed = $feed->status;
+			$companyFeedList[$keyFeed]->statusPop = $leads->getPopulationStatus( $feed->idFeedOut );
+		}
+		$grandTotalFeeds += count($companyFeedList);
+?>
+	<tr class='fTORow fTO_Row bgGray'>
+		<td colspan='2'><?php echo $companyCache[$idCompany]->name; ?></td>
+		<td colspan='4'><?php echo count($companyFeedList); ?> (<?php echo $totalActive; ?> Active)</td>
+		<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $totalQueued, 0 ); ?></td>
+		<td class="text-center"><button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button></td>
+	</tr>
+<?php
+		foreach($companyFeedList as $feed){
+?>
+	<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
+		<td><?php echo $feed->idFeedOut; ?></td>
+		<td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo htmlentities( $feed->label ); ?></td>
+		<td><?php echo htmlentities( $feed->description ); ?></td>
+		<td><?php echo htmlentities( $feed->statusPop ); ?></td>
+		<td><?php echo ucfirst( $feed->status ); ?></td>
+		<td><input class="cron-toggle" <?php if( !empty( $feed->cron ) ) { print ' checked="checked"'; } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Running" data-onstyle="success" data-off="Paused" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedOut; ?>" type="checkbox" /></td>
+		<td class="text-right"><?php echo $feed->accepted; ?></td>
+		<td class="text-right"><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
+		<td class="text-right"><?php echo $feed->queued; ?></td>
+		<td class="text-center">
+<div class="btn-group">
+  <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editfeed" data-mode="edit" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Edit Feed</button>
+  <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	<span class="caret"></span>
+	<span class="sr-only">Toggle Dropdown</span>
+  </button>
+  <ul class="dropdown-menu">
+	<li><a href="#" data-toggle="modal" data-target="#modal-showpop" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Show populations</a></li>
+	<li><a href="#" data-toggle="modal" data-target="#newfeed" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Duplicate feed</a></li>
+	<li><a href="#" data-toggle="modal" data-target="#modal-testrecord" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Send test record</a></li>
+	<li><a href="#" data-toggle="modal" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
+	<li><a href="#" data-toggle="modal" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
+  </ul>
+</div>
+</td>
+	</tr>
+<?php
+		}
+	}
+?>
+	<tfoot>
+	<tr>
+		<td colspan='2'>GRAND TOTAL</td>
+		<td colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
+		<td class="text-right"><?php echo number_format( $grandTotalQueued, 0 ); ?></td>
+		<td>&nbsp;</td>
+	</tr>
+	</tfoot>
+</table>
+<?php
+}
+?>
+
+<div class="modal fade" id="newfeed" tabindex="-1" role="dialog" aria-labelledby="newfeed_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="newfeed_title">Add a new outgoing feed</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-newfeed" type="button" class="btn btn-primary">Add feed</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="editfeed" tabindex="-1" role="dialog" aria-labelledby="editfeed_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="editfeed_title">Edit an outgoing feed</h4>
+			</div>
+			<div class="modal-body"></div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-editfeed" type="button" class="btn btn-primary">Save changes</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="modal-showpop" tabindex="-1" role="dialog" aria-labelledby="showpop_title">
+	<div class="modal-dialog modal-xl" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="showpop_title">Population Settings</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="modal-clearqueue" tabindex="-1" role="dialog" aria-labelledby="clearqueue_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="clearqueue_title">Clear queued records</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="modal-testrecord" tabindex="-1" role="dialog" aria-labelledby="testrecord_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="testrecord_title">Send a test record</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="modal-urlreport" tabindex="-1" role="dialog" aria-labelledby="urlreport_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="urlreport_title">URL Report</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-urlreport" type="button" class="btn btn-primary">Run Report</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="modal-newpop" tabindex="-1" role="dialog" aria-labelledby="newpop_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="newpop_title">Add a new population parameter</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-newpop" type="button" class="btn btn-primary">Add population</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="modal-editpop" tabindex="-1" role="dialog" aria-labelledby="editpop_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="editpop_title">Edit a population parameter</h4>
+			</div>
+			<div class="modal-body"></div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-editpop" type="button" class="btn btn-primary">Save changes</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+$('#modal-save-newfeed').click( function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "mgr_feedout.php",
+		type: "POST",
+		async: true,
+		data: $("#new_feed").serialize()
+	}).done(function(result){
+		if(result.status == 1){
+			window.location.reload(true);
+		} else {
+			alert(result.error);
+		}
+	});
+});
+
+$('#newfeed').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_newfeed',
+			'idFeedOut': idFeedOut
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-save-editfeed').click(function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "mgr_feedout.php",
+		type: "POST",
+		async: true,
+		data: $("#edit_feed").serialize()
+	}).done(function(result){
+		if(result.status == 1){
+			window.location.reload(true);
+		} else {
+			alert(result.error);
+		}
+	});
+});
+
+$('#editfeed').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_editfeed',
+			'idFeedOut': idFeedOut
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-showpop').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_editpopulation',
+			'idFeedOut': idFeedOut
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-clearqueue').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_clearqueue',
+			'idFeedOut': idFeedOut
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-testrecord').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_testrecord',
+			'idFeedOut': idFeedOut
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-urlreport').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_urlreport',
+			'idFeedOut': idFeedOut
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-save-urlreport').click(function(event) {
+	event.preventDefault();
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: $("#form-urlreport").serialize(),
+		success: function(data) {
+			$('#modal-urlreport').find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-save-newpop').click( function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "mgr_feedout.php",
+		type: "POST",
+		async: true,
+		data: $("#new_pop").serialize()
+	}).done(function(result){
+		if(result.status == 1){
+			window.location.reload(true);
+		} else {
+			alert(result.error);
+		}
+	});
+});
+
+$('#modal-newpop').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_newpopsetting',
+			'idFeedOut': idFeedOut
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-save-editpop').click(function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "mgr_feedout.php",
+		type: "POST",
+		async: true,
+		data: $("#edit_pop").serialize()
+	}).done(function(result){
+		if(result.status == 1){
+			window.location.reload(true);
+		} else {
+			alert(result.error);
+		}
+	});
+});
+
+$('#modal-editpop').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+	var idAssoc = $(e.relatedTarget).data('assoc-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_editpopsetting',
+			'idFeedOut': idFeedOut,
+			'idAssoc': idAssoc
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#status-select select').change(function(e) {
+	e.preventDefault();
+	$('#status-select').submit();
+});
+
+$('.feed-toggle').on('show.bs.collapse', function() {
+	$(this).prev().find('button[data-toggle="collapse"]').html('Hide Feeds');
+});
+$('.feed-toggle').on('hide.bs.collapse', function() {
+	$(this).prev().find('button[data-toggle="collapse"]').html('Show Feeds');
+});
+
+$('.cron-toggle').change( function() {
+	var idFeedOut = $(this).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'a': 'manageFeedParam',
+			'idFeedOut': idFeedOut,
+			'action': 'toggle',
+			'param': 'cron'
+		}
+	});
+});
+
+$(document).on('hidden.bs.modal', '.modal', function () {
+	$('.modal:visible').length && $(document.body).addClass('modal-open');
+});
+
+function splitMultiFilter(e, t){
 	values = $('#'+e+'popset_filter'+t+'Multi').val();
 	//alert(values);
 	valueArray = values.match(/[^\r\n]+/g);
-	for(count = 0; count < valueArray.length; count++){ 
+	for(count = 0; count < valueArray.length; count++){
 		element(
 			e+"popset_filter"+t+"_container"
 			, "element_filter"
-			, { 
+			, {
 				"e": e
-				, "type": t 
+				, "type": t
 				, "value": valueArray[count]
 			}
 		);
 	}
 	//alert('#'+e+'popset_filter'+t+'_multipleInsert');
-	$('#'+e+'popset_filter'+t+'_multipleInsert').html("");	
+	$('#'+e+'popset_filter'+t+'_multipleInsert').html("");
 }
-
-function managePopulationParam(idAssoc, action, options){ 
-	c = true;
-	if(action == 'delete'){ c = confirm("Are you sure you want to delete this population parameter?"); }
-	if(c){ 
-		var response = $.ajax({
-			url: "mgr_feedout.php",
-			type: "POST",
-			async: true,
-			data: ({
-				"a" : "managePopulationParam"
-				, "action" : action
-				, "idAssoc": idAssoc
-			})
-		}).done(function(responseText){ 
-			var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-			if(result===null) { 
-				alert("JSON Failed: "+responseText); 
-			} else { 
-				if(result.status == 1){ 
-					switch(action){ 
-						case 'toggle':
-							display(
-								'outgoingFeeds'
-								, { 
-									'callbackParams': {
-										'sub':options.sub
-										, 'idFeedOut':options.idFeedOut
-									}
-								}
-								, true
-								, function(o){ 
-									toggleHidden(
-										'companyFeedList'
-										, {'sub':o.sub, 'hiddenText':'Show Feeds', 'shownText':'Close' }
-									);
-									display(
-										'dialog_editpopulation'
-										, { 'sub': o.idFeedOut, 'idFeedOut': o.idFeedOut }
-									);
-								}
-							);												
-						break;
-						case 'delete':
-							display(
-								'outgoingFeeds'
-								, { 
-									'callbackParams': {
-										'sub':options.sub
-										, 'idFeedOut':options.idFeedOut
-									}
-								}
-								, true
-								, function(o){ 
-									toggleHidden(
-										'companyFeedList'
-										, {'sub':o.sub, 'hiddenText':'Show Feeds', 'shownText':'Close' }
-									);
-									display(
-										'dialog_editpopulation'
-										, { 'sub': o.idFeedOut, 'idFeedOut': o.idFeedOut }
-									);
-								}
-							);	
-						break;
-					}
-				} else { 
-					alert(result.error);
-				}
-			}			
-		});
-	}
-}
-
-function manageFeedParam(param, idFeedOut, action, options){ 
-	c = true;
-	//if(action == 'delete'){ c = confirm("Are you sure you want to delete this population parameter?"); }
-	if(c){ 
-		var response = $.ajax({
-			url: "mgr_feedout.php",
-			type: "POST",
-			async: true,
-			data: ({
-				"a" : "manageFeedParam"
-				, "param": param
-				, "action" : action
-				, "idFeedOut": idFeedOut
-			})
-		}).done(function(responseText){ 
-			var result = jQuery.parseJSON(responseText.charAt(0) != "{" ? null : responseText);
-			if(result===null) { 
-				alert("JSON Failed: "+responseText); 
-			} else { 
-				if(result.status == 1){ 
-					switch(action){ 
-						case 'toggle':
-							display(
-								'outgoingFeeds'
-								, { 
-									'callbackParams': {
-										'sub':options.sub
-										, 'idFeedOut':options.idFeedOut
-									}
-								}
-								, true
-								, function(o){ 
-									toggleHidden(
-										'companyFeedList'
-										, {'sub':o.sub, 'hiddenText':'Show Feeds', 'shownText':'Close' }
-									);
-								}
-							);												
-						break;
-					}
-				} else { 
-					alert(result.error);
-				}
-			}			
-		});
-	}
-}
-
-$(document).ready(function(){ 
-	display('outgoingFeeds', { 'status': 'active' } );
-
-	$('#status').change(function() {
-		display('outgoingFeeds', { 'status': $(this).val() } );
-	});
-});
 </script>
-
-<?php include(INCLUDES.'c_nav.php'); ?>
-<div class="container-fluid">
-
-<h2>Outgoing Feeds</h2>
-
-		<div id='controls'>
-<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
-			<p>
-			<a href="#" class="btn btn-primary" onclick="display('dialog_newfeedout');">Add New Feed</a>
-			<select class="pull-right" id="status" name="status">
-				<option value="active">Show active feeds</option>
-				<option value="hidden">Show hidden feeds</option>
-				<option value="retired">Show retired feeds</option>
-				<option value="">Show all feeds</option>
-			</select>
-			</p>
-<?php } ?>
-		</div>
-		<div id='dialogs'>
-			<div id='dialog_newfeedout' style='display:none;'></div>
-			<div id='dialog_editfeedout' style='display:none;'></div>
-			<div id='dialog_editpopulation' style='display:none;'></div>
-		</div>
-		<div>
-			<div id='feedSettings' style='display:none;'></div>
-		</div>
-		<div>
-			<div id='outgoingFeeds'></div>
-		</div>
-		<div class='clr'></div>
-</div>
 
 </body>
 </html>

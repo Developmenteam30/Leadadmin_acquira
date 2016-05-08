@@ -911,6 +911,123 @@ class Leads
 		return $results;
 	}
 
+	public function addOutboundFeed( $fields ) {
+
+		if( empty( $fields['label'] ) ) {
+			return null;
+		}
+
+		$this->db->beginTransaction();
+
+		try {
+			$idFeedOut = $this->insertRow( 'feedout', $fields );
+		} catch( Leads_PDOException $e ) {
+			$this->db->rollBack();
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add outbound feed: ' . $pdoException->getMessage() );
+		}
+
+		$this->db->commit();
+
+		return $idFeedOut;
+	}
+
+	public function updateOutboundFeed( $idFeedOut, $fields ) {
+		try {
+			$status = $this->update( 'feedout', $fields, array(
+				'idFeedOut' => $idFeedOut,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update outbound feed: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
+	public function getPopulationStatus( $idFeedOut ) {
+		$results = array();
+		$status = 'Error';
+
+		try {
+			$query = $this->db->prepare( "SELECT enabled FROM feedPopulation WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+
+			if( empty( $results ) ) {
+				return 'No populations setup';
+			} else {
+				$enabled = 0;
+				foreach( $results as $result ) {
+					if( $result->enabled ) {
+						$enabled++;
+					}
+				}
+				if( $enabled === 0 ) {
+					return 'Disabled';
+				} else if( $enabled < sizeOf( $results ) ) {
+					return 'Partially enabled';
+				} else {
+					return 'Enabled';
+				}
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get population status: ' . $e->getMessage() );
+			return 'Error';
+		}
+
+		return $status;
+	}
+
+	public function getPopulationSetting( $idAssoc ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM feedPopulation WHERE idAssoc = ?" );
+			$query->execute( array( $idAssoc ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get feed population: ' . $e->getMessage() );
+			return false;
+		}
+
+		return $results;
+	}
+
+	public function addPopulation( $fields ) {
+
+		if( empty( $fields['idFeedIn'] ) || empty( $fields['idFeedOut'] ) ) {
+			return null;
+		}
+
+		try {
+			$idAssoc = $this->insertRow( 'feedPopulation', $fields );
+		} catch( Leads_PDOException $e ) {
+			$this->db->rollBack();
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add population: ' . $pdoException->getMessage() );
+		}
+
+		return $idAssoc;
+	}
+
+	public function updatePopulation( $idAssoc, $fields ) {
+		try {
+			$status = $this->update( 'feedPopulation', $fields, array(
+				'idAssoc' => $idAssoc,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update population: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
 	public function retireOutboundFeed( $idFeedOut ) {
 		if( empty( $idFeedOut ) ) {
 			return false;
@@ -1038,6 +1155,23 @@ class Leads
 
 		return $result;
 	}
+
+	public function checkOutboundFeedLabelExists( $label ) {
+		$result = false;
+
+		try {
+			$query = $this->db->prepare( "SELECT 1 FROM feedout WHERE label = ?" );
+			$query->execute( array( $label ) );
+			if( '1' == $query->fetchColumn( ) ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check outbound feed label: ' . $e->getMessage() );
+		}
+
+		return $result;
+	}
+
 
 	public function getOutboundStats( $idFeedOut ) {
 		$results = array( 'accepted' => 0, 'rejected' => 0 );

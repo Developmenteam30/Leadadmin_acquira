@@ -153,14 +153,14 @@ if(isset($_REQUEST['a'])){
 			} else {
 				if( $c ) {
 					if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-					    $idCompany = LeadsSession::getCompanyId();
-					    if( empty( $idCompany ) ) {
+						$idCompany = LeadsSession::getCompanyId();
+						if( empty( $idCompany ) ) {
 						$idCompany = -9999;
-					    }
-					    if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
+						}
+						if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
 							$c = false;
 							$result['error'] = 'Sorry, you do not have access to this feed.';
-			    		}
+						}
 					} else {
 						$idCompany = empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'];
 					}
@@ -243,14 +243,14 @@ if(isset($_REQUEST['a'])){
 			$c = true; $result['error'] = 'Failed when trying to export data.';
 
 			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-			    $idCompany = LeadsSession::getCompanyId();
-			    if( empty( $idCompany ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
 				$idCompany = -9999;
-			    }
-			    if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
+				}
+				if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
 					$c = false;
 					$result['error'] = 'Sorry, you do not have access to this feed.';
-		    	}
+				}
 			}
 
 			if($c){
@@ -269,15 +269,15 @@ if(isset($_REQUEST['a'])){
 			}
 
 			if( $c ) {
-	            $jobId = $leads->addJob( 'export-incoming', $feed->idFeedIn, serialize( $_REQUEST ), '', 0 );
-	            if( null === $jobId ) {
+				$jobId = $leads->addJob( 'export-incoming', $feed->idFeedIn, serialize( $_REQUEST ), '', 0 );
+				if( null === $jobId ) {
 					$c = false;
 					$result['error'] = 'Error adding this job to the database.';
-        	    } else {
-            	    $leads->auditLog( 'FEEDINC:EXPORT', $jobId );
+				} else {
+					$leads->auditLog( 'FEEDINC:EXPORT', $jobId );
 					$result['status'] = 1;
 					$result['error'] = 'Export job #' . $jobId . ' submitted succesfully. You will be notified by email when your download is ready.';
-	            }
+				}
 			}
 
 		break;
@@ -302,13 +302,13 @@ if(isset($_REQUEST['d'])){
 			$idFeedIn = $_REQUEST['idFeedIn'];
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-			    $idCompany = LeadsSession::getCompanyId();
-			    if( empty( $idCompany ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
 				$idCompany = -9999;
-			    }
-			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+				}
+				if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
 					die( 'Sorry, you do not have access to this feed.' );
-		    	}
+				}
 			}
 
 			$feed = $leads->getInboundFeed( $idFeedIn );
@@ -655,13 +655,13 @@ if(isset($_REQUEST['d'])){
 			$idFeedIn = $_REQUEST['idFeedIn'];
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-			    $idCompany = LeadsSession::getCompanyId();
-			    if( empty( $idCompany ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
 				$idCompany = -9999;
-			    }
-			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+				}
+				if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
 					die( 'Sorry, you do not have access to this feed.' );
-		    	}
+				}
 			}
 
 			$feed = $leads->getInboundFeed( $idFeedIn );
@@ -733,13 +733,13 @@ $company = $leads->getCompany( $feed->idCompany );
 			$idFeedIn = $_REQUEST['idFeedIn'];
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-			    $idCompany = LeadsSession::getCompanyId();
-			    if( empty( $idCompany ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
 				$idCompany = -9999;
-			    }
-			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+				}
+				if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
 					die( 'Sorry, you do not have access to this feed.' );
-		    	}
+				}
 			}
 
 			$feed = $leads->getInboundFeed( $idFeedIn );
@@ -829,16 +829,16 @@ $company = $leads->getCompany( $feed->idCompany );
 		break;
 
 		case 'dialog_urlreport':
-			$idFeedIn = $_REQUEST['idFeedIn'];
+			$idFeedIn = !empty( $_REQUEST['idFeedIn'] ) ? $_REQUEST['idFeedIn'] : 0;
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-			    $idCompany = LeadsSession::getCompanyId();
-			    if( empty( $idCompany ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
 				$idCompany = -9999;
-			    }
-			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+				}
+				if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
 					die( 'Sorry, you do not have access to this feed.' );
-		    	}
+				}
 			}
 
 			if( empty( $_REQUEST['submit'] ) ) {
@@ -848,6 +848,11 @@ $company = $leads->getCompany( $feed->idCompany );
 				$_REQUEST['breakdown'] = 'day';
 				$_REQUEST['sort'] = 'date';
 			}
+			$_REQUEST['dateStart'] = !empty( $_REQUEST['dateStart'] ) ? $_REQUEST['dateStart'] : '';
+			$_REQUEST['dateEnd'] = !empty( $_REQUEST['dateEnd'] ) ? $_REQUEST['dateEnd'] : '';
+			$_REQUEST['urlList'] = !empty( $_REQUEST['urlList'] ) && is_array( $_REQUEST['urlList'] ) ? $_REQUEST['urlList'] : array();
+			$_REQUEST['breakdown'] = !empty( $_REQUEST['breakdown'] ) ? $_REQUEST['breakdown'] : 'day';
+			$_REQUEST['sort'] = !empty( $_REQUEST['sort'] ) ? $_REQUEST['sort'] : 'date';
 
 			$feed = $leads->getInboundFeed( $idFeedIn );
 ?>
@@ -989,7 +994,7 @@ $company = $leads->getCompany( $feed->idCompany );
 							fclose($file);
 							print "</tbody>\n";
 							print "</table>\n";
-							printf( '<p><a href="%s">Download this report</a></p>', $fileLink );
+							printf( '<p><a <a class="btn btn-primary" href="%s">Export this report</a></p>', $fileLink );
 						}
 					}
 
@@ -1020,13 +1025,13 @@ $company = $leads->getCompany( $feed->idCompany );
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-			    $idCompany = LeadsSession::getCompanyId();
-			    if( empty( $idCompany ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
 				$idCompany = -9999;
-			    }
-			    if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
+				}
+				if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
 					die( 'Sorry, you do not have access to this feed.' );
-		    	}
+				}
 			}
 
 			$feed = $leads->getInboundFeed( $idFeedIn );
@@ -1235,14 +1240,14 @@ if($incomingFeeds === false){
 <div class="btn-group">
   <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editfeedinc" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Edit Feed</button>
   <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    <span class="caret"></span>
-    <span class="sr-only">Toggle Dropdown</span>
+	<span class="caret"></span>
+	<span class="sr-only">Toggle Dropdown</span>
   </button>
   <ul class="dropdown-menu">
-    <li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>" target="_blank">API Spec</a></li>
-    <li><a href="#" data-toggle="modal" data-target="#modal-import" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Import data</a></li>
-    <li><a href="#" data-toggle="modal" data-target="#modal-export" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Export data</a></li>
-    <li><a href="#" data-toggle="modal" data-target="#modal-urlreport" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">URL report</a></li>
+	<li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>" target="_blank">API Spec</a></li>
+	<li><a href="#" data-toggle="modal" data-target="#modal-import" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Import data</a></li>
+	<li><a href="#" data-toggle="modal" data-target="#modal-export" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Export data</a></li>
+	<li><a href="#" data-toggle="modal" data-target="#modal-urlreport" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">URL report</a></li>
   </ul>
 </div>
 </td>
@@ -1504,7 +1509,7 @@ $('#modal-save-urlreport').click(function(event) {
 });
 
 $('#newfeedinc, #editfeedinc').on('hide.bs.modal', function(e) {
-    $(this).find('.modal-body').html('');
+	$(this).find('.modal-body').html('');
 });
 
 $('#status-select select').change(function(e) {

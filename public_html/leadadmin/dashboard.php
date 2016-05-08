@@ -104,7 +104,7 @@ if($incomingFeeds === false){
 		<td><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</td>
 		<td class="text-right"><?php echo number_format( $feed->dailyCount, 0 ); ?></td>
 		<td class="text-right"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo number_format( $feed->dailyCountInvalid, 0 ); ?></a></td>
-		<td class="text-center"><a href="#" id="link_feedinc_<?php echo $feed->idFeedIn; ?>" onclick="display('feedinc', { 'sub':'<?php echo $feed->idFeedIn; ?>', 'idFeedIn':'<?php echo $feed->idFeedIn; ?>', 'hiddenText': 'Show URLs', 'shownText': 'Close' } );">Show URLs</a></td>
+		<td class="text-center"><a class="btn btn-primary btn-xs nonLink" href="#" id="link_feedinc_<?php echo $feed->idFeedIn; ?>" onclick="display('feedinc', { 'sub':'<?php echo $feed->idFeedIn; ?>', 'idFeedIn':'<?php echo $feed->idFeedIn; ?>', 'hiddenText': 'Show URLs', 'shownText': 'Close' } );">Show URLs</a></td>
 	</tr>
 	<tr><td class="hidden-custom" id="feedinc_<?php echo $feed->idFeedIn; ?>" colspan="4"></td></tr>
 <?php
