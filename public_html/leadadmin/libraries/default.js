@@ -86,5 +86,8 @@ $(document).ready(function(){
 	display('errorCount');
 });
 
+
+// Fix for using select2 dropdowns in Bootstrap modal windows
+// Without this fix, the select2 input boxes are not able to be typed in
 $.fn.modal.Constructor.prototype.enforceFocus = function() {};
 
