@@ -539,6 +539,8 @@ table tr.bg-gray {
 	background-image: url("/v2/leadadmin/images/upsimple.png");
 }
 
+#new_pop select,
+#edit_pop select,
 #email_form select,
 #newvertical select,
 #editledger select,

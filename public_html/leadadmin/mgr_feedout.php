@@ -1133,12 +1133,23 @@ if( isset( $_REQUEST['d'] ) ) {
 				<select name="idFeedIn">
 				<option></option>
 				<?php
-				foreach( $incomingFeeds as $fI) {
+				$lastCompany = '';
+				foreach( $incomingFeeds as $fI ) {
+					if( $lastCompany !== $fI->name ) {
+						$lastCompany = $fI->name;
+						printf( '<optgroup label="%s">' . PHP_EOL,
+							htmlentities( $fI->name, ENT_QUOTEs | ENT_HTML5 )
+						);
+					}
 				?>
 					<option value='<?php echo $fI->idFeedIn; ?>'
 						<?php if($fI->idFeedIn == $popset_idFeedIn){ echo "selected='selected'"; } ?>
 					>(<?php echo $fI->idFeedIn; ?>) <?php echo htmlentities( $fI->label ); ?></option>
 				<?php
+					if( $lastCompany !== $fI->name ) {
+						$lastCompany = $fI->name;
+						print '</optgroup>' . PHP_EOL;
+					}
 				}
 				?>
 				</select>
@@ -1433,6 +1444,12 @@ if( isset( $_REQUEST['d'] ) ) {
 	</tr>
 </table>
 </form>
+<script type="text/javascript">
+$("#new_pop select[name='idFeedIn'], #edit_pop select[name='idFeedIn']").select2({
+    placeholder: "Select an incoming feed",
+    allowClear: true
+});
+</script>
 <?php
 		break;
 
