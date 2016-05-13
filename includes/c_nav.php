@@ -13,7 +13,6 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		array( 'name' => 'Reports', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
 			array( 'name' => 'Mapping Report', 'url' => '/leadadmin/reports-mapping.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
-			array( 'name' => '*Mailer - Email', 'url' => '/leadadmin/ledger.php?divisionId=1&amp;type=1', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*List Owner - Email', 'url' => '/leadadmin/list-owner.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Publisher', 'url' => '/leadadmin/ledger.php?type=0', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
