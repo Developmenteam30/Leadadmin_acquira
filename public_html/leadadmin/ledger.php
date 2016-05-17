@@ -401,7 +401,7 @@ $("#newledger select[name='divisionId']").change( function() {
 				companyId.empty();
 				companyId.append('<option></option>');
 				$.each( data, function(i, obj) {
-					companyId.append('<option value="' + obj.companyId + '">' + obj.name + '</option>');
+					companyId.append('<option value="' + obj.idCompany + '">' + obj.name + '</option>');
 				});
 				companyId.select2({
 					placeholder: "Select a company",
