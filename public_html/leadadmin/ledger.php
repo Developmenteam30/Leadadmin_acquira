@@ -240,7 +240,7 @@ if(isset($_REQUEST['a'])){
 
 		case "getDivisionCompanies":
 			if( !empty( $_REQUEST['divisionId'] ) ) {
-				echo json_encode( $leads->getDivisionCompanies( $_REQUEST['divisionId'], PDO::FETCH_ASSOC ) );
+				echo json_encode( $leads->getDivisionCompanies( $_REQUEST['divisionId'], null, PDO::FETCH_ASSOC ) );
 			} else {
 				echo json_encode( array( ) );
 			}
@@ -469,7 +469,7 @@ $("#newledger select[name='divisionId']").change( function() {
 						'type' => 'select',
 						'required' => true,
 						'placeholder' => 'Select a company',
-						'choices' =>  $leads->getDivisionCompanies( $entry->divisionId ),
+						'choices' =>  $leads->getDivisionCompanies( $entry->divisionId, $entry->companyId ),
 						'value' => $entry->companyId,
 					),
 					array(

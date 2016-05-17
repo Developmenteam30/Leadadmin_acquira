@@ -555,12 +555,17 @@ class Leads
 		return $results;
 	}
 
-	public function getDivisionCompanies( $divisionId, $format = PDO::FETCH_KEY_PAIR ) {
+	public function getDivisionCompanies( $divisionId, $companyId, $format = PDO::FETCH_KEY_PAIR ) {
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT c.idCompany,c.name FROM companies_divisions cd LEFT JOIN companies c ON c.idCompany = cd.companyId WHERE cd.divisionId = ? AND c.status = 'active' ORDER BY c.name" );
-			$query->execute( array( $divisionId ) );
+			if( !empty( $companyId ) ) {
+				$query = $this->db->prepare( "SELECT c.idCompany,c.name FROM companies_divisions cd LEFT JOIN companies c ON c.idCompany = cd.companyId WHERE ( cd.divisionId = ? AND c.status = 'active' ) OR c.idCompany = ? ORDER BY c.name" );
+				$query->execute( array( $divisionId, $companyId ) );
+			} else {
+				$query = $this->db->prepare( "SELECT c.idCompany,c.name FROM companies_divisions cd LEFT JOIN companies c ON c.idCompany = cd.companyId WHERE cd.divisionId = ? AND c.status = 'active' ORDER BY c.name" );
+				$query->execute( array( $divisionId ) );
+			}
 			$results = $query->fetchAll( $format );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get division company list: ' . $e->getMessage() );
