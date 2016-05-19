@@ -49,10 +49,10 @@ include(INCLUDES."c_header.php");
 
 		foreach( $months as $month => $val ) {
 ?>
+<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
 <table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
-			<th>Date</th>
 			<th>Division</th>
 			<th>Company</th>
 			<th>Invoice #</th>
@@ -69,7 +69,6 @@ include(INCLUDES."c_header.php");
 					$paymentTotal += $entry->paymentAmount;
 ?>
 		<tr>
-			<td><?php echo $entry->paymentDate; ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
@@ -84,7 +83,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="6">Monthly Total</td>
+			<td colspan="5">Monthly Total</td>
 			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>

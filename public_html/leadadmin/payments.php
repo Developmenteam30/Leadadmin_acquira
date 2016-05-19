@@ -348,14 +348,15 @@ include(INCLUDES."c_header.php");
 
 		foreach( $months as $month => $val ) {
 ?>
+<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
 <table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
-			<th>Date</th>
 			<th>Division</th>
 			<th>Company</th>
 			<th>Invoice #</th>
 			<th>Salesperson</th>
+			<th>Payment Date</th>
 			<th>Payment Method</th>
 			<th>Payment Amount</th>
 			<th>Email</th>
@@ -369,11 +370,11 @@ include(INCLUDES."c_header.php");
 					$paymentTotal += $entry->paymentAmount;
 ?>
 		<tr>
-			<td><?php echo $entry->paymentDate; ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td><?php echo $entry->fullName; ?></td>
+			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td class="text-center"><input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->ledgerId; ?>" /></td>
