@@ -291,7 +291,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Account Manager',
 					'type' => 'select',
 					'placeholder' => 'Select an account manager',
-					'choices' =>  $leads->getStaffUsers(),
+					'choices' => $leads->getStaffUsers(),
 				),
 				array(
 					'id' => 'note',
@@ -516,7 +516,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Account Manager',
 					'type' => 'select',
 					'placeholder' => 'Select an account manager',
-					'choices' =>  $leads->getStaffUsers(),
+					'choices' => $leads->getStaffUsers(),
 					'value' => $company->accountManager,
 				),
 				array(

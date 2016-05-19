@@ -336,7 +336,7 @@ if(isset($_REQUEST['d'])){
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a salesperson',
-					'choices' =>  $leads->getStaffUsers(),
+					'choices' => $leads->getStaffUsers(),
 				),
 				array(
 					'id' => 'commissionAmount',
@@ -469,7 +469,7 @@ $("#newledger select[name='divisionId']").change( function() {
 						'type' => 'select',
 						'required' => true,
 						'placeholder' => 'Select a company',
-						'choices' =>  $leads->getDivisionCompanies( $entry->divisionId, $entry->companyId ),
+						'choices' => $leads->getDivisionCompanies( $entry->divisionId, $entry->companyId ),
 						'value' => $entry->companyId,
 					),
 					array(
@@ -478,7 +478,7 @@ $("#newledger select[name='divisionId']").change( function() {
 						'type' => 'select',
 						'required' => true,
 						'placeholder' => 'Select a vertical',
-						'choices' =>  $leads->getDivisionVerticals( $entry->divisionId ),
+						'choices' => $leads->getDivisionVerticals( $entry->divisionId ),
 						'value' => $entry->verticalId,
 					),
 					array(
@@ -527,7 +527,7 @@ $("#newledger select[name='divisionId']").change( function() {
 						'type' => 'select',
 						'required' => true,
 						'placeholder' => 'Select a salesperson',
-						'choices' =>  $leads->getStaffUsers(),
+						'choices' => $leads->getStaffUsers(),
 						'value' => $entry->userId,
 					),
 					array(
