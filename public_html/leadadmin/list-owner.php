@@ -143,9 +143,9 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			$leads->setInvoiceNumber( $_REQUEST['date'], $_REQUEST['idCompany'], !empty( $_REQUEST['invoiceNumber'] ) ? $_REQUEST['invoiceNumber'] : '' );
+			$leads->setInvoiceDetails( $_REQUEST['date'], $_REQUEST['idCompany'], !empty( $_REQUEST['invoiceNumber'] ) ? $_REQUEST['invoiceNumber'] : '', !empty( $_REQUEST['paymentDate'] ) ? $_REQUEST['paymentDate'] : '', !empty( $_REQUEST['userId'] ) ? $_REQUEST['userId'] : '' );
 			$result['status'] = 1;
-			$result['error'] = 'Invoice number updated.';
+			$result['error'] = 'Invoice details updated.';
 
 			if( !empty( $_REQUEST['email' ] ) && !empty( $_REQUEST['invoiceNumber'] ) ) {
 				if( empty( $company->acct_email ) ) {
@@ -291,19 +291,48 @@ if( isset( $_REQUEST['d'] ) ) {
 
 <?php
 if( !empty( $idCompany ) ) {
-	print '<input class="pull-right" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
+	print '<div class="pull-right">' . PHP_EOL;
 
+	print '<p class="text-right">' . PHP_EOL;
 	$reportDateObj = new DateTime( $reportDate . '01' );
 	$reportDateObj->sub( new DateInterval( 'P1M' ) );
+	printf( '<input class="btn btn-primary btn-sm" type="button" value="Copy values from last month" onclick="copyRevenue( \'%s\', \'%s\', \'%s\' )" /> ', $reportDateObj->format( 'Ym' ), $reportDate, $idCompany );
+	print '<input class="btn btn-primary btn-sm" type="button" value="Send Report Ready Email" onclick="sendReportReady(' . $idCompany . ',' . $reportDate . ')" />';
+	print '</p>' . PHP_EOL;
 
-	printf( '<input class="pull-right" type="button" value="Copy values from last month" onclick="copyRevenue( \'%s\', \'%s\', \'%s\' )" />', $reportDateObj->format( 'Ym' ), $reportDate, $idCompany );
-
-	print '<p class="pull-right">';
-	$invoiceNumber = $leads->getInvoiceNumber( $reportDate, $idCompany );
-	print 'Invoice #<input type="text" value="' . htmlspecialchars( $invoiceNumber, ENT_HTML5 | ENT_NOQUOTES ) . '" id="invoice_number" /> ';
-	print '<input type="checkbox" value="1" id="invoice_email" /> Send Email? ';
-	print '<input type="button" value="Save" onclick="invoiceStatus(' . $idCompany . ',' . $reportDate . ', 0, ' . ( empty( $idFeedIn ) ? 0 : $idFeedIn ) . ' , \'' . ( empty( $urlFilter ) ? 0 : $urlFilter )  . '\' )" />';
+	print '<p class="text-right form-inline">';
+	$invoice = $leads->getInvoiceDetails( $reportDate, $idCompany );
+	printf( 'Invoice #: <input class="form-control" type="text" value="%s" id="invoice_number" /> ',
+		!empty( $invoice->invoiceNumber ) ? htmlspecialchars( $invoice->invoiceNumber, ENT_HTML5 | ENT_NOQUOTES ) : ''
+	);
+	printf( 'Payment Date: <input class="form-control" type="text" value="%s" id="paymentDate" /> ',
+		!empty( $invoice->paymentDate ) ? htmlspecialchars( $invoice->paymentDate, ENT_HTML5 | ENT_NOQUOTES ) : ''
+	);
+	$users = $leads->getStaffUsers();
+	print 'Salesperson: <select class="form-control" id="userId">';
+	print '<option></option>' . PHP_EOL;
+	foreach( $users as $userId => $name ) {
+		printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+			$userId,
+			( isset( $invoice->userId ) && $invoice->userId == $userId ) ? ' selected="selected"' : '',
+			$name
+		);
+	}
+	print '</select> ';
+	print 'Send Email? <input class="form-control" type="checkbox" value="1" id="invoice_email" /> ';
+	print '<input class="btn btn-primary btn-sm" type="button" value="Save" onclick="invoiceStatus(' . $idCompany . ',' . $reportDate . ', 0, ' . ( empty( $idFeedIn ) ? 0 : $idFeedIn ) . ' , \'' . ( empty( $urlFilter ) ? 0 : $urlFilter )  . '\' )" />';
 	print '</p>';
+
+	print '</div>';
+?>
+<script type="text/javascript">
+$('#paymentDate').datepicker({
+    // Consistent format with the HTML5 picker
+    dateFormat: 'yy-mm-dd'
+});
+</script>
+
+<?php
 }
 ?>
 </p>
@@ -367,19 +396,23 @@ if( !empty( $idCompany ) ) {
 ?>
 <script type="text/javascript">
 
-var tf = new TableFilter(document.querySelector('#revenue_report'), {
-	base_path: '/leadadmin/libraries/tablefilter/',
-	grid: false,
-	filters_row_index: 1,
-	extensions: [{
-		name: 'sort',
-		types: [
-			'String','String','String','String','String','ymddate','ymddate','us','us'
-		],
-	}],
-	sort: true
-});
-tf.init();
+var myTable = document.querySelector('#revenue_report');
+
+if( myTable ) {
+	var tf = new TableFilter(myTable, {
+		base_path: '/leadadmin/libraries/tablefilter/',
+		grid: false,
+		filters_row_index: 1,
+		extensions: [{
+			name: 'sort',
+			types: [
+				'String','String','String','String','String','ymddate','ymddate','us','us'
+			],
+		}],
+		sort: true
+	});
+	tf.init();
+}
 
 $(document).ready(function(){
 
@@ -402,7 +435,7 @@ $(document).ready(function(){
 	$("#revenue_report input").each(function() {
 		$(this).focusout(function(){
 			$.ajax({
-				url: "mgr_reports.php",
+				url: "list-owner.php",
 				type: "POST",
 				async: true,
 				data: ({
@@ -419,7 +452,7 @@ $(document).ready(function(){
 
 function sendReportReady( idCompany, date ){
 	var response = $.ajax({
-		url: "mgr_reports.php",
+		url: "list-owner.php",
 		type: "POST",
 		async: true,
 		data: ({
@@ -446,7 +479,7 @@ function copyRevenue( fromDate, toDate, idCompany ){
 	if( confirm("Are you sure you want to copy all values from last month?") ) {
 
 		var response = $.ajax({
-			url: "mgr_reports.php",
+			url: "list-owner.php",
 			type: "POST",
 			async: true,
 			data: ({
@@ -474,7 +507,7 @@ function copyRevenue( fromDate, toDate, idCompany ){
 
 function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
 	var response = $.ajax({
-		url: "mgr_reports.php",
+		url: "list-owner.php",
 		type: "POST",
 		async: true,
 		data: ({
@@ -482,6 +515,8 @@ function invoiceStatus( idCompany, date, paid, idFeedIn, url ){
 			"idCompany" : idCompany,
 			"date" : date,
 			"invoiceNumber" : $("#invoice_number").val(),
+			"paymentDate" : $("#paymentDate").val(),
+			"userId" : $("#userId").val(),
 			"email" : $("#invoice_email").prop( "checked" ) ? 1 : 0
 		})
 	}).done(function(responseText){

@@ -460,7 +460,25 @@ class Leads
 		if( !empty( $userId ) ) {
 			$sql .= "AND l.userId = ? ";
 		}
-		$sql .= "ORDER BY l.paymentDate DESC";
+
+		$sql .= "UNION ";
+
+		$sql .= "SELECT NULL as ledgerId,1 AS divisionId,c.idCompany AS companyId,5 AS verticalId,i.paymentDate,'ACH' AS paymentMethod,CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01') AS ledgerMonth,ROUND(SUM(r.value)*0.50,2) AS invoiceAmount,i.invoiceNumber AS invoiceNum,ROUND(SUM(r.value)*0.50,2) AS paymentAmount,NULL AS commissionAmount,0 AS type,u.idUser AS userId,c.name AS companyName,'E-mail' AS divisionName,'Email Marketing' AS verticalName,u.fullName,u.idUser ";
+		$sql .= "FROM url_mapping m ";
+		$sql .= "INNER JOIN feedinc fi ON m.idFeedIn = fi.idFeedIn ";
+		$sql .= "INNER JOIN companies c ON fi.idCompany = c.idCompany ";
+		$sql .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
+		$sql .= "AND m.url = r.url ";
+		$sql .= "AND m.idFeedOut = r.idFeedOut ";
+		$sql .= "LEFT JOIN invoices i ON i.date = r.date AND i.idCompany = c.idCompany ";
+		$sql .= "LEFT JOIN users u ON i.userId = u.idUser ";
+		$sql .= "WHERE r.value IS NOT NULL ";
+		$sql .= "AND r.value > 0.00 ";
+		$sql .= "AND r.date >= '201601' ";
+		$sql .= "AND i.paymentDate IS NOT NULL ";
+		$sql .= "GROUP BY c.idCompany,r.date ";
+
+		$sql .= "ORDER BY paymentDate ";
 
 		try {
 			$query = $this->db->prepare( $sql );
@@ -1486,6 +1504,19 @@ class Leads
 		return $results;
 	}
 
+	public function getInvoiceDetails( $date, $idCompany ) {
+		try {
+			$query = $this->db->prepare( "SELECT * FROM invoices WHERE date = ? AND idCompany = ?" );
+			$query->execute( array( $date, $idCompany ) );
+			return $query->fetch( \PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get invoice details: ' . $e->getMessage() );
+			return false;
+		}
+
+		return null;
+	}
+
 	public function getInvoiceNumber( $date, $idCompany ) {
 		$invoiceNumber = '';
 
@@ -1500,11 +1531,18 @@ class Leads
 		return $invoiceNumber;
 	}
 
-	public function setInvoiceNumber( $date, $idCompany, $invoiceNumber ) {
+	public function setInvoiceDetails( $date, $idCompany, $invoiceNumber, $paymentDate, $userId ) {
 
 		try {
-			$query = $this->db->prepare( "REPLACE INTO invoices( date, idCompany, invoiceNumber, paid ) VALUES( ?, ?, ?, ? )" );
-			$query->execute( array( $date, $idCompany, !empty( $invoiceNumber ) ? $invoiceNumber : null, !empty( $invoiceNumber ) ? 1 : 0 ) );
+			$query = $this->db->prepare( "REPLACE INTO invoices( date, idCompany, invoiceNumber, paymentDate, userId, paid ) VALUES( ?, ?, ?, ?, ?, ? )" );
+			$query->execute( array(
+				$date,
+				$idCompany,
+				!empty( $invoiceNumber ) ? $invoiceNumber : null,
+				!empty( $paymentDate ) ? $paymentDate : null,
+				!empty( $userId ) ? $userId : null,
+				!empty( $invoiceNumber ) ? 1 : 0,
+			) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to update invoice value: ' . $e->getMessage() );
 			return;
