@@ -21,9 +21,8 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 			array( 'name' => 'Commissions', 'url' => '/leadadmin/commissions.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => '*Income Ledger', 'url' => '/leadadmin/income.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Payment Ledger', 'url' => '/leadadmin/payments.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
-			//array( 'name' => 'Revenue - Online', 'url' => '/leadadmin/revenue-online.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
-			//array( 'name' => 'Revenue - PPC / Ping Post', 'url' => '/leadadmin/revenue-ppc.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
-			//array( 'name' => 'Revenue - Offline', 'url' => '/leadadmin/mgr_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
+			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
+			array( 'name' => 'Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 		) ),
 		array( 'name' => 'Admin', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
 			array( 'name' => 'URL Search', 'url' => '/leadadmin/url-search.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
@@ -46,7 +45,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_REPORTS ) ) {
 
 	$nav = array(
-		array( 'name' => 'Reports', 'url' => '/leadadmin/mgr_reports.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_REPORTS ),
+		array( 'name' => 'Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_REPORTS ),
 	);
 
 }
