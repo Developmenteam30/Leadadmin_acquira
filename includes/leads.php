@@ -461,22 +461,26 @@ class Leads
 			$sql .= "AND l.userId = ? ";
 		}
 
-		$sql .= "UNION ";
+		if( $type === 0 ) {
 
-		$sql .= "SELECT NULL as ledgerId,1 AS divisionId,c.idCompany AS companyId,5 AS verticalId,i.paymentDate,'ACH' AS paymentMethod,CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01') AS ledgerMonth,ROUND(SUM(r.value)*0.50,2) AS invoiceAmount,i.invoiceNumber AS invoiceNum,ROUND(SUM(r.value)*0.50,2) AS paymentAmount,NULL AS commissionAmount,0 AS type,u.idUser AS userId,c.name AS companyName,'E-mail' AS divisionName,'Email Marketing' AS verticalName,u.fullName,u.idUser ";
-		$sql .= "FROM url_mapping m ";
-		$sql .= "INNER JOIN feedinc fi ON m.idFeedIn = fi.idFeedIn ";
-		$sql .= "INNER JOIN companies c ON fi.idCompany = c.idCompany ";
-		$sql .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
-		$sql .= "AND m.url = r.url ";
-		$sql .= "AND m.idFeedOut = r.idFeedOut ";
-		$sql .= "LEFT JOIN invoices i ON i.date = r.date AND i.idCompany = c.idCompany ";
-		$sql .= "LEFT JOIN users u ON i.userId = u.idUser ";
-		$sql .= "WHERE r.value IS NOT NULL ";
-		$sql .= "AND r.value > 0.00 ";
-		$sql .= "AND r.date >= '201601' ";
-		$sql .= "AND i.paymentDate IS NOT NULL ";
-		$sql .= "GROUP BY c.idCompany,r.date ";
+			$sql .= "UNION ";
+
+			$sql .= "SELECT NULL as ledgerId,1 AS divisionId,c.idCompany AS companyId,5 AS verticalId,i.paymentDate,'ACH' AS paymentMethod,CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01') AS ledgerMonth,ROUND(SUM(r.value)*0.50,2) AS invoiceAmount,i.invoiceNumber AS invoiceNum,ROUND(SUM(r.value)*0.50,2) AS paymentAmount,NULL AS commissionAmount,0 AS type,u.idUser AS userId,c.name AS companyName,'E-mail' AS divisionName,'Email Marketing' AS verticalName,u.fullName,u.idUser ";
+			$sql .= "FROM url_mapping m ";
+			$sql .= "INNER JOIN feedinc fi ON m.idFeedIn = fi.idFeedIn ";
+			$sql .= "INNER JOIN companies c ON fi.idCompany = c.idCompany ";
+			$sql .= "LEFT JOIN revenue r ON r.idFeedIn = m.idFeedIn ";
+			$sql .= "AND m.url = r.url ";
+			$sql .= "AND m.idFeedOut = r.idFeedOut ";
+			$sql .= "LEFT JOIN invoices i ON i.date = r.date AND i.idCompany = c.idCompany ";
+			$sql .= "LEFT JOIN users u ON i.userId = u.idUser ";
+			$sql .= "WHERE r.value IS NOT NULL ";
+			$sql .= "AND r.value > 0.00 ";
+			$sql .= "AND r.date >= '201601' ";
+			$sql .= "AND i.paymentDate IS NOT NULL ";
+			$sql .= "GROUP BY c.idCompany,r.date ";
+
+		}
 
 		$sql .= "ORDER BY paymentDate ";
 
@@ -489,7 +493,7 @@ class Leads
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get income ledger: ' . $e->getMessage() );
+			$this->logError( 'Unable to get ledger list: ' . $e->getMessage() );
 		}
 
 		return $results;
