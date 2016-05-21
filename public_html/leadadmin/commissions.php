@@ -54,17 +54,17 @@ include(INCLUDES."c_header.php");
 
 				$months = array();
 				foreach( $entries as $entry ) {
-					$month = substr( $entry->paymentDate, 0, 7 );
+					$month = substr( $entry->ledgerMonth, 0, 7 );
 					$months[$month] = true;
 				}
 
 				foreach( $months as $month => $val ) {
 
 ?>
-<table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
+<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
+<table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
-			<th>Date</th>
 			<th>Division</th>
 			<th>Company</th>
 			<th>Invoice #</th>
@@ -77,12 +77,11 @@ include(INCLUDES."c_header.php");
 					$paymentTotal = 0;
 					$commissionTotal = 0;
 					foreach( $entries as $entry ) {
-						if( substr( $entry->paymentDate, 0, 7 ) == $month ) {
+						if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
 							$paymentTotal += $entry->paymentAmount;
 							$commissionTotal += $entry->commissionAmount;
 ?>
 		<tr>
-			<td><?php echo $entry->paymentDate; ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
@@ -96,7 +95,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr class="bgGray header">
-			<td colspan="4">Totals</td>
+			<td colspan="3">Totals</td>
 			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 			<td class="text-right">$<?php echo number_format( $commissionTotal, 2 ); ?></td>
 		</tr>
@@ -112,7 +111,7 @@ include(INCLUDES."c_header.php");
 </div>
 
 <script type="text/javascript">
-$( "table" ).each(function( index ) {
+$('.ledger-sort').each(function( index ) {
 	var tf = new TableFilter($(this).attr('id'), {
 		base_path: '/leadadmin/libraries/tablefilter/',
 		grid: false,
@@ -120,7 +119,7 @@ $( "table" ).each(function( index ) {
 		extensions: [{
 			name: 'sort',
 			types: [
-				'ymddate', 'String', 'String', 'String', 'us', 'us'
+				'String', 'String', 'String', 'us', 'us'
 			],
 			image_asc_class_name: 'custom-ascending',
 			image_desc_class_name: 'custom-descending'

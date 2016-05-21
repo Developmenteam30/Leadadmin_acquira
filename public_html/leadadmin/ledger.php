@@ -126,6 +126,8 @@ if(isset($_REQUEST['a'])){
 				if( null === $ledgerId ) {
 					$c = false;
 					$result['error'] = 'Unable to add entry to the database';
+				} else {
+					$leads->auditLog( 'LEDGER:ADD', $ledgerId );
 				}
 			}
 
@@ -138,6 +140,11 @@ if(isset($_REQUEST['a'])){
 		case "editLedger":
 			$c = true;
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
+
+			if( empty( $_REQUEST['ledgerId'] ) ) {
+				$result['error'] = 'Ledger ID is empty. Cannot edit!';
+				$c = false;
+			}
 
 			if( $c && empty( $_REQUEST['divisionId'] ) ) {
 				$result['error'] = 'Please select a division from the list.';
@@ -228,6 +235,8 @@ if(isset($_REQUEST['a'])){
 				if( null === $ledgerId ) {
 					$c = false;
 					$result['error'] = 'Unable to updated ledger entry.';
+				} else {
+					$leads->auditLog( 'LEDGER:EDIT', $_REQUEST['ledgerId'] );
 				}
 
 			}
@@ -342,7 +351,6 @@ if(isset($_REQUEST['d'])){
 					'id' => 'commissionAmount',
 					'label' => 'Commission Amt',
 					'type' => 'currency',
-					'active' => ( 1 == $type ) ? true : false,
 				),
 				array(
 					'id' => 'a',
@@ -378,6 +386,11 @@ $("#newledger select[name='companyId']").select2({
 
 $("#newledger select[name='verticalId']").select2({
 	placeholder: "Select a vertical",
+	allowClear: true
+});
+
+$("#newledger select[name='ledgerMonth']").select2({
+	placeholder: "Select the ledger month",
 	allowClear: true
 });
 
@@ -534,7 +547,7 @@ $("#newledger select[name='divisionId']").change( function() {
 						'id' => 'commissionAmount',
 						'label' => 'Commission Amt',
 						'type' => 'currency',
-						'active' => ( 1 == $entry->type ) ? true : false,
+						'value' => $entry->commissionAmount,
 					),
 					array(
 						'id' => 'a',
@@ -572,6 +585,11 @@ $("#editledger select[name='verticalId']").select2({
 	allowClear: true
 });
 
+$("#editledger select[name='ledgerMonth']").select2({
+	placeholder: "Select the ledger month",
+	allowClear: true
+});
+
 $("#editledger select[name='userId']").select2({
 	placeholder: "Select a salesperson",
 	allowClear: true
@@ -605,52 +623,65 @@ include(INCLUDES."c_header.php");
 		print '<p>No ledger entries exist in the database.</p>';
 
 	} else {
+		$months = array();
+		foreach( $entries as $entry ) {
+			$month = substr( $entry->ledgerMonth, 0, 7 );
+			$months[$month] = true;
+		}
+
+		foreach( $months as $month => $val ) {
 ?>
-<table class="table table-bordered table-condensed table-striped" id="ledger">
+<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
+<table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $month; ?>">
 	<thead>
 		<tr class="header">
 			<th>Company Name</th>
 			<th>Vertical</th>
-			<th>Month</th>
 			<th>Invoice Amount</th>
 			<th>Invoice #</th>
 			<th>Date Paid</th>
 			<th>Payment Amount</th>
 			<th>Method</th>
 			<th>Salesperson</th>
-<?php if( 1 == $type ) { ?>
 			<th>Commissions</th>
-<?php } ?>
 			<th>Options</th>
 		</tr>
 	</thead>
 	<tbody>
 <?php
-		foreach( $entries as $entry ) {
+			$paymentTotal = 0;
+			foreach( $entries as $entry ) {
+				if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+					$paymentTotal += $entry->paymentAmount;
 
-			$ledger = new DateTime( $entry->ledgerMonth );
+					$ledger = new DateTime( $entry->ledgerMonth );
 ?>
 		<tr>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->verticalName ); ?></td>
-			<td data-tf-sortKey="<?php echo $entry->ledgerMonth; ?>"><?php echo $ledger->format( 'M Y' ); ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
 			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-			<td><?php echo $entry->paymentDate; ?></td>
+			<td class="text-center"><?php echo $entry->paymentDate; ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td><?php echo $entry->fullName; ?></td>
-<?php if( 1 == $entry->type ) { ?>
 			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
-<?php } ?>
 			<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
 		</tr>
 <?php
-		}
+				}
+			}
 ?>
 	</tbody>
+	<tfoot>
+		<tr>
+			<td colspan="9">Monthly Total</td>
+			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+		</tr>
+	</tfoot>
 </table>
 <?php
+		}
 	}
 ?>
 
@@ -764,21 +795,23 @@ $('#newledger, #editledger').on('hide.bs.modal', function(e) {
 	$(this).find('.modal-body').html('');
 });
 
-var tf = new TableFilter(document.querySelector('#ledger'), {
-	base_path: '/leadadmin/libraries/tablefilter/',
-	grid: false,
-	filters_row_index: 1,
-	extensions: [{
-		name: 'sort',
-		types: [
-			'String','String','ymddate','us','String','ymddate','us','String','String'
-		],
-		image_asc_class_name: 'custom-ascending',
-		image_desc_class_name: 'custom-descending'
-	}],
-	sort: true
+$('.ledger-sort').each(function() { console.log($(this).attr('id'));
+	var tf = new TableFilter($(this).attr('id'), {
+		base_path: '/leadadmin/libraries/tablefilter/',
+		grid: false,
+		filters_row_index: 1,
+		extensions: [{
+			name: 'sort',
+			types: [
+				'String','String','us','String','ymddate','us','String','String','us'
+			],
+			image_asc_class_name: 'custom-ascending',
+			image_desc_class_name: 'custom-descending'
+		}],
+		sort: true
+	});
+	tf.init();
 });
-tf.init();
 </script>
 
 </body>

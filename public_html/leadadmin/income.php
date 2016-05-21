@@ -43,7 +43,7 @@ include(INCLUDES."c_header.php");
 	} else {
 		$months = array();
 		foreach( $entries as $entry ) {
-			$month = substr( $entry->paymentDate, 0, 7 );
+			$month = substr( $entry->ledgerMonth, 0, 7 );
 			$months[$month] = true;
 		}
 
@@ -65,7 +65,7 @@ include(INCLUDES."c_header.php");
 <?php
 			$paymentTotal = 0;
 			foreach( $entries as $entry ) {
-				if( substr( $entry->paymentDate, 0, 7 ) == $month ) {
+				if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
 					$paymentTotal += $entry->paymentAmount;
 ?>
 		<tr>

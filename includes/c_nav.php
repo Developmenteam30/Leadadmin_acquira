@@ -14,6 +14,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 			array( 'name' => 'Mapping Report', 'url' => '/leadadmin/reports-mapping.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*List Owner - Email', 'url' => '/leadadmin/list-owner.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
+			array( 'name' => '*Offline', 'url' => '/leadadmin/offline.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Publisher', 'url' => '/leadadmin/ledger.php?type=0', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Advertiser', 'url' => '/leadadmin/ledger.php?type=1', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
@@ -22,7 +23,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 			array( 'name' => '*Income Ledger', 'url' => '/leadadmin/income.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Payment Ledger', 'url' => '/leadadmin/payments.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
-			array( 'name' => 'Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
+			array( 'name' => '*Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 		) ),
 		array( 'name' => 'Admin', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
 			array( 'name' => 'URL Search', 'url' => '/leadadmin/url-search.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),

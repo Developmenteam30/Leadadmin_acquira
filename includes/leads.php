@@ -369,6 +369,21 @@ class Leads
 		return $ledgerId;
 	}
 
+	public function addOfflineLedger( $fields ) {
+
+		$ledgerId = null;
+
+		try {
+			$ledgerId = $this->insertRow( 'ledger_offline', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add offline ledger entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $ledgerId;
+	}
+
 	public function updateLedger( $ledgerId, $fields ) {
 
 		try {
@@ -385,6 +400,22 @@ class Leads
 		return null;
 	}
 
+	public function updateOfflineLedger( $ledgerId, $fields ) {
+
+		try {
+			$status = $this->update( 'ledger_offline', $fields, array(
+				'ledgerId' => $ledgerId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update offline ledger: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
 	public function getLedgerById( $ledgerId ) {
 		$results = null;
 
@@ -394,6 +425,20 @@ class Leads
 			$results = $query->fetch( PDO::FETCH_OBJ  );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get ledger entry: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getOfflineLedgerById( $ledgerId ) {
+		$results = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM ledger_offline WHERE ledgerId = ?" );
+			$query->execute( array( $ledgerId ) );
+			$results = $query->fetch( PDO::FETCH_OBJ  );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get offline ledger entry: ' . $e->getMessage() );
 		}
 
 		return $results;
@@ -444,8 +489,30 @@ class Leads
 		return $results;
 	}
 
+	public function getOfflineLedger() {
+		$results = array();
+
+		$sql  = "SELECT l.*,vc.name AS vendorCompanyName,cc.name AS clientCompanyName,u.fullName ";
+		$sql .= "FROM ledger_offline l ";
+		$sql .= "LEFT JOIN companies vc ON l.vendorCompanyId = vc.idCompany ";
+		$sql .= "LEFT JOIN companies cc ON l.clientCompanyId = cc.idCompany ";
+		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "ORDER BY l.ledgerMonth,vendorCompanyName";
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute();
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get offline ledger: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function getPaidLedger( $type, $userId = null ) {
 		$results = array();
+		$params = array();
 
 		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.fullName,u.idUser ";
 		$sql .= "FROM ledger l ";
@@ -454,11 +521,13 @@ class Leads
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE type = ? ";
+		$params[] = $type;
 		$sql .= "AND l.paymentDate IS NOT NULL ";
 		$sql .= "AND l.paymentAmount IS NOT NULL ";
 		$sql .= "AND l.paymentMethod IS NOT NULL ";
 		if( !empty( $userId ) ) {
 			$sql .= "AND l.userId = ? ";
+			$params[] = $userId;
 		}
 
 		if( $type === 0 ) {
@@ -478,7 +547,43 @@ class Leads
 			$sql .= "AND r.value > 0.00 ";
 			$sql .= "AND r.date >= '201601' ";
 			$sql .= "AND i.paymentDate IS NOT NULL ";
+			if( !empty( $userId ) ) {
+				$sql .= "AND i.userId = ? ";
+				$params[] = $userId;
+			}
 			$sql .= "GROUP BY c.idCompany,r.date ";
+
+			$sql .= "UNION ";
+
+			$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.loPaymentDate AS paymentDate,l.loPaymentMethod AS paymentMethod,l.ledgerMonth,l.loInvoiceAmount AS invoiceAmount,l.loInvoiceNum AS invoiceNum,l.loPaymentAmount AS paymentAmount,l.commissionAmount,0 AS type,l.userId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u.fullName,u.idUser ";
+			$sql .= "FROM ledger_offline l ";
+			$sql .= "LEFT JOIN companies c ON l.vendorCompanyId = c.idCompany ";
+			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+			$sql .= "WHERE 1=1 ";
+			$sql .= "AND l.loPaymentDate IS NOT NULL ";
+			$sql .= "AND l.loPaymentAmount IS NOT NULL ";
+			$sql .= "AND l.loPaymentMethod IS NOT NULL ";
+			if( !empty( $userId ) ) {
+				$sql .= "AND l.userId = ? ";
+				$params[] = $userId;
+			}
+
+		} else {
+
+			$sql .= "UNION ";
+
+			$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount,1 AS type,l.userId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u.fullName,u.idUser ";
+			$sql .= "FROM ledger_offline l ";
+			$sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
+			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+			$sql .= "WHERE 1=1 ";
+			$sql .= "AND l.paymentDate IS NOT NULL ";
+			$sql .= "AND l.paymentAmount IS NOT NULL ";
+			$sql .= "AND l.paymentMethod IS NOT NULL ";
+			if( !empty( $userId ) ) {
+				$sql .= "AND l.userId = ? ";
+				$params[] = $userId;
+			}
 
 		}
 
@@ -486,11 +591,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( $sql );
-			if( !empty( $userId ) ) {
-				$query->execute( array( $type, $userId ) );
-			} else {
-				$query->execute( array( $type ) );
-			}
+			$query->execute( $params );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get ledger list: ' . $e->getMessage() );

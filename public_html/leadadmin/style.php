@@ -452,6 +452,8 @@ table.TF th,
 	font-weight: bold;
 }
 
+.table-striped-double tbody tr:nth-child(4n-1),
+.table-striped-double tbody tr:nth-child(4n),
 .table-striped-custom tbody tr.striped-master:nth-child(4n-1) {
 	background-color: #f9f9f9;
 }
@@ -543,8 +545,10 @@ table tr.bg-gray {
 #edit_pop select,
 #email_form select,
 #newvertical select,
-#editledger select,
-#newledger select {
+#edit_offlineledger select,
+#new_offlineledger select,
+#edit_ledger select,
+#new_ledger select {
 	width: 300px;
 }
 

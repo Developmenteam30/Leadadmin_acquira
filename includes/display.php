@@ -109,6 +109,24 @@ class Display
 				}
 				print '</div>';
 
+			} else if( 'radio' == $field['type'] ) {
+
+				printf( "\t<label for=\"%s\">%s%s</label>\n",
+						htmlspecialchars( $field['id'] ),
+						htmlspecialchars( $field['label'] ),
+						( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' )
+				);
+				foreach( $field['choices'] as $key => $val ) {
+					printf( "\t<input type=\"radio\" name=\"%s\" value=\"%s\"%s%s /> %s%s\n",
+						htmlspecialchars( $field['id'] ),
+						htmlspecialchars( $key ),
+						( !empty( $field['value'] ) && $key == $field['value'] ) ? ' checked="checked"' : '',
+						( !empty( $field['required'] ) ? ' required="required" ' : '' ),
+						htmlspecialchars( $val ),
+						( !empty( $field['choice_append'] ) ? $field['choice_append'] : '' )
+					);
+				}
+
 			} else if( 'textarea' == $field['type'] ) {
 
 				printf( "\t<label for=\"%s\">%s</label>\n",
