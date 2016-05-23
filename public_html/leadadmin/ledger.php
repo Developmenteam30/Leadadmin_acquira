@@ -137,6 +137,30 @@ if(isset($_REQUEST['a'])){
 			}
 		break;
 
+		case "deleteLedger":
+			if( empty( $_REQUEST['ledgerId'] ) ) {
+				$result['error'] = 'Ledger ID is empty. Cannot delete!';
+				break;
+			}
+
+			$entry = $leads->getLedgerById( $_REQUEST['ledgerId'] );
+			if( empty( $entry ) ) {
+				$result['error'] = 'There is no ledger entry that exists by that ID.';
+				break;
+			}
+
+			$status = $leads->deleteLedger( $_REQUEST['ledgerId'] );
+			if( empty( $entry ) ) {
+				$result['error'] = 'There was an error deleting this ledger entry.';
+				break;
+			}
+
+			$leads->auditLog( 'LEDGER:DELETE', $_REQUEST['ledgerId'] );
+			$result['status'] = 1;
+			$result['error'] = 'Ledger deleted successfully.';
+
+		break;
+
 		case "editLedger":
 			$c = true;
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
@@ -454,6 +478,131 @@ $("#newledger select[name='divisionId']").change( function() {
 
 		break;
 
+		case "deleteLedger":
+			$ledgerId = !empty( $_REQUEST['ledgerId'] ) ? $_REQUEST['ledgerId'] : '';
+			$entry = $leads->getLedgerById( $ledgerId );
+
+			if( empty( $entry ) ) {
+
+				print '<p>There is no ledger that exists by that ID.</p>';
+
+			} else {
+
+				print '<p>Are you sure you wish to <strong>delete</strong> this entry?</p>';
+
+				$ledgerMonth = new DateTime( $entry->ledgerMonth );
+
+				$fields = array(
+					array(
+						'id' => 'divisionId',
+						'label' => 'Division',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a division',
+						'choices' => $leads->getDivisions(),
+						'value' => $entry->divisionId,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'companyId',
+						'label' => 'Company',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a company',
+						'choices' => $leads->getDivisionCompanies( $entry->divisionId, $entry->companyId ),
+						'value' => $entry->companyId,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'verticalId',
+						'label' => 'Vertical',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a vertical',
+						'choices' => $leads->getDivisionVerticals( $entry->divisionId ),
+						'value' => $entry->verticalId,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'invoiceNum',
+						'label' => ( 0 == $entry->type ) ? 'Client Invoice #' : 'QM Invoice #',
+						'type' => 'text',
+						'required' => true,
+						'value' => $entry->invoiceNum,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'invoiceAmount',
+						'label' => 'Invoice Amount',
+						'type' => 'currency',
+						'required' => true,
+						'value' => $entry->invoiceAmount,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'ledgerMonth',
+						'label' => 'Ledger Month',
+						'type' => 'select',
+						'required' => true,
+						'choices' => $ledgerMonths,
+						'value' => $ledgerMonth->format( 'Ym' ),
+						'readonly' => true,
+					),
+					array(
+						'id' => 'paymentDate',
+						'label' => 'Date Paid',
+						'type' => 'text',
+						'value' => $entry->paymentDate,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'paymentMethod',
+						'label' => 'Payment Method',
+						'type' => 'text',
+						'value' => $entry->paymentMethod,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'paymentAmount',
+						'label' => 'Payment Amount',
+						'type' => 'currency',
+						'value' => $entry->paymentAmount,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'userId',
+						'label' => 'Salesperson',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a salesperson',
+						'choices' => $leads->getStaffUsers(),
+						'value' => $entry->userId,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionAmount',
+						'label' => 'Commission Amt',
+						'type' => 'currency',
+						'value' => $entry->commissionAmount,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'a',
+						'type' => 'hidden',
+						'value' => 'deleteLedger',
+					),
+					array(
+						'id' => 'ledgerId',
+						'type' => 'hidden',
+						'value' => $ledgerId,
+					),
+				);
+
+				Display::displayForm( 'delete_ledger', $fields );
+
+			}
+		break;
+
 		case "editLedger":
 			$ledgerId = !empty( $_REQUEST['ledgerId'] ) ? $_REQUEST['ledgerId'] : '';
 			$entry = $leads->getLedgerById( $ledgerId );
@@ -666,7 +815,17 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td><?php echo $entry->fullName; ?></td>
 			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
-			<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
+			<td class="text-center">
+<div class="btn-group">
+	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+	<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		<span class="caret"></span>
+		<span class="sr-only">Toggle Dropdown</span>
+	</button>
+	<ul class="dropdown-menu">
+		<li><a href="#" data-toggle="modal" data-target="#deleteledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
+	</ul>
+</div></td>
 		</tr>
 <?php
 				}
@@ -719,6 +878,23 @@ include(INCLUDES."c_header.php");
   </div>
 </div>
 
+<div class="modal fade" id="deleteledger" tabindex="-1" role="dialog" aria-labelledby="deleteledger_title">
+  <div class="modal-dialog" role="document">
+	<div class="modal-content">
+	  <div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		<h4 class="modal-title" id="deleteledger_title">Delete a ledger entry</h4>
+	  </div>
+	  <div class="modal-body">
+	  </div>
+	  <div class="modal-footer">
+		<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		<button id="modal-deleteledger" type="button" class="btn btn-primary">Delete</button>
+	  </div>
+	</div>
+  </div>
+</div>
+
 </div>
 
 <script type="text/javascript">
@@ -749,6 +925,41 @@ $('#newledger').on('show.bs.modal', function(e) {
 		data: {
 			'd': 'newLedger',
 			'type': '<?php echo $type; ?>'
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-deleteledger').click( function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "ledger.php",
+		type: "POST",
+		async: true,
+		data: $("#delete_ledger").serialize()
+	}).done(function(result){
+		if(result.status == 1){
+			window.location.reload(true);
+		} else {
+			alert(result.error);
+		}
+	});
+});
+
+$('#deleteledger').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var ledgerId = $(e.relatedTarget).data('ledger-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'ledger.php',
+		data: {
+			'd': 'deleteLedger',
+			'ledgerId': ledgerId
 		},
 		success: function(data) {
 			modal.find('.modal-body').html(data);
@@ -795,7 +1006,7 @@ $('#newledger, #editledger').on('hide.bs.modal', function(e) {
 	$(this).find('.modal-body').html('');
 });
 
-$('.ledger-sort').each(function() { console.log($(this).attr('id'));
+$('.ledger-sort').each(function() {
 	var tf = new TableFilter($(this).attr('id'), {
 		base_path: '/leadadmin/libraries/tablefilter/',
 		grid: false,

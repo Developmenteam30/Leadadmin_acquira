@@ -146,9 +146,10 @@ class Display
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
-				printf( "\t<select class=\"form-control\" name=\"%s\" id=\"%s\">\n",
+				printf( "\t<select class=\"form-control\" name=\"%s\" id=\"%s\"%s>\n",
 					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					( !empty( $field['readonly'] ) ? ' readonly' : '' )
 				);
 				if( !empty( $field['placeholder'] ) ) {
 					printf( "\t\t<option disabled=\"disabled\"%s value=\"\">%s</option>\n",

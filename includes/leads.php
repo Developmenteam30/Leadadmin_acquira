@@ -384,6 +384,19 @@ class Leads
 		return $ledgerId;
 	}
 
+	public function deleteLedger( $ledgerId ) {
+
+		try {
+			$query = $this->db->prepare( "DELETE FROM ledger WHERE ledgerId = ?" );
+			$query->execute( array( $ledgerId ) );
+		} catch( Leads_PDOException $e ) {
+			$this->logError( 'Unable to delete ledger entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return true;
+	}
+
 	public function updateLedger( $ledgerId, $fields ) {
 
 		try {
