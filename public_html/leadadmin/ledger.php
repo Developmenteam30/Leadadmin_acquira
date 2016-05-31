@@ -94,6 +94,15 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
+			if( $c && !empty( $_REQUEST['commissionDate'] ) ) {
+				try {
+					$commissionDate = new DateTime( $_REQUEST['commissionDate'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date.';
+					$c = false;
+				}
+			}
+
 			if( $c && !empty( $_REQUEST['commissionAmount'] ) && is_numeric( $_REQUEST['commissionAmount'] ) === FALSE ) {
 				$result['error'] = 'Commission amount must be a numeric value.';
 				$c = false;
@@ -118,6 +127,7 @@ if(isset($_REQUEST['a'])){
 					'invoiceAmount' => empty( $_REQUEST['invoiceAmount'] ) ? 0.00 : $_REQUEST['invoiceAmount'],
 					'invoiceNum' => empty( $_REQUEST['invoiceNum'] ) ? null : $_REQUEST['invoiceNum'],
 					'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
+					'commissionDate' => !isset( $commissionDate ) ? null : $commissionDate->format( 'Y-m-d' ),
 					'commissionAmount' => empty( $_REQUEST['commissionAmount'] ) ? null : $_REQUEST['commissionAmount'],
 					'type' => $type,
 					'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
@@ -228,6 +238,15 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
+			if( $c && !empty( $_REQUEST['commissionDate'] ) ) {
+				try {
+					$commissionDate = new DateTime( $_REQUEST['commissionDate'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date.';
+					$c = false;
+				}
+			}
+
 			if( $c && !empty( $_REQUEST['commissionAmount'] ) && is_numeric( $_REQUEST['commissionAmount'] ) === FALSE ) {
 				$result['error'] = 'Commission amount must be a numeric value.';
 				$c = false;
@@ -252,6 +271,7 @@ if(isset($_REQUEST['a'])){
 					'invoiceAmount' => empty( $_REQUEST['invoiceAmount'] ) ? 0.00 : $_REQUEST['invoiceAmount'],
 					'invoiceNum' => empty( $_REQUEST['invoiceNum'] ) ? null : $_REQUEST['invoiceNum'],
 					'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
+					'commissionDate' => !isset( $commissionDate ) ? null : $commissionDate->format( 'Y-m-d' ),
 					'commissionAmount' => empty( $_REQUEST['commissionAmount'] ) ? null : $_REQUEST['commissionAmount'],
 					'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
 				) );
@@ -372,6 +392,11 @@ if(isset($_REQUEST['d'])){
 					'choices' => $leads->getStaffUsers(),
 				),
 				array(
+					'id' => 'commissionDate',
+					'label' => 'Commission Date',
+					'type' => 'text',
+				),
+				array(
 					'id' => 'commissionAmount',
 					'label' => 'Commission Amt',
 					'type' => 'currency',
@@ -393,7 +418,7 @@ if(isset($_REQUEST['d'])){
 ?>
 
 <script type="text/javascript">
-$('#newledger input[name=paymentDate]').datepicker({
+$('#newledger input[name=paymentDate], #newledger input[name=comissionDate]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
@@ -580,6 +605,13 @@ $("#newledger select[name='divisionId']").change( function() {
 						'readonly' => true,
 					),
 					array(
+						'id' => 'commissionDate',
+						'label' => 'Commission Date',
+						'type' => 'text',
+						'value' => $entry->commissionDate,
+						'readonly' => true,
+					),
+					array(
 						'id' => 'commissionAmount',
 						'label' => 'Commission Amt',
 						'type' => 'currency',
@@ -693,6 +725,12 @@ $("#newledger select[name='divisionId']").change( function() {
 						'value' => $entry->userId,
 					),
 					array(
+						'id' => 'commissionDate',
+						'label' => 'Commission Date',
+						'type' => 'text',
+						'value' => $entry->commissionDate,
+					),
+					array(
 						'id' => 'commissionAmount',
 						'label' => 'Commission Amt',
 						'type' => 'currency',
@@ -714,7 +752,7 @@ $("#newledger select[name='divisionId']").change( function() {
 ?>
 
 <script type="text/javascript">
-$('#editledger input[name=paymentDate]').datepicker({
+$('#editledger input[name=paymentDate], #editledger input[name=commissionDate]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });

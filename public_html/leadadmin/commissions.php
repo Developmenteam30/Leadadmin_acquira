@@ -48,15 +48,16 @@ include(INCLUDES."c_header.php");
 			$entries = $leads->getPaidLedger( 1, $user->idUser );
 			if( empty( $entries ) ) {
 ?>
-<p>No ledger entries exist in the database.</p>
+<p>No commission entries exist in the database.</p>
 <?php
 			} else {
 
 				$months = array();
 				foreach( $entries as $entry ) {
-					$month = substr( $entry->ledgerMonth, 0, 7 );
+					$month = substr( $entry->commissionDate, 0, 7 );
 					$months[$month] = true;
 				}
+				ksort( $months );
 
 				foreach( $months as $month => $val ) {
 
@@ -77,7 +78,7 @@ include(INCLUDES."c_header.php");
 					$paymentTotal = 0;
 					$commissionTotal = 0;
 					foreach( $entries as $entry ) {
-						if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+						if( substr( $entry->commissionDate, 0, 7 ) == $month ) {
 							$paymentTotal += $entry->paymentAmount;
 							$commissionTotal += $entry->commissionAmount;
 ?>

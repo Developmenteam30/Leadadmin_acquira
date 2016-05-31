@@ -76,7 +76,7 @@ if(isset($_REQUEST['a'])){
 				try {
 					$paymentDate = new DateTime( $_REQUEST['paymentDate'] );
 				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid mail date.';
+					$result['error'] = 'Please enter a valid payment date.';
 					break;
 				}
 			}
@@ -115,7 +115,16 @@ if(isset($_REQUEST['a'])){
 				try {
 					$loPaymentDate = new DateTime( $_REQUEST['loPaymentDate'] );
 				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid mail date.';
+					$result['error'] = 'Please enter a valid LO payment date.';
+					break;
+				}
+			}
+
+			if( !empty( $_REQUEST['commissionDate'] ) ) {
+				try {
+					$commissionDate = new DateTime( $_REQUEST['commissionDate'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date.';
 					break;
 				}
 			}
@@ -154,6 +163,7 @@ if(isset($_REQUEST['a'])){
 				'loPaymentDate' => !isset( $loPaymentDate ) ? null : $loPaymentDate->format( 'Y-m-d' ),
 				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod'] ) ? null : $_REQUEST['loPaymentMethod'],
 				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount'] ) ? null : $_REQUEST['loPaymentAmount'],
+				'commissionDate' => !isset( $commissionDate ) ? null : $commissionDate->format( 'Y-m-d' ),
 				'commissionAmount' => empty( $_REQUEST['commissionAmount'] ) ? null : $_REQUEST['commissionAmount'],
 				'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
 			) );
@@ -218,7 +228,7 @@ if(isset($_REQUEST['a'])){
 				try {
 					$paymentDate = new DateTime( $_REQUEST['paymentDate'] );
 				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid mail date.';
+					$result['error'] = 'Please enter a valid payment date.';
 					break;
 				}
 			}
@@ -257,7 +267,16 @@ if(isset($_REQUEST['a'])){
 				try {
 					$loPaymentDate = new DateTime( $_REQUEST['loPaymentDate'] );
 				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid mail date.';
+					$result['error'] = 'Please enter a valid LO payment date.';
+					break;
+				}
+			}
+
+			if( !empty( $_REQUEST['commissionDate'] ) ) {
+				try {
+					$commissionDate = new DateTime( $_REQUEST['commissionDate'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date.';
 					break;
 				}
 			}
@@ -296,6 +315,7 @@ if(isset($_REQUEST['a'])){
 				'loPaymentDate' => !isset( $loPaymentDate ) ? null : $loPaymentDate->format( 'Y-m-d' ),
 				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod'] ) ? null : $_REQUEST['loPaymentMethod'],
 				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount'] ) ? null : $_REQUEST['loPaymentAmount'],
+				'commissionDate' => !isset( $commissionDate ) ? null : $commissionDate->format( 'Y-m-d' ),
 				'commissionAmount' => empty( $_REQUEST['commissionAmount'] ) ? null : $_REQUEST['commissionAmount'],
 				'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
 			) );
@@ -482,6 +502,11 @@ if(isset($_REQUEST['d'])){
 					'choices' => $leads->getStaffUsers(),
 				),
 				array(
+					'id' => 'commissionDate',
+					'label' => 'Commission Date',
+					'type' => 'text',
+				),
+				array(
 					'id' => 'commissionAmount',
 					'label' => 'Commission Amt',
 					'type' => 'currency',
@@ -504,7 +529,7 @@ if(isset($_REQUEST['d'])){
 ?>
 
 <script type="text/javascript">
-$("#new_ledger input[name=orderDate], #new_ledger input[name=mailDate], #new_ledger input[name=paymentDate], #new_ledger input[name=loPaymentDate]").datepicker({
+$("#new_ledger input[name=orderDate], #new_ledger input[name=mailDate], #new_ledger input[name=paymentDate], #new_ledger input[name=loPaymentDate], #new_ledger input[name=commissionDate']").datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
@@ -714,6 +739,12 @@ $("#new_ledger select[name='userId']").select2({
 						'value' => $entry->userId,
 					),
 					array(
+						'id' => 'commissionDate',
+						'label' => 'Commission Date',
+						'type' => 'text',
+						'value' => $entry->commissionDate,
+					),
+					array(
 						'id' => 'commissionAmount',
 						'label' => 'Commission Amt',
 						'type' => 'currency',
@@ -736,7 +767,7 @@ $("#new_ledger select[name='userId']").select2({
 ?>
 
 <script type="text/javascript">
-$("#edit_ledger input[name=orderDate], #edit_ledger input[name=mailDate], #edit_ledger input[name=paymentDate], #edit_ledger input[name=loPaymentDate]").datepicker({
+$("#edit_ledger input[name=orderDate], #edit_ledger input[name=mailDate], #edit_ledger input[name=paymentDate], #edit_ledger input[name=loPaymentDate], #edit_ledger input[name=commissionDate]").datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
