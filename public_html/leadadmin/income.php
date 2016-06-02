@@ -71,10 +71,10 @@ include(INCLUDES."c_header.php");
 		<tr>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
-			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td><?php echo $entry->fullName; ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 		</tr>
 <?php
 				}
@@ -84,7 +84,7 @@ include(INCLUDES."c_header.php");
 	<tfoot>
 		<tr>
 			<td colspan="5">Monthly Total</td>
-			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>
 </table>

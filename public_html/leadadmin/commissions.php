@@ -85,9 +85,9 @@ include(INCLUDES."c_header.php");
 		<tr>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
-			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
+			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
 		</tr>
 <?php
 						}
@@ -97,8 +97,8 @@ include(INCLUDES."c_header.php");
 	<tfoot>
 		<tr class="bgGray header">
 			<td colspan="3">Totals</td>
-			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
-			<td class="text-right">$<?php echo number_format( $commissionTotal, 2 ); ?></td>
+			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+			<td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>
 </table>

@@ -529,7 +529,7 @@ if(isset($_REQUEST['d'])){
 ?>
 
 <script type="text/javascript">
-$("#new_ledger input[name=orderDate], #new_ledger input[name=mailDate], #new_ledger input[name=paymentDate], #new_ledger input[name=loPaymentDate], #new_ledger input[name=commissionDate']").datepicker({
+$("#new_ledger input[name=orderDate], #new_ledger input[name=mailDate], #new_ledger input[name=paymentDate], #new_ledger input[name=loPaymentDate], #new_ledger input[name=commissionDate]").datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
@@ -838,8 +838,8 @@ include(INCLUDES."c_header.php");
 <table class="table table-bordered table-condensed table-striped-double ledger-sort" id="ledger_<?php echo $month; ?>">
 	<thead>
 		<tr class="header">
-			<th>Client Name</th>
-			<th>Mailer Name</th>
+			<th style="width:250px;">Client Name</th>
+			<th style="width:300px;">Mailer Name</th>
 			<th>Client PO</th>
 			<th>Type</th>
 			<th>Salesperson</th>
@@ -883,24 +883,24 @@ include(INCLUDES."c_header.php");
 			<td><?php echo $entry->fullName; ?></td>
 			<td><?php echo htmlentities( $entry->orderDate ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
+			<td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td class="text-center" rowspan="2" style="vertical-align: middle;"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
 		</tr>
 		<tr>
 			<td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>
 			<td><?php echo htmlentities( $entry->listName ); ?></td>
 			<td><?php echo htmlentities( $entry->ourPoNum ); ?></td>
-			<td class="text-right"><?php echo number_format( $entry->qty, 0 ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
+			<td><?php echo number_format( $entry->qty, 0 ); ?></td>
+			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->mailDate ); ?></td>
 			<td><?php echo htmlentities( $entry->loInvoiceNum ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->loInvoiceAmount, 2 ); ?></td>
+			<td>$<?php echo number_format( $entry->loInvoiceAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->loPaymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->loPaymentMethod ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->loPaymentAmount, 2 ); ?></td>
+			<td>$<?php echo number_format( $entry->loPaymentAmount, 2 ); ?></td>
 		</tr>
 <?php
 				}

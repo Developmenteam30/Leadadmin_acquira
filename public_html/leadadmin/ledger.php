@@ -846,13 +846,13 @@ include(INCLUDES."c_header.php");
 		<tr>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->verticalName ); ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
-			<td class="text-right"><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-			<td class="text-center"><?php echo $entry->paymentDate; ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+			<td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
+			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+			<td><?php echo $entry->paymentDate; ?></td>
+			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td><?php echo $entry->fullName; ?></td>
-			<td class="text-right">$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
+			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
 			<td class="text-center">
 <div class="btn-group">
 	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
@@ -873,7 +873,7 @@ include(INCLUDES."c_header.php");
 	<tfoot>
 		<tr>
 			<td colspan="9">Monthly Total</td>
-			<td class="text-right">$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>
 </table>
