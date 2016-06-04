@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_ADMIN );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -33,6 +33,11 @@ if(isset($_REQUEST['a'])){
 	switch($_REQUEST['a']){
 		case "addLedger":
 			$result['error'] = 'Failed when trying to add a new ledger entry.';
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['error'] = 'You do not have access to add/edit entries.';
+				break;
+			}
 
 			if( empty( $_REQUEST['clientCompanyId'] ) ) {
 				$result['error'] = 'Please select a client from the list.';
@@ -180,6 +185,11 @@ if(isset($_REQUEST['a'])){
 
 		case "editLedger":
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['error'] = 'You do not have access to add/edit entries.';
+				break;
+			}
 
 			if( empty( $_REQUEST['ledgerId'] ) ) {
 				$result['error'] = 'Ledger ID is empty. Cannot edit!';
@@ -811,7 +821,9 @@ include(INCLUDES."c_header.php");
 
 <h2>Offline Ledger</h2>
 
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 <p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newledger">Add a new entry</button></p>
+<?php } ?>
 
 <?php
 	$entries = $leads->getOfflineLedger();
@@ -849,7 +861,9 @@ include(INCLUDES."c_header.php");
 			<th>Pmt Date</th>
 			<th>Pmt Mthd</th>
 			<th>Pmt Amt</th>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 			<th rowspan="2" style="vertical-align: middle;">Options</th>
+<?php } ?>
 		</tr>
 		<tr class="header">
 			<th>Vendor Name</th>
@@ -887,7 +901,9 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 			<td class="text-center" rowspan="2" style="vertical-align: middle;"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
+<?php } ?>
 		</tr>
 		<tr>
 			<td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>

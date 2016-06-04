@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_ADMIN );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -34,6 +34,11 @@ if(isset($_REQUEST['a'])){
 		case "addLedger":
 			$c = true;
 			$result['error'] = 'Failed when trying to add a new ledger entry.';
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['error'] = 'You do not have access to add/edit entries.';
+				$c = false;
+			}
 
 			if( $c && empty( $_REQUEST['divisionId'] ) ) {
 				$result['error'] = 'Please select a division from the list.';
@@ -148,6 +153,11 @@ if(isset($_REQUEST['a'])){
 		break;
 
 		case "deleteLedger":
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['error'] = 'You do not have access to add/edit entries.';
+				break;
+			}
+
 			if( empty( $_REQUEST['ledgerId'] ) ) {
 				$result['error'] = 'Ledger ID is empty. Cannot delete!';
 				break;
@@ -174,6 +184,11 @@ if(isset($_REQUEST['a'])){
 		case "editLedger":
 			$c = true;
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['error'] = 'You do not have access to add/edit entries.';
+				$c = false;
+			}
 
 			if( empty( $_REQUEST['ledgerId'] ) ) {
 				$result['error'] = 'Ledger ID is empty. Cannot edit!';
@@ -801,7 +816,9 @@ include(INCLUDES."c_header.php");
 
 <h2><?php echo ( $type == 0 ? 'Publisher' : 'Advertiser' ); ?></h2>
 
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 <p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newledger">Add a new entry</button></p>
+<?php } ?>
 
 <?php
 	$entries = $leads->getLedger( $type );
@@ -831,7 +848,9 @@ include(INCLUDES."c_header.php");
 			<th>Method</th>
 			<th>Salesperson</th>
 			<th>Commissions</th>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 			<th>Options</th>
+<?php } ?>
 		</tr>
 	</thead>
 	<tbody>
@@ -853,6 +872,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td><?php echo $entry->fullName; ?></td>
 			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 			<td class="text-center">
 <div class="btn-group">
 	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
@@ -864,6 +884,7 @@ include(INCLUDES."c_header.php");
 		<li><a href="#" data-toggle="modal" data-target="#deleteledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
 	</ul>
 </div></td>
+<?php } ?>
 		</tr>
 <?php
 				}
@@ -872,7 +893,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="9">Monthly Total</td>
+			<td colspan="<?php echo LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ? '9' : '8'; ?>">Monthly Total</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>

@@ -431,10 +431,18 @@ class Leads
 
 	public function getLedgerById( $ledgerId ) {
 		$results = null;
+		$params = array();
+
+		$sql = "SELECT * FROM ledger WHERE ledgerId = ? ";
+		$params[] = $ledgerId;
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			$sql .= "AND userId = ? ";
+			$params[] = LeadsSession::getUserId();
+		}
 
 		try {
-			$query = $this->db->prepare( "SELECT * FROM ledger WHERE ledgerId = ?" );
-			$query->execute( array( $ledgerId ) );
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
 			$results = $query->fetch( PDO::FETCH_OBJ  );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get ledger entry: ' . $e->getMessage() );
@@ -445,10 +453,18 @@ class Leads
 
 	public function getOfflineLedgerById( $ledgerId ) {
 		$results = null;
+		$params = array();
+
+		$sql = "SELECT * FROM ledger_offline WHERE ledgerId = ? ";
+		$params[] = $ledgerId;
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			$sql .= "AND userId = ? ";
+			$params[] = LeadsSession::getUserId();
+		}
 
 		try {
-			$query = $this->db->prepare( "SELECT * FROM ledger_offline WHERE ledgerId = ?" );
-			$query->execute( array( $ledgerId ) );
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
 			$results = $query->fetch( PDO::FETCH_OBJ  );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get offline ledger entry: ' . $e->getMessage() );
@@ -482,6 +498,7 @@ class Leads
 
 	public function getLedger( $type ) {
 		$results = array();
+		$params = array();
 
 		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u.fullName ";
 		$sql .= "FROM ledger l ";
@@ -489,11 +506,16 @@ class Leads
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE l.type = ? ";
+		$params[] = $type;
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			$sql .= "AND l.userId = ? ";
+			$params[] = LeadsSession::getUserId();
+		}
 		$sql .= "ORDER BY l.ledgerMonth,companyName";
 
 		try {
 			$query = $this->db->prepare( $sql );
-			$query->execute( array( $type ) );
+			$query->execute( $params );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get ledger: ' . $e->getMessage() );
@@ -504,17 +526,22 @@ class Leads
 
 	public function getOfflineLedger() {
 		$results = array();
+		$params = array();
 
 		$sql  = "SELECT l.*,vc.name AS vendorCompanyName,cc.name AS clientCompanyName,u.fullName ";
 		$sql .= "FROM ledger_offline l ";
 		$sql .= "LEFT JOIN companies vc ON l.vendorCompanyId = vc.idCompany ";
 		$sql .= "LEFT JOIN companies cc ON l.clientCompanyId = cc.idCompany ";
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			$sql .= "WHERE l.userId = ? ";
+			$params[] = LeadsSession::getUserId();
+		}
 		$sql .= "ORDER BY l.ledgerMonth,vendorCompanyName";
 
 		try {
 			$query = $this->db->prepare( $sql );
-			$query->execute();
+			$query->execute( $params );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get offline ledger: ' . $e->getMessage() );
