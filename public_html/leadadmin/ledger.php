@@ -897,8 +897,8 @@ include(INCLUDES."c_header.php");
 		<tr>
 			<td>Monthly Totals</td>
 			<td>&nbsp;</td>
-			<td>&nbsp;</td>
 			<td>$<?php echo number_format( $invoiceTotal, 2 ); ?></td>
+			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 			<td>&nbsp;</td>
