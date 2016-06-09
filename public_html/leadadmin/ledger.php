@@ -855,10 +855,12 @@ include(INCLUDES."c_header.php");
 	</thead>
 	<tbody>
 <?php
-			$paymentTotal = 0;
+			$invoiceTotal = $paymentTotal = $commissionTotal = 0;
 			foreach( $entries as $entry ) {
 				if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+					$invoiceTotal += $entry->invoiceAmount;
 					$paymentTotal += $entry->paymentAmount;
+					$commissionTotal += $entry->commissionAmount;
 
 					$ledger = new DateTime( $entry->ledgerMonth );
 ?>
@@ -893,8 +895,18 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="<?php echo LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ? '9' : '8'; ?>">Monthly Total</td>
+			<td>Monthly Totals</td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>$<?php echo number_format( $invoiceTotal, 2 ); ?></td>
+			<td>&nbsp;</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+			<td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+			<td>&nbsp;</td>
+<?php } ?>
 		</tr>
 	</tfoot>
 </table>

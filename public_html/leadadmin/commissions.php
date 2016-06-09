@@ -96,7 +96,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr class="bgGray header">
-			<td colspan="3">Totals</td>
+			<td colspan="3">Monthly Totals</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 			<td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
 		</tr>
