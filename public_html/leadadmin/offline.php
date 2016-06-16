@@ -850,6 +850,7 @@ include(INCLUDES."c_header.php");
 <table class="table table-bordered table-condensed table-striped-double ledger-sort" id="ledger_<?php echo $month; ?>">
 	<thead>
 		<tr class="header">
+			<th rowspan="2" style="vertical-align: middle;">Entry #</th>
 			<th style="width:250px;">Client Name</th>
 			<th style="width:300px;">Mailer Name</th>
 			<th>Client PO</th>
@@ -890,6 +891,7 @@ include(INCLUDES."c_header.php");
 					$ledger = new DateTime( $entry->ledgerMonth );
 ?>
 		<tr>
+			<td rowspan="2" class="text-center" style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->clientCompanyName ); ?></td>
 			<td><?php echo htmlentities( $entry->mailerName ); ?></td>
 			<td><?php echo htmlentities( $entry->clientPoNum ); ?></td>

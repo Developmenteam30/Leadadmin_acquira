@@ -352,6 +352,7 @@ include(INCLUDES."c_header.php");
 <table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
+			<th>Entry #</th>
 			<th>Division</th>
 			<th>Company</th>
 			<th>Invoice #</th>
@@ -370,6 +371,7 @@ include(INCLUDES."c_header.php");
 					$paymentTotal += $entry->paymentAmount;
 ?>
 		<tr>
+			<td><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
@@ -386,7 +388,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="6">Monthly Total</td>
+			<td colspan="7">Monthly Total</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 			<td>&nbsp;</td>
 		</tr>

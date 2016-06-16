@@ -500,7 +500,7 @@ class Leads
 		$results = array();
 		$params = array();
 
-		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u.fullName ";
+		$sql  = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u.fullName ";
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
@@ -528,7 +528,7 @@ class Leads
 		$results = array();
 		$params = array();
 
-		$sql  = "SELECT l.*,vc.name AS vendorCompanyName,cc.name AS clientCompanyName,u.fullName ";
+		$sql  = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,vc.name AS vendorCompanyName,cc.name AS clientCompanyName,u.fullName ";
 		$sql .= "FROM ledger_offline l ";
 		$sql .= "LEFT JOIN companies vc ON l.vendorCompanyId = vc.idCompany ";
 		$sql .= "LEFT JOIN companies cc ON l.clientCompanyId = cc.idCompany ";
@@ -554,14 +554,17 @@ class Leads
 		$results = array();
 		$params = array();
 
-		$sql  = "SELECT l.*,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.fullName,u.idUser ";
+		$sql  = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.fullName,u.idUser ";
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
 		$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
-		$sql .= "WHERE type = ? ";
-		$params[] = $type;
+		$sql .= "WHERE 1=1 ";
+		if( $type != null ) {
+			$sql .= "AND type = ? ";
+			$params[] = $type;
+		}
 		$sql .= "AND l.paymentDate IS NOT NULL ";
 		$sql .= "AND l.paymentAmount IS NOT NULL ";
 		$sql .= "AND l.paymentMethod IS NOT NULL ";
@@ -576,7 +579,7 @@ class Leads
 
 			$sql .= "UNION ";
 
-			$sql .= "SELECT NULL as ledgerId,1 AS divisionId,c.idCompany AS companyId,5 AS verticalId,i.paymentDate,'ACH' AS paymentMethod,CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01') AS ledgerMonth,ROUND(SUM(r.value)*0.50,2) AS invoiceAmount,i.invoiceNumber AS invoiceNum,ROUND(SUM(r.value)*0.50,2) AS paymentAmount,NULL AS commissionAmount,NULL as commissionDate,0 AS type,u.idUser AS userId,c.name AS companyName,'E-mail' AS divisionName,'Email Marketing' AS verticalName,u.fullName,u.idUser ";
+			$sql .= "SELECT NULL as ledgerId,1 AS divisionId,c.idCompany AS companyId,5 AS verticalId,i.paymentDate,'ACH' AS paymentMethod,CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01') AS ledgerMonth,ROUND(SUM(r.value)*0.50,2) AS invoiceAmount,i.invoiceNumber AS invoiceNum,ROUND(SUM(r.value)*0.50,2) AS paymentAmount,NULL AS commissionAmount,NULL as commissionDate,0 AS type,u.idUser AS userId,CONCAT('E',r.date) AS entryId,c.name AS companyName,'E-mail' AS divisionName,'Email Marketing' AS verticalName,u.fullName,u.idUser ";
 			$sql .= "FROM url_mapping m ";
 			$sql .= "INNER JOIN feedinc fi ON m.idFeedIn = fi.idFeedIn ";
 			$sql .= "INNER JOIN companies c ON fi.idCompany = c.idCompany ";
@@ -597,7 +600,7 @@ class Leads
 
 			$sql .= "UNION ";
 
-			$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.loPaymentDate AS paymentDate,l.loPaymentMethod AS paymentMethod,l.ledgerMonth,l.loInvoiceAmount AS invoiceAmount,l.loInvoiceNum AS invoiceNum,l.loPaymentAmount AS paymentAmount,l.commissionAmount,l.commissionDate,0 AS type,l.userId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u.fullName,u.idUser ";
+			$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.loPaymentDate AS paymentDate,l.loPaymentMethod AS paymentMethod,l.ledgerMonth,l.loInvoiceAmount AS invoiceAmount,l.loInvoiceNum AS invoiceNum,l.loPaymentAmount AS paymentAmount,l.commissionAmount,l.commissionDate,0 AS type,l.userId,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u.fullName,u.idUser ";
 			$sql .= "FROM ledger_offline l ";
 			$sql .= "LEFT JOIN companies c ON l.vendorCompanyId = c.idCompany ";
 			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
@@ -616,7 +619,7 @@ class Leads
 
 			$sql .= "UNION ";
 
-			$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount,l.commissionDate,1 AS type,l.userId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u.fullName,u.idUser ";
+			$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount,l.commissionDate,1 AS type,l.userId,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u.fullName,u.idUser ";
 			$sql .= "FROM ledger_offline l ";
 			$sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
 			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";

@@ -839,6 +839,7 @@ include(INCLUDES."c_header.php");
 <table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $month; ?>">
 	<thead>
 		<tr class="header">
+			<th>Entry #</th>
 			<th>Company Name</th>
 			<th>Vertical</th>
 			<th>Invoice Amount</th>
@@ -865,6 +866,7 @@ include(INCLUDES."c_header.php");
 					$ledger = new DateTime( $entry->ledgerMonth );
 ?>
 		<tr>
+			<td><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->verticalName ); ?></td>
 			<td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
@@ -896,6 +898,7 @@ include(INCLUDES."c_header.php");
 	<tfoot>
 		<tr>
 			<td>Monthly Totals</td>
+			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 			<td>$<?php echo number_format( $invoiceTotal, 2 ); ?></td>
 			<td>&nbsp;</td>

@@ -45,7 +45,7 @@ include(INCLUDES."c_header.php");
 
 			printf( '<h3>%s</h3>' . PHP_EOL, htmlentities( $user->fullName ) );
 
-			$entries = $leads->getPaidLedger( 1, $user->idUser );
+			$entries = $leads->getPaidLedger( null, $user->idUser );
 			if( empty( $entries ) ) {
 ?>
 <p>No commission entries exist in the database.</p>
@@ -66,6 +66,7 @@ include(INCLUDES."c_header.php");
 <table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
+			<th>ID #</th>
 			<th>Division</th>
 			<th>Company</th>
 			<th>Invoice #</th>
@@ -83,6 +84,7 @@ include(INCLUDES."c_header.php");
 							$commissionTotal += $entry->commissionAmount;
 ?>
 		<tr>
+			<td><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
@@ -96,7 +98,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr class="bgGray header">
-			<td colspan="3">Monthly Totals</td>
+			<td colspan="4">Monthly Totals</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 			<td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
 		</tr>
