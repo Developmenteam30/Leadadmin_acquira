@@ -43,7 +43,7 @@ include(INCLUDES."c_header.php");
 	} else {
 		$months = array();
 		foreach( $entries as $entry ) {
-			$month = substr( $entry->ledgerMonth, 0, 7 );
+			$month = substr( $entry->paymentDate, 0, 7 );
 			$months[$month] = true;
 		}
 
@@ -54,6 +54,7 @@ include(INCLUDES."c_header.php");
 	<thead>
 		<tr class="bgGray header">
 			<th>Entry #</th>
+			<th>Payment Date</th>
 			<th>Division</th>
 			<th>Company</th>
 			<th>Invoice #</th>
@@ -66,11 +67,12 @@ include(INCLUDES."c_header.php");
 <?php
 			$paymentTotal = 0;
 			foreach( $entries as $entry ) {
-				if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+				if( substr( $entry->paymentDate, 0, 7 ) == $month ) {
 					$paymentTotal += $entry->paymentAmount;
 ?>
 		<tr>
 			<td><?php echo htmlentities( $entry->entryId ); ?></td>
+			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
@@ -85,7 +87,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="6">Monthly Total</td>
+			<td colspan="7">Monthly Total</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>
