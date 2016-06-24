@@ -184,18 +184,34 @@ if(isset($_REQUEST['d'])){
 			$paymentAmount = 0.00;
 
 			if( !empty( $_REQUEST['emailLedgerId'] ) ) {
-				foreach( $_REQUEST['emailLedgerId'] as $ledgerId ) {
-					$entry = $leads->getLedgerById( $ledgerId );
-					if( !empty( $entry ) ) {
-						$divisionId = $entry->divisionId;
-						$companyId = $entry->companyId;
-						$invoiceNum = $entry->invoiceNum;
-						$invoiceAmount += $entry->invoiceAmount;
-						$ledgerMonth = new DateTime( $entry->ledgerMonth );
-						$ledgerMonth = $ledgerMonth->format( 'Ym' );
-						$paymentDate = $entry->paymentDate;
-						$paymentMethod = $entry->paymentMethod;
-						$paymentAmount += $entry->paymentAmount;
+				foreach( $_REQUEST['emailLedgerId'] as $divisionLedgerId ) {
+					list( $divisionId, $ledgerId ) = explode( '|', $divisionLedgerId );
+					if( '4' === $divisionId ) {
+						$entry = $leads->getOfflineLedgerById( $ledgerId );
+						if( !empty( $entry ) ) {
+							$divisionId = 4;
+							$companyId = $entry->vendorCompanyId;
+							$invoiceNum = $entry->loInvoiceNum;
+							$invoiceAmount += $entry->loInvoiceAmount;
+							$ledgerMonth = new DateTime( $entry->ledgerMonth );
+							$ledgerMonth = $ledgerMonth->format( 'Ym' );
+							$paymentDate = $entry->loPaymentDate;
+							$paymentMethod = $entry->loPaymentMethod;
+							$paymentAmount += $entry->loPaymentAmount;
+						}
+					} else {
+						$entry = $leads->getLedgerById( $ledgerId );
+						if( !empty( $entry ) ) {
+							$divisionId = $entry->divisionId;
+							$companyId = $entry->companyId;
+							$invoiceNum = $entry->invoiceNum;
+							$invoiceAmount += $entry->invoiceAmount;
+							$ledgerMonth = new DateTime( $entry->ledgerMonth );
+							$ledgerMonth = $ledgerMonth->format( 'Ym' );
+							$paymentDate = $entry->paymentDate;
+							$paymentMethod = $entry->paymentMethod;
+							$paymentAmount += $entry->paymentAmount;
+						}
 					}
 				}
 			}
@@ -231,7 +247,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Invoice Amount',
 					'type' => 'currency',
 					'required' => true,
-					'value' => !empty( $invoiceAmount ) ? $invoiceAmount : '',
+					'value' => !empty( $invoiceAmount ) ? number_format( $invoiceAmount, 2 ) : '',
 				),
 				array(
 					'id' => 'ledgerMonth',
@@ -257,7 +273,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Payment Amount',
 					'type' => 'currency',
 					'required' => true,
-					'value' => !empty( $paymentAmount ) ? $paymentAmount : '',
+					'value' => !empty( $paymentAmount ) ? number_format( $paymentAmount, 2 ) : '',
 				),
 				array(
 					'id' => 'a',
@@ -379,7 +395,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-center"><input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->ledgerId; ?>" /></td>
+			<td class="text-center"><?php if( '1' !== $entry->divisionId ) { ?><input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>" /><?php } else { echo "&nbsp;"; } ?></td>
 		</tr>
 <?php
 				}
