@@ -119,10 +119,10 @@ if(isset($_REQUEST['a'])){
 						'staticFields' => empty( $staticFields ) ? null : $staticFields,
 						'varFields' => empty( $varFields ) ? null : $varFields,
 						'fieldMap' => empty( $fieldMap ) ? null : $fieldMap,
-						'cron' => empty( $_REQUEST['cron'] ) ? 0 : 1,
-						'cronTiming' => empty( $_REQUEST['cronTiming'] ) ? 1 : $_REQUEST['cronTiming'],
+						'cron' => 1,
+						'cronTiming' => 1,
 						'successString' => empty( $_REQUEST['successString'] ) ? null : $_REQUEST['successString'],
-						'throttle' => empty( $_REQUEST['throttle'] ) ? 0 : $_REQUEST['throttle'],
+						'throttle' => 0,
 						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
@@ -184,7 +184,7 @@ if(isset($_REQUEST['a'])){
 						}
 					}
 
-					$idFeedOut = $leads->updateOutboundFeed( $idFeedOut, array(
+					$dbResult = $leads->updateOutboundFeed( $idFeedOut, array(
 						'label' => $_REQUEST['label'],
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
 						'idCompany' => $_REQUEST['idCompany'],
@@ -193,17 +193,14 @@ if(isset($_REQUEST['a'])){
 						'staticFields' => empty( $staticFields ) ? null : $staticFields,
 						'varFields' => empty( $varFields ) ? null : $varFields,
 						'fieldMap' => empty( $fieldMap ) ? null : $fieldMap,
-						'cron' => empty( $_REQUEST['cron'] ) ? 0 : 1,
-						'cronTiming' => empty( $_REQUEST['cronTiming'] ) ? 1 : $_REQUEST['cronTiming'],
 						'successString' => empty( $_REQUEST['successString'] ) ? null : $_REQUEST['successString'],
-						'throttle' => empty( $_REQUEST['throttle'] ) ? 0 : $_REQUEST['throttle'],
 						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 					) );
 
-					if( null === $idFeedOut ) {
+					if( null === $dbResult ) {
 						$c = false;
 						$result['status'] = 0;
 						$result['error'] = 'Error updating feed settings.';
