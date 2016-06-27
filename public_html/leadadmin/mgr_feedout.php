@@ -11,6 +11,7 @@ $leads = Leads::getInstance();
 $status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
 
 require_once( INCLUDES . 'display.php' );
+require_once( INCLUDES . 'f_site.php' );
 
 if(isset($_REQUEST['a'])){
 	Header( 'Content-Type: application/json' );
@@ -1616,7 +1617,7 @@ $("#new_pop select[name='idFeedIn'], #edit_pop select[name='idFeedIn']").select2
 				</p>
 			</td>
 			<td valign='top' class="text-center">
-				<input class="population-toggle" <?php if( !empty( $popSet->enabled ) ) { print ' checked="checked"'; } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Enabled" data-onstyle="success" data-off="Disabled" data-offstyle="danger" data-assoc-id="<?php echo $popSet->idAssoc; ?>" type="checkbox" /></td>
+				<input class="population-toggle" <?php if( !empty( $popSet->enabled ) ) { print 'checked="checked" '; } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Enabled" data-onstyle="success" data-off="Disabled" data-offstyle="danger" data-assoc-id="<?php echo $popSet->idAssoc; ?>" type="checkbox" /></td>
 			</td>
 			<td valign='top'>
 				<p><?php echo $filterTypeUrl; ?></p>
@@ -1818,7 +1819,7 @@ if( $outgoingFeeds === false ) {
 		<td><?php echo htmlentities( $feed->description ); ?></td>
 		<td><?php echo htmlentities( $feed->statusPop ); ?></td>
 		<td><?php echo ucfirst( $feed->status ); ?></td>
-		<td><input class="cron-toggle" <?php if( !empty( $feed->cron ) ) { print ' checked="checked"'; } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Running" data-onstyle="success" data-off="Paused" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedOut; ?>" type="checkbox" /></td>
+		<td><input class="cron-toggle" <?php if( !empty( $feed->cron ) ) { print 'checked="checked" '; } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Running" data-onstyle="success" data-off="Paused" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedOut; ?>" type="checkbox" /></td>
 		<td class="text-right"><?php echo $feed->accepted; ?></td>
 		<td class="text-right"><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut);?>&amp;label=<?php echo urlencode($feed->label);?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
 		<td class="text-right"><?php echo $feed->queued; ?></td>
