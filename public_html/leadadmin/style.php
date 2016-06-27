@@ -264,44 +264,6 @@ div.dashboardOutgoing { width: 50%; }
 	border-radius: 5px;
 }
 
-/* Rejections Table */
-.rejectionsTable {
-	border: 1px solid;
-	border-collapse: collapse;
-	margin: 20px 0 20px 0;
-	width: 100%;
-}
-
-.rejectionsTable th {
-	border: 1px solid #909090;
-	font-family:Arial;
-	font-weight:bold;
-	padding: 4px;
-	vertical-align: middle;
-}
-
-.rejectionsTable td {
-	border: 1px solid #909090;
-	font-family:Arial;
-	font-weight:normal;
-	padding: 4px;
-	vertical-align: middle;
-}
-
-.rejectionsTable tbody tr:nth-child(4n),
-.rejectionsTable tbody tr:nth-child(4n-1) {
-	background-color:#ffffff;
-}
-
-.rejectionsTable tbody tr:nth-child(4n-2),
-.rejectionsTable tbody tr:nth-child(4n-3) {
-	background-color:#ffd4aa;
-}
-
-.rejectionsTable .error {
-	border: 1px solid #909090;
-}
-
 .status-retired {
 	color: #800000;
 	text-decoration:line-through;
@@ -618,6 +580,44 @@ div.headerRow.client {
 
 #logo-reports {
 	max-height: 63px;
+}
+
+/* Rejections Table */
+.rejectionsTable {
+	border: 1px solid;
+	border-collapse: collapse;
+	margin: 20px 0 20px 0;
+	width: 100%;
+}
+
+.rejectionsTable th {
+	border: 1px solid #909090;
+	font-family:Arial;
+	font-weight:bold;
+	padding: 4px;
+	vertical-align: middle;
+}
+
+.rejectionsTable td {
+	border: 1px solid #909090;
+	font-family:Arial;
+	font-weight:normal;
+	padding: 4px;
+	vertical-align: middle;
+}
+
+.rejectionsTable tbody tr:nth-child(4n),
+.rejectionsTable tbody tr:nth-child(4n-1) {
+	background-color:#ffffff;
+}
+
+.rejectionsTable tbody tr:nth-child(4n-2),
+.rejectionsTable tbody tr:nth-child(4n-3) {
+	background-color:#ffd4aa;
+}
+
+.rejectionsTable .error {
+	border: 1px solid #909090;
 }
 
 div.navContainer, div.logoutContainer{
