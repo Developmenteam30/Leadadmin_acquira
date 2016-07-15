@@ -59,8 +59,10 @@ include(INCLUDES."c_header.php");
 			<th>Company</th>
 			<th>Invoice #</th>
 			<th>Salesperson</th>
+			<th>Commissions</th>
 			<th>Payment Method</th>
 			<th>Payment Amount</th>
+			<th>Options</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -77,8 +79,10 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td><?php echo $entry->fullName; ?></td>
+			<td><?php echo !empty( $entry->commissionAmount ) ? '$' . number_format( $entry->commissionAmount, 2 ) : ''; ?><?php if( !empty( $entry->commissionDate ) && !empty( $entry->commissionAmount ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+			<td class="text-center"><?php if( '4' === $entry->divisionId ) { ?><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button><?php } else if( '1' !== $entry->divisionId ) { ?><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td><?php } else { print "&nbsp;"; } ?></td>
 		</tr>
 <?php
 				}
@@ -87,8 +91,9 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="7">Monthly Total</td>
+			<td colspan="8">Monthly Total</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+			<td>&nbsp;</td>
 		</tr>
 	</tfoot>
 </table>
@@ -118,6 +123,8 @@ $( "table" ).each(function( index ) {
 	tf.init();
 });
 </script>
+
+<?php require_once( INCLUDES . 'modals.php' ); ?>
 
 </body>
 </html>

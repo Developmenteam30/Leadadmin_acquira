@@ -31,7 +31,7 @@ if(isset($_REQUEST['a'])){
 		, 'error' => 'Action does not exist.'
 	);
 	switch($_REQUEST['a']){
-		case "addLedger":
+		case "addOfflineLedger":
 			$result['error'] = 'Failed when trying to add a new ledger entry.';
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
@@ -183,7 +183,7 @@ if(isset($_REQUEST['a'])){
 			$result['error'] = 'Successfully added a new ledger entry.';
 		break;
 
-		case "editLedger":
+		case "editOfflineLedger":
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
@@ -364,7 +364,7 @@ if(isset($_REQUEST['d'])){
 			Display::errorList();
 		break;
 
-		case "newLedger":
+		case "newOfflineLedger":
 
 			$fields = array(
 				array(
@@ -534,32 +534,32 @@ if(isset($_REQUEST['d'])){
 				),
 			);
 
-			Display::displayForm( 'new_ledger', $fields );
+			Display::displayForm( 'new_offlineledger', $fields );
 
 ?>
 
 <script type="text/javascript">
-$("#new_ledger input[name=orderDate], #new_ledger input[name=mailDate], #new_ledger input[name=paymentDate], #new_ledger input[name=loPaymentDate], #new_ledger input[name=commissionDate]").datepicker({
+$("#new_offlineledger input[name=orderDate], #new_offlineledger input[name=mailDate], #new_offlineledger input[name=paymentDate], #new_offlineledger input[name=loPaymentDate], #new_offlineledger input[name=commissionDate]").datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
 
-$("#new_ledger select[name='clientCompanyId']").select2({
+$("#new_offlineledger select[name='clientCompanyId']").select2({
 	placeholder: "Select a client",
 	allowClear: true
 });
 
-$("#new_ledger select[name='ledgerMonth']").select2({
+$("#new_offlineledger select[name='ledgerMonth']").select2({
 	placeholder: "Select the ledger month",
 	allowClear: true
 });
 
-$("#new_ledger select[name='vendorCompanyId']").select2({
+$("#new_offlineledger select[name='vendorCompanyId']").select2({
 	placeholder: "Select a vendor",
 	allowClear: true
 });
 
-$("#new_ledger select[name='userId']").select2({
+$("#new_offlineledger select[name='userId']").select2({
 	placeholder: "Select a salesperson",
 	allowClear: true
 });
@@ -569,7 +569,7 @@ $("#new_ledger select[name='userId']").select2({
 
 		break;
 
-		case "editLedger":
+		case "editOfflineLedger":
 			$ledgerId = !empty( $_REQUEST['ledgerId'] ) ? $_REQUEST['ledgerId'] : '';
 			$entry = $leads->getOfflineLedgerById( $ledgerId );
 
@@ -773,31 +773,31 @@ $("#new_ledger select[name='userId']").select2({
 					),
 				);
 
-				Display::displayForm( 'edit_ledger', $fields );
+				Display::displayForm( 'edit_offlineledger', $fields );
 ?>
 
 <script type="text/javascript">
-$("#edit_ledger input[name=orderDate], #edit_ledger input[name=mailDate], #edit_ledger input[name=paymentDate], #edit_ledger input[name=loPaymentDate], #edit_ledger input[name=commissionDate]").datepicker({
+$("#edit_offlineledger input[name=orderDate], #edit_offlineledger input[name=mailDate], #edit_offlineledger input[name=paymentDate], #edit_offlineledger input[name=loPaymentDate], #edit_offlineledger input[name=commissionDate]").datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
 
-$("#edit_ledger select[name='clientCompanyId']").select2({
+$("#edit_offlineledger select[name='clientCompanyId']").select2({
 	placeholder: "Select a client",
 	allowClear: true
 });
 
-$("#edit_ledger select[name='ledgerMonth']").select2({
+$("#edit_offlineledger select[name='ledgerMonth']").select2({
 	placeholder: "Select the ledger month",
 	allowClear: true
 });
 
-$("#edit_ledger select[name='vendorCompanyId']").select2({
+$("#edit_offlineledger select[name='vendorCompanyId']").select2({
 	placeholder: "Select a vendor",
 	allowClear: true
 });
 
-$("#edit_ledger select[name='userId']").select2({
+$("#edit_offlineledger select[name='userId']").select2({
 	placeholder: "Select a salesperson",
 	allowClear: true
 });
@@ -822,7 +822,7 @@ include(INCLUDES."c_header.php");
 <h2>Offline Ledger</h2>
 
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newledger">Add a new entry</button></p>
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newofflineledger">Add a new entry</button></p>
 <?php } ?>
 
 <?php
@@ -847,7 +847,7 @@ include(INCLUDES."c_header.php");
 		foreach( $months as $month => $val ) {
 ?>
 <h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
-<table class="table table-bordered table-condensed table-striped-double ledger-sort" id="ledger_<?php echo $month; ?>">
+<table class="table table-bordered table-condensed table-striped-double ledger-sort" id="offlineledger_<?php echo $month; ?>">
 	<thead>
 		<tr class="header">
 			<th rowspan="2" style="vertical-align: middle;">Entry #</th>
@@ -904,7 +904,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-			<td class="text-center" rowspan="2" style="vertical-align: middle;"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
+			<td class="text-center" rowspan="2" style="vertical-align: middle;"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
 <?php } ?>
 		</tr>
 		<tr>
@@ -931,116 +931,9 @@ include(INCLUDES."c_header.php");
 	}
 ?>
 
-<div class="modal fade" id="newledger" tabindex="-1" role="dialog" aria-labelledby="newledger_title">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="newcompany_title"><?php echo ( 1 == $type ) ? 'Add a new client invoice' : 'Add a new payment'; ?></h4>
-			</div>
-			<div class="modal-body">
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-newledger" type="button" class="btn btn-primary">Add entry</button>
-			</div>
-		</div>
-	</div>
-</div>
-
-<div class="modal fade" id="editledger" tabindex="-1" role="dialog" aria-labelledby="editledger_title">
-  <div class="modal-dialog" role="document">
-	<div class="modal-content">
-	  <div class="modal-header">
-		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-		<h4 class="modal-title" id="editledger_title">Edit a ledger entry</h4>
-	  </div>
-	  <div class="modal-body">
-	  </div>
-	  <div class="modal-footer">
-		<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-		<button id="modal-save-editledger" type="button" class="btn btn-primary">Save changes</button>
-	  </div>
-	</div>
-  </div>
-</div>
-
 </div>
 
 <script type="text/javascript">
-$('#modal-save-newledger').click( function(event) {
-	event.preventDefault();
-
-	var response = $.ajax({
-		url: "offline.php",
-		type: "POST",
-		async: true,
-		data: $("#new_ledger").serialize()
-	}).done(function(result){
-		if(result.status == 1){
-			window.location.reload(true);
-		} else {
-			alert(result.error);
-		}
-	});
-});
-
-$('#newledger').on('show.bs.modal', function(e) {
-	var modal = $(this);
-
-	$.ajax({
-		cache: false,
-		type: 'POST',
-		url: 'offline.php',
-		data: {
-			'd': 'newLedger',
-			'type': '<?php echo $type; ?>'
-		},
-		success: function(data) {
-			modal.find('.modal-body').html(data);
-		}
-	});
-});
-
-$('#modal-save-editledger').click(function(event) {
-	event.preventDefault();
-
-	var response = $.ajax({
-		url: "offline.php",
-		type: "POST",
-		async: true,
-		data: $("#edit_ledger").serialize()
-	}).done(function(result){
-		if(result.status == 1){
-			window.location.reload(true);
-		} else {
-			alert(result.error);
-		}
-	});
-});
-
-$('#editledger').on('show.bs.modal', function(e) {
-	var modal = $(this);
-	var ledgerId = $(e.relatedTarget).data('ledger-id');
-
-	$.ajax({
-		cache: false,
-		type: 'POST',
-		url: 'offline.php',
-		data: {
-			'd': 'editLedger',
-			'ledgerId': ledgerId
-		},
-		success: function(data) {
-			modal.find('.modal-body').html(data);
-		}
-	});
-});
-
-$('#newledger, #editledger').on('hide.bs.modal', function(e) {
-	$(this).find('.modal-body').html('');
-});
-
 /*
 $('.ledger-sort').each(function() { console.log($(this).attr('id'));
     var tf = new TableFilter($(this).attr('id'), {
@@ -1061,6 +954,8 @@ $('.ledger-sort').each(function() { console.log($(this).attr('id'));
 });
 */
 </script>
+
+<?php require_once( INCLUDES . 'modals.php' ); ?>
 
 </body>
 </html>
