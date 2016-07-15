@@ -565,14 +565,15 @@ class Leads
 			$sql .= "AND type = ? ";
 			$params[] = $type;
 		}
-		$sql .= "AND l.paymentDate IS NOT NULL ";
-		$sql .= "AND l.paymentAmount IS NOT NULL ";
-		$sql .= "AND l.paymentMethod IS NOT NULL ";
 		if( !empty( $userId ) ) {
 			$sql .= "AND l.userId = ? ";
 			$sql .= "AND l.commissionAmount IS NOT NULL ";
 			$sql .= "AND l.commissionDate IS NOT NULL ";
 			$params[] = $userId;
+		} else {
+			$sql .= "AND l.paymentDate IS NOT NULL ";
+			$sql .= "AND l.paymentAmount IS NOT NULL ";
+			$sql .= "AND l.paymentMethod IS NOT NULL ";
 		}
 
 		if( $type === 0 ) {
@@ -591,10 +592,11 @@ class Leads
 			$sql .= "WHERE r.value IS NOT NULL ";
 			$sql .= "AND r.value > 0.00 ";
 			$sql .= "AND r.date >= '201601' ";
-			$sql .= "AND i.paymentDate IS NOT NULL ";
 			if( !empty( $userId ) ) {
 				$sql .= "AND i.userId = ? ";
 				$params[] = $userId;
+			} else {
+				$sql .= "AND i.paymentDate IS NOT NULL ";
 			}
 			$sql .= "GROUP BY c.idCompany,r.date ";
 
@@ -605,14 +607,15 @@ class Leads
 			$sql .= "LEFT JOIN companies c ON l.vendorCompanyId = c.idCompany ";
 			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
 			$sql .= "WHERE 1=1 ";
-			$sql .= "AND l.loPaymentDate IS NOT NULL ";
-			$sql .= "AND l.loPaymentAmount IS NOT NULL ";
-			$sql .= "AND l.loPaymentMethod IS NOT NULL ";
 			if( !empty( $userId ) ) {
 				$sql .= "AND l.userId = ? ";
 				$sql .= "AND l.commissionAmount IS NOT NULL ";
 				$sql .= "AND l.commissionDate IS NOT NULL ";
 				$params[] = $userId;
+			} else {
+				$sql .= "AND l.loPaymentDate IS NOT NULL ";
+				$sql .= "AND l.loPaymentAmount IS NOT NULL ";
+				$sql .= "AND l.loPaymentMethod IS NOT NULL ";
 			}
 
 		} else {
@@ -624,14 +627,15 @@ class Leads
 			$sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
 			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
 			$sql .= "WHERE 1=1 ";
-			$sql .= "AND l.paymentDate IS NOT NULL ";
-			$sql .= "AND l.paymentAmount IS NOT NULL ";
-			$sql .= "AND l.paymentMethod IS NOT NULL ";
 			if( !empty( $userId ) ) {
 				$sql .= "AND l.commissionAmount IS NOT NULL ";
 				$sql .= "AND l.commissionDate IS NOT NULL ";
 				$sql .= "AND l.userId = ? ";
 				$params[] = $userId;
+			} else {
+				$sql .= "AND l.paymentDate IS NOT NULL ";
+				$sql .= "AND l.paymentAmount IS NOT NULL ";
+				$sql .= "AND l.paymentMethod IS NOT NULL ";
 			}
 
 		}
