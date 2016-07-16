@@ -525,7 +525,7 @@ if(isset($_REQUEST['d'])){
 				array(
 					'id' => 'a',
 					'type' => 'hidden',
-					'value' => 'addLedger',
+					'value' => 'addOfflineLedger',
 				),
 				array(
 					'id' => 'type',
@@ -764,7 +764,7 @@ $("#new_offlineledger select[name='userId']").select2({
 					array(
 						'id' => 'a',
 						'type' => 'hidden',
-						'value' => 'editLedger',
+						'value' => 'editOfflineLedger',
 					),
 					array(
 						'id' => 'ledgerId',
