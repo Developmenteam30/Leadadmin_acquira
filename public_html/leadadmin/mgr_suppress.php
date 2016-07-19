@@ -8,7 +8,9 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
-if(isset($_REQUEST['a'])){ 
+require_once( INCLUDES . 'display.php' );
+
+if(isset($_REQUEST['a'])){
 	$result = array(
 		'status' => 0
 		, 'error' => 'Action does not exist.'
