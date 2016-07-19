@@ -232,7 +232,7 @@ if(isset($_REQUEST['d'])){
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a company',
-					'choices' => !empty( $divisionId ) ? $leads->getDivisionCompanies( $divisionId ) : array(),
+					'choices' => !empty( $divisionId ) ? $leads->getDivisionCompanies( $divisionId, $companyId ) : array(),
 					'value' => $companyId,
 				),
 				array(
@@ -247,7 +247,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Invoice Amount',
 					'type' => 'currency',
 					'required' => true,
-					'value' => !empty( $invoiceAmount ) ? number_format( $invoiceAmount, 2 ) : '',
+					'value' => !empty( $invoiceAmount ) ? number_format( $invoiceAmount, 2, '.', '' ) : '',
 				),
 				array(
 					'id' => 'ledgerMonth',
@@ -273,7 +273,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Payment Amount',
 					'type' => 'currency',
 					'required' => true,
-					'value' => !empty( $paymentAmount ) ? number_format( $paymentAmount, 2 ) : '',
+					'value' => !empty( $paymentAmount ) ? number_format( $paymentAmount, 2, '.', '' ) : '',
 				),
 				array(
 					'id' => 'a',
