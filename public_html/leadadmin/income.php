@@ -10,6 +10,8 @@ $leads = Leads::getInstance();
 
 require_once( INCLUDES . 'display.php' );
 
+$type = 0;
+
 if(isset($_REQUEST['d'])){
 	switch($_REQUEST['d']){
 		case 'errorCount':

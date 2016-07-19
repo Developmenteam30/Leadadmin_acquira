@@ -1,9 +1,12 @@
+<?php
+	global $type;
+?>
 <div class="modal fade" id="newledger" tabindex="-1" role="dialog" aria-labelledby="newledger_title">
 	<div class="modal-dialog" role="document">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="newcompany_title"><?php echo ( 1 == $type ) ? 'Add a new client invoice' : 'Add a new payment'; ?></h4>
+					<h4 class="modal-title" id="newledger_title"><?php echo ( 1 == $type ) ? 'Add a new client invoice' : 'Add a new payment'; ?></h4>
 			</div>
 			<div class="modal-body">
 			</div>
@@ -54,7 +57,7 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="newcompany_title"><?php echo ( 1 == $type ) ? 'Add a new client invoice' : 'Add a new payment'; ?></h4>
+					<h4 class="modal-title" id="newofflineledger_title"><?php echo ( 1 == $type ) ? 'Add a new client invoice' : 'Add a new payment'; ?></h4>
 			</div>
 			<div class="modal-body">
 			</div>
