@@ -356,6 +356,7 @@ if(isset($_REQUEST['d'])){
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a company',
+					'choices' => array(),
 				),
 				array(
 					'id' => 'verticalId',
@@ -363,6 +364,7 @@ if(isset($_REQUEST['d'])){
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a vertical',
+					'choices' => array(),
 				),
 				array(
 					'id' => 'invoiceNum',

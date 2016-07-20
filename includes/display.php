@@ -98,14 +98,16 @@ class Display
 						( !empty( $field['label_append'] ) ? $field['label_append'] : '' )
 				);
 				print '<div class="checkbox-choices">';
-				foreach( $field['choices'] as $key => $val ) {
-					printf( "\t<input class=\"form-control\" type=\"checkbox\" name=\"%s[]\" value=\"%s\"%s /> %s%s\n",
-						htmlspecialchars( $field['id'] ),
-						htmlspecialchars( $key ),
-						( !empty( $field['value'][$key] ) ? ' checked="checked"' : '' ),
-						htmlspecialchars( $val ),
-						( !empty( $field['choice_append'] ) ? $field['choice_append'] : '' )
-					);
+				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
+					foreach( $field['choices'] as $key => $val ) {
+						printf( "\t<input class=\"form-control\" type=\"checkbox\" name=\"%s[]\" value=\"%s\"%s /> %s%s\n",
+							htmlspecialchars( $field['id'] ),
+							htmlspecialchars( $key ),
+							( !empty( $field['value'][$key] ) ? ' checked="checked"' : '' ),
+							htmlspecialchars( $val ),
+							( !empty( $field['choice_append'] ) ? $field['choice_append'] : '' )
+						);
+					}
 				}
 				print '</div>';
 
@@ -116,15 +118,17 @@ class Display
 						htmlspecialchars( $field['label'] ),
 						( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' )
 				);
-				foreach( $field['choices'] as $key => $val ) {
-					printf( "\t<input type=\"radio\" name=\"%s\" value=\"%s\"%s%s /> %s%s\n",
-						htmlspecialchars( $field['id'] ),
-						htmlspecialchars( $key ),
-						( !empty( $field['value'] ) && $key == $field['value'] ) ? ' checked="checked"' : '',
-						( !empty( $field['required'] ) ? ' required="required" ' : '' ),
-						htmlspecialchars( $val ),
-						( !empty( $field['choice_append'] ) ? $field['choice_append'] : '' )
-					);
+				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
+					foreach( $field['choices'] as $key => $val ) {
+						printf( "\t<input type=\"radio\" name=\"%s\" value=\"%s\"%s%s /> %s%s\n",
+							htmlspecialchars( $field['id'] ),
+							htmlspecialchars( $key ),
+							( !empty( $field['value'] ) && $key == $field['value'] ) ? ' checked="checked"' : '',
+							( !empty( $field['required'] ) ? ' required="required" ' : '' ),
+							htmlspecialchars( $val ),
+							( !empty( $field['choice_append'] ) ? $field['choice_append'] : '' )
+						);
+					}
 				}
 
 			} else if( 'textarea' == $field['type'] ) {
@@ -159,12 +163,14 @@ class Display
 				} else {
 					printf( "\t\t<option value=\"\"></option>\n" );
 				}
-				foreach( $field['choices'] as $key => $val ) {
-					printf( "\t\t<option value=\"%s\"%s>%s</option>\n",
-						htmlspecialchars( $key, ENT_QUOTES | ENT_HTML5 ),
-						( isset( $field['value'] ) && $key == $field['value'] ? ' selected="selected"' : '' ),
-						htmlentities( $val )
-					);
+				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
+					foreach( $field['choices'] as $key => $val ) {
+						printf( "\t\t<option value=\"%s\"%s>%s</option>\n",
+							htmlspecialchars( $key, ENT_QUOTES | ENT_HTML5 ),
+							( isset( $field['value'] ) && $key == $field['value'] ? ' selected="selected"' : '' ),
+							htmlentities( $val )
+						);
+					}
 				}
 				printf( "\t</select>\n" );
 
