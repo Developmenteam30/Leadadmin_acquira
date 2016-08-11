@@ -1,5 +1,9 @@
 <?php
 
+if( extension_loaded( 'newrelic' ) ) {
+	newrelic_set_appname( 'Qatalyst Scripts' );
+}
+
 chdir(__DIR__);
 
 require( '../includes/c_config.php' );

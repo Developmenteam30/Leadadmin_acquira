@@ -1,5 +1,13 @@
 <?php
 
+if( extension_loaded( 'newrelic' ) ) {
+	newrelic_set_appname( 'Qatalyst Scripts' );
+}
+
+if( extension_loaded( 'newrelic' ) ) {
+	newrelic_ignore_transaction();
+}
+
 require_once("../includes/c_config.php");
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();

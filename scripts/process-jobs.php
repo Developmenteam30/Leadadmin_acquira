@@ -1,5 +1,9 @@
 <?php
 
+if( extension_loaded( 'newrelic' ) ) {
+	newrelic_set_appname( 'Qatalyst Scripts' );
+}
+
 include( __DIR__ . "/../includes/c_config.php");
 
 require_once( INCLUDES . 'leads.php' );
