@@ -22,6 +22,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 			array( 'name' => 'Commissions Paid', 'url' => '/leadadmin/commissions.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => '*Income Ledger', 'url' => '/leadadmin/income.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Payment Ledger', 'url' => '/leadadmin/payments.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
+			array( 'name' => '*Profit & Loss Report', 'url' => '/leadadmin/profit-loss.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 		) ),
