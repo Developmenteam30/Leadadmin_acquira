@@ -396,9 +396,7 @@ if($c){
 								$c = false;
 								$result['reason'] = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
 
-								if( !empty( $_REQUEST['url'] ) ) {
-									$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $statsDay, $result['reason'] );
-								}
+								$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $_REQUEST['url'], $statsDay, $result['reason'] );
 
 							}
 						}

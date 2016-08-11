@@ -1570,6 +1570,10 @@ class Leads
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
 		$this->db->beginTransaction();
 
+		if( empty( $url ) ) {
+			$url = 'No URL provided';
+		}
+
 		try {
 			if( LEGACY_DB ) {
 				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
