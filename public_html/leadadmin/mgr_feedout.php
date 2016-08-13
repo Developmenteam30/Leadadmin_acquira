@@ -1124,6 +1124,12 @@ if( isset( $_REQUEST['d'] ) ) {
 <input type="hidden" name="a" value="managePopulation" />
 <input type="hidden" name="action" value="<?php echo $mode; ?>" />
 <table class="table table-bordered table-condensed table-striped">
+<?php if( 'edit' === $mode ) { ?>
+	<tr>
+		<td>Population ID</td>
+		<td><?php echo $popset_idAssoc; ?></td>
+	</tr>
+<?php } ?>
 	<tr>
 		<td><p>Incoming Feed (To Populate From)</p></td>
 		<td>
@@ -1433,9 +1439,9 @@ if( isset( $_REQUEST['d'] ) ) {
 				Incoming records will be sent to this provider in REAL TIME as they come in.  Do not use this option unless authorized.  Most feeds have this option disabled.
 			</p>
 			<p>
-				<input type='radio' name='livedata' id='livedata_disabled' value='1'
+				<input type='radio' name='livedata' id='livedata_disabled' value='0'
 					<?php if($popset_livedata != '1'){ ?> checked='checked' <?php } ?>/> Disabled (DEFAULT)<br />
-				<input type='radio' name='livedata' id='livedata_enabled' value='0'
+				<input type='radio' name='livedata' id='livedata_enabled' value='1'
 					<?php if($popset_livedata == '1'){ ?> checked='checked' <?php } ?>/> Enabled
 			</p>
 		</td>
