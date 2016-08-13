@@ -205,7 +205,6 @@ if(isset($_REQUEST['a'])){
 						'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
 						'required' => empty( $_REQUEST['required'] ) ? null : implode( ';', $_REQUEST['required'] ),
 						'allowedFields' => empty( $_REQUEST['allowedFields'] ) ? null : implode( ';', $_REQUEST['allowedFields'] ),
-						'password' => genFeedPass(),
 						'dedupeEmail' => empty( $_REQUEST['dedupeEmail'] ) ? 0 : 1,
 						'dedupeLandline' => empty( $_REQUEST['dedupeLandline'] ) ? 0 : 1,
 						'dedupeCellphone' => empty( $_REQUEST['dedupeCellphone'] ) ? 0 : 1,
