@@ -1,6 +1,7 @@
 <?php
 
 require_once( 'c_config.php' );
+require_once( INCLUDES . '_f_validation.php' );
 
 class ProcessLeads
 {
@@ -631,6 +632,11 @@ class ProcessLeads
 			$data['cellphone'] = preg_replace( '/[^0-9]/', '', $data['cellphone'] );
 		}
 
+		// Fix incoming URLs missing a protocol so they validate properly
+		if( !empty( $data['url'] ) && strpos( $data['url'], 'http' ) !== 0 ) {
+			$data['url'] = 'http://' . $data['url'];
+		}
+
 		foreach( $requiredFields as $requiredKey ) {
 			switch( $requiredKey ) {
 				case 'phone':
@@ -660,9 +666,7 @@ class ProcessLeads
 		}
 
 		if( in_array('url', $allowedFields ) ) { //URL is expected so trim it and store in the database.
-			if( !empty( $data['url'] ) ) {
-				$data['url'] = $leads->parseUrl( $data['url'] );
-			} else {
+			if( empty( $data['url'] ) ) {
 				$data['url'] = '';
 			}
 		}

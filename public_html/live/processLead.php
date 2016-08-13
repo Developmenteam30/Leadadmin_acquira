@@ -1,6 +1,7 @@
 <?php
 require_once("../../includes/c_config.php");
 require_once( INCLUDES . 'leads.php' );
+require_once( INCLUDES . 'Array2XML.php' );
 require_once( INCLUDES . 'processLeads.php' );
 
 function showResultAndDie( $result ) {
@@ -72,7 +73,7 @@ if( $validateResult['valid'] ) {
 
 } else {
 
-	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $validateResult['errors'][0], $job->jobId );
+	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $validateResult['errors'][0], null );
 	$result['reason'] = $validateResult['errors'][0];
 
 }
