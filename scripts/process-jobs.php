@@ -7,12 +7,10 @@ if( extension_loaded( 'newrelic' ) ) {
 include( __DIR__ . "/../includes/c_config.php");
 
 require_once( INCLUDES . 'leads.php' );
+require_once( INCLUDES . 'processLeads.php' );
 
 $mysqlErrorSource = 'Process Jobs';
-require_once(INCLUDES."_connx.php");
 require_once(INCLUDES."f_site.php");
-require_once(INCLUDES."_f_validEmail.php");
-require_once(INCLUDES."processFunctions.php");
 
 ini_set("auto_detect_line_endings", true);
 set_time_limit(0);
@@ -224,21 +222,23 @@ if( 'clear-outbound-queue' === $job->type ) {
 			print " ";
 		}
 
-		$result = validateIncomingData( $feedParams, $data );
+		$result = ProcessLeads::validateIncomingData( $feedParams, $data );
 
 		if( $result['valid'] ) {
 
-			print " - VALID\n";
-
 			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId );
 			if( null === $inboundId ) {
+				print " - DBFAIL\n";
 				$counts['failures']++;
 			} else {
-				if( LEGACY_DB ) {
-					insertIncomingData( $feedParams, $data, $job->jobId );
-				}
-				pushIncomingData( $feedParams->idFeedIn, $data, $inboundId );
-				$counts['success']++;
+
+				if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $data, $inboundId ) ) === null ) {
+					print " - VALID\n";
+					$counts['success']++;
+    	    	} else {
+					print " - ERROR\n";
+					$counts['invalid']++;
+        		}
 			}
 
 		} else {
@@ -251,10 +251,6 @@ if( 'clear-outbound-queue' === $job->type ) {
 			}
 
 			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $job->jobId );
-
-			if( LEGACY_DB ) {
-				insertIncomingData( $feedParams, $data, $job->jobId, $result['errors'][0] );
-			}
 
 		}
 

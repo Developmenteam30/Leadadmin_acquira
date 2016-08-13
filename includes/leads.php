@@ -1,7 +1,6 @@
 <?php
 
 require_once( 'c_config.php' );
-require_once( 'processFunctions.php' );
 
 class Leads_PDOException extends PDOException {
 }
@@ -3097,7 +3096,7 @@ class Leads
 				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idRecord = ? AND o.idFeedOut = ?" );
 				$query->execute( array( $idRecord, $idFeedOut ) );
 			}
-			return $query->fetch();
+			return $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound record: ' . $e->getMessage() );
 			return null;

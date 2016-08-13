@@ -10,7 +10,6 @@ require( '../includes/c_config.php' );
 
 $mysqlErrorSource = 'Notification script';
 require( INCLUDES."_connx.php" );
-require( INCLUDES."processFunctions.php" );
 require_once( INCLUDES . 'leads.php' );
 
 function sendNotification( $label, $feedId, $url, $time, $hours ) {
@@ -30,7 +29,8 @@ function sendNotification( $label, $feedId, $url, $time, $hours ) {
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
   
 	if(!$sent){
-		logError( 'Error Logging', 'Failed to send error report notification to administrator' );
+		$leads = Leads::getInstance();
+		$leads->logError( 'Failed to send error report notification to administrator' );
 	}
 }
 

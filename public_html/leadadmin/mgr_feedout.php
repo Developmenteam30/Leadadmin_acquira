@@ -500,10 +500,9 @@ if( isset( $_REQUEST['d'] ) ) {
 				break;
 			}
 
-			require_once( SITE_ROOT . '/pushLead/_f_onlms.php' );
 			$settings['testing'] = 0;
 			$settings['testrecord'] = 1;
-			$leaddata = array(
+			$leaddata = (object) array(
 				'stamp' => date( 'Y-m-d H:i:s' ),
 				'url' => 'http://www.' . SITE_URL,
 				'ip' => '1.2.3.4',
@@ -525,7 +524,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			print "<p><strong>HTTP Method:</strong> " . $feed->feedType . "</p>";
 
-			$response = runlead( $leaddata, $feed );
+			$response = ProcessLeads::pushOutboundData( $feed, $leaddata );
 
 			print "<strong>Query String:</strong> " . htmlspecialchars( $response['querystring'] ) . "</p>";
 
