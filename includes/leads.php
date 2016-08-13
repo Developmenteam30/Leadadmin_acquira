@@ -37,7 +37,7 @@ class Leads
 
 	public function parseUrl( $url ) {
 		if( empty( $url ) ) {
-			return null;
+			return '';
 		}
 
 		$url = strtolower( $url );
@@ -1417,14 +1417,12 @@ class Leads
 		}
 
 		try {
-			if( !empty( $fields['url'] ) ) {
-				if( empty( $error ) ) {
-					$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
-				} else {
-					$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
-				}
-				$query->execute( array( $idFeedIn, $this->parseUrl( $fields['url'] ) , $statsDay ) );
+			if( empty( $error ) ) {
+				$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
+			} else {
+				$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
 			}
+			$query->execute( array( $idFeedIn, $this->parseUrl( $fields['url'] ) , $statsDay ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to insert stats_inbound record: ' . $e->getMessage() );
@@ -1569,10 +1567,6 @@ class Leads
 
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
 		$this->db->beginTransaction();
-
-		if( empty( $url ) ) {
-			$url = 'No URL provided';
-		}
 
 		try {
 			if( LEGACY_DB ) {
