@@ -118,20 +118,20 @@ class ProcessLeads
 
 				// Is this population parameter enabled?
 				if( empty( $feed->enabled ) ) {
-					break;
+					continue;
 				}
 
 				// Ensure the record passes the population parameter filters for this feed
 				if( !is_null( $feed->filterTypeUrl ) && !ProcessLeads::filterValue( $feed->filterTypeUrl, $data['url'], $feed->filterUrl ) ) {
-					break;
+					continue;
 				}
 
 				if( !is_null( $feed->filterTypeEmail ) && !ProcessLeads::filterValue( $feed->filterTypeEmail, $data['email'], $feed->filterEmail ) ) {
-					break;
+					continue;
 				}
 
 				if( !is_null( $feed->filterTypeListcode ) && !ProcessLeads::filterValue( $feed->filterTypeListcode, $data['listcode'], $feed->filterListcode ) ) {
-					break;
+					continue;
 				}
 
 				// Ensure we haven't reached our daily limit of records
@@ -139,7 +139,7 @@ class ProcessLeads
 					$cnt = $leads->getOutboundDailyCount( $feed->idFeedOut );
 					if( $cnt && $cnt > $feed->dailyLimit ) {
 						$leads->logError( 'Feed '.$feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
-						break;
+						continue;
 					}
 				}
 
