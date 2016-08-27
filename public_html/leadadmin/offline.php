@@ -183,6 +183,35 @@ if(isset($_REQUEST['a'])){
 			$result['error'] = 'Successfully added a new ledger entry.';
 		break;
 
+		case "deleteOfflineLedger":
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$result['error'] = 'You do not have access to add/edit entries.';
+				break;
+			}
+
+			if( empty( $_REQUEST['ledgerId'] ) ) {
+				$result['error'] = 'Ledger ID is empty. Cannot delete!';
+				break;
+			}
+
+			$entry = $leads->getOfflineLedgerById( $_REQUEST['ledgerId'] );
+			if( empty( $entry ) ) {
+				$result['error'] = 'There is no ledger entry that exists by that ID.';
+				break;
+			}
+
+			$status = $leads->deleteOfflineLedger( $_REQUEST['ledgerId'] );
+			if( empty( $entry ) ) {
+				$result['error'] = 'There was an error deleting this ledger entry.';
+				break;
+			}
+
+			$leads->auditLog( 'LEDGER-OFFLINE:DELETE', $_REQUEST['ledgerId'] );
+			$result['status'] = 1;
+			$result['error'] = 'Offline ledger deleted successfully.';
+
+		break;
+
 		case "editOfflineLedger":
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
 
@@ -569,6 +598,242 @@ $("#new_offlineledger select[name='userId']").select2({
 
 		break;
 
+		case "deleteOfflineLedger":
+			$ledgerId = !empty( $_REQUEST['ledgerId'] ) ? $_REQUEST['ledgerId'] : '';
+			$entry = $leads->getOfflineLedgerById( $ledgerId );
+
+			if( empty( $entry ) ) {
+
+				print '<p>There is no ledger that exists by that ID.</p>';
+
+			} else {
+
+				print '<p>Are you sure you wish to <strong>delete</strong> this entry?</p>';
+
+				$ledgerMonth = new DateTime( $entry->ledgerMonth );
+
+				$fields = array(
+					array(
+						'id' => 'divisionId',
+						'label' => 'Division',
+						'type' => '_text',
+						'value' => 'Offline',
+					),
+					array(
+						'id' => 'clientCompanyId',
+						'label' => 'Client',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a client',
+						'choices' => $leads->getDivisionCompanies( 4, $entry->clientCompanyId ),
+						'value' => $entry->clientCompanyId,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'mailerName',
+						'label' => 'Mailer',
+						'type' => 'text',
+						'value' => $entry->mailerName,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'listName',
+						'label' => 'List Name',
+						'type' => 'text',
+						'value' => $entry->listName,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'clientPoNum',
+						'label' => 'Client PO #',
+						'type' => 'text',
+						'value' => $entry->clientPoNum,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'orderType',
+						'label' => 'Order Type',
+						'type' => 'radio',
+						'choices' => array(
+							't' => 'Test',
+							'c' => 'Continuation',
+						),
+						'value' => $entry->orderType,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'orderDate',
+						'label' => 'Order Date',
+						'type' => 'text',
+						'value' => $entry->orderDate,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'mailDate',
+						'label' => 'Mail Date',
+						'type' => 'text',
+						'value' => $entry->mailDate,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'qty',
+						'label' => 'Quantity',
+						'type' => 'number',
+						'value' => $entry->qty,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'invoiceNum',
+						'label' => 'Invoice Number',
+						'type' => 'text',
+						'value' => $entry->invoiceNum,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'invoiceAmount',
+						'label' => 'Invoice Amount',
+						'type' => 'currency',
+						'required' => true,
+						'value' => $entry->invoiceAmount,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'ledgerMonth',
+						'label' => 'Ledger Month',
+						'type' => 'select',
+						'choices' => $ledgerMonths,
+						'value' => $ledgerMonth->format( 'Ym' ),
+						'readonly' => true,
+					),
+					array(
+						'id' => 'paymentDate',
+						'label' => 'Date Paid',
+						'type' => 'text',
+						'value' => $entry->paymentDate,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'paymentMethod',
+						'label' => 'Payment Method',
+						'type' => 'text',
+						'value' => $entry->paymentMethod,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'paymentAmount',
+						'label' => 'Payment Amount',
+						'type' => 'currency',
+						'required' => true,
+						'value' => $entry->paymentAmount,
+						'readonly' => true,
+					),
+
+					array(
+						'type' => '_divider',
+					),
+
+					array(
+						'id' => 'vendorCompanyId',
+						'label' => 'Vendor',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a vendor',
+						'choices' => $leads->getDivisionCompanies( 4, $entry->vendorCompanyId ),
+						'value' => $entry->vendorCompanyId,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'ourPoNum',
+						'label' => 'QM PO #',
+						'type' => 'text',
+						'value' => $entry->ourPoNum,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'loInvoiceNum',
+						'label' => 'LO Invoice #',
+						'type' => 'text',
+						'value' => $entry->loInvoiceNum,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'loInvoiceAmount',
+						'label' => 'LO Amount',
+						'type' => 'currency',
+						'required' => true,
+						'value' => $entry->loInvoiceAmount,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'loPaymentDate',
+						'label' => 'Date Paid',
+						'type' => 'text',
+						'value' => $entry->loPaymentDate,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'loPaymentMethod',
+						'label' => 'Payment Method',
+						'type' => 'text',
+						'value' => $entry->loPaymentMethod,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'loPaymentAmount',
+						'label' => 'Payment Amount',
+						'type' => 'currency',
+						'required' => true,
+						'value' => $entry->loPaymentAmount,
+						'readonly' => true,
+					),
+
+					array(
+						'type' => '_divider',
+					),
+
+					array(
+						'id' => 'userId',
+						'label' => 'Salesperson',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a salesperson',
+						'choices' => $leads->getStaffUsers(),
+						'value' => $entry->userId,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionDate',
+						'label' => 'Commission Date',
+						'type' => 'text',
+						'value' => $entry->commissionDate,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionAmount',
+						'label' => 'Commission Amt',
+						'type' => 'currency',
+						'value' => $entry->commissionAmount,
+						'readonly' => true,
+					),
+
+					array(
+						'id' => 'a',
+						'type' => 'hidden',
+						'value' => 'deleteOfflineLedger',
+					),
+					array(
+						'id' => 'ledgerId',
+						'type' => 'hidden',
+						'value' => $ledgerId,
+					),
+				);
+
+				Display::displayForm( 'delete_offlineledger', $fields );
+
+			}
+
+		break;
+
 		case "editOfflineLedger":
 			$ledgerId = !empty( $_REQUEST['ledgerId'] ) ? $_REQUEST['ledgerId'] : '';
 			$entry = $leads->getOfflineLedgerById( $ledgerId );
@@ -904,7 +1169,17 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-			<td class="text-center" rowspan="2" style="vertical-align: middle;"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
+			<td class="text-center" rowspan="2" style="vertical-align: middle;">
+<div class="btn-group">
+	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+	<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		<span class="caret"></span>
+		<span class="sr-only">Toggle Dropdown</span>
+	</button>
+	<ul class="dropdown-menu">
+		<li><a href="#" data-toggle="modal" data-target="#deleteofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
+	</ul>
+</div></td>
 <?php } ?>
 		</tr>
 		<tr>
@@ -936,7 +1211,7 @@ include(INCLUDES."c_header.php");
 <script type="text/javascript">
 /*
 $('.ledger-sort').each(function() { console.log($(this).attr('id'));
-    var tf = new TableFilter($(this).attr('id'), {
+	var tf = new TableFilter($(this).attr('id'), {
 		base_path: '/leadadmin/libraries/tablefilter/',
 		grid: false,
 		filters_row_index: 1,

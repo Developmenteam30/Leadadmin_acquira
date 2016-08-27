@@ -69,6 +69,23 @@
 	</div>
 </div>
 
+<div class="modal fade" id="deleteofflineledger" tabindex="-1" role="dialog" aria-labelledby="deleteofflineledger_title">
+  <div class="modal-dialog" role="document">
+	<div class="modal-content">
+	  <div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		<h4 class="modal-title" id="deleteofflineledger_title">Delete a ledger entry</h4>
+	  </div>
+	  <div class="modal-body">
+	  </div>
+	  <div class="modal-footer">
+		<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		<button id="modal-deleteofflineledger" type="button" class="btn btn-primary">Delete</button>
+	  </div>
+	</div>
+  </div>
+</div>
+
 <div class="modal fade" id="editofflineledger" tabindex="-1" role="dialog" aria-labelledby="editofflineledger_title">
   <div class="modal-dialog" role="document">
 	<div class="modal-content">
@@ -222,6 +239,41 @@ $('#newofflineledger').on('show.bs.modal', function(e) {
 		data: {
 			'd': 'newOfflineLedger',
 			'type': '<?php echo $type; ?>'
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-deleteofflineledger').click( function(event) {
+	event.preventDefault();
+
+	var response = $.ajax({
+		url: "offline.php",
+		type: "POST",
+		async: true,
+		data: $("#delete_offlineledger").serialize()
+	}).done(function(result){
+		if(result.status == 1){
+			window.location.reload(true);
+		} else {
+			alert(result.error);
+		}
+	});
+});
+
+$('#deleteofflineledger').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var ledgerId = $(e.relatedTarget).data('ledger-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'offline.php',
+		data: {
+			'd': 'deleteOfflineLedger',
+			'ledgerId': ledgerId
 		},
 		success: function(data) {
 			modal.find('.modal-body').html(data);

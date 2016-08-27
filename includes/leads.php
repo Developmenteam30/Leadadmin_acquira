@@ -110,6 +110,10 @@ class Leads
 		return null;
 	}
 
+	public function setBufferedQuery() {
+		$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
+	}
+
 	public function lockTables( $tables ) {
 		if( !empty( $tables ) ) {
 			try {
@@ -390,6 +394,19 @@ class Leads
 			$query->execute( array( $ledgerId ) );
 		} catch( Leads_PDOException $e ) {
 			$this->logError( 'Unable to delete ledger entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return true;
+	}
+
+	public function deleteOfflineLedger( $ledgerId ) {
+
+		try {
+			$query = $this->db->prepare( "DELETE FROM ledger_offline WHERE ledgerId = ?" );
+			$query->execute( array( $ledgerId ) );
+		} catch( Leads_PDOException $e ) {
+			$this->logError( 'Unable to delete offline ledger entry: ' . $pdoException->getMessage() );
 			return null;
 		}
 
@@ -2804,7 +2821,7 @@ class Leads
 				$query .= "LIMIT " . intval( $settings['limit'] );
 			}
 
-			$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
+			$this->setBufferedQuery();
 
 			$result['query'] = $query;
 			$query = $this->db->Prepare( $query );
@@ -2845,7 +2862,7 @@ class Leads
 
 		try {
 
-			$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
+			$this->setBufferedQuery();
 
 			$fields = array();
 
@@ -2876,7 +2893,7 @@ class Leads
 
 		try {
 
-			$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
+			$this->setBufferedQuery();
 
 			$fields = array();
 
@@ -2897,7 +2914,7 @@ class Leads
 
 		try {
 
-			$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
+			$this->setBufferedQuery();
 
 			$query = $this->db->prepare( $sql );
 			$query->execute( $fields );
@@ -3084,6 +3101,34 @@ class Leads
 		}
 
 		return null;
+	}
+
+	public function checkOutboundRecordExists( $idRecord, $idFeedIn, $idFeedOut ) {
+		try {
+			$query = $this->db->prepare( "SELECT 1 FROM data_outbound WHERE idRecord = ? AND idFeedIn = ? AND idFeedOut = ?" );
+			$query->execute( array( $idRecord, $idFeedIn, $idFeedOut ) );
+			if( $query && $query->fetchColumn() ) {
+				return true;
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound record exists results: ' . $e->getMessage() );
+			return null;
+		}
+
+		try {
+			$query = $this->db->prepare( "SELECT 1 FROM archive.data_outbound_201608 WHERE idRecord = ? AND idFeedIn = ? AND idFeedOut = ?" );
+			$query->execute( array( $idRecord, $idFeedIn, $idFeedOut ) );
+			if( $query && $query->fetchColumn() ) {
+				return true;
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound record archive exists results: ' . $e->getMessage() );
+			return null;
+		}
+
+		return false;
 	}
 
 	public function getOutboundRecord( $idRecord, $idFeedOut, $processed = null ) {
