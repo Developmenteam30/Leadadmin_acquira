@@ -23,7 +23,7 @@ class LeadsSession
 		$_SESSION['level'] = intval( $level );
 		$_SESSION['idCompany'] = intval( $idCompany );
 
-		session_write_close();
+		//session_write_close();
 
 		$leads = Leads::getInstance();
 		$leads->auditLog( 'LOGIN', null );
@@ -44,7 +44,7 @@ class LeadsSession
 		session_unset();
 		session_destroy();
 		$_SESSION = array();
-		session_write_close();
+		//session_write_close();
 	}
 
 	public static function getCompanyId() {
@@ -55,7 +55,7 @@ class LeadsSession
 			return null;
 		}
 
-		session_write_close();
+		//session_write_close();
 		return $_SESSION['idCompany'];
 	}
 
@@ -63,11 +63,11 @@ class LeadsSession
 		LeadsSession::start();
 
 		if( empty( $_SESSION['userId'] ) ) {
-			session_write_close();
+			//session_write_close();
 			return null;
 		}
 
-		session_write_close();
+		//session_write_close();
 		return $_SESSION['userId'];
 	}
 
@@ -75,16 +75,16 @@ class LeadsSession
 		LeadsSession::start();
 
 		if( empty( $_SESSION['level'] ) ) {
-			session_write_close();
+			//session_write_close();
 			return false;
 		}
 
 		if( intval( $_SESSION['level'] ) < $level ) {
-			session_write_close();
+			//session_write_close();
 			return false;
 		}
 
-		session_write_close();
+		//session_write_close();
 		return true;
 	}
 
@@ -99,7 +99,7 @@ class LeadsSession
 			return LeadsSession::deny();
 		}
 
-		session_write_close();
+		//session_write_close();
 	}
 
 	private static function start() {
@@ -109,8 +109,8 @@ class LeadsSession
 	}
 
 	private static function deny() {
-    
-		session_write_close(); 
+
+		//session_write_close();
 
 		if( isset( $_REQUEST['a'] ) ) {
 
@@ -125,10 +125,10 @@ class LeadsSession
 			exit;
 
 		} else {
-        
+
 			header("Location: /leadadmin/");
 			exit;
-    
+
 		}
 
 	}
