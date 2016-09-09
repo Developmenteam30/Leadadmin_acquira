@@ -96,7 +96,7 @@ if(isset($_REQUEST['a'])){
 				) );
 				if( null === $idCompany ) {
 					$c = false;
-					$result['error'] = $newCompanyResult['error'];
+					$result['error'] = 'Error adding this company to the database.';
 				} else {
 					$leads->auditLog( 'COMPANIES:ADD', $idCompany );
 					$leads->clearCompanyDivisions( $idCompany );

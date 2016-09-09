@@ -100,8 +100,9 @@ class Display
 				print '<div class="checkbox-choices">';
 				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
 					foreach( $field['choices'] as $key => $val ) {
-						printf( "\t<input class=\"form-control\" type=\"checkbox\" name=\"%s[]\" value=\"%s\"%s /> %s%s\n",
+						printf( "\t<input class=\"form-control\" type=\"checkbox\" name=\"%s%s\" value=\"%s\"%s /> %s%s\n",
 							htmlspecialchars( $field['id'] ),
+							( sizeOf( $field['choices'] ) > 1 ? '[]' : '' ),
 							htmlspecialchars( $key ),
 							( !empty( $field['value'][$key] ) ? ' checked="checked"' : '' ),
 							htmlspecialchars( $val ),

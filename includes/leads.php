@@ -669,6 +669,109 @@ class Leads
 		return $results;
 	}
 
+	public function addOpportunity( $fields ) {
+
+		$opportunityId = null;
+
+		try {
+			$opportunityId = $this->insertRow( 'opportunities', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add opportunity: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $opportunityId;
+	}
+
+	public function updateOpportunity( $opportunityId, $fields ) {
+
+		try {
+			$status = $this->update( 'opportunities', $fields, array(
+				'opportunityId' => $opportunityId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update opportunity: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
+	public function getOpportunities( $status = null ) {
+		$results = array();
+		$params = array();
+
+		try {
+			$sql  = "SELECT o.*,c.name AS companyName,d.name AS divisionName,u.fullName,MAX(timestamp) AS lastDate ";
+			$sql .= "FROM opportunities o ";
+			$sql .= "LEFT JOIN companies c ON o.companyId = c.idCompany ";
+			$sql .= "LEFT JOIN users u ON o.userId = u.idUser ";
+			$sql .= "LEFT JOIN divisions d ON o.divisionId = d.divisionId ";
+			$sql .= "LEFT JOIN opportunities_notes n ON o.opportunityId = n.opportunityId ";
+			$sql .= "WHERE 1=1 ";
+			if( !empty( $status ) ) {
+				$sql .= "AND o.status = ? ";
+				$params[] = $status;
+			}
+			$sql .= "GROUP BY o.opportunityId ";
+			$sql .= "ORDER BY o.opportunityId DESC";
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get opportunity list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getOpportunity( $opportunityId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM opportunities WHERE opportunityId = ?" );
+			$query->execute( array( $opportunityId ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get opportunity info: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function addOpportunityNote( $fields ) {
+
+		$noteId = null;
+
+		try {
+			$noteId = $this->insertRow( 'opportunities_notes', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add opportunity note: ' . $pdoException->getMessage() );
+			return false;
+		}
+
+		return $noteId;
+	}
+
+	public function getOpportunityNotes( $opportunityId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT n.*,u.fullName FROM opportunities_notes n LEFT JOIN users u ON n.userId = u.idUser WHERE opportunityId = ? ORDER BY timestamp DESC" );
+			$query->execute( array( $opportunityId ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get opportunity notes: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function addCompany( $fields ) {
 
 		$companyId = null;

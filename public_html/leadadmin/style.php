@@ -122,6 +122,15 @@ table tr.bg-gray {
 	height: 75px !important;
 }
 
+#new_opportunity textarea {
+	height: 200px !important;
+}
+
+#note_opportunity textarea {
+	width: 75% !important;
+	height: 200px !important;
+}
+
 .form-input input[type='text'],
 .form-input select {
 	font-family: Verdana, Helvetica, sans-serif;
