@@ -58,6 +58,18 @@ if(isset($_REQUEST['a'])){
 			}
 
 			if($c){
+				$isPublisher = false;
+				$isAdvertiser = false;
+				if( !empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
+					foreach( $_REQUEST['companyType'] as $key => $val ) {
+						if( 'isPublisher' === $val ) {
+							$isPublisher = true;
+						} else if( 'isAdvertiser' === $val ) {
+							$isAdvertiser = true;
+						}
+					}
+				}
+
 				$idCompany = $leads->addCompany( array(
 					'name' => trim( $_REQUEST['name'] ),
 					'note' => empty( $_REQUEST['note'] ) ? null : trim( $_REQUEST['note'] ),
@@ -79,6 +91,8 @@ if(isset($_REQUEST['a'])){
 					'tech_phone' => empty( $_REQUEST['tech_phone'] ) ? null : trim( $_REQUEST['tech_phone'] ),
 					'tech_email' => empty( $_REQUEST['tech_email'] ) ? null : trim( $_REQUEST['tech_email'] ),
 					'accountManager' => empty( $_REQUEST['accountManager'] ) ? null : $_REQUEST['accountManager'],
+					'isPublisher' => $isPublisher ? 1 : 0,
+					'isAdvertiser' => $isAdvertiser ? 1 : 0,
 				) );
 				if( null === $idCompany ) {
 					$c = false;
@@ -142,6 +156,18 @@ if(isset($_REQUEST['a'])){
 			}
 
 			if($c){
+				$isPublisher = false;
+				$isAdvertiser = false;
+				if( !empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
+					foreach( $_REQUEST['companyType'] as $key => $val ) {
+						if( 'isPublisher' === $val ) {
+							$isPublisher = true;
+						} else if( 'isAdvertiser' === $val ) {
+							$isAdvertiser = true;
+						}
+					}
+				}
+
 				$alterCompanyResult = $leads->updateCompany( $_REQUEST['idCompany'], array(
 					'name' => trim( $_REQUEST['name'] ),
 					'note' => empty( $_REQUEST['note'] ) ? null : trim( $_REQUEST['note'] ),
@@ -164,6 +190,8 @@ if(isset($_REQUEST['a'])){
 					'tech_email' => empty( $_REQUEST['tech_email'] ) ? null : trim( $_REQUEST['tech_email'] ),
 					'accountManager' => empty( $_REQUEST['accountManager'] ) ? null : $_REQUEST['accountManager'],
 					'status' => empty( $_REQUEST['status'] ) ? null : $_REQUEST['status'],
+					'isPublisher' => $isPublisher ? 1 : 0,
+					'isAdvertiser' => $isAdvertiser ? 1 : 0,
 				) );
 
 				if($alterCompanyResult === false){
@@ -178,6 +206,7 @@ if(isset($_REQUEST['a'])){
 						}
 					}
 				}
+
 			}
 
 			if($c){
@@ -285,6 +314,16 @@ if(isset($_REQUEST['d'])){
 					'id' => 'url',
 					'label' => 'Web Site',
 					'type' => 'url',
+				),
+				array(
+					'id' => 'companyType',
+					'label' => 'Company Type',
+					'type' => 'checkbox',
+					'choices' => array(
+						'isPublisher' => 'Publisher / Affiliate',
+						'isAdvertiser' => 'Advertister',
+					),
+					'choice_append' => '<br/>',
 				),
 				array(
 					'id' => 'accountManager',
@@ -510,6 +549,20 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Web Site',
 					'type' => 'url',
 					'value' => $company->url,
+				),
+				array(
+					'id' => 'companyType',
+					'label' => 'Company Type',
+					'type' => 'checkbox',
+					'choices' => array(
+						'isPublisher' => 'Publisher / Affiliate',
+						'isAdvertiser' => 'Advertister',
+					),
+					'choice_append' => '<br/>',
+					'value' => array(
+						'isPublisher' => !empty( $company->isPublisher ) ? true : false,
+						'isAdvertiser' => !empty( $company->isAdvertiser ) ? true : false,
+					),
 				),
 				array(
 					'id' => 'accountManager',
