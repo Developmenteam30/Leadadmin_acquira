@@ -607,11 +607,11 @@ include(INCLUDES."c_header.php");
 			<td class="hidden-xs"><?php echo htmlentities( $opportunity->products ); ?></td>
 			<td>$<?php echo number_format( $opportunity->revenue, 2 ); ?></td>
 			<td>$<?php echo number_format( $opportunity->expense, 2 ); ?></td>
-			<td><?php echo number_format( $opportunity->startQty, 2 ); ?></td>
+			<td><?php echo number_format( $opportunity->startQty, 0 ); ?></td>
 			<td>$<?php echo number_format( $opportunity->startQty * $opportunity->revenue, 2 ); ?></td>
 			<td>$<?php echo number_format( $opportunity->startQty * $opportunity->expense, 2 ); ?></td>
 			<td>$<?php echo number_format( ( $opportunity->startQty * $opportunity->revenue ) - ( $opportunity->startQty * $opportunity->expense ), 2 ); ?></td>
-			<td><?php echo number_format( $opportunity->goalQty, 2 ); ?></td>
+			<td><?php echo number_format( $opportunity->goalQty, 0 ); ?></td>
 			<td>$<?php echo number_format( $opportunity->goalQty * $opportunity->revenue, 2 ); ?></td>
 			<td>$<?php echo number_format( $opportunity->goalQty * $opportunity->expense, 2 ); ?></td>
 			<td>$<?php echo number_format( ( $opportunity->goalQty * $opportunity->revenue ) - ( $opportunity->goalQty * $opportunity->expense ), 2 ); ?></td>
