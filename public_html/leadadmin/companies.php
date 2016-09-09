@@ -105,6 +105,12 @@ if(isset($_REQUEST['a'])){
 							$leads->addCompanyDivision( $idCompany, $division );
 						}
 					}
+					$leads->clearCompanyVerticals( $idCompany );
+					if( !empty( $_REQUEST['verticals'] ) && is_array( $_REQUEST['verticals'] ) ) {
+						foreach( $_REQUEST['verticals'] as $vertical ) {
+							$leads->addCompanyVertical( $idCompany, $vertical );
+						}
+					}
 				}
 			}
 
@@ -205,6 +211,12 @@ if(isset($_REQUEST['a'])){
 							$leads->addCompanyDivision( $_REQUEST['idCompany'], $division );
 						}
 					}
+					$leads->clearCompanyVerticals( $_REQUEST['idCompany'] );
+					if( !empty( $_REQUEST['verticals'] ) && is_array( $_REQUEST['verticals'] ) ) {
+						foreach( $_REQUEST['verticals'] as $vertical ) {
+							$leads->addCompanyVertical( $_REQUEST['idCompany'], $vertical );
+						}
+					}
 				}
 
 			}
@@ -230,6 +242,14 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case "dialog_newcompany":
+
+			$verticals = array();
+			$db_divisions = $leads->getDivisions();
+			foreach( $db_divisions as $key => $val ) {
+				$db_verticals = $leads->getDivisionVerticals( $key );
+				$verticals[$val] = $db_verticals;
+			}
+
 			$fields = array(
 				array(
 					'id' => 'name',
@@ -345,6 +365,15 @@ if(isset($_REQUEST['d'])){
 					'choice_append' => '<br/>',
 				),
 				array(
+					'id' => 'verticals',
+					'label' => 'Verticals',
+					'type' => 'select',
+					'multiple' => true,
+					'placeholder' => false,
+					'choices' => $verticals,
+					'choice_append' => '<br/>',
+				),
+				array(
 					'type' => '_header',
 					'label' => 'Main Contact',
 				),
@@ -441,10 +470,23 @@ if(isset($_REQUEST['d'])){
 <?php
 			} else {
 
+				$verticals = array();
+				$db_divisions = $leads->getDivisions();
+				foreach( $db_divisions as $key => $val ) {
+					$db_verticals = $leads->getDivisionVerticals( $key );
+					$verticals[$val] = $db_verticals;
+				}
+
 				$set_divisions = array();
 				$db_divisions = $leads->getCompanyDivisions( $company->idCompany );
 				foreach( $db_divisions as $division ) {
 					$set_divisions[$division->divisionId] = true;
+				}
+
+				$set_verticals = array();
+				$db_verticals = $leads->getCompanyVerticals( $company->idCompany );
+				foreach( $db_verticals as $vertical ) {
+					$set_verticals[$vertical->verticalId] = true;
 				}
 
 			$fields = array(
@@ -585,6 +627,16 @@ if(isset($_REQUEST['d'])){
 					'choices' => $divisions,
 					'choice_append' => '<br/>',
 					'value' => $set_divisions,
+				),
+				array(
+					'id' => 'verticals',
+					'label' => 'Verticals',
+					'type' => 'select',
+					'multiple' => true,
+					'placeholder' => false,
+					'choices' => $verticals,
+					'choice_append' => '<br/>',
+					'value' => $set_verticals,
 				),
 				array(
 					'type' => '_header',

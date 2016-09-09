@@ -846,6 +846,40 @@ class Leads
 		return $results;
 	}
 
+	public function getCompanyVerticals( $companyId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT verticalId FROM companies_verticals WHERE companyId = ?" );
+			$query->execute( array( $companyId ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company vertical list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function addCompanyVertical( $companyId, $verticalId ) {
+		try {
+			$query = $this->db->prepare( "REPLACE INTO companies_verticals(companyId, verticalId) VALUES(?, ?)" );
+			$query->execute( array( $companyId, $verticalId ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to add company vertical mapping: ' . $e->getMessage() );
+			return;
+		}
+	}
+
+	public function clearCompanyVerticals( $companyId ) {
+		try {
+			$query = $this->db->prepare( "DELETE FROM companies_verticals WHERE companyId = ?" );
+			$query->execute( array( $companyId ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to clear company verticals: ' . $e->getMessage() );
+			return;
+		}
+	}
+
 	public function addCompanyDivision( $companyId, $divisionId ) {
 		try {
 			$query = $this->db->prepare( "REPLACE INTO companies_divisions(companyId, divisionId) VALUES(?, ?)" );
