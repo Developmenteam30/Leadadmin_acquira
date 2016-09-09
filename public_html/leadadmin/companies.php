@@ -397,6 +397,14 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Returns Contact',
 				),
 				array(
+					'id' => 'returns_copy',
+					'label' => '',
+					'type' => 'checkbox',
+					'choices' => array(
+						'1' => 'Copy info from Main Contact',
+					),
+				),
+				array(
 					'id' => 'returns_name',
 					'label' => 'Name',
 					'type' => 'text',
@@ -416,6 +424,14 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Accounting Contact',
 				),
 				array(
+					'id' => 'acct_copy',
+					'label' => '',
+					'type' => 'checkbox',
+					'choices' => array(
+						'1' => 'Copy info from Main Contact',
+					),
+				),
+				array(
 					'id' => 'acct_name',
 					'label' => 'Name',
 					'type' => 'text',
@@ -433,6 +449,14 @@ if(isset($_REQUEST['d'])){
 				array(
 					'type' => '_header',
 					'label' => 'Technical Contact',
+				),
+				array(
+					'id' => 'tech_copy',
+					'label' => '',
+					'type' => 'checkbox',
+					'choices' => array(
+						'1' => 'Copy info from Main Contact',
+					),
 				),
 				array(
 					'id' => 'tech_name',
@@ -457,6 +481,26 @@ if(isset($_REQUEST['d'])){
 			);
 
 			Display::displayForm( 'new_company', $fields );
+
+?>
+<script type="text/javascript">
+$('input[name="returns_copy"]').click(function(event) {
+	$('#returns_name').val( $('#main_name').val() );
+	$('#returns_phone').val( $('#main_phone').val() );
+	$('#returns_email').val( $('#main_email').val() );
+});
+$('input[name="acct_copy"]').click(function(event) {
+	$('#acct_name').val( $('#main_name').val() );
+	$('#acct_phone').val( $('#main_phone').val() );
+	$('#acct_email').val( $('#main_email').val() );
+});
+$('input[name="tech_copy"]').click(function(event) {
+	$('#tech_name').val( $('#main_name').val() );
+	$('#tech_phone').val( $('#main_phone').val() );
+	$('#tech_email').val( $('#main_email').val() );
+});
+</script>
+<?php
 
 		break;
 
@@ -665,6 +709,14 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Returns Contact',
 				),
 				array(
+					'id' => 'returns_copy',
+					'label' => '',
+					'type' => 'checkbox',
+					'choices' => array(
+						'1' => 'Copy info from Main Contact',
+					),
+				),
+				array(
 					'id' => 'returns_name',
 					'label' => 'Name',
 					'type' => 'text',
@@ -687,6 +739,14 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Accounting Contact',
 				),
 				array(
+					'id' => 'acct_copy',
+					'label' => '',
+					'type' => 'checkbox',
+					'choices' => array(
+						'1' => 'Copy info from Main Contact',
+					),
+				),
+				array(
 					'id' => 'acct_name',
 					'label' => 'Name',
 					'type' => 'text',
@@ -707,6 +767,14 @@ if(isset($_REQUEST['d'])){
 				array(
 					'type' => '_header',
 					'label' => 'Technical Contact',
+				),
+				array(
+					'id' => 'tech_copy',
+					'label' => '',
+					'type' => 'checkbox',
+					'choices' => array(
+						'1' => 'Copy info from Main Contact',
+					),
 				),
 				array(
 					'id' => 'tech_name',
@@ -739,6 +807,26 @@ if(isset($_REQUEST['d'])){
 			);
 
 			Display::displayForm( 'edit_company', $fields );
+
+?>
+<script type="text/javascript">
+$('input[name="returns_copy"]').click(function(event) {
+	$('#returns_name').val( $('#main_name').val() );
+	$('#returns_phone').val( $('#main_phone').val() );
+	$('#returns_email').val( $('#main_email').val() );
+});
+$('input[name="acct_copy"]').click(function(event) {
+	$('#acct_name').val( $('#main_name').val() );
+	$('#acct_phone').val( $('#main_phone').val() );
+	$('#acct_email').val( $('#main_email').val() );
+});
+$('input[name="tech_copy"]').click(function(event) {
+	$('#tech_name').val( $('#main_name').val() );
+	$('#tech_phone').val( $('#main_phone').val() );
+	$('#tech_email').val( $('#main_email').val() );
+});
+</script>
+<?php
 
 			}
 		break;
