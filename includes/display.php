@@ -150,25 +150,57 @@ class Display
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
-				printf( "\t<select class=\"form-control\" name=\"%s\" id=\"%s\"%s>\n",
+				printf( "\t<select class=\"form-control\" name=\"%s%s\" id=\"%s\"%s%s>\n",
 					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					( !empty( $field['multiple'] ) ? '[]' : '' ),
 					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					( !empty( $field['readonly'] ) ? ' readonly' : '' )
+					( !empty( $field['readonly'] ) ? ' readonly' : '' ),
+					( !empty( $field['multiple'] ) ? ' multiple' : '' )
 				);
-				if( !empty( $field['placeholder'] ) ) {
-					printf( "\t\t<option disabled=\"disabled\"%s value=\"\">%s</option>\n",
-						empty( $field['value'] ) ? ' selected="selected"' : '',
-						htmlentities( $field['placeholder'] )
-					);
+				if( isset( $field['placeholder'] ) ) {
+					if( !empty( $field['placeholder'] ) ) {
+						printf( "\t\t<option disabled=\"disabled\"%s value=\"\">%s</option>\n",
+							empty( $field['value'] ) ? ' selected="selected"' : '',
+							htmlentities( $field['placeholder'] )
+						);
+					}
 				} else {
 					printf( "\t\t<option value=\"\"></option>\n" );
 				}
-				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
-					foreach( $field['choices'] as $key => $val ) {
+				foreach( $field['choices'] as $key => $val ) {
+					if( is_array( $val ) ) {
+						printf( "\t\t<optgroup label=\"%s\">\n",
+							htmlentities( $key, ENT_QUOTES | ENT_HTML5 )
+						);
+						foreach( $val as $rec_key => $rec_val ) {
+							$selected = false;
+							if( is_array( $field['value'] ) ) {
+								if( array_key_exists( $rec_key, $field['value'] ) ) {
+									$selected = true;
+								}
+							} else if( !empty( $field['value'] ) && $rec_key == $field['value'] ) {
+								$selected = true;
+							}
+							printf( "\t\t\t<option value=\"%s\"%s>%s</option>\n",
+								htmlentities( $rec_key, ENT_QUOTES | ENT_HTML5 ),
+								$selected ? ' selected="selected"' : '',
+								htmlentities( $rec_val, ENT_HTML5 )
+							);
+						}
+						print "\t\t</optgroup>\n";
+					} else {
+						$selected = false;
+						if( is_array( $field['value'] ) ) {
+							if( array_key_exists( $key, $field['value'] ) ) {
+								$selected = true;
+							}
+						} else if( !empty( $field['value'] ) && $key == $field['value'] ) {
+							$selected = true;
+						}
 						printf( "\t\t<option value=\"%s\"%s>%s</option>\n",
-							htmlspecialchars( $key, ENT_QUOTES | ENT_HTML5 ),
-							( isset( $field['value'] ) && $key == $field['value'] ? ' selected="selected"' : '' ),
-							htmlentities( $val )
+							htmlentities( $key, ENT_QUOTES | ENT_HTML5 ),
+							$selected ? ' selected="selected"' : '',
+							htmlentities( $val, ENT_HTML5 )
 						);
 					}
 				}
