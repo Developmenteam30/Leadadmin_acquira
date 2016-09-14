@@ -435,7 +435,7 @@ if(isset($_REQUEST['d'])){
 ?>
 
 <script type="text/javascript">
-$('#newledger input[name=paymentDate], #newledger input[name=comissionDate]').datepicker({
+$('#newledger input[name=paymentDate], #newledger input[name=commissionDate]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
