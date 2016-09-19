@@ -184,7 +184,7 @@ if(isset($_REQUEST['a'])){
 						}
 					}
 
-					$dbResult = $leads->updateOutboundFeed( $idFeedOut, array(
+					$fields = array(
 						'label' => $_REQUEST['label'],
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
 						'idCompany' => $_REQUEST['idCompany'],
@@ -198,7 +198,23 @@ if(isset($_REQUEST['a'])){
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
-					) );
+					);
+
+					// For retired feeds, automatically turn off cron processing and set all populations as disabled
+					if( 'retired' == $_REQUEST['status'] ) {
+						$fields['cron'] = 0;
+
+						$populations = $leads->getPopulations( $idFeedOut );
+						if( !empty( $populations ) && is_array( $populations ) ) {
+							foreach( $populations as $population ) {
+								if( $population->enabled ) {
+									$leads->updatePopulation( $population->idAssoc, array( 'enabled' => 0 ) );
+								}
+							}
+						}
+					}
+
+					$dbResult = $leads->updateOutboundFeed( $idFeedOut, $fields );
 
 					if( null === $dbResult ) {
 						$c = false;
