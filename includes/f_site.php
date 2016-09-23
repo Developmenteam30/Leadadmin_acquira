@@ -14,6 +14,16 @@ $incomingAdditionalRequirementSettings = array(
 	'phone'
 );
 
+$crmStatuses = array(
+	'cold' => 'Cold',
+	'prospecting' => 'Prospecting',
+	'negotiating' => 'Negotiating',
+	'intheworks' => 'In The Works',
+	'live' => 'Live',
+	'paused' => 'Paused',
+	'retired' => 'Retired',
+);
+
 //Utility Functions//
 function hex2rgb($hex) { //Converts a hex color code to rgb color code for css.
    $hex = str_replace("#", "", $hex);

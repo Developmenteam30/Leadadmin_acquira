@@ -3,6 +3,7 @@
 include("../../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
+require_once( INCLUDES . 'f_site.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 
 require_once( INCLUDES . 'leads.php' );
@@ -290,15 +291,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Status',
 					'type' => 'select',
 					'placeholder' => 'Select a status',
-					'choices' => array(
-						'cold' => 'Cold',
-						'prospecting' => 'Prospecting',
-						'negotiating' => 'Negotiating',
-						'intheworks' => 'In The Works',
-						'live' => 'Live',
-						'paused' => 'Paused',
-						'retired' => 'Retired',
-					),
+					'choices' => $crmStatuses,
 				),
 				array(
 					'id' => 'companyId',
@@ -394,15 +387,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Status',
 					'type' => 'select',
 					'placeholder' => 'Select a status',
-					'choices' => array(
-						'cold' => 'Cold',
-						'prospecting' => 'Prospecting',
-						'negotiating' => 'Negotiating',
-						'intheworks' => 'In The Works',
-						'live' => 'Live',
-						'paused' => 'Paused',
-						'retired' => 'Retired',
-					),
+					'choices' => $crmStatuses,
 					'value' => $opportunity->status,
 				),
 				array(
@@ -549,13 +534,16 @@ include(INCLUDES."c_header.php");
 <form class="pull-right" id="status-select" method="get">
 <select id="status" name="status">
 	<option value=""<?php if( null === $status ) { print ' selected="selected"'; } ?>>Show all opportunities</option>
-	<option value="cold"<?php if( 'cold' === $status ) { print ' selected="selected"'; } ?>>Show cold opportunities</option>
-	<option value="prospecting"<?php if( 'prospecting' === $status ) { print ' selected="selected"'; } ?>>Show prospecting opportunities</option>
-	<option value="negotiating"<?php if( 'negotiating' === $status ) { print ' selected="selected"'; } ?>>Show negotiating opportunities</option>
-	<option value="intheworks"<?php if( 'intheworks' === $status ) { print ' selected="selected"'; } ?>>Show intheworks opportunities</option>
-	<option value="live"<?php if( 'live' === $status ) { print ' selected="selected"'; } ?>>Show live opportunities</option>
-	<option value="paused"<?php if( 'paused' === $status ) { print ' selected="selected"'; } ?>>Show paused opportunities</option>
-	<option value="retired"<?php if( 'retired' === $status ) { print ' selected="selected"'; } ?>>Show retired opportunities</option>
+	<option value="active"<?php if( 'active' === $status ) { print ' selected="selected"'; } ?>>Show active opportunities</option>
+<?php
+	foreach( $crmStatuses as $key => $val ) {
+		printf( '<option value="%s"%s>Show "%s" opportunities</option>' . PHP_EOL,
+			$key,
+			$status === $key ? ' selected="selected"' : "",
+			$val
+		);
+	}
+?>
 </select>
 </form>
 
@@ -602,7 +590,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $opportunity->divisionName ); ?></td>
 			<td class="hidden-xs"><?php echo htmlentities( $opportunity->affiliate ); ?></td>
 			<td class="hidden-xs"><?php echo htmlentities( $opportunity->fullName ); ?></td>
-			<td><?php echo htmlentities( $opportunity->status ); ?></td>
+			<td><?php echo htmlentities( $crmStatuses[$opportunity->status] ); ?></td>
 			<td><?php echo !empty( $opportunity->lastDate ) ? htmlentities( date( 'Y-m-d', strtotime( $opportunity->lastDate ) ) ) : ''; ?></td>
 			<td class="hidden-xs"><?php echo htmlentities( $opportunity->products ); ?></td>
 			<td>$<?php echo number_format( $opportunity->revenue, 2 ); ?></td>
