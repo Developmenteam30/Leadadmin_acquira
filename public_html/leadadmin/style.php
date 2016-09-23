@@ -301,6 +301,11 @@ div.navContainer, div.logoutContainer{
 
 div.logoContainer { width: 225px; }
 
+.crm-highlight {
+	color: #FF0000;
+	font-weight: bold;
+}
+
 @media (min-width: 768px) {
 	.modal-xl {
 		width: 90%;

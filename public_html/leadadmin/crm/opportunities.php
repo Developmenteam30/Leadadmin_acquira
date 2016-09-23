@@ -558,7 +558,7 @@ include(INCLUDES."c_header.php");
 	} else {
 ?>
 
-<table class="table table-bordered table-condensed table-striped">
+<table class="table table-bordered table-condensed table-striped" id="crm-opportunities">
 	<thead>
 		<tr class="bgGray header">
 			<th>Company</th>
@@ -595,11 +595,11 @@ include(INCLUDES."c_header.php");
 			<td class="hidden-xs"><?php echo htmlentities( $opportunity->products ); ?></td>
 			<td>$<?php echo number_format( $opportunity->revenue, 2 ); ?></td>
 			<td>$<?php echo number_format( $opportunity->expense, 2 ); ?></td>
-			<td><?php echo number_format( $opportunity->startQty, 0 ); ?></td>
-			<td>$<?php echo number_format( $opportunity->startQty * $opportunity->revenue, 2 ); ?></td>
-			<td>$<?php echo number_format( $opportunity->startQty * $opportunity->expense, 2 ); ?></td>
-			<td>$<?php echo number_format( ( $opportunity->startQty * $opportunity->revenue ) - ( $opportunity->startQty * $opportunity->expense ), 2 ); ?></td>
-			<td><?php echo number_format( $opportunity->goalQty, 0 ); ?></td>
+			<td class="crm-highlight" data-tf-sortKey="<?php echo number_format( $opportunity->startQty, 0, '', '' ); ?>"><?php echo number_format( $opportunity->startQty, 0 ); ?></td>
+			<td class="crm-highlight">$<?php echo number_format( $opportunity->startQty * $opportunity->revenue, 2 ); ?></td>
+			<td class="crm-highlight">$<?php echo number_format( $opportunity->startQty * $opportunity->expense, 2 ); ?></td>
+			<td class="crm-highlight">$<?php echo number_format( ( $opportunity->startQty * $opportunity->revenue ) - ( $opportunity->startQty * $opportunity->expense ), 2 ); ?></td>
+			<td data-tf-sortKey="<?php echo number_format( $opportunity->goalQty, 0, '', '' ); ?>"><?php echo number_format( $opportunity->goalQty, 0 ); ?></td>
 			<td>$<?php echo number_format( $opportunity->goalQty * $opportunity->revenue, 2 ); ?></td>
 			<td>$<?php echo number_format( $opportunity->goalQty * $opportunity->expense, 2 ); ?></td>
 			<td>$<?php echo number_format( ( $opportunity->goalQty * $opportunity->revenue ) - ( $opportunity->goalQty * $opportunity->expense ), 2 ); ?></td>
@@ -788,6 +788,40 @@ $('#newopportunity, #editopportunity, #opportunitynotes').on('hide.bs.modal', fu
 $('#status-select select').change(function(e) {
 	e.preventDefault();
 	$('#status-select').submit();
+});
+
+$('table').each(function() {
+	var tf = new TableFilter($(this).attr('id'), {
+		base_path: '/leadadmin/libraries/tablefilter/',
+		grid: false,
+		filters_row_index: 1,
+		extensions: [{
+			name: 'sort',
+			types: [
+				'String', // Company
+				'String', // Division
+				'String', // Affiliate
+				'String', // Salesperson
+				'String', // Status
+				'ymdddate', // Updated
+				'String', // Products
+				'us', // Rev
+				'us', // Exp
+				'Number', // Start Qty
+				'us', // Rev/Wk
+				'us', // Exp/Wk
+				'us', // GP/Wk
+				'Number', // Goal Qty
+				'us', // Rev/Wk
+				'us', // Exp/Wk
+				'us' // GP/Wk
+			],
+			image_asc_class_name: 'custom-ascending',
+			image_desc_class_name: 'custom-descending'
+		}],
+		sort: true
+	});
+	tf.init();
 });
 </script>
 
