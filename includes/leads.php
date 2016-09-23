@@ -712,7 +712,9 @@ class Leads
 			$sql .= "LEFT JOIN divisions d ON o.divisionId = d.divisionId ";
 			$sql .= "LEFT JOIN opportunities_notes n ON o.opportunityId = n.opportunityId ";
 			$sql .= "WHERE 1=1 ";
-			if( !empty( $status ) ) {
+			if( !empty( $status ) && 'active' == $status ) {
+				$sql .= "AND o.status != 'retired' ";
+			} else if( !empty( $status ) ) {
 				$sql .= "AND o.status = ? ";
 				$params[] = $status;
 			}

@@ -8,7 +8,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		array( 'name' => 'Companies', 'url' => '/leadadmin/companies.php?status=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Incoming Feeds', 'url' => '/leadadmin/mgr_feedinc.php?status=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Outgoing Feeds', 'url' => '/leadadmin/mgr_feedout.php?status=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
-		array( 'name' => 'CRM', 'url' => '/leadadmin/crm/opportunities.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+		array( 'name' => 'CRM', 'url' => '/leadadmin/crm/opportunities.php?status=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		//array( 'name' => 'CRM', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
 		//	array( 'name' => 'Opportunities', 'url' => '/leadadmin/crm/opportunities.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		//	array( 'name' => 'Search', 'url' => '/leadadmin/crm/search.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
