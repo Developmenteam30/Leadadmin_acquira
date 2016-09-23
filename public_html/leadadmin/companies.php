@@ -512,7 +512,7 @@ $('input[name="tech_copy"]').click(function(event) {
 $('#country').on('change',function(event) {
 	var country = $(this).val();
 	if(country != '236') {
-		$('#state').replaceWith('<input class="form-control" id="state" type="text" value="" />');
+		$('#state').replaceWith('<input class="form-control" id="state" name="state" type="text" value="" />');
 	}
 });
 </script>
@@ -852,7 +852,7 @@ $('input[name="tech_copy"]').click(function(event) {
 $('#country').on('change',function(event) {
 	var country = $(this).val();
 	if(country != '236') {
-		$('#state').replaceWith('<input class="form-control" id="state" type="text" value="" />');
+		$('#state').replaceWith('<input class="form-control" id="state" name="status" type="text" value="" />');
 	}
 });
 </script>
