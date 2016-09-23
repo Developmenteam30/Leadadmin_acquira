@@ -1033,6 +1033,20 @@ class Leads
 		return $results;
 	}
 
+	public function getCountries( $format = PDO::FETCH_KEY_PAIR ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT id,short_name FROM countries ORDER BY short_name" );
+			$query->execute( );
+			$results = $query->fetchAll( $format );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get country list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function addInboundFeed( $fields ) {
 
 		if( empty( $fields['label'] ) ) {

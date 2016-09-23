@@ -78,6 +78,7 @@ if(isset($_REQUEST['a'])){
 					'city' => empty( $_REQUEST['city'] ) ? null : trim( $_REQUEST['city'] ),
 					'state' => empty( $_REQUEST['state'] ) ? null : trim( $_REQUEST['state'] ),
 					'zipcode' => empty( $_REQUEST['zipcode'] ) ? null : trim( $_REQUEST['zipcode'] ),
+					'country' => empty( $_REQUEST['country'] ) ? null : trim( $_REQUEST['country'] ),
 					'main_name' => empty( $_REQUEST['main_name'] ) ? null : trim( $_REQUEST['main_name'] ),
 					'main_phone' => empty( $_REQUEST['main_phone'] ) ? null : trim( $_REQUEST['main_phone'] ),
 					'main_email' => empty( $_REQUEST['main_email'] ) ? null : trim( $_REQUEST['main_email'] ),
@@ -182,6 +183,7 @@ if(isset($_REQUEST['a'])){
 					'city' => empty( $_REQUEST['city'] ) ? null : trim( $_REQUEST['city'] ),
 					'state' => empty( $_REQUEST['state'] ) ? null : trim( $_REQUEST['state'] ),
 					'zipcode' => empty( $_REQUEST['zipcode'] ) ? null : trim( $_REQUEST['zipcode'] ),
+					'country' => empty( $_REQUEST['country'] ) ? null : trim( $_REQUEST['country'] ),
 					'main_name' => empty( $_REQUEST['main_name'] ) ? null : trim( $_REQUEST['main_name'] ),
 					'main_phone' => empty( $_REQUEST['main_phone'] ) ? null : trim( $_REQUEST['main_phone'] ),
 					'main_email' => empty( $_REQUEST['main_email'] ) ? null : trim( $_REQUEST['main_email'] ),
@@ -258,6 +260,14 @@ if(isset($_REQUEST['d'])){
 					'required' => true,
 				),
 				array(
+					'id' => 'country',
+					'label' => 'Country',
+					'type' => 'select',
+					'choices' => $leads->getCountries(),
+					'value' => 236,
+					'placeholder' => 'Select a country',
+				),
+				array(
 					'id' => 'address',
 					'label' => 'Address',
 					'type' => 'text',
@@ -269,7 +279,7 @@ if(isset($_REQUEST['d'])){
 				),
 				array(
 					'id' => 'state',
-					'label' => 'State',
+					'label' => 'State/Province',
 					'type' => 'select',
 					'choices' => array(
 						'AL' => 'Alabama',
@@ -327,8 +337,8 @@ if(isset($_REQUEST['d'])){
 				),
 				array(
 					'id' => 'zipcode',
-					'label' => 'Zip Code',
-					'type' => 'number',
+					'label' => 'Zip/Postal Code',
+					'type' => 'text',
 				),
 				array(
 					'id' => 'url',
@@ -499,6 +509,12 @@ $('input[name="tech_copy"]').click(function(event) {
 	$('#tech_phone').val( $('#main_phone').val() );
 	$('#tech_email').val( $('#main_email').val() );
 });
+$('#country').on('change',function(event) {
+	var country = $(this).val();
+	if(country != '236') {
+		$('#state').replaceWith('<input class="form-control" id="state" type="text" value="" />');
+	}
+});
 </script>
 <?php
 
@@ -554,6 +570,14 @@ $('input[name="tech_copy"]').click(function(event) {
 					'value' => $company->status,
 				),
 				array(
+					'id' => 'country',
+					'label' => 'Country',
+					'type' => 'select',
+					'choices' => $leads->getCountries(),
+					'value' => $company->country,
+					'placeholder' => 'Select a country',
+				),
+				array(
 					'id' => 'address',
 					'label' => 'Address',
 					'type' => 'text',
@@ -567,8 +591,8 @@ $('input[name="tech_copy"]').click(function(event) {
 				),
 				array(
 					'id' => 'state',
-					'label' => 'State',
-					'type' => 'select',
+					'label' => 'State/Province',
+					'type' => $company->country == '236' ? 'select' : 'text',
 					'choices' => array(
 						'AL' => 'Alabama',
 						'AK' => 'Alaska',
@@ -626,8 +650,8 @@ $('input[name="tech_copy"]').click(function(event) {
 				),
 				array(
 					'id' => 'zipcode',
-					'label' => 'Zip Code',
-					'type' => 'number',
+					'label' => 'Zip/Postal Code',
+					'type' => 'text',
 					'value' => $company->zipcode,
 				),
 				array(
@@ -824,6 +848,12 @@ $('input[name="tech_copy"]').click(function(event) {
 	$('#tech_name').val( $('#main_name').val() );
 	$('#tech_phone').val( $('#main_phone').val() );
 	$('#tech_email').val( $('#main_email').val() );
+});
+$('#country').on('change',function(event) {
+	var country = $(this).val();
+	if(country != '236') {
+		$('#state').replaceWith('<input class="form-control" id="state" type="text" value="" />');
+	}
 });
 </script>
 <?php
