@@ -197,7 +197,7 @@ if(isset($_REQUEST['a'])){
 					'tech_phone' => empty( $_REQUEST['tech_phone'] ) ? null : trim( $_REQUEST['tech_phone'] ),
 					'tech_email' => empty( $_REQUEST['tech_email'] ) ? null : trim( $_REQUEST['tech_email'] ),
 					'accountManager' => empty( $_REQUEST['accountManager'] ) ? null : $_REQUEST['accountManager'],
-					'status' => empty( $_REQUEST['status'] ) ? null : $_REQUEST['status'],
+					'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 					'isPublisher' => $isPublisher ? 1 : 0,
 					'isAdvertiser' => $isAdvertiser ? 1 : 0,
 				) );
@@ -852,7 +852,7 @@ $('input[name="tech_copy"]').click(function(event) {
 $('#country').on('change',function(event) {
 	var country = $(this).val();
 	if(country != '236') {
-		$('#state').replaceWith('<input class="form-control" id="state" name="status" type="text" value="" />');
+		$('#state').replaceWith('<input class="form-control" id="state" name="state" type="text" value="" />');
 	}
 });
 </script>
