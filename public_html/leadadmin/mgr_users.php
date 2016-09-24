@@ -51,7 +51,7 @@ if(isset($_REQUEST['a'])){
 				$_REQUEST['idCompany'] = null;
 			}
 
-			$idUser = $leads->addUser( strtolower( trim( $_REQUEST['username'] ) ), $_REQUEST['password'], empty( trim( $_REQUEST['fullName'] ) ) ? null : trim( $_REQUEST['fullName'] ), empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'], empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'] );
+			$idUser = $leads->addUser( strtolower( trim( $_REQUEST['username'] ) ), $_REQUEST['password'], empty( trim( $_REQUEST['fullName'] ) ) ? null : trim( $_REQUEST['fullName'] ), empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'], empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'], empty( trim( $_REQUEST['email'] ) ) ? null : trim( $_REQUEST['email'] ) );
 			if( null === $idUser ) {
 				$result['error'] = 'Unable to add new user';
 				break;
@@ -104,6 +104,7 @@ if(isset($_REQUEST['a'])){
 				'fullName' => empty( $_REQUEST['fullName'] ) ? null : $_REQUEST['fullName'],
 				'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
 				'level' => empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'],
+				'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
 			) );
 			if( null === $status ) {
 				$result['error'] = 'Unable to edit user';
@@ -172,6 +173,11 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'text',
 				),
 				array(
+					'id' => 'email',
+					'label' => 'Email Address',
+					'type' => 'email',
+				),
+				array(
 					'id' => 'level',
 					'label' => 'Access Level',
 					'type' => 'select',
@@ -238,6 +244,12 @@ if( isset( $_REQUEST['d'] ) ) {
 					'label' => 'Full Name',
 					'type' => 'text',
 					'value' => $user->fullName,
+				),
+				array(
+					'id' => 'email',
+					'label' => 'Email Address',
+					'type' => 'email',
+					'value' => $user->email,
 				),
 				array(
 					'id' => 'level',

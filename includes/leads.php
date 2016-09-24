@@ -160,7 +160,7 @@ class Leads
 		return $value;
 	}
 
-	public function addUser( $username, $password, $fullName, $idCompany, $level ) {
+	public function addUser( $username, $password, $fullName, $idCompany, $level, $email ) {
 
 		try {
 			$idUser = $this->insertRow( 'users', array(
@@ -168,6 +168,7 @@ class Leads
 				'fullName' => $fullName,
 				'idCompany' => $idCompany,
 				'level' => $level,
+				'email' => $email,
 			) );
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
@@ -197,7 +198,7 @@ class Leads
 
 	public function getUser( $idUser ) {
 		try {
-			$query = $this->db->prepare( "SELECT username,password,fullName,idCompany,level FROM users WHERE idUser = ?" );
+			$query = $this->db->prepare( "SELECT username,password,fullName,idCompany,level,email FROM users WHERE idUser = ?" );
 			$query->execute( array( $idUser ) );
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
