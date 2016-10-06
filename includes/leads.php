@@ -2411,10 +2411,22 @@ class Leads
 		return null;
 	}
 
-	public function getJobs() {
+	public function getJobs( $idCompany = null ) {
 		try {
-			$query = $this->db->prepare( "SELECT j.jobId,j.type,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn ORDER BY j.jobId DESC LIMIT 100" );
-			$query->execute( );
+			$params = array();
+			$sql  = "SELECT j.jobId,j.type,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username ";
+			$sql .= "FROM jobs j ";
+			$sql .= "LEFT JOIN users u ON j.idUser = u.idUser ";
+			$sql .= "LEFT JOIN feedinc f ON j.destination = f.idFeedIn ";
+			if( !empty( $idCompany ) ) {
+				$sql .= "WHERE j.type = 'feedinc' ";
+				$sql .= "AND destination IN (SELECT idFeedIn FROM feedinc WHERE idCompany = ?)";
+				$params[] = $idCompany;
+			}
+			$sql .= "ORDER BY j.jobId DESC LIMIT 100";
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
 			return $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get jobs: ' . $e->getMessage() );
@@ -2464,12 +2476,25 @@ class Leads
 		return null;
 	}
 
-	public function getInboundJobRecords( $jobId, $idRecord = 0 ) {
+	public function getInboundJobRecords( $jobId, $idRecord = 0, $idCompany = null ) {
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT idRecord,email,url,result FROM data_inbound WHERE jobId = ? AND idRecord > ? ORDER BY idRecord ASC LIMIT 500" );
-			$query->execute( array( $jobId, $idRecord ) );
+			$params = array();
+			$sql  = "SELECT idRecord,email,url,result ";
+			$sql .= "FROM data_inbound ";
+			$sql .= "WHERE jobId = ? ";
+			$params[] = $jobId;
+			$sql .= "AND idRecord > ? ";
+			$params[] = $idRecord;
+			if( !empty( $idCompany ) ) {
+				$sql .= "AND idFeedIn IN (SELECT idFeedIn FROM feedinc WHERE idCompany = ?)";
+				$params[] = $idCompany;
+			}
+			$sql .= "ORDER BY idRecord ASC LIMIT 500";
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
 			$results = $query->fetchAll( PDO::FETCH_ASSOC );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound job records: ' . $e->getMessage() );

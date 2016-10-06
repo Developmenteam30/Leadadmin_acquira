@@ -184,11 +184,12 @@ if( isset( $_REQUEST['d'] ) ) {
 					'choices' => array(
 						0 => 'No Access',
 						LEADS_SESSION_LEVEL_CLIENT_REPORTS => 'Client Reporting Access',
+						LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Client Import Access',
 						LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Client Dashboard Access',
 						LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
 						LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
 					),
-					required => true,
+					'required' => true,
 				),
 				array(
 					'id' => 'idCompany',
@@ -258,6 +259,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'choices' => array(
 						0 => 'No Access',
 						LEADS_SESSION_LEVEL_CLIENT_REPORTS => 'Client Reporting Access',
+						LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Client Import Access',
 						LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Client Dashboard Access',
 						LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
 						LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
@@ -330,6 +332,8 @@ include(INCLUDES."c_header.php");
 						$level = 'Staff Member';
 					} else if( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD == $level ) {
 						$level = 'Client Dashboard';
+					} else if( LEADS_SESSION_LEVEL_CLIENT_IMPORT == $level ) {
+						$level = 'Client Import';
 					} else if( LEADS_SESSION_LEVEL_CLIENT == $level ) {
 						$level = 'Client Reporting';
 					} else if( 0 == $level ) {

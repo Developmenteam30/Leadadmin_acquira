@@ -48,6 +48,13 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		array( 'name' => 'Outgoing Feeds', 'url' => '/leadadmin/mgr_feedout.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ),
 	);
 
+} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_IMPORT ) ) {
+
+	$nav = array(
+		array( 'name' => 'Incoming Feeds', 'url' => '/leadadmin/mgr_feedinc.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_IMPORT ),
+		array( 'name' => 'Jobs', 'url' => '/leadadmin/mgr_job.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_IMPORT ),
+	);
+
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_REPORTS ) ) {
 
 	$nav = array(

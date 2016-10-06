@@ -3,9 +3,10 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_IMPORT );
 
 require_once( INCLUDES . 'leads.php' );
+$leads = Leads::getInstance();
 
 require_once( INCLUDES . 'display.php' );
 
@@ -24,14 +25,14 @@ ini_set("auto_detect_line_endings", true);
 set_time_limit(0);
 
 if( isset( $_REQUEST['d'] ) ) {
-    switch( $_REQUEST['d'] ) {
-        case 'errorCount':
-            Display::errorCount();
-        break;
+	switch( $_REQUEST['d'] ) {
+		case 'errorCount':
+			Display::errorCount();
+		break;
 
-        case 'errorList':
-            Display::errorList();
-        break;
+		case 'errorList':
+			Display::errorList();
+		break;
 	}
 	exit;
 }
@@ -43,10 +44,24 @@ include(INCLUDES."c_header.php");
 <body>
 
 <div class='mainContainer'>
-    <?php include(INCLUDES.'c_nav.php'); ?>
-    <div style='margin: auto;'>
+	<?php include(INCLUDES.'c_nav.php'); ?>
+	<div style='margin: auto;'>
 
 <?php
+
+if( !isset( $_REQUEST['destination'] ) ) {
+	dieError( 'No destination supplied' );
+}
+
+if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+	$idCompany = LeadsSession::getCompanyId();
+	if( empty( $idCompany ) ) {
+		$idCompany = -9999;
+	}
+	if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['destination'] ) ) {
+		die( 'Sorry, you do not have access to this feed.' );
+	}
+}
 
 if( !isset( $_FILES['import_file']['error'] ) ) {
 	dieError( 'Cannot determine file error code.' );
@@ -79,10 +94,6 @@ $validTypes = array(
 
 if( !in_array( $_REQUEST['type'], $validTypes ) ) {
 	dieError( 'Invalid upload type supplied' );
-}
-
-if( !isset( $_REQUEST['destination'] ) ) {
-	dieError( 'No destination supplied' );
 }
 
 if( empty( $_FILES['import_file']['tmp_name'] ) ) {
@@ -148,7 +159,6 @@ if( move_uploaded_file( $_FILES['import_file']['tmp_name'], $newFile  ) !== true
 	dieError( 'Cannot move uploaded file for processing' );
 }
 
-$leads = Leads::getInstance();
 $jobId = $leads->addJob( $_REQUEST['type'], $_REQUEST['destination'], serialize( $_REQUEST ), $newFile, $cnt );
 if( null === $jobId ) {
 	dieError( 'Cannot add job to database' );
@@ -164,7 +174,7 @@ $link = sprintf( '/leadadmin/mgr_job.php?jobId=%d&count=%d',
 <p><a href="<?php echo $link; ?>">View results</a></p>
 <script>window.location = '<?php echo $link; ?>';</script>
 
-    </div>
+	</div>
 </div>
 
 </body>

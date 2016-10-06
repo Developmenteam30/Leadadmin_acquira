@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_IMPORT );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -27,13 +27,18 @@ if(isset($_REQUEST['a'])){
 			$result['error'] = 'Failed when attempting to manage feeds.';
 			$action = $_REQUEST['action'];
 
+			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				$c = false;
+				$result['error'] = 'Sorry, you do not have permission to edit feeds.';
+			}
+
 			//Validate Input
-			if( empty( $_REQUEST['label'] ) ) {
+			if( $c && empty( $_REQUEST['label'] ) ) {
 				$c = false;
 				$result['error'] = 'Feed label cannot be empty.';
 			}
 
-			if( empty( $_REQUEST['idCompany'] ) ) {
+			if( $c && empty( $_REQUEST['idCompany'] ) ) {
 				$c = false;
 				$result['error'] = 'Company cannot be empty.';
 			}
@@ -238,6 +243,11 @@ if(isset($_REQUEST['a'])){
 		case 'exportData':
 			$c = true; $result['error'] = 'Failed when trying to export data.';
 
+			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				$c = false;
+				$result['error'] = 'Sorry, you do not have permission to export data.';
+			}
+
 			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
@@ -297,6 +307,10 @@ if(isset($_REQUEST['d'])){
 			$mode = 'edit';
 			$idFeedIn = $_REQUEST['idFeedIn'];
 
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				die( 'Sorry, you do not have permission to edit feeds.' );
+			}
+
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
@@ -323,6 +337,10 @@ if(isset($_REQUEST['d'])){
 			$selectedAllowedFields = explode(";", $feed->allowedFields);
 
 		case 'dialog_newfeed':
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				die( 'Sorry, you do not have permission to add new feeds.' );
+			}
+
 			if( empty( $id ) ) {
 				$id = 'new_feedinc';
 			}
@@ -666,7 +684,7 @@ if(isset($_REQUEST['d'])){
 ?>
 <p>Database failure - could not fetch feed information.</p>
 <?php
-			} elseif(!is_object($feed) && $feed == 0){ 
+			} elseif(!is_object($feed) && $feed == 0){
 ?>
 <p>Error fetching feed information - feed does not exist.</p>
 <?php
@@ -727,6 +745,10 @@ $company = $leads->getCompany( $feed->idCompany );
 		break;
 		case 'dialog_export':
 			$idFeedIn = $_REQUEST['idFeedIn'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				die( 'Sorry, you do not have permission to export data.' );
+			}
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
@@ -826,6 +848,10 @@ $company = $leads->getCompany( $feed->idCompany );
 
 		case 'dialog_urlreport':
 			$idFeedIn = !empty( $_REQUEST['idFeedIn'] ) ? $_REQUEST['idFeedIn'] : 0;
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				die( 'Sorry, you do not have permission to run URL reports.' );
+			}
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
@@ -1019,6 +1045,10 @@ $company = $leads->getCompany( $feed->idCompany );
 		break;
 		case 'dialog_listcodes':
 			$idFeedIn = $_REQUEST['options']['idFeedIn'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				die( 'Sorry, you do not have permission to generate listcodes.' );
+			}
 
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
@@ -1233,6 +1263,7 @@ if($incomingFeeds === false){
 		<td class="text-right"><?php echo $feed->dailyCount; ?></td>
 		<td class="text-right"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
 		<td class="text-center">
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) { ?>
 <div class="btn-group">
   <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editfeedinc" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Edit Feed</button>
   <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -1246,6 +1277,9 @@ if($incomingFeeds === false){
 	<li><a href="#" data-toggle="modal" data-target="#modal-urlreport" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">URL report</a></li>
   </ul>
 </div>
+<?php } else { ?>
+<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#modal-import" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Import data</button>
+<?php } ?>
 </td>
 	</tr>
 <?php

@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_IMPORT );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -35,7 +35,16 @@ if( isset( $_REQUEST['a'] ) ) {
 				),
 			);
 
-			$records = $leads->getInboundJobRecords( $jobId, $idRecord );
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+			} else {
+				$idCompany = 0;
+			}
+
+			$records = $leads->getInboundJobRecords( $jobId, $idRecord, $idCompany );
 			foreach( $records as $record ) {
 				$result = $record['result'];
 				if( 'Email exists in our global suppression file.' == $result ) {
@@ -200,7 +209,15 @@ if( !empty( $_REQUEST['jobId'] ) ) {
 <h1>Batch Jobs</h1>
 
 <?php
-	$jobs = $leads->getJobs();
+	if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+		$idCompany = LeadsSession::getCompanyId();
+		if( empty( $idCompany ) ) {
+			$idCompany = -9999;
+		}
+	} else {
+		$idCompany = 0;
+	}
+	$jobs = $leads->getJobs( $idCompany );
 	if( empty( $jobs ) || !is_array( $jobs ) ) {
 		print "No jobs found.";
 	} else {

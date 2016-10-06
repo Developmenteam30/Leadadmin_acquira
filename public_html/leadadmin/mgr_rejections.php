@@ -5,7 +5,7 @@ $title = 'Rejection Log';
 include(INCLUDES."c_header.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_IMPORT );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();

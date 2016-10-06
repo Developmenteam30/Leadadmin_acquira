@@ -6,6 +6,9 @@ require_once( INCLUDES . 'session.php' );
 if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
 	header("Location: dashboard.php");
 	exit;
+} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_IMPORT ) ) {
+	header("Location: mgr_feedinc.php");
+	exit;
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_REPORTS ) ) {
 	header("Location: client_reports.php");
 	exit;
