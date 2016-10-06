@@ -775,6 +775,109 @@ class Leads
 		return $results;
 	}
 
+	public function addProspect( $fields ) {
+
+		$prospectId = null;
+
+		try {
+			$prospectId = $this->insertRow( 'prospects', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add prospect: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $prospectId;
+	}
+
+	public function updateProspect( $prospectId, $fields ) {
+
+		try {
+			$status = $this->update( 'prospects', $fields, array(
+				'prospectId' => $prospectId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update prospect: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
+	public function getProspects( $status = null ) {
+		$results = array();
+		$params = array();
+
+		try {
+			$sql  = "SELECT p.*,u.fullName,MAX(timestamp) AS lastDate ";
+			$sql .= "FROM prospects p ";
+			$sql .= "LEFT JOIN users u ON p.userId = u.idUser ";
+			$sql .= "LEFT JOIN prospects_notes n ON p.prospectId = n.prospectId ";
+			$sql .= "WHERE 1=1 ";
+			if( !empty( $status ) && 'active' == $status ) {
+				$sql .= "AND p.status != 'retired' ";
+			} else if( !empty( $status ) ) {
+				$sql .= "AND p.status = ? ";
+				$params[] = $status;
+			}
+			$sql .= "GROUP BY p.prospectId ";
+			$sql .= "ORDER BY p.prospectId DESC";
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get prospect list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getProspect( $prospectId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM prospects WHERE prospectId = ?" );
+			$query->execute( array( $prospectId ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get prospect info: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function addProspectNote( $fields ) {
+
+		$noteId = null;
+
+		try {
+			$noteId = $this->insertRow( 'prospects_notes', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add prospect note: ' . $pdoException->getMessage() );
+			return false;
+		}
+
+		return $noteId;
+	}
+
+	public function getProspectNotes( $prospectId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT n.*,u.fullName FROM prospects_notes n LEFT JOIN users u ON n.userId = u.idUser WHERE prospectId = ? ORDER BY timestamp DESC" );
+			$query->execute( array( $prospectId ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get prospect notes: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function addCompany( $fields ) {
 
 		$companyId = null;
