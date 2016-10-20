@@ -975,6 +975,35 @@ class Leads
 		return $results;
 	}
 
+	public function addCompanyNote( $fields ) {
+
+		$noteId = null;
+
+		try {
+			$noteId = $this->insertRow( 'companies_notes', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add company note: ' . $pdoException->getMessage() );
+			return false;
+		}
+
+		return $noteId;
+	}
+
+	public function getCompanyNotes( $companyId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT n.*,u.fullName FROM companies_notes n LEFT JOIN users u ON n.userId = u.idUser WHERE companyId = ? ORDER BY timestamp DESC" );
+			$query->execute( array( $companyId ) );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company notes: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function addVertical( $fields ) {
 
 		$verticalId = null;
@@ -1293,20 +1322,20 @@ class Leads
 			if( $status === null ) {
 
 				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? ORDER BY f.idFeedIn" );
+					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE c.idCompany = ? GROUP BY f.idFeedIn ORDER BY f.idFeedIn" );
 					$query->execute( array( $idCompany ) );
 				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany ORDER BY c.name,f.idFeedIn" );
+					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany GROUP BY f.idFeedIn ORDER BY c.name,f.idFeedIn" );
 					$query->execute( );
 				}
 
 			} else {
 
 				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? AND f.status = ? ORDER BY f.idFeedIn" );
+					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE c.idCompany = ? AND f.status = ? GROUP BY f.idFeedIn ORDER BY f.idFeedIn" );
 					$query->execute( array( $idCompany, $status ) );
 				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.status = ? ORDER BY c.name,f.idFeedIn" );
+					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE f.status = ? GROUP BY f.idFeedIn ORDER BY c.name,f.idFeedIn" );
 					$query->execute( array( $status ) );
 				}
 			}
@@ -1562,20 +1591,20 @@ class Leads
 			if( $status === null ) {
 
 				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT o.*,co.name FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? ORDER BY o.idFeedOut" );
+					$query = $this->db->prepare( "SELECT o.*,co.name,MAX(n.timestamp) AS lastDate FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany LEFT JOIN companies_notes n ON n.companyId = co.idCompany WHERE ci.idCompany = ? GROUP BY o.idFeedOut ORDER BY o.idFeedOut" );
 					$query->execute( array( $idCompany ) );
 				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany ORDER BY c.name,f.idFeedOut" );
+					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany GROUP BY f.idFeedOut ORDER BY c.name,f.idFeedOut" );
 					$query->execute( );
 				}
 
 			} else {
 
 				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT o.*,co.name FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? AND o.status = ? ORDER BY o.idFeedOut" );
+					$query = $this->db->prepare( "SELECT o.*,co.name,MAX(n.timestamp) AS lastDate FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany LEFT JOIN companies_notes n ON n.companyId = co.idCompany WHERE ci.idCompany = ? AND o.status = ? GROUP BY o.idFeedOut ORDER BY o.idFeedOut" );
 					$query->execute( array( $idCompany, $status ) );
 				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE f.status = ? ORDER BY c.name,f.idFeedOut" );
+					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE f.status = ? GROUP BY f.idFeedOut ORDER BY c.name,f.idFeedOut" );
 					$query->execute( array( $status ) );
 				}
 
