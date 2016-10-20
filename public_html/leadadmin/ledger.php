@@ -341,6 +341,9 @@ if(isset($_REQUEST['d'])){
 
 		case "newLedger":
 
+			$divisions = $leads->getDivisions();
+			unset( $divisions[4] ); // Remove the offline division
+
 			$fields = array(
 				array(
 					'id' => 'divisionId',
@@ -348,7 +351,7 @@ if(isset($_REQUEST['d'])){
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a division',
-					'choices' => $leads->getDivisions(),
+					'choices' => $divisions,
 				),
 				array(
 					'id' => 'companyId',
@@ -663,6 +666,8 @@ $("#newledger select[name='divisionId']").change( function() {
 			} else {
 
 				$ledgerMonth = new DateTime( $entry->ledgerMonth );
+				$divisions = $leads->getDivisions();
+				unset( $divisions[4] ); // Remove the offline division
 
 				$fields = array(
 					array(
@@ -671,7 +676,7 @@ $("#newledger select[name='divisionId']").change( function() {
 						'type' => 'select',
 						'required' => true,
 						'placeholder' => 'Select a division',
-						'choices' => $leads->getDivisions(),
+						'choices' => $divisions,
 						'value' => $entry->divisionId,
 					),
 					array(
