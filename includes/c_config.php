@@ -79,6 +79,6 @@ define("LEGACY_DB", false);
 define( 'DB_TIMEZONE', 'UTC' );
 define( 'LOCAL_TIMEZONE', 'America/New_York' );
 
-define( 'COMPANY_LEGAL_NAME', 'Qatalyst Media, LLC' );
-define( 'COMPANY_ADDRESS_1', '777 Westchester Avenue, Suite 101' );
-define( 'COMPANY_ADDRESS_2', 'White Plains, NY 10604' );
+define( 'COMPANY_LEGAL_NAME', 'Qatalyst, Inc.' );
+define( 'COMPANY_ADDRESS_1', '100 4th Avenue South #138' );
+define( 'COMPANY_ADDRESS_2', 'St Petersburg, FL 33701' );
