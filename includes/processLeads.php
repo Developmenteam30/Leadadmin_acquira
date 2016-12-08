@@ -308,6 +308,7 @@ class ProcessLeads
 			print_r($requestdata);
 		}
 
+		$geturl = '';
 		if( $feedOut->feedType == 'curlGET' ) { // Method is GET
 
 			$geturl = $feedOut->postUrl . "?";

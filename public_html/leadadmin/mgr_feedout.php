@@ -6,6 +6,7 @@ require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 
 require_once( INCLUDES . 'leads.php' );
+require_once( INCLUDES . 'processLeads.php' );
 $leads = Leads::getInstance();
 
 $status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
