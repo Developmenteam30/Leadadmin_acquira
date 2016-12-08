@@ -54,21 +54,26 @@ include(INCLUDES."c_header.php");
 
 				$months = array();
 				foreach( $entries as $entry ) {
-					$month = substr( $entry->commissionDate, 0, 7 );
-					$months[$month] = true;
+					if( !empty( $entry->commissionDate ) ) {
+						$month = substr( $entry->commissionDate, 0, 7 );
+						$months[$month][$entry->type] = true;
+					} else {
+						$months['000000'][$entry->type] = true;
+					}
 				}
 				ksort( $months );
 
-				foreach( $months as $month => $val ) {
-
+				foreach( $months as $month => $types ) {
+					foreach( $types as $type => $val ) {
 ?>
-<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
+<h4><?php echo ( '000000' == $month ? 'Pending Commissions' : date( 'F Y', strtotime( $month . '-01' ) ) ) . ' - ' . ( '0' == $type ? 'Publisher' : 'Advertiser' ); ?></h4>
 <table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
 			<th>ID #</th>
 			<th>Division</th>
 			<th>Company</th>
+			<th>Ledger Month</th>
 			<th>Invoice #</th>
 			<th>Payment Amount</th>
 			<th>Commission</th>
@@ -79,7 +84,7 @@ include(INCLUDES."c_header.php");
 					$paymentTotal = 0;
 					$commissionTotal = 0;
 					foreach( $entries as $entry ) {
-						if( substr( $entry->commissionDate, 0, 7 ) == $month ) {
+						if( $type == $entry->type && ( ( '000000' == $month && empty( $entry->commissionDate ) ) || substr( $entry->commissionDate, 0, 7 ) == $month ) ) {
 							$paymentTotal += $entry->paymentAmount;
 							$commissionTotal += $entry->commissionAmount;
 ?>
@@ -87,6 +92,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
+			<td><?php echo date( 'F Y', strtotime( $entry->ledgerMonth ) ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
@@ -98,13 +104,14 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr class="bgGray header">
-			<td colspan="4">Monthly Totals</td>
+			<td colspan="5">Monthly Totals</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 			<td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
 		</tr>
 	</tfoot>
 </table>
 <?php
+					}
 				}
 			}
 		}

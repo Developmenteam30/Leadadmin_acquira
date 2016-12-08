@@ -32,51 +32,14 @@ if( isset( $_REQUEST['a'] ) ) {
 			$c = true;
 			$result['error'] = 'Failed when trying to send a payment email.';
 
-			if( $c && empty( $_REQUEST['divisionId'] ) ) {
-				$result['error'] = 'Please select a division from the list.';
-				$c = false;
-			}
-
-			if( $c && empty( $_REQUEST['companyId'] ) ) {
-				$result['error'] = 'Please select a company from the list.';
-				$c = false;
-			}
-
 			if( $c && empty( $_REQUEST['invoiceNum'] ) ) {
 				$result['error'] = 'Invoice number cannot be blank.';
-				$c = false;
-			}
-
-			if( $c && empty( $_REQUEST['invoiceAmount'] ) ) {
-				$result['error'] = 'Invoice amount cannot be blank.';
-				$c = false;
-			}
-
-			if( $c && is_numeric( $_REQUEST['invoiceAmount'] ) === FALSE ) {
-				$result['error'] = 'Invoice amount must be a numeric value.';
-				$c = false;
-			}
-
-			if( $c && floatval( $_REQUEST['invoiceAmount'] ) < 0 ) {
-				$result['error'] = 'Invoice amount cannot be less than zero.';
 				$c = false;
 			}
 
 			if( $c && empty( $_REQUEST['ledgerMonth'] ) ) {
 				$result['error'] = 'Ledger month cannot be blank.';
 				$c = false;
-			}
-
-			if( $c && empty( $_REQUEST['paymentDate'] ) ) {
-				$result['error'] = 'Payment date cannot be blank.';
-				$c = false;
-			} else if( $c && !empty( $_REQUEST['paymentDate'] ) ) {
-				try {
-					$paymentDate = new DateTime( $_REQUEST['paymentDate'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid payment date.';
-					$c = false;
-				}
 			}
 
 			if( $c && empty( $_REQUEST['paymentMethod'] ) ) {
@@ -121,15 +84,35 @@ if( isset( $_REQUEST['a'] ) ) {
 
 				if( $c ) {
 
+					$BCCText = '';
+					$BCCText = "BCC: " . PAYMENT_EMAIL . "\r\n";
+					if( !empty( $_REQUEST['commissionBCC'] ) ) {
+						$BCCs = explode( ',', $_REQUEST['commissionBCC'] );
+						foreach( $BCCs as $BCC ) {
+							$user = $leads->getUser( $BCC );
+							if( !empty( $user->email ) ) {
+								$BCCText .= "BCC: {$user->email}\r\n";
+							}
+						}
+					}
+
 					$date = date( 'F Y', strtotime( $_REQUEST['ledgerMonth'] . '01' ) );
 					list( $first, $garbage ) = explode( ' ', $company->acct_name, 2 );
 
-					$message  = "Hi {$first},\r\n";
+					$message  = "Hi, {$first}.\r\n";
 					$message .= "\r\n";
-					$message .= "The invoice below has been paid.\r\n";
+					if( strpos( $_REQUEST['invoiceNum'], ',' ) ) {
+						$message .= "The invoices below have been paid.\r\n";
+					} else {
+						$message .= "The invoice below has been paid.\r\n";
+					}
 					$message .= "\r\n";
 					$message .= "Month: {$date}\r\n";
-					$message .= "Invoice #: " . $_REQUEST['invoiceNum'] . "\r\n";
+					if( strpos( $_REQUEST['invoiceNum'], ',' ) ) {
+						$message .= "Invoice Numbers: " . $_REQUEST['invoiceNum'] . "\r\n";
+					} else {
+						$message .= "Invoice Number: " . $_REQUEST['invoiceNum'] . "\r\n";
+					}
 					$message .= "Amount: \$" . number_format( $_REQUEST['paymentAmount'], 2 ) . "\r\n";
 					$message .= "Payment Method: " . $_REQUEST['paymentMethod'] . "\r\n";
 					$message .= "\r\n";
@@ -143,7 +126,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					$message .= COMPANY_ADDRESS_1 . "\r\n";
 					$message .= COMPANY_ADDRESS_2 . "\r\n";
 
-					if( !mail( $company->acct_email, "Invoice #" . $_REQUEST['invoiceNum'] . " PAID | " . CONFIG_COMPANY_NAME, $message, "From: \"" . CONFIG_COMPANY_NAME . "\" <" . PAYMENT_EMAIL . ">\r\nBCC: " . PAYMENT_EMAIL, '-f' . PAYMENT_EMAIL ) ) {
+					if( !mail( $company->acct_email, "Invoice #" . $_REQUEST['invoiceNum'] . " PAID | " . CONFIG_COMPANY_NAME, $message, "From: \"" . CONFIG_COMPANY_NAME . "\" <" . PAYMENT_EMAIL . ">\r\n" . $BCCText, '-f' . PAYMENT_EMAIL ) ) {
 						$result['error'] = 'Unable to send message.';
 						$c = false;
 					}
@@ -174,80 +157,138 @@ if(isset($_REQUEST['d'])){
 
 		case 'dialog_email':
 
-			$divisionId = '';
-			$companyId = '';
-			$invoiceNum = '';
-			$invoiceAmount = 0.00;
-			$ledgerMonth = '';
-			$paymentDate = '';
-			$paymentMethod = '';
-			$paymentAmount = 0.00;
+			$entries = array();
 
 			if( !empty( $_REQUEST['emailLedgerId'] ) ) {
 				foreach( $_REQUEST['emailLedgerId'] as $divisionLedgerId ) {
-					list( $divisionId, $ledgerId ) = explode( '|', $divisionLedgerId );
-					if( '4' === $divisionId ) {
+					list( $divisionId, $ledgerId ) = explode( '|', $divisionLedgerId, 2 );
+					if( 'E' === $divisionId ) {
+						list( $reportDate, $companyId ) = explode( '|', $ledgerId );
+						$entry = $leads->getInvoiceDetails( $reportDate, $companyId );
+						if( !empty( $entry ) ) {
+							$ledgerMonth = new DateTime( $entry->paymentDate );
+							$revenue = $leads->getRevenueInboundClientMonthTotal( $entry->idCompany, $entry->date );
+							$entries[] = array(
+								'invoiceNum' => $entry->invoiceNumber,
+								'paymentAmount' => isset( $revenue[0]['partner'] ) ? $revenue[0]['partner'] : 0.00,
+								'paymentMethod' => 'ACH',
+								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
+								'companyId' => $entry->idCompany,
+								'userId' => $entry->userId,
+							);
+						}
+					} else if( '4' === $divisionId ) {
 						$entry = $leads->getOfflineLedgerById( $ledgerId );
 						if( !empty( $entry ) ) {
-							$divisionId = 4;
-							$companyId = $entry->vendorCompanyId;
-							$invoiceNum = $entry->loInvoiceNum;
-							$invoiceAmount += $entry->loInvoiceAmount;
 							$ledgerMonth = new DateTime( $entry->ledgerMonth );
-							$ledgerMonth = $ledgerMonth->format( 'Ym' );
-							$paymentDate = $entry->loPaymentDate;
-							$paymentMethod = $entry->loPaymentMethod;
-							$paymentAmount += $entry->loPaymentAmount;
+							$entries[] = array(
+								'invoiceNum' => $entry->loInvoiceNum,
+								'paymentAmount' => $entry->loPaymentAmount,
+								'paymentMethod' => $entry->loPaymentMethod,
+								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
+								'companyId' => $entry->vendorCompanyId,
+								'userId' => $entry->userId,
+							);
 						}
 					} else {
 						$entry = $leads->getLedgerById( $ledgerId );
 						if( !empty( $entry ) ) {
-							$divisionId = $entry->divisionId;
-							$companyId = $entry->companyId;
-							$invoiceNum = $entry->invoiceNum;
-							$invoiceAmount += $entry->invoiceAmount;
 							$ledgerMonth = new DateTime( $entry->ledgerMonth );
-							$ledgerMonth = $ledgerMonth->format( 'Ym' );
-							$paymentDate = $entry->paymentDate;
-							$paymentMethod = $entry->paymentMethod;
-							$paymentAmount += $entry->paymentAmount;
+							$entries[] = array(
+								'invoiceNum' => $entry->invoiceNum,
+								'paymentAmount' => $entry->paymentAmount,
+								'paymentMethod' => $entry->paymentMethod,
+								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
+								'companyId' => $entry->companyId,
+								'userId' => $entry->userId,
+							);
 						}
 					}
 				}
 			}
 
+			if( empty( $entries ) ) {
+				print '<div class="alert alert-danger" role="alert">No entries were selected.</div>' . PHP_EOL;
+				break;
+			}
+
+			// Ensure there is no mixing of companies
+			$companyId = null;
+			$mixedCompanies = false;
+			$invoiceNumbers = '';
+			$paymentMethod = '';
+			$ledgerMonth = '';
+			$paymentAmount = 0.00;
+			$commissionBCCs = array();
+			foreach( $entries as $entry ) {
+				if( empty( $companyId ) ) {
+					$companyId = $entry['companyId'];
+				}
+				if( $entry['companyId'] != $companyId ) {
+					$mixedCompanies = true;
+				}
+
+				if( !empty( $invoiceNumbers ) ) {
+					$invoiceNumbers .= ', ';
+				}
+				$invoiceNumbers .= $entry['invoiceNum'];
+
+				if( empty( $ledgerMonth ) ) {
+					$ledgerMonth = $entry['ledgerMonth'];
+				}
+
+				if( empty( $paymentMethod ) ) {
+					$paymentMethod = $entry['paymentMethod'];
+				}
+
+				$paymentAmount += floatval( $entry['paymentAmount'] );
+
+				$commissionBCCs[$entry['userId']] = true;
+			}
+
+			if( $mixedCompanies ) {
+				print '<div class="alert alert-danger" role="alert">You cannot send an email to different companies at the same time. Please only select payments that all belong to the same company.</div>' . PHP_EOL;
+				break;
+			}
+
+			$company = $leads->getCompany( $companyId );
+
+			$commissionBCCList = '';
+			foreach( $commissionBCCs as $commissionBCC => $val ) {
+				if( !empty( $commissionBCCList ) ) {
+					$commissionBCCList .= ',';
+				}
+				$commissionBCCList .= $commissionBCC;
+			}
+
 			$fields = array(
 				array(
-					'id' => 'divisionId',
-					'label' => 'Division',
-					'type' => 'select',
-					'required' => true,
-					'placeholder' => 'Select a division',
-					'choices' => $leads->getDivisions(),
-					'value' => $divisionId,
+					'id' => 'companyId_text',
+					'label' => 'Company',
+					'type' => '_text',
+					'value' => $company->name,
+				),
+				array(
+					'id' => 'a',
+					'type' => 'hidden',
+					'value' => 'sendEmail',
+				),
+				array(
+					'id' => 'commissionBCC',
+					'type' => 'hidden',
+					'value' => $commissionBCCList,
 				),
 				array(
 					'id' => 'companyId',
-					'label' => 'Company',
-					'type' => 'select',
-					'required' => true,
-					'placeholder' => 'Select a company',
-					'choices' => !empty( $divisionId ) ? $leads->getDivisionCompanies( $divisionId, $companyId ) : array(),
+					'type' => 'hidden',
 					'value' => $companyId,
 				),
 				array(
 					'id' => 'invoiceNum',
-					'label' => 'Client Invoice #',
+					'label' => 'Invoice Number(s)',
 					'type' => 'text',
 					'required' => true,
-					'value' => $invoiceNum,
-				),
-				array(
-					'id' => 'invoiceAmount',
-					'label' => 'Invoice Amount',
-					'type' => 'currency',
-					'required' => true,
-					'value' => !empty( $invoiceAmount ) ? number_format( $invoiceAmount, 2, '.', '' ) : '',
+					'value' => $invoiceNumbers,
 				),
 				array(
 					'id' => 'ledgerMonth',
@@ -255,12 +296,6 @@ if(isset($_REQUEST['d'])){
 					'type' => 'select',
 					'choices' => $ledgerMonths,
 					'value' => $ledgerMonth,
-				),
-				array(
-					'id' => 'paymentDate',
-					'label' => 'Date Paid',
-					'type' => 'text',
-					'value' => $paymentDate,
 				),
 				array(
 					'id' => 'paymentMethod',
@@ -274,11 +309,6 @@ if(isset($_REQUEST['d'])){
 					'type' => 'currency',
 					'required' => true,
 					'value' => !empty( $paymentAmount ) ? number_format( $paymentAmount, 2, '.', '' ) : '',
-				),
-				array(
-					'id' => 'a',
-					'type' => 'hidden',
-					'value' => 'sendEmail',
 				),
 			);
 
@@ -395,7 +425,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-center"><?php if( '1' !== $entry->divisionId ) { ?><input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>" /><?php } else { echo "&nbsp;"; } ?></td>
+			<td class="text-center"><?php if( 'email' === $entry->source ) { ?><input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'E|' . $entry->ledgerId . '|' . $entry->companyId; ?>" /><?php } else { ?><input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>" /><?php } ?></td>
 		</tr>
 <?php
 				}
@@ -406,7 +436,7 @@ include(INCLUDES."c_header.php");
 		<tr>
 			<td colspan="7">Monthly Total</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
-			<td>&nbsp;</td>
+			<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#sendEmail">Send Email</button></td>
 		</tr>
 	</tfoot>
 </table>
