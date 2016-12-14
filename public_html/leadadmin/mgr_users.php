@@ -334,7 +334,7 @@ include(INCLUDES."c_header.php");
 						$level = 'Client Dashboard';
 					} else if( LEADS_SESSION_LEVEL_CLIENT_IMPORT == $level ) {
 						$level = 'Client Import';
-					} else if( LEADS_SESSION_LEVEL_CLIENT == $level ) {
+					} else if( LEADS_SESSION_LEVEL_CLIENT_REPORTS == $level ) {
 						$level = 'Client Reporting';
 					} else if( 0 == $level ) {
 						$level = 'No Access';
