@@ -876,13 +876,13 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->verticalName ); ?></td>
-			<td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
+			<td data-tf-sortKey="<?php echo number_format( $entry->invoiceAmount, 2 ); ?>">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td><?php echo $entry->paymentDate; ?></td>
-			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+			<td data-tf-sortKey="<?php echo number_format( $entry->paymentAmount, 2 ); ?>">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td><?php echo $entry->fullName; ?></td>
-			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?><?php if( !empty( $entry->commissionDate ) && !empty( $entry->commissionAmount ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?></td>
+			<td data-tf-sortKey="<?php echo number_format( $entry->commissionAmount, 2 ); ?>">$<?php echo number_format( $entry->commissionAmount, 2 ); ?><?php if( !empty( $entry->commissionDate ) && !empty( $entry->commissionAmount ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?></td>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 			<td class="text-center">
 <div class="btn-group">
@@ -931,13 +931,31 @@ include(INCLUDES."c_header.php");
 $('.ledger-sort').each(function() {
 	var tf = new TableFilter($(this).attr('id'), {
 		base_path: '/leadadmin/libraries/tablefilter/',
+		state: {
+			types: ['local_storage'],
+			sort: true,
+			filters: false,
+			page_number: false,
+			page_length: false,
+			columns_visibility: false,
+			filters_visibility: false
+		},
 		grid: false,
 		filters_row_index: 1,
+		col_types: [
+			'number',
+			'string',
+			'string',
+			{ type: 'formatted-number', decimal: '.', thousands: ',' },
+			'string',
+			{ type: 'date', locale: 'en-US' },
+			{ type: 'formatted-number', decimal: '.', thousands: ',' },
+			'string',
+			'string',
+			{ type: 'formatted-number', decimal: '.', thousands: ',' }
+		],
 		extensions: [{
 			name: 'sort',
-			types: [
-				'String','String','String','us','String','ymddate','us','String','String','us'
-			],
 			image_asc_class_name: 'custom-ascending',
 			image_desc_class_name: 'custom-descending'
 		}],

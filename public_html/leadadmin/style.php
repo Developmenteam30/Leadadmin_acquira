@@ -166,6 +166,9 @@ table tr.bg-gray {
 	);
 }
 
+.sort-arrow {
+	display: inline !important;
+}
 .custom-descending {
 	background-image: url("/v2/leadadmin/images/downsimple.png");
 }
