@@ -86,7 +86,12 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->commissionDate ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-center"><?php if( '4' === $entry->divisionId ) { ?><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button><?php } else if( '1' !== $entry->divisionId ) { ?><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td><?php } else { print "&nbsp;"; } ?></td>
+			<td class="text-center"><?php if( '4' === $entry->divisionId ) { ?>
+<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+<?php } else if( 'email' === $entry->source ) { print "&nbsp;"; ?>
+<?php } else { ?>
+<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>
+<?php } ?>
 		</tr>
 <?php
 				}
@@ -95,7 +100,7 @@ include(INCLUDES."c_header.php");
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan="8">Monthly Total</td>
+			<td colspan="9">Monthly Total</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 			<td>&nbsp;</td>
 		</tr>
