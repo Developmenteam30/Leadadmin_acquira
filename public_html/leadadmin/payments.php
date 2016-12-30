@@ -468,12 +468,29 @@ include(INCLUDES."c_header.php");
 $( "table" ).each(function( index ) {
 	var tf = new TableFilter($(this).attr('id'), {
 		base_path: '/leadadmin/libraries/tablefilter/',
+		state: {
+			types: ['local_storage'],
+			sort: true,
+			filters: false,
+			page_number: false,
+			page_length: false,
+			columns_visibility: false,
+			filters_visibility: false
+		},
 		grid: false,
 		filters_row_index: 1,
 		extensions: [{
 			name: 'sort',
 			types: [
-				'ymddate', 'String', 'String', 'String', 'String', 'String', 'us'
+				'string',
+				'string',
+				'string',
+				'string',
+				'string',
+				'date',
+				'string',
+				'formatted-number',
+				'none'
 			],
 			image_asc_class_name: 'custom-ascending',
 			image_desc_class_name: 'custom-descending'

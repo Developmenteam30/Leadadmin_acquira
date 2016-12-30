@@ -843,7 +843,7 @@ include(INCLUDES."c_header.php");
 		foreach( $months as $month => $val ) {
 ?>
 <h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
-<table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $month; ?>">
+<table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $type; ?>_<?php echo $month; ?>">
 	<thead>
 		<tr class="header">
 			<th>Entry #</th>

@@ -67,7 +67,7 @@ include(INCLUDES."c_header.php");
 					foreach( $types as $type => $val ) {
 ?>
 <h4><?php echo ( '000000' == $month ? 'Pending Commissions' : date( 'F Y', strtotime( $month . '-01' ) ) ) . ' - ' . ( '0' == $type ? 'Publisher' : 'Advertiser' ); ?></h4>
-<table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $entry->idUser; ?>_<?php echo $month ?>">
+<table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $entry->idUser; ?>_<?php echo $type; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
 			<th>ID #</th>
@@ -92,7 +92,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
-			<td><?php echo date( 'F Y', strtotime( $entry->ledgerMonth ) ); ?></td>
+			<td data-tf-sortKey="<?php echo date( 'Y-m-01', strtotime( $entry->ledgerMonth ) ); ?>"><?php echo date( 'F Y', strtotime( $entry->ledgerMonth ) ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
@@ -124,12 +124,27 @@ include(INCLUDES."c_header.php");
 $('.ledger-sort').each(function( index ) {
 	var tf = new TableFilter($(this).attr('id'), {
 		base_path: '/leadadmin/libraries/tablefilter/',
+		state: {
+			types: ['local_storage'],
+			sort: true,
+			filters: false,
+			page_number: false,
+			page_length: false,
+			columns_visibility: false,
+			filters_visibility: false
+		},
 		grid: false,
 		filters_row_index: 1,
 		extensions: [{
 			name: 'sort',
 			types: [
-				'String', 'String', 'String', 'us', 'us'
+				'number',
+				'string',
+				'string',
+				'date',
+				'string',
+				'formatted-number',
+				'formatted-number'
 			],
 			image_asc_class_name: 'custom-ascending',
 			image_desc_class_name: 'custom-descending'

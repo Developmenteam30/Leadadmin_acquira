@@ -401,12 +401,29 @@ var myTable = document.querySelector('#revenue_report');
 if( myTable ) {
 	var tf = new TableFilter(myTable, {
 		base_path: '/leadadmin/libraries/tablefilter/',
+		state: {
+			types: ['local_storage'],
+			sort: true,
+			filters: false,
+			page_number: false,
+			page_length: false,
+			columns_visibility: false,
+			filters_visibility: false
+		},
 		grid: false,
 		filters_row_index: 1,
 		extensions: [{
 			name: 'sort',
 			types: [
-				'String','String','String','String','String','ymddate','ymddate','us','us'
+				'String',
+				'String',
+				'String',
+				'String',
+				'String',
+				'date',
+				'date',
+				'formatted-number',
+				'formatted-number'
 			],
 		}],
 		sort: true
