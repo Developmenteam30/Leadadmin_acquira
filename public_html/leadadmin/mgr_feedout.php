@@ -914,124 +914,141 @@ if( isset( $_REQUEST['d'] ) ) {
 <?php
 			} else {
 ?>
-<p>URL Report from Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
-<form id="form-urlreport">
+<p>Feed ID: <strong><?php echo $feed->idFeedOut; ?></strong><br/>Feed Label: <strong><?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?></strong></p>
+
+<form id="form-urlreport" class="form-inlin1e">
 <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>" />
 <input type="hidden" name="d" value="dialog_urlreport" />
 <input type="hidden" name="submit" value="submit" />
-<table class="table table-bordered table-condensed table-striped">
-	<tr>
-		<td colspan='2'><p class='aCenter'>Report Settings</p></td>
-	</tr>
-	<tr>
-		<td>
-			<p>Period</p>
-		</td>
-		<td>
-			<p>
-				Period goes from midnight of the first date to midnight of the second date. Leave blank to select
-				from all time records. (This could take a long time.)
-			</p>
-			<p>
-				<input type='text' name='dateStart' class='dateSelector' value='<?php echo date("Y-m-d"); ?>' />
-				to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>' />
-			</p>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<p>
-				URLs
-			</p>
-		</td>
-		<td>
-			<p>
-				URLs to limit the selection by. Leave blank to select all records regardless of URL.
-			</p>
-			<p>
+
+<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
+<div class="form-group">
+	<label for="dateStart">Start Date:</label>
+	<input type="text" id="dateStart" name="dateStart" class="form-control dateSelector" value="<?php echo htmlspecialchars(  $_REQUEST['dateStart'], ENT_QUOTES ); ?>" />
+</div>
+
+<div class="form-group">
+	<label for="dateEnd">End Date:</label>
+	<input type="text" id="dateEnd" name="dateEnd" class="form-control dateSelector" value="<?php echo htmlspecialchars(  $_REQUEST['dateEnd'], ENT_QUOTES ); ?>" />
+</div>
+
+	<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
+<div class="form-group">
+	<label for="urls">URLs:</label>
 <?php
 				$urls = $leads->getOutboundURLDates( $idFeedOut );
 				if( $urls && is_array( $urls ) ) {
-					printf( "<select multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n", sizeOf( $urls ) );
+					printf( "<select class=\"form-control\" id=\"urls\" multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n", sizeOf( $urls ) );
 					foreach( $urls as $url ) {
-						printf( "<option value=\"%s\">%s (%s)</option>\n", htmlspecialchars( $url['url'] ), htmlspecialchars( $url['url'] ), $url['date'] );
+						printf( "<option value=\"%s\"%s>%s (%s)</option>\n", htmlspecialchars( $url['url'], ENT_QUOTES ), in_array( $url['url'], $_REQUEST['urlList'] ) ? ' selected="selected"' : '', htmlspecialchars( $url['url'] ), $url['date'] );
 					}
 					print "</select>\n";
 				}
 ?>
-			</p>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<p>
-				Count By
-			</p>
-		</td>
-		<td>
-			<p><select name="breakdown"><option value="day" selected="selected">Day</option><option value="month">Month</option><option value="year">Year</option><option value="total">Total</option</select></p>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<p>
-				Sort By
-			</p>
-		</td>
-		<td>
-			<p><select name="sort"><option value="date" selected="selected">Date</option><option value="url">URL</option><option value="count">Count</option></select></p>
-		</td>
-	</tr>
-</table>
+</div>
+
+<div class="form-group">
+	<label for="breakdown">Count By:</label>
+	<select class="form-control" id="breakdown" name="breakdown">
+<?php
+			$choices = array(
+				'day' => 'Day',
+				'month' => 'Month',
+				'year' => 'Year',
+				'total' => 'Total',
+			);
+			foreach( $choices as $key => $val ) {
+				printf( "<option value=\"%s\"%s>%s</option>\n",
+					htmlspecialchars( $key, ENT_QUOTES ),
+					$_REQUEST['breakdown'] === $key ? ' selected="selected"' : '',
+					htmlspecialchars( $val )
+				);
+			}
+?>
+	</select>
+</div>
+
+<div class="form-group">
+	<label for="id">Sort By:</label>
+	<select class="form-control" id="sort" name="sort">
+<?php
+			$choices = array(
+				'date' => 'Date',
+				'url' => 'URL',
+				'count' => 'Count',
+			);
+			foreach( $choices as $key => $val ) {
+				printf( "<option value=\"%s\"%s>%s</option>\n",
+					htmlspecialchars( $key, ENT_QUOTES ),
+					$_REQUEST['sort'] === $key ? ' selected="selected"' : '',
+					htmlspecialchars( $val )
+				);
+			}
+?>
+	</select>
+</div>
+
+</form>
 <?php
 
-			if( !empty( $_REQUEST['submit'] ) ) {
+				if( !empty( $_REQUEST['submit'] ) ) {
 
-				$stats = $leads->getOutboundURLStatsReport( $_REQUEST['idFeedOut'], $_REQUEST['urlList'], $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'] );
+					$stats = $leads->getOutboundURLStatsReport( $_REQUEST['idFeedOut'], $_REQUEST['urlList'], $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'] );
 
-				if( empty( $stats ) ) {
+					if( empty( $stats ) ) {
 ?>
 <p>No records found.</p>
-<?php
-				} else {
+<?php 
+					} else {
 
-					$fileLink = 'exports/' . $feed->label."_".time().".csv";
-					$filePath = ADMIN_ROOT.$fileLink;
-					$file = fopen($filePath, "w");
-					if(!file_exists($filePath)){
+						$fileLink = 'exports/' . $feed->label."_".time().".csv";
+						$filePath = ADMIN_ROOT.$fileLink;
+						$file = fopen($filePath, "w");
+						if(!file_exists($filePath)){
 ?>
 <p>Failed to create CSV report file.</p>
-<?php
-					} else {
-			 			fputcsv( $file, array( 'URL', 'Date', 'Accepted', 'Rejected' ) );
-						print "<table class=\"table table-bordered table-condensed table-striped\">\n";
-						print "<thead>\n";
-						print "\t<tr>\n";
-						print "\t<th>URL</th>\n";
-						print "\t<th>Date</th>\n";
-						print "\t<th>Accepted</th>\n";
-						print "\t<th>Rejected</th>\n";
-						print "\t</tr>\n";
-						print "</thead>\n";
-						print "<tbody>\n";
-						print "\t<tr>\n";
-						foreach( $stats as $stat ) {
+<?php 
+						} else {
+							$accepted = 0;
+							$rejected = 0;
+							fputcsv( $file, array( 'URL', 'Date', 'Accepted', 'Rejected' ) );
+							print "<table class=\"table table-bordered table-condensed table-striped\">\n";
+							print "<thead>\n";
 							print "\t<tr>\n";
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['url'] ) );
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['date'] ) );
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['accepted'] ) );
-							printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['rejected'] ) );
+							print "\t<th>URL</th>\n";
+							print "\t<th>Date</th>\n";
+							print "\t<th>Accepted</th>\n";
+							print "\t<th>Rejected</th>\n";
 							print "\t</tr>\n";
-							fputcsv( $file, array( $stat['url'], $stat['date'], $stat['accepted'], $stat['rejected'] ) );
+							print "</thead>\n";
+							print "<tbody>\n";
+							print "\t<tr>\n";
+							foreach( $stats as $stat ) {
+								print "\t<tr>\n";
+								printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['url'] ) );
+								printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['date'] ) );
+								printf("\t\t<td>%s</td>\n", number_format( $stat['accepted'], 0 ) );
+								printf("\t\t<td>%s</td>\n", number_format( $stat['rejected'], 0 ) );
+								print "\t</tr>\n";
+								$accepted += $stat['accepted'];
+								$rejected += $stat['rejected'];
+								fputcsv( $file, array( $stat['url'], $stat['date'], $stat['accepted'], $stat['rejected'] ) );
+							}
+							fclose($file);
+							print "\t<tr>\n";
+							print "\t\t<td colspan=\"2\"><strong>GRAND TOTAL</strong></td>\n";
+							printf("\t\t<td>%s</td>\n", number_format( $accepted, 0 ) );
+							printf("\t\t<td>%s</td>\n", number_format( $rejected, 0 ) );
+							print "\t</tr>\n";
+							print "</tbody>\n";
+							print "</table>\n";
+							printf( '<p><a <a class="btn btn-primary" href="%s">Export this report</a></p>', $fileLink );
 						}
-						fclose($file);
-						print "</tbody>\n";
-						print "</table>\n";
-						printf( '<p><a <a class="btn btn-primary" href="%s">Export this report</a></p>', $fileLink );
 					}
+
 				}
+
 			}
-		}
 		break;
 
 		case 'staticField':

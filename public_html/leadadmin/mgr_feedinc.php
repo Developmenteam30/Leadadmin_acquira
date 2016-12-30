@@ -856,7 +856,7 @@ $company = $leads->getCompany( $feed->idCompany );
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
-				$idCompany = -9999;
+					$idCompany = -9999;
 				}
 				if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedIn ) ) {
 					die( 'Sorry, you do not have access to this feed.' );
@@ -889,46 +889,42 @@ $company = $leads->getCompany( $feed->idCompany );
 <?php
 			} else {
 ?>
-<p>URL Report from Feed (ID:<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
-<form id="form-urlreport">
+<p>Feed ID: <strong><?php echo $feed->idFeedIn; ?></strong><br/>Feed Label: <strong><?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?></strong></p>
+
+<form id="form-urlreport" class="form-inlin1e">
 <input type="hidden" name="idFeedIn" value="<?php echo $feed->idFeedIn; ?>" />
 <input type="hidden" name="d" value="dialog_urlreport" />
 <input type="hidden" name="submit" value="submit" />
-<table class="table table-bordered table-condensed table-striped">
-	<tr>
-		<td>
-			Period
-		</td>
-		<td>
-				<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
-				<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo htmlspecialchars(  $_REQUEST['dateStart'], ENT_QUOTES ); ?>' />
-				to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo htmlspecialchars(  $_REQUEST['dateEnd'], ENT_QUOTES ); ?>' /></p>
-		</td>
-	</tr>
-	<tr>
-		<td>
-				URLs
-		</td>
-		<td>
-				<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
+
+<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
+<div class="form-group">
+	<label for="dateStart">Start Date:</label>
+	<input type="text" id="dateStart" name="dateStart" class="form-control dateSelector" value="<?php echo htmlspecialchars(  $_REQUEST['dateStart'], ENT_QUOTES ); ?>" />
+</div>
+
+<div class="form-group">
+	<label for="dateEnd">End Date:</label>
+	<input type="text" id="dateEnd" name="dateEnd" class="form-control dateSelector" value="<?php echo htmlspecialchars(  $_REQUEST['dateEnd'], ENT_QUOTES ); ?>" />
+</div>
+
+	<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
+<div class="form-group">
+	<label for="urls">URLs:</label>
 <?php
 				$urls = $leads->getInboundURLDates( $idFeedIn );
 				if( $urls && is_array( $urls ) ) {
-					printf( "<select multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n", sizeOf( $urls ) );
+					printf( "<select class=\"form-control\" id=\"urls\" multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n", sizeOf( $urls ) );
 					foreach( $urls as $url ) {
 						printf( "<option value=\"%s\"%s>%s (%s)</option>\n", htmlspecialchars( $url['url'], ENT_QUOTES ), in_array( $url['url'], $_REQUEST['urlList'] ) ? ' selected="selected"' : '', htmlspecialchars( $url['url'] ), $url['date'] );
 					}
 					print "</select>\n";
 				}
 ?>
-		</td>
-	</tr>
-	<tr>
-		<td>
-				Count By
-		</td>
-		<td>
-			<select name="breakdown">
+</div>
+
+<div class="form-group">
+	<label for="breakdown">Count By:</label>
+	<select class="form-control" id="breakdown" name="breakdown">
 <?php
 			$choices = array(
 				'day' => 'Day',
@@ -944,15 +940,12 @@ $company = $leads->getCompany( $feed->idCompany );
 				);
 			}
 ?>
-			</select>
-		</td>
-	</tr>
-	<tr>
-		<td>
-				Sort By
-		</td>
-		<td>
-			<select name="sort">
+	</select>
+</div>
+
+<div class="form-group">
+	<label for="id">Sort By:</label>
+	<select class="form-control" id="sort" name="sort">
 <?php
 			$choices = array(
 				'date' => 'Date',
@@ -967,10 +960,9 @@ $company = $leads->getCompany( $feed->idCompany );
 				);
 			}
 ?>
-			</select>
-		</td>
-	</tr>
-</table>
+	</select>
+</div>
+
 </form>
 <?php
 
@@ -992,14 +984,16 @@ $company = $leads->getCompany( $feed->idCompany );
 <p>Failed to create CSV report file.</p>
 <?php 
 						} else {
+							$accepted = 0;
+							$rejected = 0;
 							fputcsv( $file, array( 'URL', 'Date', 'Accepted', 'Rejected' ) );
 							print "<table class=\"table table-bordered table-condensed table-striped\">\n";
 							print "<thead>\n";
 							print "\t<tr>\n";
-							print "\t<td>URL</td>\n";
-							print "\t<td>Date</td>\n";
-							print "\t<td>Accepted</td>\n";
-							print "\t<td>Rejected</td>\n";
+							print "\t<th>URL</th>\n";
+							print "\t<th>Date</th>\n";
+							print "\t<th>Accepted</th>\n";
+							print "\t<th>Rejected</th>\n";
 							print "\t</tr>\n";
 							print "</thead>\n";
 							print "<tbody>\n";
@@ -1008,12 +1002,19 @@ $company = $leads->getCompany( $feed->idCompany );
 								print "\t<tr>\n";
 								printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['url'] ) );
 								printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['date'] ) );
-								printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['accepted'] ) );
-								printf("\t\t<td>%s</td>\n", htmlspecialchars( $stat['rejected'] ) );
+								printf("\t\t<td>%s</td>\n", number_format( $stat['accepted'], 0 ) );
+								printf("\t\t<td>%s</td>\n", number_format( $stat['rejected'], 0 ) );
 								print "\t</tr>\n";
+								$accepted += $stat['accepted'];
+								$rejected += $stat['rejected'];
 								fputcsv( $file, array( $stat['url'], $stat['date'], $stat['accepted'], $stat['rejected'] ) );
 							}
 							fclose($file);
+							print "\t<tr>\n";
+							print "\t\t<td colspan=\"2\"><strong>GRAND TOTAL</strong></td>\n";
+							printf("\t\t<td>%s</td>\n", number_format( $accepted, 0 ) );
+							printf("\t\t<td>%s</td>\n", number_format( $rejected, 0 ) );
+							print "\t</tr>\n";
 							print "</tbody>\n";
 							print "</table>\n";
 							printf( '<p><a <a class="btn btn-primary" href="%s">Export this report</a></p>', $fileLink );
