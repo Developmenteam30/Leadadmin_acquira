@@ -936,7 +936,7 @@ $('.ledger-sort').each(function() {
 		extensions: [{
 			name: 'sort',
 			types: [
-				'String','String','us','String','ymddate','us','String','String','us'
+				'String','String','String','us','String','ymddate','us','String','String','us'
 			],
 			image_asc_class_name: 'custom-ascending',
 			image_desc_class_name: 'custom-descending'
