@@ -26,7 +26,7 @@ if( !isset( $title ) ) {
 	<script src="/leadadmin/libraries/select2-4.0.2/js/select2.min.js"></script>
 	<script src="/leadadmin/libraries/default.js"></script>
 	<script src="/leadadmin/libraries/calx-1.1.4/jquery-calx-1.1.4.min.js" type="text/javascript"></script>
-	<script src="/v1/leadadmin/libraries/tablefilter/tablefilter.js" type="text/javascript"></script>
+	<script src="/v2/leadadmin/libraries/tablefilter/tablefilter.js" type="text/javascript"></script>
 	<!--[if lt IE 9]>
 		<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>

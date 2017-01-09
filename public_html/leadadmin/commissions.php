@@ -31,27 +31,40 @@ include(INCLUDES."c_header.php");
 <?php include(INCLUDES.'c_nav.php'); ?>
 
 <div class="container-fluid">
+<h2>Commissions Report</h2>
 
 <?php
-	$users = $leads->getStaffUsers( PDO::FETCH_OBJ );
-	if( empty( $users ) ) {
+
+$employeeId = ( !empty( $_REQUEST['userId'] ) && LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) ? $_REQUEST['userId'] : LeadsSession::getUserId();
+$monthId = !empty( $_REQUEST['month'] ) ? $_REQUEST['month'] : '000000';
+$users = $leads->getStaffUsers( PDO::FETCH_OBJ );
+if( empty( $users ) ) {
 
 ?>
 <p>No users exist in the database.</p>
 <?php
-	} else {
+} else {
 
-		foreach( $users as $user ) {
+	print '<form class="form-inline" method="get">' . PHP_EOL;
+	print '<div class="form-group">' . PHP_EOL;
+	print '<label for="userId">Employee:</label>' . PHP_EOL;
+	print '<select class="form-control" id="userId" name="userId">' . PHP_EOL;
+	foreach( $users as $user ) {
+		printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+			$user->idUser,
+			$employeeId == $user->idUser ? ' selected="selected"' : '',
+			htmlentities( $user->fullName )
+		);
+	}
+	print '</select>' . PHP_EOL;
+	print '</div>' . PHP_EOL;
 
-			printf( '<h3>%s</h3>' . PHP_EOL, htmlentities( $user->fullName ) );
+	if( !empty( $employeeId ) ) {
 
+		$user = $leads->getUser( $employeeId );
+		if( !empty( $user ) ) {
 			$entries = $leads->getPaidLedger( null, $user->idUser );
-			if( empty( $entries ) ) {
-?>
-<p>No commission entries exist in the database.</p>
-<?php
-			} else {
-
+			if( !empty( $entries ) ) {
 				$months = array();
 				foreach( $entries as $entry ) {
 					if( !empty( $entry->commissionDate ) ) {
@@ -61,13 +74,74 @@ include(INCLUDES."c_header.php");
 						$months['000000'][$entry->type] = true;
 					}
 				}
-				ksort( $months );
+				krsort( $months );
+			}
 
+			$years = array();
+			$quarters = array();
+			if( !empty( $months ) ) {
+				print '<div class="form-group">' . PHP_EOL;
+				print '<label for="userId">Month:</label>' . PHP_EOL;
+				print '<select class="form-control" id="month" name="month">' . PHP_EOL;
 				foreach( $months as $month => $types ) {
-					foreach( $types as $type => $val ) {
+					if( '000000' != $month ) {
+						$year = substr( $month, 0, 4 );
+						$quarter = $year . '-Q' . ceil( substr( $month, 5, 2 ) / 3 );
+						if( empty( $years[$year] ) ) {
+							printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+								$year,
+								$monthId == $year ? ' selected="selected"' : '',
+								htmlentities( $year . ' Year' )
+							);
+							$years[$year] = true;
+						}
+						if( empty( $quarters[$quarter] ) ) {
+							printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+								$quarter,
+								$monthId == $quarter ? ' selected="selected"' : '',
+								htmlentities( str_replace( '-Q', ' Qtr ', $quarter ) )
+							);
+							$quarters[$quarter] = true;
+						}
+					}
+					printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+						$month,
+						$monthId == $month ? ' selected="selected"' : '',
+						'000000' == $month ? 'Pending' : htmlentities( $month )
+					);
+				}
+				print '</select>' . PHP_EOL;
+				print '</div>' . PHP_EOL;
+			}
+		}
+	}
+
+	print '</form>' . PHP_EOL;
+
+}
+
+if( empty( $user ) ) {
+
+	print '<p>User not found in the database.</p>' . PHP_EOL;
+
+} else {
+
+	printf( '<h3>%s</h3>' . PHP_EOL, htmlentities( $user->fullName ) );
+
+	if( empty( $entries ) ) {
+?>
+<p>There are no commission entries for the selected period.</p>
+<?php
+	} else {
+
+		$found = false;
+		ksort( $months );
+		foreach( $months as $month => $types ) {
+			if( ( strlen( $monthId ) == 6 && $month == $monthId ) || ( strlen( $monthId ) == 4 && substr( $month, 0, 4 ) == $monthId ) || ( strlen( $monthId ) == 7 && $month == $monthId ) || ( preg_match( '/^(20[0-9]{2})-Q([1-4])$/', $monthId ) && substr( $month, 0, 4 ) . ceil( substr( $month, 5, 2 ) / 3 ) == substr( $monthId, 0, 4 ) . substr( $monthId, -1 ) ) ) {
+				foreach( $types as $type => $val ) {
 ?>
 <h4><?php echo ( '000000' == $month ? 'Pending Commissions' : date( 'F Y', strtotime( $month . '-01' ) ) ) . ' - ' . ( '0' == $type ? 'Publisher' : 'Advertiser' ); ?></h4>
-<table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $entry->idUser; ?>_<?php echo $type; ?>_<?php echo $month ?>">
+<table class="table table-bordered table-condensed table-striped ledger-sort" id="commissions_<?php echo $type; ?>_<?php echo $month ?>">
 	<thead>
 		<tr class="bgGray header">
 			<th>ID #</th>
@@ -87,6 +161,7 @@ include(INCLUDES."c_header.php");
 						if( $type == $entry->type && ( ( '000000' == $month && empty( $entry->commissionDate ) ) || substr( $entry->commissionDate, 0, 7 ) == $month ) ) {
 							$paymentTotal += $entry->paymentAmount;
 							$commissionTotal += $entry->commissionAmount;
+							$found = true;
 ?>
 		<tr>
 			<td><?php echo htmlentities( $entry->entryId ); ?></td>
@@ -111,16 +186,24 @@ include(INCLUDES."c_header.php");
 	</tfoot>
 </table>
 <?php
-					}
 				}
 			}
 		}
+
+		if( !$found ) {
+			print '<p>There are no commission entries for the selected period.</p>' . PHP_EOL;
+		}
 	}
+}
 ?>
 
 </div>
 
 <script type="text/javascript">
+$('.form-inline select').change(function() {
+	$('.form-inline').submit();
+});
+
 $('.ledger-sort').each(function( index ) {
 	var tf = new TableFilter($(this).attr('id'), {
 		base_path: '/leadadmin/libraries/tablefilter/',

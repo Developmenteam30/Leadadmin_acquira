@@ -37,22 +37,97 @@ include(INCLUDES."c_header.php");
 <h2>Income Ledger</h2>
 
 <?php
-	$entries = $leads->getPaidLedger( 1 );
-	if( empty( $entries ) ) {
+	$monthIn = !empty( $_REQUEST['month'] ) ? $_REQUEST['month'] : null;
+	$monthSelected = null;
+	$months = $leads->getPaidLedger( 1, null, 'LEFT(paymentDate,7)' );
+
+	if( empty( $months ) ) {
+
+		print '<p>No ledger entries exist in the database.</p>' . PHP_EOL;
+
+	} else {
+
+		print '<form class="form-inline" method="get">' . PHP_EOL;
+		print '<div class="form-group">' . PHP_EOL;
+		print '<label for="month">Month:</label>' . PHP_EOL;
+		print '<select class="form-control" id="month" name="month">' . PHP_EOL;
+		$years = array();
+		$quarters = array();
+		foreach( $months as $month ) {
+			$year = substr( $month->month, 0, 4 );
+			$quarter = $year . '-Q' . ceil( substr( $month->month, 5, 2 ) / 3 );
+			if( empty( $monthIn ) ) {
+				$monthIn = $month->month;
+			}
+			if( $monthIn == $month->month ) {
+				$monthSelected = $month->month;
+			}
+			if( $monthIn == $year ) {
+				$monthSelected = $year;
+			}
+			if( $monthIn == $quarter ) {
+				$monthSelected = $quarter;
+			}
+			if( empty( $years[$year] ) ) {
+				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+					$year,
+					$monthIn == $year ? ' selected="selected"' : '',
+					htmlentities( $year . ' Year' )
+				);
+				$years[$year] = true;
+			}
+			if( empty( $quarters[$quarter] ) ) {
+				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+					$quarter,
+					$monthIn == $quarter ? ' selected="selected"' : '',
+					htmlentities( str_replace( '-Q', ' Qtr ', $quarter ) )
+				);
+				$quarters[$quarter] = true;
+			}
+
+			printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+				$month->month,
+				$monthIn == $month->month ? ' selected="selected"' : '',
+				htmlentities( $month->month )
+			);
+		}
+		print '</select>' . PHP_EOL;
+		print '</div>' . PHP_EOL;
+		print '</form>' . PHP_EOL;
+
+	}
+
+
+	if( empty( $monthSelected ) ) {
+
+		print '<p>Please select a valid report period above.</p>';
+
+	} else {
+
+		if( strlen( $monthSelected ) == 4 ) {
+			$entries = $leads->getPaidLedger( 1, null, 'LEFT(paymentDate,4)', $monthSelected );
+		} else if( preg_match( '/^(20[0-9]{2})-Q([1-4])$/', $monthSelected, $matches ) ) {
+			$entries = $leads->getPaidLedger( 1, null, 'CONCAT(LEFT(paymentDate,4),QUARTER(paymentDate))', $matches[1] . $matches[2] );
+		} else {
+			$entries = $leads->getPaidLedger( 1, null, 'LEFT(paymentDate,7)', $monthSelected );
+		}
+
+		if( empty( $entries ) ) {
 ?>
 <p>No ledger entries exist in the database.</p>
 <?php
-	} else {
-		$months = array();
-		foreach( $entries as $entry ) {
-			$month = substr( $entry->paymentDate, 0, 7 );
-			$months[$month] = true;
-		}
+		} else {
+			$months = array();
+			foreach( $entries as $entry ) {
+				$month = substr( $entry->paymentDate, 0, 7 );
+				$months[$month] = true;
+			}
+			ksort( $months );
 
-		foreach( $months as $month => $val ) {
+			foreach( $months as $month => $val ) {
 ?>
 <h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
-<table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
+<table class="table table-bordered table-condensed table-striped" id="income_ledger_<?php echo $date; ?>">
 	<thead>
 		<tr class="bgGray header">
 			<th>Entry #</th>
@@ -70,10 +145,10 @@ include(INCLUDES."c_header.php");
 	</thead>
 	<tbody>
 <?php
-			$paymentTotal = 0;
-			foreach( $entries as $entry ) {
-				if( substr( $entry->paymentDate, 0, 7 ) == $month ) {
-					$paymentTotal += $entry->paymentAmount;
+				$paymentTotal = 0;
+				foreach( $entries as $entry ) {
+					if( substr( $entry->paymentDate, 0, 7 ) == $month ) {
+						$paymentTotal += $entry->paymentAmount;
 ?>
 		<tr>
 			<td><?php echo htmlentities( $entry->entryId ); ?></td>
@@ -94,8 +169,8 @@ include(INCLUDES."c_header.php");
 <?php } ?>
 		</tr>
 <?php
+					}
 				}
-			}
 ?>
 	</tbody>
 	<tfoot>
@@ -107,6 +182,7 @@ include(INCLUDES."c_header.php");
 	</tfoot>
 </table>
 <?php
+			}
 		}
 	}
 ?>
@@ -114,6 +190,9 @@ include(INCLUDES."c_header.php");
 </div>
 
 <script type="text/javascript">
+$('.form-inline select').change(function() {
+	$('.form-inline').submit();
+});
 $( "table" ).each(function( index ) {
 	var tf = new TableFilter($(this).attr('id'), {
 		base_path: '/leadadmin/libraries/tablefilter/',

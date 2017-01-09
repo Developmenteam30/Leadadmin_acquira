@@ -1091,25 +1091,94 @@ include(INCLUDES."c_header.php");
 <?php } ?>
 
 <?php
-	$entries = $leads->getOfflineLedger();
-	if( empty( $entries ) ) {
+	$monthIn = !empty( $_REQUEST['month'] ) ? $_REQUEST['month'] : null;
+	$monthSelected = null;
+	$months = $leads->getOfflineLedger( true );
 
-		print '<p>No ledger entries exist in the database.</p>';
+	if( empty( $months ) ) {
+
+		print '<p>No ledger entries exist in the database.</p>' . PHP_EOL;
 
 	} else {
-		$months = array();
-		foreach( $entries as $entry ) {
-			$month = substr( $entry->ledgerMonth, 0, 7 );
-			$months[$month] = true;
+
+		print '<form class="form-inline" method="get">' . PHP_EOL;
+		print '<div class="form-group">' . PHP_EOL;
+		print '<label for="month">Month:</label>' . PHP_EOL;
+		print '<select class="form-control" id="month" name="month">' . PHP_EOL;
+		$years = array();
+		$quarters = array();
+		foreach( $months as $month ) {
+			$year = substr( $month->month, 0, 4 );
+			$quarter = $year . '-Q' . ceil( substr( $month->month, 5, 2 ) / 3 );
+			if( empty( $monthIn ) ) {
+				$monthIn = $month->month;
+			}
+			if( $monthIn == $month->month ) {
+				$monthSelected = $month->month;
+			}
+			if( $monthIn == $year ) {
+				$monthSelected = $year;
+			}
+			if( $monthIn == $quarter ) {
+				$monthSelected = $quarter;
+			}
+			if( empty( $years[$year] ) ) {
+				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+					$year,
+					$monthIn == $year ? ' selected="selected"' : '',
+					htmlentities( $year . ' Year' )
+				);
+				$years[$year] = true;
+			}
+			if( empty( $quarters[$quarter] ) ) {
+				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+					$quarter,
+					$monthIn == $quarter ? ' selected="selected"' : '',
+					htmlentities( str_replace( '-Q', ' Qtr ', $quarter ) )
+				);
+				$quarters[$quarter] = true;
+			}
+
+			printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+				$month->month,
+				$monthIn == $month->month ? ' selected="selected"' : '',
+				htmlentities( $month->month )
+			);
 		}
+		print '</select>' . PHP_EOL;
+		print '</div>' . PHP_EOL;
+		print '</form>' . PHP_EOL;
 
-		$itemTypes = array(
-			'' => '',
-			't' => 'Test',
-			'c' => 'Continuation',
-		);
+	}
 
-		foreach( $months as $month => $val ) {
+	if( empty( $monthSelected ) ) {
+
+		print '<p>Please select a valid report period above.</p>';
+
+	} else {
+
+		$entries = $leads->getOfflineLedger( false, $monthSelected );
+
+		if( empty( $entries ) ) {
+
+			print '<p>No ledger entries exist in the database.</p>';
+
+		} else {
+
+			$itemTypes = array(
+				'' => '',
+				't' => 'Test',
+				'c' => 'Continuation',
+			);
+
+			$months = array();
+			foreach( $entries as $entry ) {
+				$month = substr( $entry->ledgerMonth, 0, 7 );
+				$months[$month] = true;
+			}
+
+			foreach( $months as $month => $val ) {
+
 ?>
 <h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
 <table class="table table-bordered table-condensed table-striped-double ledger-sort" id="offlineledger_<?php echo $month; ?>">
@@ -1147,13 +1216,12 @@ include(INCLUDES."c_header.php");
 	</thead>
 	<tbody>
 <?php
-			$paymentTotal = 0;
-			foreach( $entries as $entry ) {
+				$paymentTotal = 0;
+				foreach( $entries as $entry ) {
+					if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+						$paymentTotal += $entry->paymentAmount;
 
-				if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
-					$paymentTotal += $entry->paymentAmount;
-
-					$ledger = new DateTime( $entry->ledgerMonth );
+						$ledger = new DateTime( $entry->ledgerMonth );
 ?>
 		<tr>
 			<td rowspan="2" class="text-center" style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
@@ -1196,12 +1264,13 @@ include(INCLUDES."c_header.php");
 			<td>$<?php echo number_format( $entry->loPaymentAmount, 2 ); ?></td>
 		</tr>
 <?php
+					}
 				}
-			}
 ?>
 	</tbody>
 </table>
 <?php
+			}
 		}
 	}
 ?>
@@ -1209,6 +1278,9 @@ include(INCLUDES."c_header.php");
 </div>
 
 <script type="text/javascript">
+$('.form-inline select').change(function() {
+	$('.form-inline').submit();
+});
 /*
 $('.ledger-sort').each(function() { console.log($(this).attr('id'));
 	var tf = new TableFilter($(this).attr('id'), {
