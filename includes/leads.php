@@ -1941,6 +1941,18 @@ class Leads
 		return $status;
 	}
 
+
+	public function incrementOutboundQueue( $idFeedOut ) {
+		try {
+			$query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
+			$query->execute( array( $idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to add to queue count: ' . $e->getMessage() );
+			return null;
+		}
+	}
+
 	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
 		$this->db->beginTransaction();
 
