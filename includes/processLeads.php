@@ -8,8 +8,19 @@ class ProcessLeads
 	public static function assignValue( $key, $value, &$requestdata ) {
 
 		if( strpos( $key, '|' ) !== FALSE ) {
-			$vars = explode('|', $key );
+			// Send a subarray with the data
+			$vars = explode( '|', $key );
 			$requestdata[$vars[0]][$vars[1]] = $value;
+		} else if( strpos( $key, '#' ) !== FALSE ) {
+			// Send a JSON object with the data
+			$vars = explode( '#', $key );
+
+			// If there's already JSON data present, append to it
+			if( !empty( $requestdata[$vars[0]] ) ) {
+				$requestdata[$vars[0]] = json_encode( (object) array_merge( array( $vars[1] => $value ), (array) json_decode( $requestdata[$vars[0]] ) ) );
+			} else {
+				$requestdata[$vars[0]] = json_encode( (object) array( $vars[1] => $value ) );
+			}
 		} else {
 			$requestdata[$key] = $value;
 		}
