@@ -82,6 +82,16 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
+			if( $c && !empty( $_REQUEST['chokePercent'] ) && is_numeric( $_REQUEST['chokePercent'] ) === FALSE ) {
+				$c = false;
+				$result['error'] = 'Please enter a numeric value for the choke percent.';
+			}
+
+			if( $c && !empty( $_REQUEST['chokePercent'] ) && ( intval( $_REQUEST['chokePercent'] ) < 0 || intval( $_REQUEST['chokePercent'] ) > 100 ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a value between 0 and 100 for the choke percent.';
+			}
+
 			$filterUrl = '';
 			$filterUrlMulti = array();
 			if( !empty( $_REQUEST['filterUrlMulti'] ) ) {
@@ -139,6 +149,7 @@ if(isset($_REQUEST['a'])){
 						'notifications' => empty( $_REQUEST['notifications'] ) ? 0 : 1,
 						'rejectOldLeads' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? 0 : 1,
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
+						'chokePercent' => empty( $_REQUEST['chokePercent'] ) ? 0 : intval( $_REQUEST['chokePercent'] ),
 					) );
 
 					if( null === $idFeedIn ) {
@@ -222,6 +233,7 @@ if(isset($_REQUEST['a'])){
 						'rejectOldLeads' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? 0 : 1,
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
+						'chokePercent' => empty( $_REQUEST['chokePercent'] ) ? 0 : intval( $_REQUEST['chokePercent'] ),
 					) );
 
 					if( null === $status ) {
@@ -348,7 +360,7 @@ if(isset($_REQUEST['d'])){
 				$mode = 'new';
 			}
 			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'notifications', 'status', 'rejectOldLeadsMaxAge',
+				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'notifications', 'status', 'rejectOldLeadsMaxAge', 'chokePercent',
 			);
 			foreach($feedProps as $feedProp){
 				if(isset($feed)){
@@ -635,6 +647,15 @@ if(isset($_REQUEST['d'])){
 			<p>How old are leads allowed to be before we reject them?  This should be a text string like "7 Days Ago" or "30 Days Ago".  Do not enter just a number. A blank value disables this feature.</p>
 			<p>
 				<input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge' value='<?php echo $feed_rejectOldLeadsMaxAge; ?>' class='long' />
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td>Choke Percent</p></td>
+		<td>
+			<p>The percentage of leads that will randomly be rejected. For example, entering a value of "20" means that approximately 20% of all leads coming in will be rejected. This feature ONLY applies to feeds that are setup as "live" on the outgoing side. Normally this value is zero.</p>
+			<p>
+				<input type="text" name="chokePercent" id="chokePercent" value="<?php echo $feed_chokePercent; ?>" />
 			</p>
 		</td>
 	</tr>

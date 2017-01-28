@@ -45,6 +45,7 @@ if( $feedParams === null ) {
 if( empty( $_REQUEST['pswd'] ) || $_REQUEST['pswd'] != $feedParams->password ) {
 	$result['reason'] = 'Unauthorized access.';
 	$leads->logError( 'Feed '. $feedLabel . ' Unauthorized user at '.$_SERVER["REMOTE_ADDR"], true, false );
+	$_REQUEST['url'] = $_REQUEST['url'] ?? ''; // Ensure a value for the URL is set
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null );
 	showResultAndDie( $result );
 }

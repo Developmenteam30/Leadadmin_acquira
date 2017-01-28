@@ -184,9 +184,12 @@ class ProcessLeads
 					if( !empty( $record ) ) {
 						$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
 						$status = ProcessLeads::pushOutboundData( $feedOut, $record );
-						if( isset( $status['status'] ) && $status['status'] != true ) {
+						if( ( isset( $status['status'] ) && $status['status'] != true ) || ( !empty( $feedParams->chokePercent ) && random_int( 1, 100 ) <= $feedParams->chokePercent ) ) {
 
-							$reason = 'This record was rejected by the receiving party [Feed ID: ' . $feed->idFeedOut . ']';
+							$reason = sprintf( 'This record was rejected by the receiving party [Reason: %s%s]',
+								$feed->idFeedOut,
+								( isset( $status['status'] ) && $status['status'] != true ) ? '0' : '1'
+							);
 							$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $data['url'], date( 'Y-m-d' ), $reason );
 							return $reason;
 						}
