@@ -97,7 +97,7 @@ if(isset($_REQUEST['a'])){
 			if( !empty( $_REQUEST['filterUrlMulti'] ) ) {
 				$filterUrlMulti = explode( "\n", $_REQUEST['filterUrlMulti'] );
 			}
-			$_REQUEST['filterUrl'] = array_merge( $_REQUEST['filterUrl'], $filterUrlMulti );
+			$_REQUEST['filterUrl'] = !empty( $_REQUEST['filterUrl'] ) ? array_merge( $_REQUEST['filterUrl'], $filterUrlMulti ) : $filterUrlMulti;
 			if( !empty( $_REQUEST['filterUrl'] ) && is_array( $_REQUEST['filterUrl'] ) ) {
 				$_REQUEST['filterUrl'] = array_map( 'trim', $_REQUEST['filterUrl'] );
 				$filterUrl = implode( ';', $_REQUEST['filterUrl'] );
@@ -108,7 +108,7 @@ if(isset($_REQUEST['a'])){
 			if( !empty( $_REQUEST['filterSiftLogicMulti'] ) ) {
 				$filterSiftLogicMulti = explode( "\n", $_REQUEST['filterSiftLogicMulti'] );
 			}
-			$_REQUEST['filterSiftLogic'] = array_merge( $_REQUEST['filterSiftLogic'], $filterSiftLogicMulti );
+			$_REQUEST['filterSiftLogic'] = !empty( $_REQUEST['filterSiftLogic'] ) ? array_merge( $_REQUEST['filterSiftLogic'], $filterSiftLogicMulti ) : $filterSiftLogicMulti;
 			if( !empty( $_REQUEST['filterSiftLogic'] ) && is_array( $_REQUEST['filterSiftLogic'] ) ) {
 				$_REQUEST['filterSiftLogic'] = array_map( 'trim', $_REQUEST['filterSiftLogic'] );
 				$filterSiftLogic = implode( ';', $_REQUEST['filterSiftLogic'] );
