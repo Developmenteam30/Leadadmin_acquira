@@ -235,7 +235,7 @@ if($incomingFeeds === false){
 	$grandTotalRejected = 0;
 	$grandTotalFeeds = 0;
 ?>
-<table class="table table-bordered table-condensed table-striped-custom">
+<table class="table table-bordered table-condensed table-striped-custom table-small-font">
 	<thead>
 	<tr>
 		<th>Company</th>
@@ -345,7 +345,7 @@ if($outgoingFeeds === false){
 	$grandTotalQueued = 0;
 	$grandTotalFeeds = 0;
 ?>
-<table class="table table-bordered table-condensed table-striped-custom">
+<table class="table table-bordered table-condensed table-striped-custom table-small-font">
 	<thead>
 	<tr>
 		<th>Company</th>

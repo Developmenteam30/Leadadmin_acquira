@@ -18,6 +18,8 @@ table.standard td { border: 1px solid #CCCCCC; padding: 5px; vertical-align: top
 table.standard td p { padding: 0 0 3px 0; }
 table.standard thead { font-weight: bold; text-align: center; }
 
+table.table-small-font { font-size: 12px; }
+
 table.revenue-report td { padding: 10px; vertical-align: middle; }
 table.revenue-report tr.reverse { background-color: #fdfdfd; }
 table.revenue-report thead td { font-weight: bold; background-color: <?php echo $gradientColor3; ?>; color: #fff; }
