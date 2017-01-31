@@ -129,6 +129,7 @@ if(isset($_REQUEST['a'])){
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
 						'queued' => 0,
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
+						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
 					) );
 
 					if( null === $idFeedOut ) {
@@ -199,6 +200,7 @@ if(isset($_REQUEST['a'])){
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
+						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
 					);
 
 					// For retired feeds, automatically turn off cron processing and set all populations as disabled
@@ -634,7 +636,19 @@ if( isset( $_REQUEST['d'] ) ) {
 					$fieldMap = explode( ";", $feed->fieldMap );
 				}
 			}
-			$feedProps = array('idFeedOut', 'label', 'description', 'idCompany', 'feedType', 'postUrl', 'successString', 'status', 'dailyLimit', 'delay' );
+			$feedProps = array(
+				'idFeedOut',
+				'label',
+				'description',
+				'idCompany',
+				'feedType',
+				'postUrl',
+				'successString',
+				'status',
+				'dailyLimit',
+				'delay',
+				'feedCategory',
+			);
 			foreach($feedProps as $feedProp){
 				if(isset($feed)){
 					${"feed_".$feedProp} = $feed->$feedProp;
@@ -715,6 +729,16 @@ if( isset( $_REQUEST['d'] ) ) {
 			</p>
 		</td>
 	</tr>
+		<tr>
+				<td><p>Feed Category</p></td>
+				<td>
+						<p>
+							<input type="radio" name="feedCategory" value="email"<?php if( empty( $feed_feedCategory ) || 'email' == $feed_feedCategory ) { print ' checked="checked"'; } ?> /> Email<br/>
+							<input type="radio" name="feedCategory" value="phone"<?php if( 'phone' == $feed_feedCategory ) { print ' checked="checked"'; } ?> /> Phone<br/>
+							<input type="radio" name="feedCategory" value="both"<?php if( 'both' == $feed_feedCategory ) { print ' checked="checked"'; } ?> /> Both
+						</p>
+				</td>
+		</tr>
 	<tr>
 		<td><p>Feed Type</p></td>
 		<td>
@@ -1486,8 +1510,8 @@ if( isset( $_REQUEST['d'] ) ) {
 </form>
 <script type="text/javascript">
 $("#new_pop select[name='idFeedIn'], #edit_pop select[name='idFeedIn']").select2({
-    placeholder: "Select an incoming feed",
-    allowClear: true
+	placeholder: "Select an incoming feed",
+	allowClear: true
 });
 </script>
 <?php

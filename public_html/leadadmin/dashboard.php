@@ -189,20 +189,27 @@ div.chartValue { float: left; width: 75px; }
 <?php include(INCLUDES.'c_nav.php'); ?>
 
 <div class="container-fluid">
+<?php
+$feedCategories = array(
+	'email' => 'Email',
+	'phone' => 'Phone',
+);
+foreach( $feedCategories as $categoryKey => $categoryVal ) {
+?>
 	<div class="row">
 		<div class="col-md-6">
 <?php
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$incomingFeeds = $leads->getInboundFeeds( null, 'active' );
+				$incomingFeeds = $leads->getInboundFeeds( null, 'active', $categoryKey );
 			} else {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
 				}
-				$incomingFeeds = $leads->getInboundFeeds( $idCompany, 'active' );
+				$incomingFeeds = $leads->getInboundFeeds( $idCompany, 'active', $categoryKey );
 			}
 ?>
-<h4>Incoming Feeds (Last Updated: <?php echo date("m-d g:i:s a"); ?>) <a href="#" class="btn btn-primary btn-xs nonLink" onclick="automaticRefresh = true; autoRefresh();">Refresh</a></h4>
+<h4>Incoming <?php echo $categoryVal;?> Feeds (Last Updated: <?php echo date("m-d g:i:s a"); ?>) <a href="#" class="btn btn-primary btn-xs nonLink" onclick="automaticRefresh = true; autoRefresh();">Refresh</a></h4>
 <?php
 if($incomingFeeds === false){
 ?>
@@ -301,16 +308,16 @@ if($incomingFeeds === false){
 		<div class="col-md-6">
 <?php
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$outgoingFeeds = $leads->getOutboundFeeds( null, 'active' );
+				$outgoingFeeds = $leads->getOutboundFeeds( null, 'active', $categoryKey );
 			} else {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
 				}
-				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, 'active' );
+				$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, 'active', $categoryKey );
 			}
 ?>
-<h4>Outgoing Feeds (Last Updated: <?php echo date("m-d g:i:s a"); ?>) <a href="#" class="btn btn-primary btn-xs nonLink" onclick="automaticRefresh = true; autoRefresh();">Refresh</a></h4>
+<h4>Outgoing <?php echo $categoryVal; ?> Feeds (Last Updated: <?php echo date("m-d g:i:s a"); ?>) <a href="#" class="btn btn-primary btn-xs nonLink" onclick="automaticRefresh = true; autoRefresh();">Refresh</a></h4>
 <?php
 if($outgoingFeeds === false){ 
 ?>
@@ -425,6 +432,7 @@ if($outgoingFeeds === false){
 ?>
 		</div>
 	</div>
+<?php } // $feedCategories ?>
 </div>
 
 <div class="modal fade" id="companynotes" tabindex="-1" role="dialog" aria-labelledby="companynotes_title">

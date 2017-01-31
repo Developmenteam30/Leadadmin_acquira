@@ -1389,30 +1389,34 @@ class Leads
 		return $results;
 	}
 
-	public function getInboundFeeds( $idCompany = null, $status = null ) {
+	public function getInboundFeeds( $idCompany = null, $status = null, $feedCategory = null ) {
 		$results = array();
+		$params = array();
+
+		$sql  = "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate ";
+		$sql .= "FROM feedinc f ";
+		$sql .= "LEFT JOIN companies c ON f.idCompany = c.idCompany ";
+		$sql .= "LEFT JOIN companies_notes n ON n.companyId = c.idCompany ";
+		$sql .= "WHERE 1=1 ";
+		if( !empty( $idCompany ) ) {
+			$sql .= "AND c.idCompany = ? ";
+			$params[] = $idCompany;
+		}
+		if( !empty( $status ) ) {
+			$sql .= "AND f.status = ? ";
+			$params[] = $status;
+		}
+		if( !empty( $feedCategory ) ) {
+			$sql .= "AND ( f.feedCategory = 'both' OR f.feedCategory = ? ) ";
+			$params[] = $feedCategory;
+		}
+		$sql .= "GROUP BY f.idFeedIn ";
+		$sql .= "ORDER BY c.name,f.idFeedIn";
 
 		try {
-			if( $status === null ) {
 
-				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE c.idCompany = ? GROUP BY f.idFeedIn ORDER BY f.idFeedIn" );
-					$query->execute( array( $idCompany ) );
-				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany GROUP BY f.idFeedIn ORDER BY c.name,f.idFeedIn" );
-					$query->execute( );
-				}
-
-			} else {
-
-				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE c.idCompany = ? AND f.status = ? GROUP BY f.idFeedIn ORDER BY f.idFeedIn" );
-					$query->execute( array( $idCompany, $status ) );
-				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE f.status = ? GROUP BY f.idFeedIn ORDER BY c.name,f.idFeedIn" );
-					$query->execute( array( $status ) );
-				}
-			}
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound feed list: ' . $e->getMessage() );
@@ -1658,31 +1662,36 @@ class Leads
 		return $results;
 	}
 
-	public function getOutboundFeeds( $idCompany = null, $status = null ) {
+	public function getOutboundFeeds( $idCompany = null, $status = null, $feedCategory = null ) {
 		$results = array();
+		$params = array();
+
+		$sql  = "SELECT o.*,co.name,MAX(n.timestamp) AS lastDate ";
+		$sql .= "FROM feedout o ";
+		$sql .= "LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut ";
+		$sql .= "LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn ";
+		$sql .= "LEFT JOIN companies ci ON ci.idCompany = i.idCompany ";
+		$sql .= "LEFT JOIN companies co ON co.idCompany = o.idCompany ";
+		$sql .= "LEFT JOIN companies_notes n ON n.companyId = co.idCompany ";
+		$sql .= "WHERE 1=1 ";
+		if( !empty( $idCompany ) ) {
+			$sql .= "AND ci.idCompany = ? ";
+			$params[] = $idCompany;
+		}
+		if( !empty( $status ) ) {
+			$sql .= "AND o.status = ? ";
+			$params[] = $status;
+		}
+		if( !empty( $feedCategory ) ) {
+			$sql .= "AND ( o.feedCategory = 'both' OR o.feedCategory = ? ) ";
+			$params[] = $feedCategory;
+		}
+		$sql .= "GROUP BY o.idFeedOut ";
+		$sql .= "ORDER BY co.name,o.idFeedOut";
 
 		try {
-			if( $status === null ) {
-
-				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT o.*,co.name,MAX(n.timestamp) AS lastDate FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany LEFT JOIN companies_notes n ON n.companyId = co.idCompany WHERE ci.idCompany = ? GROUP BY o.idFeedOut ORDER BY o.idFeedOut" );
-					$query->execute( array( $idCompany ) );
-				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany GROUP BY f.idFeedOut ORDER BY c.name,f.idFeedOut" );
-					$query->execute( );
-				}
-
-			} else {
-
-				if( !empty( $idCompany ) ) {
-					$query = $this->db->prepare( "SELECT o.*,co.name,MAX(n.timestamp) AS lastDate FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany LEFT JOIN companies_notes n ON n.companyId = co.idCompany WHERE ci.idCompany = ? AND o.status = ? GROUP BY o.idFeedOut ORDER BY o.idFeedOut" );
-					$query->execute( array( $idCompany, $status ) );
-				} else {
-					$query = $this->db->prepare( "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate FROM feedout f LEFT JOIN companies c ON f.idCompany = c.idCompany LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE f.status = ? GROUP BY f.idFeedOut ORDER BY c.name,f.idFeedOut" );
-					$query->execute( array( $status ) );
-				}
-
-			}
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound feed list: ' . $e->getMessage() );

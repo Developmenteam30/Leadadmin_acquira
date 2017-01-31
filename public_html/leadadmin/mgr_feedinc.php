@@ -150,6 +150,7 @@ if(isset($_REQUEST['a'])){
 						'rejectOldLeads' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? 0 : 1,
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
 						'chokePercent' => empty( $_REQUEST['chokePercent'] ) ? 0 : intval( $_REQUEST['chokePercent'] ),
+						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
 					) );
 
 					if( null === $idFeedIn ) {
@@ -234,6 +235,7 @@ if(isset($_REQUEST['a'])){
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'chokePercent' => empty( $_REQUEST['chokePercent'] ) ? 0 : intval( $_REQUEST['chokePercent'] ),
+						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
 					) );
 
 					if( null === $status ) {
@@ -359,8 +361,22 @@ if(isset($_REQUEST['d'])){
 			if( empty( $mode ) ) {
 				$mode = 'new';
 			}
-			$feedProps = array('idFeedIn', 'label', 'description', 'idCompany'
-				, 'dedupeEmail', 'dedupeLandline', 'dedupeCellphone', 'dedupeAcross', 'filterTypeUrl', 'filterTypeSiftLogic', 'notifications', 'status', 'rejectOldLeadsMaxAge', 'chokePercent',
+			$feedProps = array(
+				'idFeedIn',
+				'label',
+				'description',
+				'idCompany',
+				'dedupeEmail',
+				'dedupeLandline',
+				'dedupeCellphone',
+				'dedupeAcross',
+				'filterTypeUrl',
+				'filterTypeSiftLogic',
+				'notifications',
+				'status',
+				'rejectOldLeadsMaxAge',
+				'chokePercent',
+				'feedCategory',
 			);
 			foreach($feedProps as $feedProp){
 				if(isset($feed)){
@@ -463,6 +479,16 @@ if(isset($_REQUEST['d'])){
 			</p>
 		</td>
 	</tr>
+		<tr>
+				<td><p>Feed Category</p></td>
+				<td>
+						<p>
+							<input type="radio" name="feedCategory" value="email"<?php if( empty( $feed_feedCategory ) || 'email' == $feed_feedCategory ) { print ' checked="checked"'; } ?> /> Email<br/>
+							<input type="radio" name="feedCategory" value="phone"<?php if( 'phone' == $feed_feedCategory ) { print ' checked="checked"'; } ?> /> Phone<br/>
+							<input type="radio" name="feedCategory" value="both"<?php if( 'both' == $feed_feedCategory ) { print ' checked="checked"'; } ?> /> Both
+						</p>
+				</td>
+		</tr>
 	<tr>
 		<td>Required Fields</p></td>
 		<td>
