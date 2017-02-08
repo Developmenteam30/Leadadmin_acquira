@@ -186,7 +186,8 @@ class ProcessLeads
 						$status = ProcessLeads::pushOutboundData( $feedOut, $record );
 						if( ( isset( $status['status'] ) && $status['status'] != true ) || ( !empty( $feedParams->chokePercent ) && random_int( 1, 100 ) <= $feedParams->chokePercent ) ) {
 
-							$reason = sprintf( 'This record was rejected by the receiving party [Reason: %s%s]',
+							$reason = sprintf( 'Third-party rejection [Reason: %s] [Code: %s%s]',
+								( isset( $status['status'] ) && $status['status'] != true && !empty( $status['text'] ) ) ? $status['text'] : 'Record failure',
 								$feed->idFeedOut,
 								( isset( $status['status'] ) && $status['status'] != true ) ? '0' : '1'
 							);
