@@ -691,6 +691,15 @@ class ProcessLeads
 			return $result;
 		}
 
+		// Ensure we haven't reached our daily limit of records
+		if( !is_null( $feedParams->dailyLimit ) && intval( $feedParams->dailyLimit ) > 0 ) {
+			$cnt = $leads->getInboundDailyCount( $feedParams->idFeedIn );
+			if( $cnt && $cnt > $feedParams->dailyLimit ) {
+				$result['valid'] = false;
+				$result['errors'][] = 'Daily lead limit has been reached.';
+			}
+		}
+
 		if( !empty( $data['email'] ) ) {
 			$exists = $leads->checkSuppression( $data['email'], null );
 			if( $exists === true ) {

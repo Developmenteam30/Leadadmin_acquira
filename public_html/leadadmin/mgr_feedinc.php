@@ -82,6 +82,16 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
+			if( $c && !empty( $_REQUEST['dailyLimit'] ) && is_numeric( $_REQUEST['dailyLimit'] ) === FALSE ) {
+				$c = false;
+				$result['error'] = 'Please enter a numeric value for the daily limit.';
+			}
+
+			if( $c && !empty( $_REQUEST['dailyLimit'] ) && intval( $_REQUEST['dailyLimit'] ) < 0 ) {
+				$c = false;
+				$result['error'] = 'Please enter a positive number for the daily limit.';
+			}
+
 			if( $c && !empty( $_REQUEST['chokePercent'] ) && is_numeric( $_REQUEST['chokePercent'] ) === FALSE ) {
 				$c = false;
 				$result['error'] = 'Please enter a numeric value for the choke percent.';
@@ -151,6 +161,7 @@ if(isset($_REQUEST['a'])){
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
 						'chokePercent' => empty( $_REQUEST['chokePercent'] ) ? 0 : intval( $_REQUEST['chokePercent'] ),
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
+						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : intval( $_REQUEST['dailyLimit'] ),
 					) );
 
 					if( null === $idFeedIn ) {
@@ -236,6 +247,7 @@ if(isset($_REQUEST['a'])){
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'chokePercent' => empty( $_REQUEST['chokePercent'] ) ? 0 : intval( $_REQUEST['chokePercent'] ),
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
+						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : intval( $_REQUEST['dailyLimit'] ),
 					) );
 
 					if( null === $status ) {
@@ -376,6 +388,7 @@ if(isset($_REQUEST['d'])){
 				'status',
 				'rejectOldLeadsMaxAge',
 				'chokePercent',
+				'dailyLimit',
 				'feedCategory',
 			);
 			foreach($feedProps as $feedProp){
@@ -673,6 +686,15 @@ if(isset($_REQUEST['d'])){
 			<p>How old are leads allowed to be before we reject them?  This should be a text string like "7 Days Ago" or "30 Days Ago".  Do not enter just a number. A blank value disables this feature.</p>
 			<p>
 				<input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge' value='<?php echo $feed_rejectOldLeadsMaxAge; ?>' class='long' />
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td><p>Daily Feed Limit</p></td>
+		<td>
+			<p>Leave blank for no limit (default). If a value is supplied here, the feed will stop accepting records after the daily limit is reached.</p>
+			<p>
+				<input type="text" name="dailyLimit" value="<?php echo $feed_dailyLimit; ?>" />
 			</p>
 		</td>
 	</tr>
