@@ -625,7 +625,7 @@ class Leads
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE 1=1 ";
-		if( $type != null ) {
+		if( $type !== null ) {
 			$sql .= "AND type = ? ";
 			$params[] = $type;
 		}
