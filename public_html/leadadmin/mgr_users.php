@@ -41,7 +41,7 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-			if( ( LEADS_SESSION_LEVEL_CLIENT_REPORTS == $_REQUEST['level'] || LEADS_SESSION_LEVEL_CLIENT_DASHBOARD == $_REQUEST['level'] ) && empty( $_REQUEST['idCompany'] ) ) {
+			if( ( LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS == $_REQUEST['level'] || LEADS_SESSION_LEVEL_CLIENT_REPORTS == $_REQUEST['level'] || LEADS_SESSION_LEVEL_CLIENT_DASHBOARD == $_REQUEST['level'] ) && empty( $_REQUEST['idCompany'] ) ) {
 				$result['error'] = 'Please associate this user with a company.';
 				break;
 			}
@@ -86,7 +86,7 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-			if( ( LEADS_SESSION_LEVEL_CLIENT_REPORTS == $_REQUEST['level'] || LEADS_SESSION_LEVEL_CLIENT_DASHBOARD == $_REQUEST['level'] ) && empty( $_REQUEST['idCompany'] ) ) {
+			if( ( LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS == $_REQUEST['level'] || LEADS_SESSION_LEVEL_CLIENT_REPORTS == $_REQUEST['level'] || LEADS_SESSION_LEVEL_CLIENT_DASHBOARD == $_REQUEST['level'] ) && empty( $_REQUEST['idCompany'] ) ) {
 				$result['error'] = 'Please associate this user with a company.';
 				break;
 			}
@@ -184,6 +184,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'choices' => array(
 						0 => 'No Access',
 						LEADS_SESSION_LEVEL_CLIENT_REPORTS => 'Client Reporting Access',
+						LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS => 'Client Phone Leads Report',
 						LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Client Import Access',
 						LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Client Dashboard Access',
 						LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
@@ -259,6 +260,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'choices' => array(
 						0 => 'No Access',
 						LEADS_SESSION_LEVEL_CLIENT_REPORTS => 'Client Reporting Access',
+						LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS => 'Client Phone Leads Report',
 						LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Client Import Access',
 						LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Client Dashboard Access',
 						LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
@@ -334,6 +336,8 @@ include(INCLUDES."c_header.php");
 						$level = 'Client Dashboard';
 					} else if( LEADS_SESSION_LEVEL_CLIENT_IMPORT == $level ) {
 						$level = 'Client Import';
+					} else if( LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS == $level ) {
+						$level = 'Client Phone Leads';
 					} else if( LEADS_SESSION_LEVEL_CLIENT_REPORTS == $level ) {
 						$level = 'Client Reporting';
 					} else if( 0 == $level ) {

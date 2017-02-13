@@ -41,25 +41,17 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		) ),
 	);
 
-} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
-
-	$nav = array(
-		array( 'name' => 'Dashboard', 'url' => '/leadadmin/dashboard.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ),
-		array( 'name' => 'Incoming Feeds', 'url' => '/leadadmin/mgr_feedinc.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ),
-		array( 'name' => 'Outgoing Feeds', 'url' => '/leadadmin/mgr_feedout.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ),
-	);
-
-} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_IMPORT ) ) {
-
-	$nav = array(
-		array( 'name' => 'Incoming Feeds', 'url' => '/leadadmin/mgr_feedinc.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_IMPORT ),
-		array( 'name' => 'Jobs', 'url' => '/leadadmin/mgr_job.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_IMPORT ),
-	);
-
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_REPORTS ) ) {
 
 	$nav = array(
-		array( 'name' => 'Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_REPORTS ),
+		array( 'name' => 'Dashboard', 'url' => '/leadadmin/dashboard.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ),
+		array( 'name' => 'Incoming Feeds', 'url' => '/leadadmin/mgr_feedinc.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_IMPORT ),
+		array( 'name' => 'Outgoing Feeds', 'url' => '/leadadmin/mgr_feedout.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ),
+		array( 'name' => 'Jobs', 'url' => '/leadadmin/mgr_job.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_IMPORT ),
+		array( 'name' => 'Reports', 'level' => LEADS_SESSION_LEVEL_CLIENT_REPORTS, 'menu' => array(
+			array( 'name' => 'Phone Leads Report', 'url' => '/leadadmin/phone-leads-report.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS ),
+			array( 'name' => 'Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_CLIENT_REPORTS ),
+		) ),
 	);
 
 }

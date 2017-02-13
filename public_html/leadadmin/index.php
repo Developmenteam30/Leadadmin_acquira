@@ -9,6 +9,9 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_IMPORT ) ) {
 	header("Location: mgr_feedinc.php");
 	exit;
+} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS ) ) {
+	header("Location: phone-leads-report.php");
+	exit;
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_REPORTS ) ) {
 	header("Location: client_reports.php");
 	exit;
