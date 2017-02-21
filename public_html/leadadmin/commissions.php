@@ -150,7 +150,11 @@ if( empty( $user ) ) {
 			<th>Ledger Month</th>
 			<th>Invoice #</th>
 			<th>Payment Amount</th>
+			<th>Payment Date</th>
 			<th>Commission</th>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+			<th>Actions</th>
+<?php } ?>
 		</tr>
 	</thead>
 	<tbody>
@@ -170,7 +174,16 @@ if( empty( $user ) ) {
 			<td data-tf-sortKey="<?php echo date( 'Y-m-01', strtotime( $entry->ledgerMonth ) ); ?>"><?php echo date( 'F Y', strtotime( $entry->ledgerMonth ) ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+			<td class="text-center"><?php if( '4' === $entry->divisionId ) { ?>
+<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+<?php } else if( 'email' === $entry->source ) { print "&nbsp;"; ?>
+<?php } else { ?>
+<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+<?php } ?></td>
+<?php } ?>
 		</tr>
 <?php
 						}
@@ -181,7 +194,11 @@ if( empty( $user ) ) {
 		<tr class="bgGray header">
 			<td colspan="5">Monthly Totals</td>
 			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+			<td>&nbsp;</td>
 			<td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
+<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+			<td>&nbsp;</td>
+<?php } ?>
 		</tr>
 	</tfoot>
 </table>
@@ -237,6 +254,8 @@ $('.ledger-sort').each(function( index ) {
 	tf.init();
 });
 </script>
+
+<?php require_once( INCLUDES . 'modals.php' ); ?>
 
 </body>
 </html>
