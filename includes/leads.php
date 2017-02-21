@@ -2762,7 +2762,7 @@ class Leads
 				$dateStart = date("Y-m-d", strtotime($dateStart));
 				$dateEnd = date("Y-m-d", strtotime($dateEnd));
 			}
-			$query .= "AND stamp >= '".$dateStart."' AND stamp < '".$dateEnd."' ";
+			$query .= "AND stamp >= '".$dateStart."' AND stamp <= '".$dateEnd."' ";
 		}
 
 		$query .= "GROUP BY 1,2 ";
@@ -2831,7 +2831,7 @@ class Leads
 				$dateStart = date("Y-m-d", strtotime($dateStart));
 				$dateEnd = date("Y-m-d", strtotime($dateEnd));
 			}
-			$query .= "AND stamp >= '".$dateStart."' AND stamp < '".$dateEnd."' ";
+			$query .= "AND stamp >= '".$dateStart."' AND stamp <= '".$dateEnd."' ";
 		}
 
 		$query .= "GROUP BY 1,2 ";

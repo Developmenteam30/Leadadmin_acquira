@@ -34,7 +34,7 @@ include(INCLUDES."c_header.php");
 <h2>Phone Leads Report</h2>
 
 <?php
-	$dateStart = !empty( $_REQUEST['dateStart'] ) ? $_REQUEST['dateStart'] : date( 'Y-m-d', strtotime( 'yesterday' ) );
+	$dateStart = !empty( $_REQUEST['dateStart'] ) ? $_REQUEST['dateStart'] : date( 'Y-m-d' );
 	$dateEnd = !empty( $_REQUEST['dateEnd'] ) ? $_REQUEST['dateEnd'] : date( 'Y-m-d' );
 ?>
 
