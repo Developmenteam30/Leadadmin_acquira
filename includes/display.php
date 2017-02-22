@@ -61,7 +61,7 @@ class Display
 
 			if( in_array( $field['type'], array( 'text', 'number', 'tel', 'date', 'email', 'password', 'url' ) ) ) {
 
-				printf( "\t<label for=\"%s\">%s</label>\n",
+				printf( "\t<label data-for=\"%s\">%s</label>\n",
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
@@ -77,7 +77,7 @@ class Display
 
 			} else if( 'currency' == $field['type'] ) {
 
-				printf( "\t<label for=\"%s\">%s</label>\n",
+				printf( "\t<label data-for=\"%s\">%s</label>\n",
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
@@ -91,7 +91,7 @@ class Display
 
 			} else if( 'checkbox' == $field['type'] ) {
 
-				printf( "\t<label for=\"%s\">%s%s</label>%s\n",
+				printf( "\t<label data-for=\"%s\">%s%s</label>%s\n",
 						htmlspecialchars( $field['id'] ),
 						htmlspecialchars( $field['label'] ),
 						( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' ),
@@ -114,7 +114,7 @@ class Display
 
 			} else if( 'radio' == $field['type'] ) {
 
-				printf( "\t<label for=\"%s\">%s%s</label>\n",
+				printf( "\t<label data-for=\"%s\">%s%s</label>\n",
 						htmlspecialchars( $field['id'] ),
 						htmlspecialchars( $field['label'] ),
 						( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' )
@@ -134,7 +134,7 @@ class Display
 
 			} else if( 'textarea' == $field['type'] ) {
 
-				printf( "\t<label for=\"%s\">%s</label>\n",
+				printf( "\t<label data-for=\"%s\">%s</label>\n",
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
@@ -147,7 +147,7 @@ class Display
 
 			} else if( 'select' == $field['type'] ) {
 
-				printf( "\t<label for=\"%s\">%s</label>\n",
+				printf( "\t<label data-for=\"%s\">%s</label>\n",
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlentities( $field['label'] )
 				);
@@ -175,7 +175,7 @@ class Display
 						);
 						foreach( $val as $rec_key => $rec_val ) {
 							$selected = false;
-							if( is_array( $field['value'] ) ) {
+							if( isset( $field['value'] ) && is_array( $field['value'] ) ) {
 								if( array_key_exists( $rec_key, $field['value'] ) ) {
 									$selected = true;
 								}
@@ -191,7 +191,7 @@ class Display
 						print "\t\t</optgroup>\n";
 					} else {
 						$selected = false;
-						if( is_array( $field['value'] ) ) {
+						if( isset( $field['value'] ) && is_array( $field['value'] ) ) {
 							if( array_key_exists( $key, $field['value'] ) ) {
 								$selected = true;
 							}
@@ -241,7 +241,7 @@ class Display
 
 			} else if( '_html' == $field['type'] ) {
 
-				printf( "\t<label for=\"%s\">%s</label>\n",
+				printf( "\t<label data-for=\"%s\">%s</label>\n",
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
 				);
@@ -249,7 +249,7 @@ class Display
 
 			} else if( '_text' == $field['type'] ) {
 
-				printf( "\t<label for=\"%s\">%s</label>\n",
+				printf( "\t<label data-for=\"%s\">%s</label>\n",
 						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
 						htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
 				);
