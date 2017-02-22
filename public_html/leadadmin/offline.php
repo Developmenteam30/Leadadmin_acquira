@@ -1087,7 +1087,7 @@ include(INCLUDES."c_header.php");
 <h2>Offline Ledger</h2>
 
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newofflineledger">Add a new entry</button></p>
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button></p>
 <?php } ?>
 
 <?php
@@ -1214,7 +1214,6 @@ include(INCLUDES."c_header.php");
 			<th>LO Pmt Amt</th>
 		</tr>
 	</thead>
-	<tbody>
 <?php
 				$paymentTotal = 0;
 				foreach( $entries as $entry ) {
@@ -1223,6 +1222,7 @@ include(INCLUDES."c_header.php");
 
 						$ledger = new DateTime( $entry->ledgerMonth );
 ?>
+	<tbody>
 		<tr>
 			<td rowspan="2" class="text-center" style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->clientCompanyName ); ?></td>
@@ -1263,11 +1263,11 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->loPaymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->loPaymentAmount, 2 ); ?></td>
 		</tr>
+	</tbody>
 <?php
 					}
 				}
 ?>
-	</tbody>
 </table>
 <?php
 			}

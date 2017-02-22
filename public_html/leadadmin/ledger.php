@@ -438,47 +438,47 @@ if(isset($_REQUEST['d'])){
 ?>
 
 <script type="text/javascript">
-$('#newledger input[name=paymentDate], #newledger input[name=commissionDate]').datepicker({
+$('#new_ledger input[name=paymentDate], #new_ledger input[name=commissionDate]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
 
-$("#newledger select[name='divisionId']").select2({
+$("#new_ledger select[name='divisionId']").select2({
 	placeholder: "Select a division",
 	allowClear: true
 });
 
-$("#newledger select[name='companyId']").select2({
+$("#new_ledger select[name='companyId']").select2({
 	placeholder: "Select a company",
 	allowClear: true
 });
 
-$("#newledger select[name='verticalId']").select2({
+$("#new_ledger select[name='verticalId']").select2({
 	placeholder: "Select a vertical",
 	allowClear: true
 });
 
-$("#newledger select[name='ledgerMonth']").select2({
+$("#new_ledger select[name='ledgerMonth']").select2({
 	placeholder: "Select the ledger month",
 	allowClear: true
 });
 
-$("#newledger select[name='userId']").select2({
+$("#new_ledger select[name='userId']").select2({
 	placeholder: "Select a salesperson",
 	allowClear: true
 });
 
-$("#newledger select[name='divisionId']").change( function() {
+$("#new_ledger select[name='divisionId']").change( function() {
 	$.ajax({
 		type: "post",
 		url: "ledger.php",
 		data: {
 			a: 'getDivisionCompanies',
-			divisionId: $("#newledger select[name='divisionId']").val()
+			divisionId: $("#new_ledger select[name='divisionId']").val()
 		},
 		dataType: "json",
 		success: function(data) {
-			var companyId = $("#newledger select[name='companyId']")
+			var companyId = $("#new_ledger select[name='companyId']")
 			if( companyId ) {
 				companyId.empty();
 				companyId.append('<option></option>');
@@ -498,11 +498,11 @@ $("#newledger select[name='divisionId']").change( function() {
 		url: "ledger.php",
 		data: {
 			a: 'getDivisionVerticals',
-			divisionId: $("#newledger select[name='divisionId']").val()
+			divisionId: $("#new_ledger select[name='divisionId']").val()
 		},
 		dataType: "json",
 		success: function(data) {
-			var verticalId = $("#newledger select[name='verticalId']")
+			var verticalId = $("#new_ledger select[name='verticalId']")
 			if( verticalId ) {
 				verticalId.empty();
 				verticalId.append('<option></option>');
@@ -824,7 +824,7 @@ include(INCLUDES."c_header.php");
 <h2><?php echo ( $type == 0 ? 'Publisher' : 'Advertiser' ); ?></h2>
 
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newledger">Add a new entry</button></p>
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button></p>
 <?php } ?>
 
 <?php

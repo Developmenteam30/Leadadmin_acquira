@@ -414,6 +414,19 @@ class Leads
 		return true;
 	}
 
+	public function deletePhoneLedger( $ledgerId ) {
+
+		try {
+			$query = $this->db->prepare( "DELETE FROM ledger_phones WHERE ledgerId = ?" );
+			$query->execute( array( $ledgerId ) );
+		} catch( Leads_PDOException $e ) {
+			$this->logError( 'Unable to delete phones ledger entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return true;
+	}
+
 	public function updateLedger( $ledgerId, $fields ) {
 
 		try {
@@ -445,6 +458,70 @@ class Leads
 
 		return null;
 	}
+
+	public function addPhoneLedger( $fields ) {
+
+		$ledgerId = null;
+
+		try {
+			$ledgerId = $this->insertRow( 'ledger_phones', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add phone ledger entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $ledgerId;
+	}
+
+	public function updatePhoneLedger( $ledgerId, $fields ) {
+
+		try {
+			$status = $this->update( 'ledger_phones', $fields, array(
+				'ledgerId' => $ledgerId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update phones ledger: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
+	public function addPhoneLedgerVendor( $fields ) {
+
+		$ledgerId = null;
+
+		try {
+			$ledgerId = $this->insertRow( 'ledger_phones_vendors', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add phone ledger vendor entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $ledgerId;
+	}
+
+	public function updatePhoneLedgerVendor( $ledgerId, $indexId, $fields ) {
+
+		try {
+			$status = $this->update( 'ledger_phones_vendors', $fields, array(
+				'ledgerId' => $ledgerId,
+				'indexId' => $indexId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update phones vendor ledger: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return null;
+	}
+
 
 	public function getLedgerById( $ledgerId ) {
 		$results = null;
@@ -485,6 +562,35 @@ class Leads
 			$results = $query->fetch( PDO::FETCH_OBJ  );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get offline ledger entry: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getPhoneLedgerById( $ledgerId ) {
+		$results = null;
+		$params = array();
+
+		$sql  = "SELECT l.*,lv1.vendorCompanyId AS vendorCompanyId1,lv2.vendorCompanyId AS vendorCompanyId2,lv3.vendorCompanyId AS vendorCompanyId3,lv4.vendorCompanyId AS vendorCompanyId4,lv5.vendorCompanyId AS vendorCompanyId5,lv1.loInvoiceNum AS loInvoiceNum1,lv2.loInvoiceNum AS loInvoiceNum2,lv3.loInvoiceNum AS loInvoiceNum3,lv4.loInvoiceNum AS loInvoiceNum4,lv5.loInvoiceNum AS loInvoiceNum5,lv1.loInvoiceAmount AS loInvoiceAmount1,lv2.loInvoiceAmount AS loInvoiceAmount2,lv3.loInvoiceAmount AS loInvoiceAmount3,lv4.loInvoiceAmount AS loInvoiceAmount4,lv5.loInvoiceAmount AS loInvoiceAmount5,lv1.loPaymentDate AS loPaymentDate1,lv2.loPaymentDate AS loPaymentDate2,lv3.loPaymentDate AS loPaymentDate3,lv4.loPaymentDate AS loPaymentDate4,lv5.loPaymentDate AS loPaymentDate5,lv1.loPaymentMethod AS loPaymentMethod1,lv2.loPaymentMethod AS loPaymentMethod2,lv3.loPaymentMethod AS loPaymentMethod3,lv4.loPaymentMethod AS loPaymentMethod4,lv5.loPaymentMethod AS loPaymentMethod5,lv1.loPaymentAmount AS loPaymentAmount1,lv2.loPaymentAmount AS loPaymentAmount2,lv3.loPaymentAmount AS loPaymentAmount3,lv4.loPaymentAmount AS loPaymentAmount4,lv5.loPaymentAmount AS loPaymentAmount5 ";
+		$sql .= "FROM ledger_phones l ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv1 ON l.ledgerId = lv1.ledgerId AND lv1.indexId = 1 ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv2 ON l.ledgerId = lv2.ledgerId AND lv2.indexId = 2 ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv3 ON l.ledgerId = lv3.ledgerId AND lv3.indexId = 3 ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv4 ON l.ledgerId = lv4.ledgerId AND lv4.indexId = 4 ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv5 ON l.ledgerId = lv5.ledgerId AND lv5.indexId = 5 ";
+		$sql .= "WHERE l.ledgerId = ? ";
+		$params[] = $ledgerId;
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			$sql .= "AND userId = ? ";
+			$params[] = LeadsSession::getUserId();
+		}
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			$results = $query->fetch( PDO::FETCH_OBJ  );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get phone ledger entry: ' . $e->getMessage() );
 		}
 
 		return $results;
@@ -557,6 +663,64 @@ class Leads
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get ledger: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getPhoneLedger( $onlyMonths = false, $month = null ) {
+		$results = array();
+		$params = array();
+
+		if( !empty( $onlyMonths ) ) {
+			$sql  = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
+		} else {
+			$sql  = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,vc1.name AS vendorCompanyName1,vc2.name AS vendorCompanyName2,vc3.name AS vendorCompanyName3,vc4.name AS vendorCompanyName4,vc5.name AS vendorCompanyName5,lv1.loInvoiceNum AS loInvoiceNum1,lv2.loInvoiceNum AS loInvoiceNum2,lv3.loInvoiceNum AS loInvoiceNum3,lv4.loInvoiceNum AS loInvoiceNum4,lv5.loInvoiceNum AS loInvoiceNum5,lv1.loInvoiceAmount AS loInvoiceAmount1,lv2.loInvoiceAmount AS loInvoiceAmount2,lv3.loInvoiceAmount AS loInvoiceAmount3,lv4.loInvoiceAmount AS loInvoiceAmount4,lv5.loInvoiceAmount AS loInvoiceAmount5,lv1.loPaymentDate AS loPaymentDate1,lv2.loPaymentDate AS loPaymentDate2,lv3.loPaymentDate AS loPaymentDate3,lv4.loPaymentDate AS loPaymentDate4,lv5.loPaymentDate AS loPaymentDate5,lv1.loPaymentMethod AS loPaymentMethod1,lv2.loPaymentMethod AS loPaymentMethod2,lv3.loPaymentMethod AS loPaymentMethod3,lv4.loPaymentMethod AS loPaymentMethod4,lv5.loPaymentMethod AS loPaymentMethod5,lv1.loPaymentAmount AS loPaymentAmount1,lv2.loPaymentAmount AS loPaymentAmount2,lv3.loPaymentAmount AS loPaymentAmount3,lv4.loPaymentAmount AS loPaymentAmount4,lv5.loPaymentAmount AS loPaymentAmount5,cc.name AS clientCompanyName,u.fullName ";
+		}
+		$sql .= "FROM ledger_phones l ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv1 ON l.ledgerId = lv1.ledgerId AND lv1.indexId = 1 ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv2 ON l.ledgerId = lv2.ledgerId AND lv2.indexId = 2 ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv3 ON l.ledgerId = lv3.ledgerId AND lv3.indexId = 3 ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv4 ON l.ledgerId = lv4.ledgerId AND lv4.indexId = 4 ";
+		$sql .= "LEFT JOIN ledger_phones_vendors lv5 ON l.ledgerId = lv5.ledgerId AND lv5.indexId = 5 ";
+		$sql .= "LEFT JOIN companies vc1 ON lv1.vendorCompanyId = vc1.idCompany ";
+		$sql .= "LEFT JOIN companies vc2 ON lv2.vendorCompanyId = vc2.idCompany ";
+		$sql .= "LEFT JOIN companies vc3 ON lv3.vendorCompanyId = vc3.idCompany ";
+		$sql .= "LEFT JOIN companies vc4 ON lv4.vendorCompanyId = vc4.idCompany ";
+		$sql .= "LEFT JOIN companies vc5 ON lv5.vendorCompanyId = vc5.idCompany ";
+		$sql .= "LEFT JOIN companies cc ON l.clientCompanyId = cc.idCompany ";
+		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "WHERE 1=1 ";
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			$sql .= "AND l.userId = ? ";
+			$params[] = LeadsSession::getUserId();
+		}
+		if( !empty( $month ) ) {
+			if( strlen( $month ) == 4 ) {
+				$sql .= "AND LEFT(l.ledgerMonth,4) = ? ";
+				$params[] = $month;
+			} else if( preg_match( '/^(20[0-9]{2})-Q([1-4])$/', $month, $matches ) ) {
+				$sql .= "AND CONCAT(LEFT(l.ledgerMonth,4),QUARTER(l.ledgerMonth)) = ? ";
+				$params[] = $matches[1] . $matches[2];
+			} else {
+				$sql .= "AND LEFT(l.ledgerMonth,7) = ? ";
+				$params[] = $month;
+			}
+		}
+		if( !empty( $onlyMonths ) ) {
+			$sql .= "GROUP BY l.ledgerMonth ";
+			$sql .= "ORDER BY l.ledgerMonth DESC";
+		} else {
+			$sql .= "GROUP BY l.ledgerId ";
+			$sql .= "ORDER BY l.ledgerMonth";
+		}
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get offline ledger: ' . $e->getMessage() );
 		}
 
 		return $results;

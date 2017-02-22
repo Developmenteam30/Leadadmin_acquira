@@ -78,8 +78,7 @@ table.TF th,
 	font-weight: bold;
 }
 
-.table-striped-double tbody tr:nth-child(4n-1),
-.table-striped-double tbody tr:nth-child(4n),
+.table-striped-double tbody:nth-child(odd),
 .table-striped-custom tbody tr.striped-master:nth-child(4n-1) {
 	background-color: #f9f9f9;
 }
