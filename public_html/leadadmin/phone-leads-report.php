@@ -44,108 +44,111 @@ include(INCLUDES."c_header.php");
 
 <?php
 
-if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+$outgoingFeeds = $leads->getOutboundFeeds( null, 'active', 'phone' );
 
-	$outgoingFeeds = $leads->getOutboundFeeds( null, 'active', 'phone' );
+if( empty( $outgoingFeeds ) ) {
 
-	if( empty( $outgoingFeeds ) ) {
+	print '<p>Sorry, there were no incoming phone feeds found.</p>' . PHP_EOL;
 
-		print '<p>Sorry, there were no incoming phone feeds found.</p>' . PHP_EOL;
+} else {
 
-	} else {
+	$lastCompany = '';
+	$companyAccepted = $companyRejected = 0;
+	foreach( $outgoingFeeds as $outgoingFeed ) {
 
-		$lastCompany = '';
-		$companyAccepted = $companyRejected = 0;
-		foreach( $outgoingFeeds as $outgoingFeed ) {
-			if( $outgoingFeed->name !== $lastCompany ) {
-				if( !empty( $lastCompany ) ) {
-					print '</tbody>' . PHP_EOL;
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) && LeadsSession::getCompanyId() != $outgoingFeed->idCompany ) {
+			continue;
+	    }
 
-					print '<tfoot>' . PHP_EOL;
-					print '<tr>' . PHP_EOL;
-					printf( '<td colspan="2">COMPANY TOTAL</td>' . PHP_EOL,
-						htmlentities( $outgoingFeed->label )
-					);
-					printf( '<td>%s</td>' . PHP_EOL,
-						number_format( $companyAccepted, 0 )
-					);
-					printf( '<td>%s</td>' . PHP_EOL,
-						number_format( $companyRejected, 0 )
-					);
-					print '</tr>' . PHP_EOL;
-					print '</tfoot>' . PHP_EOL;
-					print '</table>' . PHP_EOL;
-				}
+		if( $outgoingFeed->name !== $lastCompany ) {
+			if( !empty( $lastCompany ) ) {
+				print '</tbody>' . PHP_EOL;
 
-				$companyAccepted = $companyRejected = 0;
-
-				printf( '<h3>%s</h3>' . PHP_EOL,
-					htmlentities( $outgoingFeed->name )
-				);
-				print '<table class="table table-bordered table-condensed table-striped">' . PHP_EOL;
-				print '<thead>' . PHP_EOL;
+				print '<tfoot>' . PHP_EOL;
 				print '<tr>' . PHP_EOL;
-				print '<th style="width:40%;">Feed</th>' . PHP_EOL;
-				print '<th style="width:40%;">URL</th>' . PHP_EOL;
-				print '<th style="width:10%;">Accepted</th>' . PHP_EOL;
-				print '<th style="width:10%;">Rejected</th>' . PHP_EOL;
-				print '</tr>' . PHP_EOL;
-				print '</thead>' . PHP_EOL;
-				$lastCompany = $outgoingFeed->name;
-				print '<tbody>' . PHP_EOL;
-			}
-
-			$stats = $leads->getOutboundURLStatsReport( $outgoingFeed->idFeedOut, array(), 'total', $dateStart, $dateEnd, 'url' );
-
-			$feedAccepted = $feedRejected = 0;
-
-			$saveHtml = '';
-			foreach( $stats as $stat ) {
-				$saveHtml .= sprintf( '<tr class="collapse leads-toggle-%s">' . PHP_EOL,
-					htmlentities( $outgoingFeed->idFeedOut )
-				);
-				$saveHtml .= sprintf( '<td>----&gt; %s</td>' . PHP_EOL,
+				printf( '<td colspan="2">COMPANY TOTAL</td>' . PHP_EOL,
 					htmlentities( $outgoingFeed->label )
 				);
-				$saveHtml .= sprintf( '<td>%s</td>' . PHP_EOL,
-					htmlentities( $stat['url'] )
+				printf( '<td>%s</td>' . PHP_EOL,
+					number_format( $companyAccepted, 0 )
 				);
-				$saveHtml .= sprintf( '<td>%s</td>' . PHP_EOL,
-					number_format( $stat['accepted'], 0 )
+				printf( '<td>%s</td>' . PHP_EOL,
+					number_format( $companyRejected, 0 )
 				);
-				$saveHtml .= sprintf( '<td>%s</td>' . PHP_EOL,
-					number_format( $stat['rejected'], 0 )
-				);
-				$saveHtml .= '</tr>' . PHP_EOL;
-
-				$companyAccepted += $stat['accepted'];
-				$companyRejected += $stat['rejected'];
-				$feedAccepted += $stat['accepted'];
-				$feedRejected += $stat['rejected'];
+				print '</tr>' . PHP_EOL;
+				print '</tfoot>' . PHP_EOL;
+				print '</table>' . PHP_EOL;
 			}
 
-			printf( '<tr class="warning" data-toggle="collapse" data-target=".leads-toggle-%s">' . PHP_EOL,
-					htmlentities( $outgoingFeed->idFeedOut )
+			$companyAccepted = $companyRejected = 0;
+
+			printf( '<h3>%s</h3>' . PHP_EOL,
+				htmlentities( $outgoingFeed->name )
 			);
-			printf( '<td>%s (%s)</td>' . PHP_EOL,
-				htmlentities( $outgoingFeed->label ),
-				htmlentities( $outgoingFeed->description )
-			);
-			print '<td><strong>FEED TOTAL</strong></td>' . PHP_EOL;
-			printf( '<td><strong>%s</strong></td>' . PHP_EOL,
-					number_format( $feedAccepted, 0 )
-			);
-			printf( '<td><strong>%s</strong></td>' . PHP_EOL,
-					number_format( $feedRejected, 0 )
-			);
+			print '<table class="table table-bordered table-condensed table-striped">' . PHP_EOL;
+			print '<thead>' . PHP_EOL;
+			print '<tr>' . PHP_EOL;
+			print '<th style="width:40%;">Feed</th>' . PHP_EOL;
+			print '<th style="width:40%;">URL</th>' . PHP_EOL;
+			print '<th style="width:10%;">Accepted</th>' . PHP_EOL;
+			print '<th style="width:10%;">Rejected</th>' . PHP_EOL;
 			print '</tr>' . PHP_EOL;
-
-			echo $saveHtml;
-
+			print '</thead>' . PHP_EOL;
+			$lastCompany = $outgoingFeed->name;
+			print '<tbody>' . PHP_EOL;
 		}
 
-		print '</tbody>' . PHP_EOL;
+		$stats = $leads->getOutboundURLStatsReport( $outgoingFeed->idFeedOut, array(), 'total', $dateStart, $dateEnd, 'url' );
 
+		$feedAccepted = $feedRejected = 0;
+
+		$saveHtml = '';
+		foreach( $stats as $stat ) {
+			$saveHtml .= sprintf( '<tr class="collapse leads-toggle-%s">' . PHP_EOL,
+				htmlentities( $outgoingFeed->idFeedOut )
+			);
+			$saveHtml .= sprintf( '<td>----&gt; %s</td>' . PHP_EOL,
+				htmlentities( $outgoingFeed->label )
+			);
+			$saveHtml .= sprintf( '<td>%s</td>' . PHP_EOL,
+				htmlentities( $stat['url'] )
+			);
+			$saveHtml .= sprintf( '<td>%s</td>' . PHP_EOL,
+				number_format( $stat['accepted'], 0 )
+			);
+			$saveHtml .= sprintf( '<td>%s</td>' . PHP_EOL,
+				number_format( $stat['rejected'], 0 )
+			);
+			$saveHtml .= '</tr>' . PHP_EOL;
+
+			$companyAccepted += $stat['accepted'];
+			$companyRejected += $stat['rejected'];
+			$feedAccepted += $stat['accepted'];
+			$feedRejected += $stat['rejected'];
+		}
+
+		printf( '<tr class="warning" data-toggle="collapse" data-target=".leads-toggle-%s">' . PHP_EOL,
+				htmlentities( $outgoingFeed->idFeedOut )
+		);
+		printf( '<td>%s (%s)</td>' . PHP_EOL,
+			htmlentities( $outgoingFeed->label ),
+			htmlentities( $outgoingFeed->description )
+		);
+		print '<td><strong>FEED TOTAL</strong></td>' . PHP_EOL;
+		printf( '<td><strong>%s</strong></td>' . PHP_EOL,
+				number_format( $feedAccepted, 0 )
+		);
+		printf( '<td><strong>%s</strong></td>' . PHP_EOL,
+				number_format( $feedRejected, 0 )
+		);
+		print '</tr>' . PHP_EOL;
+
+		echo $saveHtml;
+
+	}
+
+	if( !empty( $lastCompany ) ) {
+		print '</tbody>' . PHP_EOL;
 		print '<tfoot>' . PHP_EOL;
 		print '<tr>' . PHP_EOL;
 		printf( '<td colspan="2">COMPANY TOTAL</td>' . PHP_EOL,
@@ -160,7 +163,6 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		print '</tr>' . PHP_EOL;
 		print '</tfoot>' . PHP_EOL;
 		print '</table>' . PHP_EOL;
-
 	}
 
 }
@@ -175,6 +177,7 @@ if( empty( $incomingFeeds ) ) {
 } else {
 
 	$lastCompany = '';
+	$showFooter = false;
 	$companyAccepted = $companyRejected = 0;
 	foreach( $incomingFeeds as $incomingFeed ) {
 
@@ -269,22 +272,24 @@ if( empty( $incomingFeeds ) ) {
 
 	}
 
-	print '</tbody>' . PHP_EOL;
+	if( !empty( $lastCompany ) ) {
+		print '</tbody>' . PHP_EOL;
 
-	print '<tfoot>' . PHP_EOL;
-	print '<tr>' . PHP_EOL;
-	printf( '<td colspan="2">COMPANY TOTAL</td>' . PHP_EOL,
-		htmlentities( $incomingFeed->label )
-	);
-	printf( '<td>%s</td>' . PHP_EOL,
-		number_format( $companyAccepted, 0 )
-	);
-	printf( '<td>%s</td>' . PHP_EOL,
-		number_format( $companyRejected, 0 )
-	);
-	print '</tr>' . PHP_EOL;
-	print '</tfoot>' . PHP_EOL;
-	print '</table>' . PHP_EOL;
+		print '<tfoot>' . PHP_EOL;
+		print '<tr>' . PHP_EOL;
+		printf( '<td colspan="2">COMPANY TOTAL</td>' . PHP_EOL,
+			htmlentities( $incomingFeed->label )
+		);
+		printf( '<td>%s</td>' . PHP_EOL,
+			number_format( $companyAccepted, 0 )
+		);
+		printf( '<td>%s</td>' . PHP_EOL,
+			number_format( $companyRejected, 0 )
+		);
+		print '</tr>' . PHP_EOL;
+		print '</tfoot>' . PHP_EOL;
+		print '</table>' . PHP_EOL;
+	}
 
 }
 
