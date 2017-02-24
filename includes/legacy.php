@@ -1,6 +1,6 @@
 <?php
 
-require_once( 'leads.php' );
+require_once( INCLUDES . 'leads.php' );
 
 class Legacy extends Leads
 {
