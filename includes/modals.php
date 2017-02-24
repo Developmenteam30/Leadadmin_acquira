@@ -15,7 +15,7 @@
 					<option>Offline</option>
 					<option>Publisher</option>
 					<option>Advertiser</option>
-					<option>Phones</option>
+					<option>Leads</option>
 				</select>
 			</div>
 			<div class="modal-body">
@@ -402,7 +402,7 @@ $('#modal-deletephoneledger').click( function(event) {
 	event.preventDefault();
 
 	var response = $.ajax({
-		url: "phones.php",
+		url: "leads.php",
 		type: "POST",
 		async: true,
 		data: $("#delete_phoneledger").serialize()
@@ -422,7 +422,7 @@ $('#deletephoneledger').on('show.bs.modal', function(e) {
 	$.ajax({
 		cache: false,
 		type: 'POST',
-		url: 'phones.php',
+		url: 'leads.php',
 		data: {
 			'd': 'deletePhoneLedger',
 			'ledgerId': ledgerId
@@ -437,7 +437,7 @@ $('#modal-save-editphoneledger').click(function(event) {
 	event.preventDefault();
 
 	var response = $.ajax({
-		url: "phones.php",
+		url: "leads.php",
 		type: "POST",
 		async: true,
 		data: $("#edit_phoneledger").serialize()
@@ -457,7 +457,7 @@ $('#editphoneledger').on('show.bs.modal', function(e) {
 	$.ajax({
 		cache: false,
 		type: 'POST',
-		url: 'phones.php',
+		url: 'leads.php',
 		data: {
 			'd': 'editPhoneLedger',
 			'ledgerId': ledgerId
@@ -520,11 +520,11 @@ $("#genericledger select[name='ledgerType']").on('change', function(e) {
 				modal.parent().siblings('.modal-body').html(data);
 			}
 		});
-	} else if( 'Phones' == val ) {
+	} else if( 'Leads' == val ) {
 		$.ajax({
 			cache: false,
 			type: 'POST',
-			url: 'phones.php',
+			url: 'leads.php',
 			data: {
 				'd': 'newPhoneLedger'
 			},
@@ -578,15 +578,15 @@ $('#modal-save-genericledger').click( function(event) {
 				alert(result.error);
 			}
 		});
-	} else if( 'Phones' == val ) {
+	} else if( 'Leads' == val ) {
 		var response = $.ajax({
-			url: "phones.php",
+			url: "leads.php",
 			type: "POST",
 			async: true,
 			data: $("#new_phoneledger").serialize()
 		}).done(function(result){
 			if(result.status == 1){
-				window.location = '/leadadmin/phones.php';
+				window.location = '/leadadmin/leads.php';
 			} else {
 				alert(result.error);
 			}

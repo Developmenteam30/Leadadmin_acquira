@@ -163,6 +163,8 @@ include(INCLUDES."c_header.php");
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td class="text-center"><?php if( '4' === $entry->divisionId ) { ?>
 <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+<?php } else if( '5' === $entry->divisionId ) { ?>
+<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editphoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button> 
 <?php } else if( 'email' === $entry->source ) { print "&nbsp;"; ?>
 <?php } else { ?>
 <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button></td>

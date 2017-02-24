@@ -42,6 +42,11 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
+            if( $c && empty( $_REQUEST['verticalId'] ) ) {
+                $result['error'] = 'Please select a vertical from the list.';
+                $c = false;
+            }
+
 			if( !empty( $_REQUEST['orderDate'] ) ) {
 				try {
 					$orderDate = new DateTime( $_REQUEST['orderDate'] );
@@ -253,6 +258,7 @@ if(isset($_REQUEST['a'])){
 
 			$ledgerId = $leads->addPhoneLedger( array(
 				'clientCompanyId' => empty( $_REQUEST['clientCompanyId'] ) ? null : $_REQUEST['clientCompanyId'],
+				'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
 				'listName' => empty( $_REQUEST['listName'] ) ? null : $_REQUEST['listName'],
 				'orderDate' => !isset( $orderDate ) ? null : $orderDate->format( 'Y-m-d' ),
 				'qty' => empty( $_REQUEST['qty'] ) ? null : $_REQUEST['qty'],
@@ -357,7 +363,7 @@ if(isset($_REQUEST['a'])){
 
 			$leads->auditLog( 'LEDGER-PHONE:DELETE', $_REQUEST['ledgerId'] );
 			$result['status'] = 1;
-			$result['error'] = 'Phone ledger deleted successfully.';
+			$result['error'] = 'Leads ledger deleted successfully.';
 
 		break;
 
@@ -378,6 +384,11 @@ if(isset($_REQUEST['a'])){
 				$result['error'] = 'Please select a client from the list.';
 				break;
 			}
+
+            if( $c && empty( $_REQUEST['verticalId'] ) ) {
+                $result['error'] = 'Please select a vertical from the list.';
+                $c = false;
+            }
 
 			if( !empty( $_REQUEST['orderDate'] ) ) {
 				try {
@@ -591,6 +602,7 @@ if(isset($_REQUEST['a'])){
 
 			$ledgerId = $leads->updatePhoneLedger( $_REQUEST['ledgerId'], array(
 				'clientCompanyId' => empty( $_REQUEST['clientCompanyId'] ) ? null : $_REQUEST['clientCompanyId'],
+				'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
 				'listName' => empty( $_REQUEST['listName'] ) ? null : $_REQUEST['listName'],
 				'orderDate' => !isset( $orderDate ) ? null : $orderDate->format( 'Y-m-d' ),
 				'qty' => empty( $_REQUEST['qty'] ) ? null : $_REQUEST['qty'],
@@ -691,7 +703,7 @@ if(isset($_REQUEST['d'])){
 					'id' => 'divisionId',
 					'label' => 'Division',
 					'type' => '_text',
-					'value' => 'Phone',
+					'value' => 'Leads',
 				),
 				array(
 					'id' => 'clientCompanyId',
@@ -700,6 +712,14 @@ if(isset($_REQUEST['d'])){
 					'required' => true,
 					'placeholder' => 'Select a client',
 					'choices' => $leads->getDivisionCompanies( 5, null ),
+				),
+				array(
+					'id' => 'verticalId',
+					'label' => 'Vertical',
+					'type' => 'select',
+					'required' => true,
+					'placeholder' => 'Select a vertical',
+					'choices' => $leads->getDivisionVerticals( 5 ),
 				),
 				array(
 					'id' => 'listName',
@@ -995,6 +1015,11 @@ $("#new_phoneledger select[name='clientCompanyId']").select2({
 	allowClear: true
 });
 
+$("#new_phoneledger select[name='verticalId']").select2({
+	placeholder: "Select a vertical",
+	allowClear: true
+});
+
 $("#new_phoneledger select[name='ledgerMonth']").select2({
 	placeholder: "Select the ledger month",
 	allowClear: true
@@ -1034,7 +1059,7 @@ $("#new_phoneledger select[name='userId']").select2({
 						'id' => 'divisionId',
 						'label' => 'Division',
 						'type' => '_text',
-						'value' => 'Phone',
+						'value' => 'Leads',
 					),
 					array(
 						'id' => 'clientCompanyId',
@@ -1045,6 +1070,15 @@ $("#new_phoneledger select[name='userId']").select2({
 						'choices' => $leads->getDivisionCompanies( 5, $entry->clientCompanyId ),
 						'value' => $entry->clientCompanyId,
 						'readonly' => true,
+					),
+					array(
+						'id' => 'verticalId',
+						'label' => 'Vertical',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a vertical',
+						'choices' => $leads->getDivisionVerticals( 5 ),
+						'value' => $entry->verticalId,
 					),
 					array(
 						'id' => 'listName',
@@ -1177,7 +1211,7 @@ $("#new_phoneledger select[name='userId']").select2({
 						'id' => 'divisionId',
 						'label' => 'Division',
 						'type' => '_text',
-						'value' => 'Phone',
+						'value' => 'Leads',
 					),
 					array(
 						'id' => 'clientCompanyId',
@@ -1529,6 +1563,11 @@ $("#edit_phoneledger select[name='clientCompanyId']").select2({
 	allowClear: true
 });
 
+$("#edit_phoneledger select[name='verticalId']").select2({
+	placeholder: "Select a vertical",
+	allowClear: true
+});
+
 $("#edit_phoneledger select[name='ledgerMonth']").select2({
 	placeholder: "Select the ledger month",
 	allowClear: true
@@ -1552,7 +1591,7 @@ $("#edit_phoneledger select[name='userId']").select2({
 	exit;
 }
 
-$title = 'Phone Ledger Entries';
+$title = 'Leads Ledger Entries';
 include(INCLUDES."c_header.php");
 ?>
 <body>
@@ -1561,8 +1600,7 @@ include(INCLUDES."c_header.php");
 
 <div class="container-fluid">
 
-<h2>Phone Ledger</h2>
-<p><strong>You can start adding entries here, but they will not populate the Income or Payment Ledger yet. Working on that next :)</strong></p>
+<h2>Leads Ledger</h2>
 
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 <p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button></p>

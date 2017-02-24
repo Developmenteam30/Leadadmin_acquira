@@ -36,6 +36,9 @@ include(INCLUDES."c_header.php");
 
 <h2>Profit &amp; Loss Report</h2>
 <?php
+	$divisions = $leads->getDivisions();
+	asort( $divisions );
+
 	$monthIn = !empty( $_REQUEST['month'] ) ? $_REQUEST['month'] : null;
 	$monthSelected = null;
 	$months = $leads->getPaidLedger( 1, null, 'LEFT(paymentDate,7)' );
@@ -119,7 +122,6 @@ include(INCLUDES."c_header.php");
 		} else {
 
 			$months = array();
-			$divisions = array();
 			foreach( $entries as $entry ) {
 				$month = substr( $entry->paymentDate, 0, 7 );
 				if( isset( $months[$month][$entry->divisionId] ) ) {
@@ -127,9 +129,8 @@ include(INCLUDES."c_header.php");
 				} else {
 					$months[$month][$entry->divisionId] = $entry->paymentAmount;
 				}
-				$divisions[$entry->divisionId] = $entry->divisionName;
 			}
-			asort( $divisions );
+
 ?>
 <table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
@@ -174,8 +175,10 @@ include(INCLUDES."c_header.php");
 				print "\t\t</tr>\n";
 			}
 ?>
+	</tbody>
 	<tfoot>
-		<td>GRAND TOTALS</td>
+		<tr>
+			<td>GRAND TOTALS</td>
 <?php
 			foreach( $divisions as $d_key => $d_val ) {
 				printf( "\t\t\t<td class=\"text-right\">$%s</td>\n",
@@ -183,9 +186,9 @@ include(INCLUDES."c_header.php");
 				);
 			}
 ?>
-		<td class="text-right">$<?php echo number_format( $grandTotal, 2 ); ?></td>
+			<td class="text-right">$<?php echo number_format( $grandTotal, 2 ); ?></td>
+		</tr>
 	</tfoot>
-	</tbody>
 </table>
 <?php
 		}
@@ -209,7 +212,6 @@ include(INCLUDES."c_header.php");
 		} else {
 
 			$months = array();
-			$divisions = array();
 			foreach( $entries as $entry ) {
 				$month = substr( $entry->paymentDate, 0, 7 );
 				if( isset( $months[$month][$entry->divisionId] ) ) {
@@ -217,9 +219,7 @@ include(INCLUDES."c_header.php");
 				} else {
 					$months[$month][$entry->divisionId] = $entry->paymentAmount;
 				}
-				$divisions[$entry->divisionId] = $entry->divisionName;
 			}
-			asort( $divisions );
 ?>
 <table class="table table-bordered table-condensed table-striped" id="<?php echo $entry->idUser; ?>_<?php echo $month ?>">
 	<thead>
@@ -264,8 +264,10 @@ include(INCLUDES."c_header.php");
 				print "\t\t</tr>\n";
 			}
 ?>
+	</tbody>
 	<tfoot>
-		<td>GRAND TOTALS</td>
+		<tr>
+			<td>GRAND TOTALS</td>
 <?php
 			foreach( $divisions as $d_key => $d_val ) {
 				printf( "\t\t\t<td class=\"text-right\">$%s</td>\n",
@@ -273,9 +275,9 @@ include(INCLUDES."c_header.php");
 				);
 			}
 ?>
-		<td class="text-right">$<?php echo number_format( $grandTotal, 2 ); ?></td>
+			<td class="text-right">$<?php echo number_format( $grandTotal, 2 ); ?></td>
+		</tr>
 	</tfoot>
-	</tbody>
 </table>
 <?php
 		}

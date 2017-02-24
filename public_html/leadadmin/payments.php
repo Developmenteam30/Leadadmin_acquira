@@ -190,6 +190,20 @@ if(isset($_REQUEST['d'])){
 								'userId' => $entry->userId,
 							);
 						}
+					} else if( 'L' === $divisionId ) {
+						list( $ledgerId, $indexId ) = explode( '|', $ledgerId );
+						$entry = $leads->getPhoneLedgerByIdIndex( $ledgerId, $indexId );
+						if( !empty( $entry ) ) {
+							$ledgerMonth = new DateTime( $entry->ledgerMonth );
+							$entries[] = array(
+								'invoiceNum' => $entry->loInvoiceNum,
+								'paymentAmount' => $entry->loPaymentAmount,
+								'paymentMethod' => $entry->loPaymentMethod,
+								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
+								'companyId' => $entry->vendorCompanyId,
+								'userId' => $entry->userId,
+							);
+						}
 					} else {
 						$entry = $leads->getLedgerById( $ledgerId );
 						if( !empty( $entry ) ) {
@@ -499,7 +513,15 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-center"><?php if( 'email' === $entry->source ) { ?><input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'E|' . $entry->ledgerId . '|' . $entry->companyId; ?>" /><?php } else { ?><input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>" /><?php } ?></td>
+			<td class="text-center">
+<?php if( 'email' === $entry->source ) { ?>
+				<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'E|' . $entry->ledgerId . '|' . $entry->companyId; ?>" />
+<?php } else if( 'ledger_phones' === $entry->source ) { ?>
+				<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'L|' . $entry->ledgerId . '|' . $entry->indexId; ?>" />
+<?php } else { ?>
+				<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>" />
+<?php } ?>
+			</td>
 		</tr>
 <?php
 					}
