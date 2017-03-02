@@ -1504,26 +1504,7 @@ class Leads
 		$this->db->beginTransaction();
 
 		try {
-			$idFeedIn = $this->insertRow( 'feedinc', array(
-				'label' => $fields['label'],
-				'description' => empty( $fields['description'] ) ? null : $fields['description'],
-				'idCompany' => $fields['idCompany'],
-				'required' => empty( $fields['required'] ) ? null : $fields['required'],
-				'allowedFields' => empty( $fields['allowedFields'] ) ? null : $fields['allowedFields'],
-				'password' => empty( $fields['password'] ) ? null : $fields['password'],
-				'dedupeEmail' => empty( $fields['dedupeEmail'] ) ? 0 : 1,
-				'dedupeLandline' => empty( $fields['dedupeLandline'] ) ? 0 : 1,
-				'dedupeCellphone' => empty( $fields['dedupeCellphone'] ) ? 0 : 1,
-				'dedupeAcross' => empty( $fields['dedupeAcross'] ) ? null : $fields['dedupeAcross'],
-				'rejectOldLeads' => empty( $fields['rejectOldLeads'] ) ? null : $fields['rejectOldLeads'],
-				'rejectOldLeadsMaxAge' => empty( $fields['rejectOldLeadsMaxAge'] ) ? null : $fields['rejectOldLeadsMaxAge'],
-				'status' => empty( $fields['status'] ) ? 'active' : $fields['status'],
-				'filterTypeUrl' => empty( $fields['filterTypeUrl'] ) ? null : $fields['filterTypeUrl'],
-				'filterUrl' => empty( $fields['filterUrl'] ) ? null : $fields['filterUrl'],
-				'filterTypeSiftLogic' => empty( $fields['filterTypeSiftLogic'] ) ? null : $fields['filterTypeSiftLogic'],
-				'filterSiftLogic' => empty( $fields['filterSiftLogic'] ) ? null : $fields['filterSiftLogic'],
-				'notifications' => empty( $fields['notifications'] ) ? 0 : 1,
-			) );
+			$idFeedIn = $this->insertRow( 'feedinc', $fields );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
 			$pdoException = $e->getPrevious();

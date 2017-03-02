@@ -159,6 +159,7 @@ if(isset($_REQUEST['a'])){
 						'notifications' => empty( $_REQUEST['notifications'] ) ? 0 : 1,
 						'rejectOldLeads' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? 0 : 1,
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
+						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'chokePercent' => empty( $_REQUEST['chokePercent'] ) ? 0 : intval( $_REQUEST['chokePercent'] ),
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : intval( $_REQUEST['dailyLimit'] ),
