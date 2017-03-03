@@ -3389,6 +3389,10 @@ class Leads
 
 			$fields = array();
 
+			if( !empty( $settings['includeRejects'] ) ) {
+				$settings['columns'][] = 'result';
+			}
+
 			$query  = "SELECT ";
 			$comma = false;
 			foreach( $settings['columns'] as $column ) {
@@ -3398,7 +3402,10 @@ class Leads
 				$query .= $this->quoteIdentifier( $column );
 				$comma = true;
 			}
-			$query .= " FROM data_inbound WHERE idFeedIn = ? AND result IS NULL ";
+			$query .= " FROM data_inbound WHERE idFeedIn = ? ";
+			if( empty( $settings['includeRejects'] ) ) {
+				$query .= "AND result IS NULL ";
+			}
 			$fields[] = $idFeedIn;
 
 			if( !empty( $settings['dateStart'] ) && strtotime( $settings['dateStart'] ) !== FALSE ) {

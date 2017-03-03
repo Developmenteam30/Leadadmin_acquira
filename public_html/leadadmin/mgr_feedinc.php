@@ -910,6 +910,14 @@ $company = $leads->getCompany( $feed->idCompany );
 			</p>
 		</td>
 	</tr>
+	<tr>
+		<td>
+			Rejects</p>
+		</td>
+		<td>
+				<p><input type="checkbox" name="includeRejects" value="1" /> Include rejected records in the export.</p>
+		</td>
+	</tr>
 </table>
 </form>
 <?php
