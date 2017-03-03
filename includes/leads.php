@@ -3366,6 +3366,10 @@ class Leads
 			return;
 		}
 
+		if( !empty( $settings['includeRejects'] ) ) {
+			$settings['columns'][] = 'result';
+		}
+
 		// Fix column names
 		foreach( $settings['columns'] as $key => $column ) {
 			if( 'stamp' == $column ) {
@@ -3389,10 +3393,6 @@ class Leads
 
 			$fields = array();
 
-			if( !empty( $settings['includeRejects'] ) ) {
-				$settings['columns'][] = 'result';
-			}
-
 			$query  = "SELECT ";
 			$comma = false;
 			foreach( $settings['columns'] as $column ) {
@@ -3403,10 +3403,11 @@ class Leads
 				$comma = true;
 			}
 			$query .= " FROM data_inbound WHERE idFeedIn = ? ";
+			$fields[] = $idFeedIn;
+
 			if( empty( $settings['includeRejects'] ) ) {
 				$query .= "AND result IS NULL ";
 			}
-			$fields[] = $idFeedIn;
 
 			if( !empty( $settings['dateStart'] ) && strtotime( $settings['dateStart'] ) !== FALSE ) {
 				$query .= "AND timestamp >= ? ";
