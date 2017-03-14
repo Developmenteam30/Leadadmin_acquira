@@ -91,6 +91,7 @@ class ProcessLeads
 	public static function pushIncomingData( $feedParams, $data, $inboundId ) {
 
 		$leads = Leads::getInstance();
+		$reason = null;
 
 		if( !empty( $data['url'] ) && !empty( $feedParams->notifications ) ) {
 
@@ -192,14 +193,13 @@ class ProcessLeads
 								( isset( $status['status'] ) && $status['status'] != true ) ? '0' : '1'
 							);
 							$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $data['url'], date( 'Y-m-d' ), $reason );
-							return $reason;
 						}
 					}
 				}
 			} // foreach $feedsOut
 		}
 
-		return null;
+		return $reason;
 	}
 
 	public static function pushOutboundData( $feedOut, $row ) {
