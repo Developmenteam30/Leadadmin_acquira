@@ -74,7 +74,6 @@ if( 'clear-outbound-queue' === $job->type ) {
 	$to = MANAGER_EMAIL;
 	$subject = 'Job Results - Clear Outbound Queue';
 	$header = "From:" . $fromName . " <" . $from . ">\n";
-	$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 
 } else if( 'export-incoming' === $job->type ) {
@@ -117,6 +116,11 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 	}
 
+	$user = $leads->getUser( $job->idUser );
+	if( empty( $user ) || empty( $user->email ) ) {
+		return;
+	}
+
 	$body  = "Job Results\r\n";
 	$body .= "\r\n";
 	$body .= "Job ID: {$job->jobId}\r\n";
@@ -139,10 +143,10 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 	$from = 'lmsalerts@'.SITE_URL;
 	$fromName = CONFIG_COMPANY_NAME;
-	$to = MANAGER_EMAIL;
+	$to = filter_var( $user->email, FILTER_SANITIZE_EMAIL );
 	$subject = 'Job Results - Export Incoming Data';
 	$header = "From:" . $fromName . " <" . $from . ">\n";
-	$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+	$header .= "CC: " . OWNER_EMAIL . "\r\n";
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 
 } else if( 'feedinc' === $job->type ) {
@@ -392,7 +396,6 @@ if( 'clear-outbound-queue' === $job->type ) {
 	$to = MANAGER_EMAIL;
 	$subject = 'Job Results - Suppression Import';
 	$header = "From:" . $fromName . " <" . $from . ">\n";
-    $header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 
 } else {
