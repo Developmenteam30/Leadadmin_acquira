@@ -2791,7 +2791,7 @@ class Leads
 		}
 
 		try {
-			$query = $this->db->prepare( "SELECT jobId,type,destination,fields,filename,records FROM jobs WHERE status = ?" );
+			$query = $this->db->prepare( "SELECT jobId,type,destination,fields,filename,records,idUser FROM jobs WHERE status = ?" );
 			$query->execute( array( 'pending' ) );
 			$rows = $query->fetchAll( PDO::FETCH_OBJ );
 			if( $rows && is_array( $rows ) ) {
