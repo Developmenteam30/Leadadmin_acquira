@@ -88,7 +88,7 @@ class ProcessLeads
 		return $response;
 	}
 
-	public static function pushIncomingData( $feedParams, $data, $inboundId ) {
+	public static function pushIncomingData( $feedParams, $data, $inboundId, $idFeedOut = null ) {
 
 		$leads = Leads::getInstance();
 		$reason = null;
@@ -128,8 +128,18 @@ class ProcessLeads
 		if( !empty( $feedsOut ) && is_array( $feedsOut ) ) {
 			foreach( $feedsOut as $feed ) {
 
-				// Is this population parameter enabled?
-				if( empty( $feed->enabled ) ) {
+				// Is this population parameter enabled? Allow if we are importing.
+				if( empty( $idFeedOut ) && empty( $feed->enabled ) ) {
+					continue;
+				}
+
+				// Are we limiting records to a specific outbound feed?
+				if( !empty( $idFeedOut ) && $idFeedOut != $feed->idFeedOut ) {
+					continue;
+				}
+
+				// Ensure we don't re-import records sent within the last 6 months
+				if( !empty( $idFeedOut ) && $leads->checkOutboundRecordExists( $inboundId, $feedParams->idFeedIn, $feed->idFeedOut ) ) {
 					continue;
 				}
 
@@ -176,10 +186,10 @@ class ProcessLeads
 					}
 				}
 
-				$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ( !empty( $feed->livedata ) ? -1 : 0 ), $urlRewritten );
+				$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ( ( empty( $idFeedOut ) && !empty( $feed->livedata ) ) ? -1 : 0 ), $urlRewritten );
 
 				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
-				if( !empty( $feed->livedata ) ) {
+				if( empty( $idFeedOut ) && !empty( $feed->livedata ) ) {
 
 					$record = $leads->getOutboundRecord( $inboundId, $feed->idFeedOut, -1 );
 					if( !empty( $record ) ) {

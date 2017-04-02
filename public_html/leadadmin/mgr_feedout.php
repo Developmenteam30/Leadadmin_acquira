@@ -484,6 +484,84 @@ if(isset($_REQUEST['a'])){
 				$result['status'] = 1;
 			}
 		break;
+
+		case 'import-legacy-data':
+			$c = true;
+			$result['error'] = 'Failed when trying to import data.';
+
+			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$c = false;
+				$result['error'] = 'Sorry, you do not have permission to import legacy data.';
+			}
+
+			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $_REQUEST['idFeedOut'] ) ) {
+					$c = false;
+					$result['error'] = 'Sorry, you do not have access to this feed.';
+				}
+			}
+
+			if($c){
+				$feed = $leads->getOutboundFeed( $_REQUEST['idFeedOut'] );
+				if($feed === false){
+					$c = false; $result['error'] = 'Database failure - could not fetch feed information.';
+				}
+				if($c && !is_object($feed) && $feed == 0){
+					$c = false; $result['error'] = 'Error - could not fetch feed. Feed does not exist.';
+				}
+			}
+
+			if( $c ) {
+				try {
+					$dateStart = new \DateTime( $_REQUEST['dateStart'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid start date.';
+					$c = false;
+				}
+			}
+
+			if( $c ) {
+				try {
+					$dateEnd = new \DateTime( $_REQUEST['dateEnd'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid end date.';
+					$c = false;
+				}
+			}
+
+			if( $c ) {
+				if( $dateEnd < $dateStart ) {
+					$result['error'] = 'The end date must come after the start date.';
+					$c = false;
+				}
+			}
+
+			if( $c ) {
+				$date = new \DateTime();
+				$date->sub( new \DateInterval( 'P6M' ) );
+				if( $dateStart < $date || $dateEnd < $date ) {
+					$result['error'] = 'Please select start and end dates that fall within the last 6 months.';
+					$c = false;
+				}
+			}
+
+			if( $c ) {
+				$jobId = $leads->addJob( 'import-legacy-outbound', $feed->idFeedOut, serialize( $_REQUEST ), '', 0 );
+				if( null === $jobId ) {
+					$c = false;
+					$result['error'] = 'Error adding this job to the database.';
+				} else {
+					$leads->auditLog( 'FEEDOUT:IMPORT', $jobId );
+					$result['status'] = 1;
+					$result['error'] = 'Import job #' . $jobId . ' submitted succesfully. The selected records will be added to the outbound queue.';
+				}
+			}
+
+		break;
 	}
 	echo json_encode($result);
 	exit;
@@ -613,6 +691,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 			$varFields = explode( ";", $feed->varFields );
 			$fieldMap = explode( ";", $feed->fieldMap );
+
 		case 'dialog_newfeed':
 			if( empty( $idFeedOut ) ) {
 				$idFeedOut = '';
@@ -901,6 +980,106 @@ if( isset( $_REQUEST['d'] ) ) {
 </table>
 </form>
 <?php
+		break;
+
+		case 'dialog_import':
+			$idFeedOut = $_REQUEST['idFeedOut'] ?? '';
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				die( 'Sorry, you do not have permission to import data.' );
+			}
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
+			$feed = $leads->getOutboundFeed( $idFeedOut );
+?>
+<?php
+			if($feed === false){
+?>
+<p>Database failure - could not fetch feed information.</p>
+<?php
+			} elseif(!is_object($feed) && $feed == 0){
+?>
+<p>Error fetching feed information - feed does not exist.</p>
+<?php
+			} else {
+
+				$populations = $leads->getPopulations( $feed->idFeedOut );
+				if( empty( $populations) || !is_array( $populations ) ) {
+
+					print '<p>Error: No popluations are setup for this feed.</p>';
+
+				} else {
+
+?>
+<p>Importing Data into Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
+<form id="form-import">
+<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>" />
+<input type="hidden" name="a" value="import-legacy-data" />
+<input type="hidden" name="label" value="<?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?>" />
+<table class="table table-bordered table-condensed table-striped">
+	<tr>
+		<td colspan='2'><p class='aCenter'>Import Settings</p></td>
+	</tr>
+	<tr>
+		<td>
+			Inbound population
+		</td>
+		<td>
+			<select name="idAssoc">
+			<?php foreach( $populations as $population ) {
+				$feedIn = $leads->getInboundFeed( $population->idFeedIn );
+				printf( '<option value="%s">Pop #%s - Feed In #%s (%s)</option>' . PHP_EOL,
+					$population->idAssoc,
+					$population->idAssoc,
+					$population->idFeedIn,
+					htmlspecialchars( $feedIn->label, ENT_QUOTES )
+				);
+			} ?>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Period
+		</td>
+		<td>
+				<p>Period goes from midnight of the first date to 11:59p of the second date. Maxium of 6 months in the past.</p>
+				<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date("Y-m-d"); ?>' />
+				to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>' /></p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Limit</p>
+		</td>
+		<td>
+				<p>Set a limit on the number of records that are returned.  Leave blank to return ALL records.</p>
+				<p><input type="text" name="limit" value="" /></p>
+			</p>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Rejects</p>
+		</td>
+		<td>
+				<p><input type="checkbox" name="includeRejects" value="1" checked="checked" /> Include live feed rejections and choked records in the import.</p>
+		</td>
+	</tr>
+</table>
+</form>
+<?php
+				}
+			}
 		break;
 
 		case 'dialog_urlreport':
@@ -1899,6 +2078,7 @@ if( $outgoingFeeds === false ) {
 	<li><a href="#" data-toggle="modal" data-target="#modal-testrecord" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Send test record</a></li>
 	<li><a href="#" data-toggle="modal" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
 	<li><a href="#" data-toggle="modal" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
+	<li><a href="#" data-toggle="modal" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
   </ul>
 </div>
 </td>
@@ -2015,6 +2195,23 @@ if( $outgoingFeeds === false ) {
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				<button id="modal-save-urlreport" type="button" class="btn btn-primary">Run Report</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="modal-import" tabindex="-1" role="dialog" aria-labelledby="import_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="import_title">Import Legacy Data</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-import" type="button" class="btn btn-primary">Import</button>
 			</div>
 		</div>
 	</div>
@@ -2206,6 +2403,42 @@ $('#modal-save-urlreport').click(function(event) {
 		data: $("#form-urlreport").serialize(),
 		success: function(data) {
 			$('#modal-urlreport').find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-import').on('show.bs.modal', function(e) {
+	var modal = $(this);
+	var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: {
+			'd': 'dialog_import',
+			'idFeedOut': idFeedOut
+		},
+		success: function(data) {
+			modal.find('.modal-body').html(data);
+		}
+	});
+});
+
+$('#modal-save-import').click(function(event) {
+	event.preventDefault();
+
+	$.ajax({
+		cache: false,
+		type: 'POST',
+		url: 'mgr_feedout.php',
+		data: $("#form-import").serialize(),
+		success: function(result) {
+			if(result.status == 1){
+				window.location.reload(true);
+			} else {
+				alert(result.error);
+			}
 		}
 	});
 });

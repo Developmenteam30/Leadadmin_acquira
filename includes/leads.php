@@ -19,7 +19,7 @@ class Leads
 		return self::$instance;
 	}
 
-	protected function __construct() {
+	public function __construct() {
 
 		// Connect to the database
 		try {
@@ -3280,7 +3280,7 @@ class Leads
 
 	public function archiveOutbound( $idFeedOut, $datetime ) {
 		try {
-			
+
 			$table = $this->quoteIdentifier( 'data_outbound_' . $datetime->format( 'Ym' ) );
 			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
 
@@ -3746,22 +3746,25 @@ class Leads
 			if( $query && $query->fetchColumn() ) {
 				return true;
 			}
-
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound record exists results: ' . $e->getMessage() );
 			return null;
 		}
 
-		try {
-			$query = $this->db->prepare( "SELECT 1 FROM archive.data_outbound_201608 WHERE idRecord = ? AND idFeedIn = ? AND idFeedOut = ?" );
-			$query->execute( array( $idRecord, $idFeedIn, $idFeedOut ) );
-			if( $query && $query->fetchColumn() ) {
-				return true;
+		$date = new \DateTime();
+		for( $i = 0; $i < 6; $i++ ) {
+			try {
+				$table = $this->quoteIdentifier( 'data_outbound_' . $date->format( 'Ym' ) );
+				$query = $this->db->prepare( "SELECT 1 FROM archive." . $table . " WHERE idRecord = ? AND idFeedIn = ? AND idFeedOut = ?" );
+				$query->execute( array( $idRecord, $idFeedIn, $idFeedOut ) );
+				if( $query && $query->fetchColumn() ) {
+					return true;
+				}
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to get outbound record archive exists results: ' . $e->getMessage() );
+				return null;
 			}
-
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get outbound record archive exists results: ' . $e->getMessage() );
-			return null;
+			$date->sub( new \DateInterval( 'P1M' ) );
 		}
 
 		return false;

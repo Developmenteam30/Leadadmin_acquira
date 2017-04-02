@@ -284,6 +284,89 @@ if( 'clear-outbound-queue' === $job->type ) {
 	print "Invalid: {$counts['invalid']}\n";
 	print "Failures: {$counts['failures']}\n";
 
+} else if( 'import-legacy-outbound' === $job->type ) {
+
+	$fields = unserialize( $job->fields );
+	$status = 'Unknown error.';
+
+	if( empty( $job->destination ) || empty( $fields['idAssoc'] ) || empty( $fields['dateStart'] ) || empty( $fields['dateEnd'] ) ) {
+
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Missing required fields',
+		) );
+		$status = 'ERROR: Missing required fields.';
+
+	} else {
+
+		print "Importing legacy records for: {$job->destination}\n";
+
+		$population = $leads->getPopulationSetting( $fields['idAssoc'] );
+		if( empty( $population ) || empty( $population->idFeedIn ) ) {
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'error',
+				'message' => 'Cannot find population parameter: ' . $fields['idAssoc'],
+			) );
+
+			return;
+		}
+
+		$leads_export = new Leads();
+
+		$feedParams = $leads->getInboundFeed( $population->idFeedIn );
+		if( empty( $feedParams ) ) {
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'error',
+				'message' => 'Cannot find inbound feed: ' . $population->idFeedIn,
+			) );
+
+			return;
+		}
+
+		$params = array();
+		$sql  = "SELECT * FROM data_inbound ";
+		$sql .= "WHERE 1=1 ";
+		$sql .= "AND idFeedIn = ? ";
+		$params[] = $population->idFeedIn;
+		$sql .= "AND timestamp >= ? ";
+		$params[] = $fields['dateStart'];
+		$sql .= "AND timestamp <= ? ";
+		$params[] = $fields['dateEnd'] . ' 23:59:59';
+		if( !empty( $fields['includeRejects'] ) ) {
+			$sql .= "AND ( result IS NULL OR result LIKE 'Third-party rejection [%' ) ";
+		} else {
+			$sql .= "AND result IS NULL ";
+		}
+		if( !empty( intval( $fields['limit'] ) ) ) {
+			$sql .= "LIMIT " . intval( $fields['limit'] );
+		}
+
+		$query = $leads_export->exportRecords( $sql, $params );
+
+		$cnt = 0;
+		if( !empty( $query ) ) {
+			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+
+			    print "Record: {$row['idRecord']} {$row['idFeedIn']}\n";
+
+			    if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $row, $row['idRecord'], $job->destination ) ) === null ) {
+					echo "\tSUCCESS\n";
+					$cnt++;
+			    } else {
+			        echo "\t{$pushError}\n";
+			    }
+			}
+		}
+
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'finished',
+			'records' => $cnt,
+			'message' => null,
+		) );
+		$status = "Successful";
+
+	}
+
 } else if( 'suppression' === $job->type ) {
 
 	$handle = @fopen( $job->filename, "r" );
