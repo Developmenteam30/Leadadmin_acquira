@@ -35,7 +35,7 @@ if(isset($_REQUEST['a'])){
 			}
 
 			if($c){
-				if( $leads->checkVerticalName( trim( $_REQUEST['name'], $_REQUEST['divisionId'] ) ) ) {
+				if( $leads->checkVerticalName( trim( $_REQUEST['name'] ), $_REQUEST['divisionId'] ) ) {
 					$c = false;
 					$result['error'] = 'That vertical name already exists in the database.';
 				}
