@@ -10,7 +10,11 @@ class ProcessLeads
 		if( strpos( $key, '|' ) !== FALSE ) {
 			// Send a subarray with the data
 			$vars = explode( '|', $key );
-			$requestdata[$vars[0]][$vars[1]] = $value;
+			if( sizeOf( $vars ) == 3 ) {
+				$requestdata[$vars[0]][$vars[1]][] = $value;
+			} else {
+				$requestdata[$vars[0]][$vars[1]] = $value;
+			}
 		} else if( strpos( $key, '#' ) !== FALSE ) {
 			// Send a JSON object with the data
 			$vars = explode( '#', $key );
@@ -379,6 +383,9 @@ class ProcessLeads
 			if( $debug ) {
 				echo "\tPosting JSON data.\n";
 			}
+
+			$geturl = $feedOut->postUrl . ' JSON BODY: ' . json_encode( $requestdata );
+
 			$result['text'] = ProcessLeads::curlLead(
 				json_encode( $requestdata ),
 				$feedOut->postUrl,
