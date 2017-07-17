@@ -42,7 +42,7 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-            if( $c && empty( $_REQUEST['verticalId'] ) ) {
+            if( empty( $_REQUEST['verticalId'] ) ) {
                 $result['error'] = 'Please select a vertical from the list.';
                 $c = false;
             }
@@ -90,148 +90,34 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-			if( !empty( $_REQUEST['loInvoiceAmount1'] ) && is_numeric( $_REQUEST['loInvoiceAmount1'] ) === FALSE ) {
-				$result['error'] = 'LO #1 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount1'] ) && floatval( $_REQUEST['loInvoiceAmount1'] ) < 0 ) {
-				$result['error'] = 'LO #1 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount1'] ) && is_numeric( $_REQUEST['loPaymentAmount1'] ) === FALSE ) {
-				$result['error'] = 'LO #1 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount1'] ) && floatval( $_REQUEST['loPaymentAmount1'] ) < 0 ) {
-				$result['error'] = 'LO #1 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate1'] ) ) {
-				try {
-					$loPaymentDate1 = new DateTime( $_REQUEST['loPaymentDate1'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #1 payment date.';
-					break;
+			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+				if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && is_numeric( $_REQUEST['loInvoiceAmount' . $i] ) === FALSE ) {
+					$result['error'] = 'LO #' . $i . ' invoice amount must be a numeric value.';
+					break 2;
 				}
-			}
 
-			if( !empty( $_REQUEST['loInvoiceAmount2'] ) && is_numeric( $_REQUEST['loInvoiceAmount2'] ) === FALSE ) {
-				$result['error'] = 'LO #2 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount2'] ) && floatval( $_REQUEST['loInvoiceAmount2'] ) < 0 ) {
-				$result['error'] = 'LO #2 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount2'] ) && is_numeric( $_REQUEST['loPaymentAmount2'] ) === FALSE ) {
-				$result['error'] = 'LO #2 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount2'] ) && floatval( $_REQUEST['loPaymentAmount2'] ) < 0 ) {
-				$result['error'] = 'LO #2 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate2'] ) ) {
-				try {
-					$loPaymentDate2 = new DateTime( $_REQUEST['loPaymentDate2'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #2 payment date.';
-					break;
+				if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && floatval( $_REQUEST['loInvoiceAmount' . $i] ) < 0 ) {
+					$result['error'] = 'LO #' . $i . ' invoice amount cannot be less than zero.';
+					break 2;
 				}
-			}
 
-			if( !empty( $_REQUEST['loInvoiceAmount3'] ) && is_numeric( $_REQUEST['loInvoiceAmount3'] ) === FALSE ) {
-				$result['error'] = 'LO #3 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount3'] ) && floatval( $_REQUEST['loInvoiceAmount3'] ) < 0 ) {
-				$result['error'] = 'LO #3 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount3'] ) && is_numeric( $_REQUEST['loPaymentAmount3'] ) === FALSE ) {
-				$result['error'] = 'LO #3 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount3'] ) && floatval( $_REQUEST['loPaymentAmount3'] ) < 0 ) {
-				$result['error'] = 'LO #3 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate3'] ) ) {
-				try {
-					$loPaymentDate3 = new DateTime( $_REQUEST['loPaymentDate3'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #3 payment date.';
-					break;
+				if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && is_numeric( $_REQUEST['loPaymentAmount' . $i] ) === FALSE ) {
+					$result['error'] = 'LO #' . $i . ' payment amount must be a numeric value.';
+					break 2;
 				}
-			}
 
-			if( !empty( $_REQUEST['loInvoiceAmount4'] ) && is_numeric( $_REQUEST['loInvoiceAmount4'] ) === FALSE ) {
-				$result['error'] = 'LO #4 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount4'] ) && floatval( $_REQUEST['loInvoiceAmount4'] ) < 0 ) {
-				$result['error'] = 'LO #4 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount4'] ) && is_numeric( $_REQUEST['loPaymentAmount4'] ) === FALSE ) {
-				$result['error'] = 'LO #4 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount4'] ) && floatval( $_REQUEST['loPaymentAmount4'] ) < 0 ) {
-				$result['error'] = 'LO #4 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate4'] ) ) {
-				try {
-					$loPaymentDate4 = new DateTime( $_REQUEST['loPaymentDate4'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #4 payment date.';
-					break;
+				if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && floatval( $_REQUEST['loPaymentAmount' . $i] ) < 0 ) {
+					$result['error'] = 'LO #' . $i . ' payment amount cannot be less than zero.';
+					break 2;
 				}
-			}
 
-			if( !empty( $_REQUEST['loInvoiceAmount5'] ) && is_numeric( $_REQUEST['loInvoiceAmount5'] ) === FALSE ) {
-				$result['error'] = 'LO #5 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount5'] ) && floatval( $_REQUEST['loInvoiceAmount5'] ) < 0 ) {
-				$result['error'] = 'LO #5 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount5'] ) && is_numeric( $_REQUEST['loPaymentAmount5'] ) === FALSE ) {
-				$result['error'] = 'LO #5 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount5'] ) && floatval( $_REQUEST['loPaymentAmount5'] ) < 0 ) {
-				$result['error'] = 'LO #5 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate5'] ) ) {
-				try {
-					$loPaymentDate5 = new DateTime( $_REQUEST['loPaymentDate5'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #5 payment date.';
-					break;
+				if( !empty( $_REQUEST['loPaymentDate' . $i] ) ) {
+					try {
+						${loPaymentDate . $i} = new DateTime( $_REQUEST['loPaymentDate' . $i] );
+					} catch ( Exception $e ) {
+						$result['error'] = 'Please enter a valid LO #' . $i . ' payment date.';
+						break 2;
+					}
 				}
 			}
 
@@ -278,60 +164,18 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-			$leads->addPhoneLedgerVendor( array(
-				'ledgerId' => $ledgerId,
-				'indexId' => 1,
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId1'] ) ? null : $_REQUEST['vendorCompanyId1'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum1'] ) ? null : $_REQUEST['loInvoiceNum1'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount1'] ) ? null : $_REQUEST['loInvoiceAmount1'],
-				'loPaymentDate' => !isset( $loPaymentDate1 ) ? null : $loPaymentDate1->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod1'] ) ? null : $_REQUEST['loPaymentMethod1'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount1'] ) ? null : $_REQUEST['loPaymentAmount1'],
-			) );
-
-			$leads->addPhoneLedgerVendor( array(
-				'ledgerId' => $ledgerId,
-				'indexId' => 2,
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId2'] ) ? null : $_REQUEST['vendorCompanyId2'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum2'] ) ? null : $_REQUEST['loInvoiceNum2'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount2'] ) ? null : $_REQUEST['loInvoiceAmount2'],
-				'loPaymentDate' => !isset( $loPaymentDate2 ) ? null : $loPaymentDate2->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod2'] ) ? null : $_REQUEST['loPaymentMethod2'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount2'] ) ? null : $_REQUEST['loPaymentAmount2'],
-			) );
-
-			$leads->addPhoneLedgerVendor( array(
-				'ledgerId' => $ledgerId,
-				'indexId' => 3,
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId3'] ) ? null : $_REQUEST['vendorCompanyId3'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum3'] ) ? null : $_REQUEST['loInvoiceNum3'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount3'] ) ? null : $_REQUEST['loInvoiceAmount3'],
-				'loPaymentDate' => !isset( $loPaymentDate3 ) ? null : $loPaymentDate3->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod3'] ) ? null : $_REQUEST['loPaymentMethod3'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount3'] ) ? null : $_REQUEST['loPaymentAmount3'],
-			) );
-
-			$leads->addPhoneLedgerVendor( array(
-				'ledgerId' => $ledgerId,
-				'indexId' => 4,
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId4'] ) ? null : $_REQUEST['vendorCompanyId4'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum4'] ) ? null : $_REQUEST['loInvoiceNum4'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount4'] ) ? null : $_REQUEST['loInvoiceAmount4'],
-				'loPaymentDate' => !isset( $loPaymentDate4 ) ? null : $loPaymentDate4->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod4'] ) ? null : $_REQUEST['loPaymentMethod4'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount4'] ) ? null : $_REQUEST['loPaymentAmount4'],
-			) );
-
-			$leads->addPhoneLedgerVendor( array(
-				'ledgerId' => $ledgerId,
-				'indexId' => 5,
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId5'] ) ? null : $_REQUEST['vendorCompanyId5'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum5'] ) ? null : $_REQUEST['loInvoiceNum5'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount5'] ) ? null : $_REQUEST['loInvoiceAmount5'],
-				'loPaymentDate' => !isset( $loPaymentDate5 ) ? null : $loPaymentDate5->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod5'] ) ? null : $_REQUEST['loPaymentMethod5'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount5'] ) ? null : $_REQUEST['loPaymentAmount5'],
-			) );
+			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+				$leads->replacePhoneLedgerVendor( array(
+					'ledgerId' => $ledgerId,
+					'indexId' => $i,
+					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId' . $i] ) ? null : $_REQUEST['vendorCompanyId' . $i],
+					'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum' . $i] ) ? null : $_REQUEST['loInvoiceNum' . $i],
+					'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount' . $i] ) ? null : $_REQUEST['loInvoiceAmount' . $i],
+					'loPaymentDate' => !isset( ${ 'loPaymentDate' . $i } ) ? null : ${ 'loPaymentDate' . $i}->format( 'Y-m-d' ),
+					'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod' . $i] ) ? null : $_REQUEST['loPaymentMethod' . $i],
+					'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount' . $i] ) ? null : $_REQUEST['loPaymentAmount' . $i],
+				) );
+			}
 
 			$leads->auditLog( 'LEDGER-PHONE:ADD', $ledgerId );
 			$result['status'] = 1;
@@ -385,7 +229,7 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-            if( $c && empty( $_REQUEST['verticalId'] ) ) {
+            if( empty( $_REQUEST['verticalId'] ) ) {
                 $result['error'] = 'Please select a vertical from the list.';
                 $c = false;
             }
@@ -433,151 +277,36 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-			if( !empty( $_REQUEST['loInvoiceAmount1'] ) && is_numeric( $_REQUEST['loInvoiceAmount1'] ) === FALSE ) {
-				$result['error'] = 'LO #1 invoice amount must be a numeric value.';
-				break;
-			}
+			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+				if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && is_numeric( $_REQUEST['loInvoiceAmount' . $i] ) === FALSE ) {
+					$result['error'] = 'LO #' . $i . ' invoice amount must be a numeric value.';
+					break 2;
+				}
 
-			if( !empty( $_REQUEST['loInvoiceAmount1'] ) && floatval( $_REQUEST['loInvoiceAmount1'] ) < 0 ) {
-				$result['error'] = 'LO #1 invoice amount cannot be less than zero.';
-				break;
-			}
+				if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && floatval( $_REQUEST['loInvoiceAmount' . $i] ) < 0 ) {
+					$result['error'] = 'LO #' . $i . ' invoice amount cannot be less than zero.';
+					break 2;
+				}
 
-			if( !empty( $_REQUEST['loPaymentAmount1'] ) && is_numeric( $_REQUEST['loPaymentAmount1'] ) === FALSE ) {
-				$result['error'] = 'LO #1 payment amount must be a numeric value.';
-				break;
-			}
+				if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && is_numeric( $_REQUEST['loPaymentAmount' . $i] ) === FALSE ) {
+					$result['error'] = 'LO #' . $i . ' payment amount must be a numeric value.';
+					break 2;
+				}
 
-			if( !empty( $_REQUEST['loPaymentAmount1'] ) && floatval( $_REQUEST['loPaymentAmount1'] ) < 0 ) {
-				$result['error'] = 'LO #1 payment amount cannot be less than zero.';
-				break;
-			}
+				if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && floatval( $_REQUEST['loPaymentAmount' . $i] ) < 0 ) {
+					$result['error'] = 'LO #' . $i . ' payment amount cannot be less than zero.';
+					break 2;
+				}
 
-			if( !empty( $_REQUEST['loPaymentDate1'] ) ) {
-				try {
-					$loPaymentDate1 = new DateTime( $_REQUEST['loPaymentDate1'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #1 payment date.';
-					break;
+				if( !empty( $_REQUEST['loPaymentDate' . $i] ) ) {
+					try {
+						${'loPaymentDate' . $i} = new DateTime( $_REQUEST['loPaymentDate' . $i] );
+					} catch ( Exception $e ) {
+						$result['error'] = 'Please enter a valid LO #' . $i . ' payment date.';
+						break 2;
+					}
 				}
 			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount2'] ) && is_numeric( $_REQUEST['loInvoiceAmount2'] ) === FALSE ) {
-				$result['error'] = 'LO #2 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount2'] ) && floatval( $_REQUEST['loInvoiceAmount2'] ) < 0 ) {
-				$result['error'] = 'LO #2 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount2'] ) && is_numeric( $_REQUEST['loPaymentAmount2'] ) === FALSE ) {
-				$result['error'] = 'LO #2 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount2'] ) && floatval( $_REQUEST['loPaymentAmount2'] ) < 0 ) {
-				$result['error'] = 'LO #2 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate2'] ) ) {
-				try {
-					$loPaymentDate2 = new DateTime( $_REQUEST['loPaymentDate2'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #2 payment date.';
-					break;
-				}
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount3'] ) && is_numeric( $_REQUEST['loInvoiceAmount3'] ) === FALSE ) {
-				$result['error'] = 'LO #3 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount3'] ) && floatval( $_REQUEST['loInvoiceAmount3'] ) < 0 ) {
-				$result['error'] = 'LO #3 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount3'] ) && is_numeric( $_REQUEST['loPaymentAmount3'] ) === FALSE ) {
-				$result['error'] = 'LO #3 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount3'] ) && floatval( $_REQUEST['loPaymentAmount3'] ) < 0 ) {
-				$result['error'] = 'LO #3 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate3'] ) ) {
-				try {
-					$loPaymentDate3 = new DateTime( $_REQUEST['loPaymentDate3'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #3 payment date.';
-					break;
-				}
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount4'] ) && is_numeric( $_REQUEST['loInvoiceAmount4'] ) === FALSE ) {
-				$result['error'] = 'LO #4 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount4'] ) && floatval( $_REQUEST['loInvoiceAmount4'] ) < 0 ) {
-				$result['error'] = 'LO #4 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount4'] ) && is_numeric( $_REQUEST['loPaymentAmount4'] ) === FALSE ) {
-				$result['error'] = 'LO #4 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount4'] ) && floatval( $_REQUEST['loPaymentAmount4'] ) < 0 ) {
-				$result['error'] = 'LO #4 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate4'] ) ) {
-				try {
-					$loPaymentDate4 = new DateTime( $_REQUEST['loPaymentDate4'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #4 payment date.';
-					break;
-				}
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount5'] ) && is_numeric( $_REQUEST['loInvoiceAmount5'] ) === FALSE ) {
-				$result['error'] = 'LO #5 invoice amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loInvoiceAmount5'] ) && floatval( $_REQUEST['loInvoiceAmount5'] ) < 0 ) {
-				$result['error'] = 'LO #5 invoice amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount5'] ) && is_numeric( $_REQUEST['loPaymentAmount5'] ) === FALSE ) {
-				$result['error'] = 'LO #5 payment amount must be a numeric value.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentAmount5'] ) && floatval( $_REQUEST['loPaymentAmount5'] ) < 0 ) {
-				$result['error'] = 'LO #5 payment amount cannot be less than zero.';
-				break;
-			}
-
-			if( !empty( $_REQUEST['loPaymentDate5'] ) ) {
-				try {
-					$loPaymentDate5 = new DateTime( $_REQUEST['loPaymentDate5'] );
-				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid LO #5 payment date.';
-					break;
-				}
-			}
-
 
 			if( !empty( $_REQUEST['commissionDate'] ) ) {
 				try {
@@ -622,50 +351,18 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-			$leads->updatePhoneLedgerVendor( $_REQUEST['ledgerId'], 1, array(
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId1'] ) ? null : $_REQUEST['vendorCompanyId1'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum1'] ) ? null : $_REQUEST['loInvoiceNum1'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount1'] ) ? null : $_REQUEST['loInvoiceAmount1'],
-				'loPaymentDate' => !isset( $loPaymentDate1 ) ? null : $loPaymentDate1->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod1'] ) ? null : $_REQUEST['loPaymentMethod1'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount1'] ) ? null : $_REQUEST['loPaymentAmount1'],
-			) );
-
-			$leads->updatePhoneLedgerVendor( $_REQUEST['ledgerId'], 2, array(
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId2'] ) ? null : $_REQUEST['vendorCompanyId2'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum2'] ) ? null : $_REQUEST['loInvoiceNum2'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount2'] ) ? null : $_REQUEST['loInvoiceAmount2'],
-				'loPaymentDate' => !isset( $loPaymentDate2 ) ? null : $loPaymentDate2->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod2'] ) ? null : $_REQUEST['loPaymentMethod2'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount2'] ) ? null : $_REQUEST['loPaymentAmount2'],
-			) );
-
-			$leads->updatePhoneLedgerVendor( $_REQUEST['ledgerId'], 3, array(
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId3'] ) ? null : $_REQUEST['vendorCompanyId3'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum3'] ) ? null : $_REQUEST['loInvoiceNum3'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount3'] ) ? null : $_REQUEST['loInvoiceAmount3'],
-				'loPaymentDate' => !isset( $loPaymentDate3 ) ? null : $loPaymentDate3->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod3'] ) ? null : $_REQUEST['loPaymentMethod3'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount3'] ) ? null : $_REQUEST['loPaymentAmount3'],
-			) );
-
-			$leads->updatePhoneLedgerVendor( $_REQUEST['ledgerId'], 4, array(
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId4'] ) ? null : $_REQUEST['vendorCompanyId4'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum4'] ) ? null : $_REQUEST['loInvoiceNum4'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount4'] ) ? null : $_REQUEST['loInvoiceAmount4'],
-				'loPaymentDate' => !isset( $loPaymentDate4 ) ? null : $loPaymentDate4->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod4'] ) ? null : $_REQUEST['loPaymentMethod4'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount4'] ) ? null : $_REQUEST['loPaymentAmount4'],
-			) );
-
-			$leads->updatePhoneLedgerVendor( $_REQUEST['ledgerId'], 5, array(
-				'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId5'] ) ? null : $_REQUEST['vendorCompanyId5'],
-				'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum5'] ) ? null : $_REQUEST['loInvoiceNum5'],
-				'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount5'] ) ? null : $_REQUEST['loInvoiceAmount5'],
-				'loPaymentDate' => !isset( $loPaymentDate5 ) ? null : $loPaymentDate5->format( 'Y-m-d' ),
-				'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod5'] ) ? null : $_REQUEST['loPaymentMethod5'],
-				'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount5'] ) ? null : $_REQUEST['loPaymentAmount5'],
-			) );
+			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+				$leads->replacePhoneLedgerVendor( array(
+					'ledgerId' => $_REQUEST['ledgerId'],
+					'indexId' => $i,
+					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId' . $i] ) ? null : $_REQUEST['vendorCompanyId' . $i],
+					'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum' . $i] ) ? null : $_REQUEST['loInvoiceNum' . $i],
+					'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount' . $i] ) ? null : $_REQUEST['loInvoiceAmount' . $i],
+					'loPaymentDate' => !isset( ${ 'loPaymentDate' . $i } ) ? null : ${ 'loPaymentDate' . $i}->format( 'Y-m-d' ),
+					'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod' . $i] ) ? null : $_REQUEST['loPaymentMethod' . $i],
+					'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount' . $i] ) ? null : $_REQUEST['loPaymentAmount' . $i],
+				) );
+			}
 
 			$leads->auditLog( 'LEDGER-PHONE:EDIT', $_REQUEST['ledgerId'] );
 			$result['status'] = 1;
@@ -769,235 +466,76 @@ if(isset($_REQUEST['d'])){
 					'type' => 'currency',
 					'required' => true,
 				),
+			);
 
-				array(
+			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+				$fields[] = array(
 					'type' => '_divider',
-				),
+				);
 
-				array(
-					'id' => 'vendorCompanyId1',
-					'label' => 'Vendor #1',
+				$fields[] = array(
+					'id' => 'vendorCompanyId' . $i,
+					'label' => 'Vendor #' . $i,
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a vendor',
 					'choices' => $leads->getDivisionCompanies( 5, null ),
-				),
-				array(
-					'id' => 'loInvoiceNum1',
+				);
+				$fields[] = array(
+					'id' => 'loInvoiceNum' . $i,
 					'label' => 'LO Invoice #',
 					'type' => 'text',
-				),
-				array(
-					'id' => 'loInvoiceAmount1',
+				);
+				$fields[] = array(
+					'id' => 'loInvoiceAmount' . $i,
 					'label' => 'LO Amount',
 					'type' => 'currency',
 					'required' => true,
-				),
-				array(
-					'id' => 'loPaymentDate1',
+				);
+				$fields[] = array(
+					'id' => 'loPaymentDate' . $i,
 					'label' => 'Date Paid',
 					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentMethod1',
+				);
+				$fields[] = array(
+					'id' => 'loPaymentMethod' . $i,
 					'label' => 'Payment Method',
 					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentAmount1',
+				);
+				$fields[] = array(
+					'id' => 'loPaymentAmount' . $i,
 					'label' => 'Payment Amount',
 					'type' => 'currency',
 					'required' => true,
-				),
+				);
+			}
 
-				array(
-					'type' => '_divider',
-				),
+			$fields[] = array(
+				'type' => '_divider',
+			);
+			$fields[] = array(
+				'id' => 'userId',
+				'label' => 'Salesperson',
+				'type' => 'select',
+				'required' => true,
+				'placeholder' => 'Select a salesperson',
+				'choices' => $leads->getStaffUsers(),
+			);
+			$fields[] = array(
+				'id' => 'commissionDate',
+				'label' => 'Commission Date',
+				'type' => 'text',
+			);
+			$fields[] = array(
+				'id' => 'commissionAmount',
+				'label' => 'Commission Amt',
+				'type' => 'currency',
+			);
 
-				array(
-					'id' => 'vendorCompanyId2',
-					'label' => 'Vendor #2',
-					'type' => 'select',
-					'required' => true,
-					'placeholder' => 'Select a vendor',
-					'choices' => $leads->getDivisionCompanies( 5, null ),
-				),
-				array(
-					'id' => 'loInvoiceNum2',
-					'label' => 'LO Invoice #',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loInvoiceAmount2',
-					'label' => 'LO Amount',
-					'type' => 'currency',
-					'required' => true,
-				),
-				array(
-					'id' => 'loPaymentDate2',
-					'label' => 'Date Paid',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentMethod2',
-					'label' => 'Payment Method',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentAmount2',
-					'label' => 'Payment Amount',
-					'type' => 'currency',
-					'required' => true,
-				),
-
-				array(
-					'type' => '_divider',
-				),
-
-				array(
-					'id' => 'vendorCompanyId3',
-					'label' => 'Vendor #3',
-					'type' => 'select',
-					'required' => true,
-					'placeholder' => 'Select a vendor',
-					'choices' => $leads->getDivisionCompanies( 5, null ),
-				),
-				array(
-					'id' => 'loInvoiceNum3',
-					'label' => 'LO Invoice #',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loInvoiceAmount3',
-					'label' => 'LO Amount',
-					'type' => 'currency',
-					'required' => true,
-				),
-				array(
-					'id' => 'loPaymentDate3',
-					'label' => 'Date Paid',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentMethod3',
-					'label' => 'Payment Method',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentAmount3',
-					'label' => 'Payment Amount',
-					'type' => 'currency',
-					'required' => true,
-				),
-
-				array(
-					'type' => '_divider',
-				),
-
-				array(
-					'id' => 'vendorCompanyId4',
-					'label' => 'Vendor #4',
-					'type' => 'select',
-					'required' => true,
-					'placeholder' => 'Select a vendor',
-					'choices' => $leads->getDivisionCompanies( 5, null ),
-				),
-				array(
-					'id' => 'loInvoiceNum4',
-					'label' => 'LO Invoice #',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loInvoiceAmount4',
-					'label' => 'LO Amount',
-					'type' => 'currency',
-					'required' => true,
-				),
-				array(
-					'id' => 'loPaymentDate4',
-					'label' => 'Date Paid',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentMethod4',
-					'label' => 'Payment Method',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentAmount4',
-					'label' => 'Payment Amount',
-					'type' => 'currency',
-					'required' => true,
-				),
-
-				array(
-					'type' => '_divider',
-				),
-
-				array(
-					'id' => 'vendorCompanyId5',
-					'label' => 'Vendor #5',
-					'type' => 'select',
-					'required' => true,
-					'placeholder' => 'Select a vendor',
-					'choices' => $leads->getDivisionCompanies( 5, null ),
-				),
-				array(
-					'id' => 'loInvoiceNum5',
-					'label' => 'LO Invoice #',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loInvoiceAmount5',
-					'label' => 'LO Amount',
-					'type' => 'currency',
-					'required' => true,
-				),
-				array(
-					'id' => 'loPaymentDate5',
-					'label' => 'Date Paid',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentMethod5',
-					'label' => 'Payment Method',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'loPaymentAmount5',
-					'label' => 'Payment Amount',
-					'type' => 'currency',
-					'required' => true,
-				),
-
-				array(
-					'type' => '_divider',
-				),
-
-				array(
-					'id' => 'userId',
-					'label' => 'Salesperson',
-					'type' => 'select',
-					'required' => true,
-					'placeholder' => 'Select a salesperson',
-					'choices' => $leads->getStaffUsers(),
-				),
-				array(
-					'id' => 'commissionDate',
-					'label' => 'Commission Date',
-					'type' => 'text',
-				),
-				array(
-					'id' => 'commissionAmount',
-					'label' => 'Commission Amt',
-					'type' => 'currency',
-				),
-
-				array(
-					'id' => 'a',
-					'type' => 'hidden',
-					'value' => 'addPhoneLedger',
-				),
+			$fields[] = array(
+				'id' => 'a',
+				'type' => 'hidden',
+				'value' => 'addPhoneLedger',
 			);
 
 			Display::displayForm( 'new_phoneledger', $fields );
@@ -1279,273 +817,90 @@ $("#new_phoneledger select[name='userId']").select2({
 						'required' => true,
 						'value' => $entry->paymentAmount,
 					),
+				);
 
-					array(
+				for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+					$fields[] = array(
 						'type' => '_divider',
-					),
+					);
 
-					array(
-						'id' => 'vendorCompanyId1',
-						'label' => 'Vendor #1',
+					$fields[] = array(
+						'id' => 'vendorCompanyId' . $i,
+						'label' => 'Vendor #' . $i,
 						'type' => 'select',
 						'required' => true,
 						'placeholder' => 'Select a vendor',
 						'choices' => $leads->getDivisionCompanies( 5, null ),
-						'value' => $entry->vendorCompanyId1,
-					),
-					array(
-						'id' => 'loInvoiceNum1',
+						'value' => $entry->{ 'vendorCompanyId' . $i },
+					);
+					$fields[] = array(
+						'id' => 'loInvoiceNum' . $i,
 						'label' => 'LO Invoice #',
 						'type' => 'text',
-						'value' => $entry->loInvoiceNum1,
-					),
-					array(
-						'id' => 'loInvoiceAmount1',
+						'value' => $entry->{ 'loInvoiceNum' . $i },
+					);
+					$fields[] = array(
+						'id' => 'loInvoiceAmount' . $i,
 						'label' => 'LO Amount',
 						'type' => 'currency',
 						'required' => true,
-						'value' => $entry->loInvoiceAmount1,
-					),
-					array(
-						'id' => 'loPaymentDate1',
+						'value' => $entry->{ 'loInvoiceAmount' . $i },
+					);
+					$fields[] = array(
+						'id' => 'loPaymentDate' . $i,
 						'label' => 'Date Paid',
 						'type' => 'text',
-						'value' => $entry->loPaymentDate1,
-					),
-					array(
-						'id' => 'loPaymentMethod1',
+						'value' => $entry->{ 'loPaymentDate' . $i },
+					);
+					$fields[] = array(
+						'id' => 'loPaymentMethod' . $i,
 						'label' => 'Payment Method',
 						'type' => 'text',
-						'value' => $entry->loPaymentMethod1,
-					),
-					array(
-						'id' => 'loPaymentAmount1',
+						'value' => $entry->{ 'loPaymentMethod' . $i },
+					);
+					$fields[] = array(
+						'id' => 'loPaymentAmount' . $i,
 						'label' => 'Payment Amount',
 						'type' => 'currency',
 						'required' => true,
-						'value' => $entry->loPaymentAmount1,
-					),
+						'value' => $entry->{ 'loPaymentAmount' . $i },
+					);
+				}
 
-					array(
-						'type' => '_divider',
-					),
+				$fields[] = array(
+					'type' => '_divider',
+				);
 
-					array(
-						'id' => 'vendorCompanyId2',
-						'label' => 'Vendor #2',
-						'type' => 'select',
-						'required' => true,
-						'placeholder' => 'Select a vendor',
-						'choices' => $leads->getDivisionCompanies( 5, null ),
-						'value' => $entry->vendorCompanyId2,
-					),
-					array(
-						'id' => 'loInvoiceNum2',
-						'label' => 'LO Invoice #',
-						'type' => 'text',
-						'value' => $entry->loInvoiceNum2,
-					),
-					array(
-						'id' => 'loInvoiceAmount2',
-						'label' => 'LO Amount',
-						'type' => 'currency',
-						'required' => true,
-						'value' => $entry->loInvoiceAmount2,
-					),
-					array(
-						'id' => 'loPaymentDate2',
-						'label' => 'Date Paid',
-						'type' => 'text',
-						'value' => $entry->loPaymentDate2,
-					),
-					array(
-						'id' => 'loPaymentMethod2',
-						'label' => 'Payment Method',
-						'type' => 'text',
-						'value' => $entry->loPaymentMethod2,
-					),
-					array(
-						'id' => 'loPaymentAmount2',
-						'label' => 'Payment Amount',
-						'type' => 'currency',
-						'required' => true,
-						'value' => $entry->loPaymentAmount2,
-					),
-
-					array(
-						'type' => '_divider',
-					),
-
-					array(
-						'id' => 'vendorCompanyId3',
-						'label' => 'Vendor #3',
-						'type' => 'select',
-						'required' => true,
-						'placeholder' => 'Select a vendor',
-						'choices' => $leads->getDivisionCompanies( 5, null ),
-						'value' => $entry->vendorCompanyId3,
-					),
-					array(
-						'id' => 'loInvoiceNum3',
-						'label' => 'LO Invoice #',
-						'type' => 'text',
-						'value' => $entry->loInvoiceNum3,
-					),
-					array(
-						'id' => 'loInvoiceAmount3',
-						'label' => 'LO Amount',
-						'type' => 'currency',
-						'required' => true,
-						'value' => $entry->loInvoiceAmount3,
-					),
-					array(
-						'id' => 'loPaymentDate3',
-						'label' => 'Date Paid',
-						'type' => 'text',
-						'value' => $entry->loPaymentDate3,
-					),
-					array(
-						'id' => 'loPaymentMethod3',
-						'label' => 'Payment Method',
-						'type' => 'text',
-						'value' => $entry->loPaymentMethod3,
-					),
-					array(
-						'id' => 'loPaymentAmount3',
-						'label' => 'Payment Amount',
-						'type' => 'currency',
-						'required' => true,
-						'value' => $entry->loPaymentAmount3,
-					),
-
-					array(
-						'type' => '_divider',
-					),
-
-					array(
-						'id' => 'vendorCompanyId4',
-						'label' => 'Vendor #4',
-						'type' => 'select',
-						'required' => true,
-						'placeholder' => 'Select a vendor',
-						'choices' => $leads->getDivisionCompanies( 5, null ),
-						'value' => $entry->vendorCompanyId4,
-					),
-					array(
-						'id' => 'loInvoiceNum4',
-						'label' => 'LO Invoice #',
-						'type' => 'text',
-						'value' => $entry->loInvoiceNum4,
-					),
-					array(
-						'id' => 'loInvoiceAmount4',
-						'label' => 'LO Amount',
-						'type' => 'currency',
-						'required' => true,
-						'value' => $entry->loInvoiceAmount4,
-					),
-					array(
-						'id' => 'loPaymentDate4',
-						'label' => 'Date Paid',
-						'type' => 'text',
-						'value' => $entry->loPaymentDate4,
-					),
-					array(
-						'id' => 'loPaymentMethod4',
-						'label' => 'Payment Method',
-						'type' => 'text',
-						'value' => $entry->loPaymentMethod4,
-					),
-					array(
-						'id' => 'loPaymentAmount4',
-						'label' => 'Payment Amount',
-						'type' => 'currency',
-						'required' => true,
-						'value' => $entry->loPaymentAmount4,
-					),
-
-					array(
-						'type' => '_divider',
-					),
-
-					array(
-						'id' => 'vendorCompanyId5',
-						'label' => 'Vendor #5',
-						'type' => 'select',
-						'required' => true,
-						'placeholder' => 'Select a vendor',
-						'choices' => $leads->getDivisionCompanies( 5, null ),
-						'value' => $entry->vendorCompanyId5,
-					),
-					array(
-						'id' => 'loInvoiceNum5',
-						'label' => 'LO Invoice #',
-						'type' => 'text',
-						'value' => $entry->loInvoiceNum5,
-					),
-					array(
-						'id' => 'loInvoiceAmount5',
-						'label' => 'LO Amount',
-						'type' => 'currency',
-						'required' => true,
-						'value' => $entry->loInvoiceAmount5,
-					),
-					array(
-						'id' => 'loPaymentDate5',
-						'label' => 'Date Paid',
-						'type' => 'text',
-						'value' => $entry->loPaymentDate5,
-					),
-					array(
-						'id' => 'loPaymentMethod5',
-						'label' => 'Payment Method',
-						'type' => 'text',
-						'value' => $entry->loPaymentMethod5,
-					),
-					array(
-						'id' => 'loPaymentAmount5',
-						'label' => 'Payment Amount',
-						'type' => 'currency',
-						'required' => true,
-						'value' => $entry->loPaymentAmount5,
-					),
-
-					array(
-						'type' => '_divider',
-					),
-
-					array(
-						'id' => 'userId',
-						'label' => 'Salesperson',
-						'type' => 'select',
-						'required' => true,
-						'placeholder' => 'Select a salesperson',
-						'choices' => $leads->getStaffUsers(),
-						'value' => $entry->userId,
-					),
-					array(
-						'id' => 'commissionDate',
-						'label' => 'Commission Date',
-						'type' => 'text',
-						'value' => $entry->commissionDate,
-					),
-					array(
-						'id' => 'commissionAmount',
-						'label' => 'Commission Amt',
-						'type' => 'currency',
-						'value' => $entry->commissionAmount,
-					),
-
-					array(
-						'id' => 'a',
-						'type' => 'hidden',
-						'value' => 'editPhoneLedger',
-					),
-					array(
-						'id' => 'ledgerId',
-						'type' => 'hidden',
-						'value' => $ledgerId,
-					),
+				$fields[] = array(
+					'id' => 'userId',
+					'label' => 'Salesperson',
+					'type' => 'select',
+					'required' => true,
+					'placeholder' => 'Select a salesperson',
+					'choices' => $leads->getStaffUsers(),
+					'value' => $entry->userId,
+				);
+				$fields[] = array(
+					'id' => 'commissionDate',
+					'label' => 'Commission Date',
+					'type' => 'text',
+					'value' => $entry->commissionDate,
+				);
+				$fields[] = array(
+					'id' => 'commissionAmount',
+					'label' => 'Commission Amt',
+					'type' => 'currency',
+					'value' => $entry->commissionAmount,
+				);
+				$fields[] = array(
+					'id' => 'a',
+					'type' => 'hidden',
+					'value' => 'editPhoneLedger',
+				);
+				$fields[] = array(
+					'id' => 'ledgerId',
+					'type' => 'hidden',
+					'value' => $ledgerId,
 				);
 
 
@@ -1694,7 +1049,7 @@ include(INCLUDES."c_header.php");
 <table class="table table-bordered table-condensed table-striped-double ledger-sort" id="phoneledger_<?php echo $month; ?>">
 	<thead>
 		<tr class="header">
-			<th rowspan="6" style="vertical-align: middle;">Entry #</th>
+			<th rowspan="2" style="vertical-align: middle;">Entry #</th>
 			<th style="width:250px;">Client Name</th>
 			<th style="width:300px;">List Name</th>
 			<th>Order Date</th>
@@ -1707,56 +1062,8 @@ include(INCLUDES."c_header.php");
 			<th>Salesperson</th>
 			<th>Commissions</th>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-			<th rowspan="6" style="vertical-align: middle;">Options</th>
+			<th rowspan="2" style="vertical-align: middle;">Options</th>
 <?php } ?>
-		</tr>
-		<tr class="header">
-			<th colspan="2">Vendor Name</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
-			<th>LO Inv #</th>
-			<th>LO Inv Amt</th>
-			<th>LO Pmt Date</th>
-			<th>LO Pmt Mthd</th>
-			<th>LO Pmt Amt</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
-		</tr>
-		<tr class="header">
-			<th colspan="2">Vendor Name</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
-			<th>LO Inv #</th>
-			<th>LO Inv Amt</th>
-			<th>LO Pmt Date</th>
-			<th>LO Pmt Mthd</th>
-			<th>LO Pmt Amt</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
-		</tr>
-		<tr class="header">
-			<th colspan="2">Vendor Name</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
-			<th>LO Inv #</th>
-			<th>LO Inv Amt</th>
-			<th>LO Pmt Date</th>
-			<th>LO Pmt Mthd</th>
-			<th>LO Pmt Amt</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
-		</tr>
-		<tr class="header">
-			<th colspan="2">Vendor Name</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
-			<th>LO Inv #</th>
-			<th>LO Inv Amt</th>
-			<th>LO Pmt Date</th>
-			<th>LO Pmt Mthd</th>
-			<th>LO Pmt Amt</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
 		</tr>
 		<tr class="header">
 			<th colspan="2">Vendor Name</th>
@@ -1781,7 +1088,7 @@ include(INCLUDES."c_header.php");
 ?>
 	<tbody>
 		<tr>
-			<td rowspan="6" class="text-center" style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
+			<td rowspan="2" class="text-center" style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
 			<td><?php echo htmlentities( $entry->clientCompanyName ); ?></td>
 			<td><?php echo htmlentities( $entry->listName ); ?></td>
 			<td><?php echo htmlentities( $entry->orderDate ); ?></td>
@@ -1794,7 +1101,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo $entry->fullName; ?></td>
 			<td>$<?php echo number_format( $entry->commissionAmount, 2 ); ?></td>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-			<td class="text-center" rowspan="6" style="vertical-align: middle;">
+			<td class="text-center" rowspan="2" style="vertical-align: middle;">
 <div class="btn-group">
 	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editphoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
 	<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -1816,54 +1123,6 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->loPaymentDate1 ); ?></td>
 			<td><?php echo htmlentities( $entry->loPaymentMethod1 ); ?></td>
 			<td>$<?php echo number_format( $entry->loPaymentAmount1, 2 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td colspan="2"><?php echo htmlentities( $entry->vendorCompanyName2 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-			<td><?php echo htmlentities( $entry->loInvoiceNum2 ); ?></td>
-			<td>$<?php echo number_format( $entry->loInvoiceAmount2, 2 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentDate2 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentMethod2 ); ?></td>
-			<td>$<?php echo number_format( $entry->loPaymentAmount2, 2 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td colspan="2"><?php echo htmlentities( $entry->vendorCompanyName3 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-			<td><?php echo htmlentities( $entry->loInvoiceNum3 ); ?></td>
-			<td>$<?php echo number_format( $entry->loInvoiceAmount3, 2 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentDate3 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentMethod3 ); ?></td>
-			<td>$<?php echo number_format( $entry->loPaymentAmount3, 2 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td colspan="2"><?php echo htmlentities( $entry->vendorCompanyName4 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-			<td><?php echo htmlentities( $entry->loInvoiceNum4 ); ?></td>
-			<td>$<?php echo number_format( $entry->loInvoiceAmount4, 2 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentDate4 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentMethod4 ); ?></td>
-			<td>$<?php echo number_format( $entry->loPaymentAmount4, 2 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-		</tr>
-		<tr>
-			<td colspan="2"><?php echo htmlentities( $entry->vendorCompanyName5 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-			<td><?php echo htmlentities( $entry->loInvoiceNum5 ); ?></td>
-			<td>$<?php echo number_format( $entry->loInvoiceAmount5, 2 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentDate5 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentMethod5 ); ?></td>
-			<td>$<?php echo number_format( $entry->loPaymentAmount5, 2 ); ?></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>

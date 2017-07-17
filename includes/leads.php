@@ -77,6 +77,26 @@ class Leads
 		return null;
 	}
 
+	private function replaceRow( $table, array $data, $logError = true ) {
+		$cols = array();
+		$vals = array();
+
+		foreach ( $data as $col => $val ) {
+			$cols[] = $this->quoteIdentifier( $col );
+			$vals[] = '?';
+		}
+
+		try {
+			$query = $this->db->prepare( 'REPLACE INTO ' . $this->quoteIdentifier( $table ) . ' (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')' );
+			$query->execute( array_values( $data ) );
+			return $this->db->lastInsertId();
+		} catch( PDOException $e ) {
+			throw new Leads_PDOException( 'Unable to replace record', null, $e );
+		}
+
+		return null;
+	}
+
 	private function update( $table, array $data, array $where = array() ) {
 		$cols = array();
 		$where_cols = array();
@@ -505,6 +525,21 @@ class Leads
 		return $ledgerId;
 	}
 
+	public function replacePhoneLedgerVendor( $fields ) {
+
+		$ledgerId = null;
+
+		try {
+			$ledgerId = $this->replaceRow( 'ledger_phones_vendors', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to replace phone ledger vendor entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $ledgerId;
+	}
+
 	public function updatePhoneLedgerVendor( $ledgerId, $indexId, $fields ) {
 
 		try {
@@ -571,13 +606,33 @@ class Leads
 		$results = null;
 		$params = array();
 
-		$sql  = "SELECT l.*,lv1.vendorCompanyId AS vendorCompanyId1,lv2.vendorCompanyId AS vendorCompanyId2,lv3.vendorCompanyId AS vendorCompanyId3,lv4.vendorCompanyId AS vendorCompanyId4,lv5.vendorCompanyId AS vendorCompanyId5,lv1.loInvoiceNum AS loInvoiceNum1,lv2.loInvoiceNum AS loInvoiceNum2,lv3.loInvoiceNum AS loInvoiceNum3,lv4.loInvoiceNum AS loInvoiceNum4,lv5.loInvoiceNum AS loInvoiceNum5,lv1.loInvoiceAmount AS loInvoiceAmount1,lv2.loInvoiceAmount AS loInvoiceAmount2,lv3.loInvoiceAmount AS loInvoiceAmount3,lv4.loInvoiceAmount AS loInvoiceAmount4,lv5.loInvoiceAmount AS loInvoiceAmount5,lv1.loPaymentDate AS loPaymentDate1,lv2.loPaymentDate AS loPaymentDate2,lv3.loPaymentDate AS loPaymentDate3,lv4.loPaymentDate AS loPaymentDate4,lv5.loPaymentDate AS loPaymentDate5,lv1.loPaymentMethod AS loPaymentMethod1,lv2.loPaymentMethod AS loPaymentMethod2,lv3.loPaymentMethod AS loPaymentMethod3,lv4.loPaymentMethod AS loPaymentMethod4,lv5.loPaymentMethod AS loPaymentMethod5,lv1.loPaymentAmount AS loPaymentAmount1,lv2.loPaymentAmount AS loPaymentAmount2,lv3.loPaymentAmount AS loPaymentAmount3,lv4.loPaymentAmount AS loPaymentAmount4,lv5.loPaymentAmount AS loPaymentAmount5 ";
+		$sql  = "SELECT l.*,";
+		for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+			$sql .= sprintf( "lv%d.vendorCompanyId AS vendorCompanyId%d,lv%d.loInvoiceNum AS loInvoiceNum%d,lv%d.loInvoiceAmount AS loInvoiceAmount%d,lv%d.loPaymentDate AS loPaymentDate%d,lv%d.loPaymentMethod AS loPaymentMethod%d,lv%d.loPaymentAmount AS loPaymentAmount%d,",
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i
+			);
+		}
+		$sql .= "1 AS dummy ";
 		$sql .= "FROM ledger_phones l ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv1 ON l.ledgerId = lv1.ledgerId AND lv1.indexId = 1 ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv2 ON l.ledgerId = lv2.ledgerId AND lv2.indexId = 2 ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv3 ON l.ledgerId = lv3.ledgerId AND lv3.indexId = 3 ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv4 ON l.ledgerId = lv4.ledgerId AND lv4.indexId = 4 ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv5 ON l.ledgerId = lv5.ledgerId AND lv5.indexId = 5 ";
+		for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+			$sql .= sprintf( "LEFT JOIN ledger_phones_vendors lv%d ON l.ledgerId = lv%d.ledgerId AND lv%d.indexId = %d ",
+				$i,
+				$i,
+				$i,
+				$i
+			);
+		}
 		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
@@ -701,19 +756,39 @@ class Leads
 		if( !empty( $onlyMonths ) ) {
 			$sql  = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
 		} else {
-			$sql  = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,vc1.name AS vendorCompanyName1,vc2.name AS vendorCompanyName2,vc3.name AS vendorCompanyName3,vc4.name AS vendorCompanyName4,vc5.name AS vendorCompanyName5,lv1.loInvoiceNum AS loInvoiceNum1,lv2.loInvoiceNum AS loInvoiceNum2,lv3.loInvoiceNum AS loInvoiceNum3,lv4.loInvoiceNum AS loInvoiceNum4,lv5.loInvoiceNum AS loInvoiceNum5,lv1.loInvoiceAmount AS loInvoiceAmount1,lv2.loInvoiceAmount AS loInvoiceAmount2,lv3.loInvoiceAmount AS loInvoiceAmount3,lv4.loInvoiceAmount AS loInvoiceAmount4,lv5.loInvoiceAmount AS loInvoiceAmount5,lv1.loPaymentDate AS loPaymentDate1,lv2.loPaymentDate AS loPaymentDate2,lv3.loPaymentDate AS loPaymentDate3,lv4.loPaymentDate AS loPaymentDate4,lv5.loPaymentDate AS loPaymentDate5,lv1.loPaymentMethod AS loPaymentMethod1,lv2.loPaymentMethod AS loPaymentMethod2,lv3.loPaymentMethod AS loPaymentMethod3,lv4.loPaymentMethod AS loPaymentMethod4,lv5.loPaymentMethod AS loPaymentMethod5,lv1.loPaymentAmount AS loPaymentAmount1,lv2.loPaymentAmount AS loPaymentAmount2,lv3.loPaymentAmount AS loPaymentAmount3,lv4.loPaymentAmount AS loPaymentAmount4,lv5.loPaymentAmount AS loPaymentAmount5,cc.name AS clientCompanyName,u.fullName ";
+			$sql  = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,";
+			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+				$sql .= sprintf( "vc%d.name AS vendorCompanyName%d,lv%d.loInvoiceNum AS loInvoiceNum%d,lv%d.loInvoiceAmount AS loInvoiceAmount%d,lv%d.loPaymentDate AS loPaymentDate%d,lv%d.loPaymentMethod AS loPaymentMethod%d,lv%d.loPaymentAmount AS loPaymentAmount%d,",
+					$i,
+					$i,
+					$i,
+					$i,
+					$i,
+					$i,
+					$i,
+					$i,
+					$i,
+					$i,
+					$i,
+					$i
+				);
+			}
+			$sql .= "cc.name AS clientCompanyName,u.fullName ";
 		}
 		$sql .= "FROM ledger_phones l ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv1 ON l.ledgerId = lv1.ledgerId AND lv1.indexId = 1 ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv2 ON l.ledgerId = lv2.ledgerId AND lv2.indexId = 2 ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv3 ON l.ledgerId = lv3.ledgerId AND lv3.indexId = 3 ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv4 ON l.ledgerId = lv4.ledgerId AND lv4.indexId = 4 ";
-		$sql .= "LEFT JOIN ledger_phones_vendors lv5 ON l.ledgerId = lv5.ledgerId AND lv5.indexId = 5 ";
-		$sql .= "LEFT JOIN companies vc1 ON lv1.vendorCompanyId = vc1.idCompany ";
-		$sql .= "LEFT JOIN companies vc2 ON lv2.vendorCompanyId = vc2.idCompany ";
-		$sql .= "LEFT JOIN companies vc3 ON lv3.vendorCompanyId = vc3.idCompany ";
-		$sql .= "LEFT JOIN companies vc4 ON lv4.vendorCompanyId = vc4.idCompany ";
-		$sql .= "LEFT JOIN companies vc5 ON lv5.vendorCompanyId = vc5.idCompany ";
+		for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+			$sql .= sprintf( "LEFT JOIN ledger_phones_vendors lv%d ON l.ledgerId = lv%d.ledgerId AND lv%d.indexId = %d ",
+				$i,
+				$i,
+				$i,
+				$i
+			);
+			$sql .= sprintf( "LEFT JOIN companies vc%d ON lv%d.vendorCompanyId = vc%d.idCompany ",
+				$i,
+				$i,
+				$i
+			);
+		}
 		$sql .= "LEFT JOIN companies cc ON l.clientCompanyId = cc.idCompany ";
 		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
 		$sql .= "WHERE 1=1 ";
@@ -3002,6 +3077,47 @@ class Leads
 			$results = $query->fetchAll( );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound URL dates: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getInboundStatsAverages() {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT s.idFeedIn,s.url,c.name,i.label FROM dnrdmktg.stats_inbound s LEFT JOIN feedinc i ON i.idFeedIn = s.idFeedIn LEFT JOIN companies c ON i.idCompany = c.idCompany WHERE s.stamp >= DATE_SUB(NOW(),INTERVAL 90 DAY) AND s.accepted > 0 AND s.url != '' GROUP BY s.url,s.idFeedIn" );
+			$query->execute();
+			$urls = $query->fetchAll();
+
+			if( !empty( $urls ) && is_array( $urls ) ) {
+				foreach( $urls as $url ) {
+					$results[$url['idFeedIn']][$url['url']] = array(
+						'daily' => 0,
+						'weekly' => 0,
+						'monthly' => 0,
+						'idFeedIn' => $url['idFeedIn'],
+						'url' => $url['url'],
+						'label' => $url['label'],
+						'name' => $url['name'],
+					);
+
+					$query = $this->db->prepare( "SELECT AVG(accepted) FROM dnrdmktg.stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 90 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn" );
+					$query->execute( array( $url['url'], $url['idFeedIn'] ) );
+					$results[$url['idFeedIn']][$url['url']]['daily'] = $query->fetchColumn();
+
+					$query = $this->db->prepare( "SELECT SUM(accepted) FROM dnrdmktg.stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 7 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn" );
+					$query->execute( array( $url['url'], $url['idFeedIn'] ) );
+					$results[$url['idFeedIn']][$url['url']]['weekly'] = $query->fetchColumn();
+
+					$query = $this->db->prepare( "SELECT SUM(accepted) FROM dnrdmktg.stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 30 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn" );
+					$query->execute( array( $url['url'], $url['idFeedIn'] ) );
+					$results[$url['idFeedIn']][$url['url']]['monthly'] = $query->fetchColumn();
+
+				}
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound stats averages: ' . $e->getMessage() );
 		}
 
 		return $results;
