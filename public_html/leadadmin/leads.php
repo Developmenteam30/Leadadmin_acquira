@@ -543,10 +543,21 @@ if(isset($_REQUEST['d'])){
 ?>
 
 <script type="text/javascript">
-$("#new_phoneledger input[name=orderDate], #new_phoneledger input[name=paymentDate], #new_phoneledger input[name=loPaymentDate1], #new_phoneledger input[name=loPaymentDate2], #new_phoneledger input[name=loPaymentDate3], #new_phoneledger input[name=loPaymentDate4], #new_phoneledger input[name=loPaymentDate5], #new_phoneledger input[name=commissionDate]").datepicker({
+$("#new_phoneledger input[name=orderDate], #new_phoneledger input[name=paymentDate], #new_phoneledger input[name=commissionDate]").datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
+
+<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+$("#new_phoneledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
+	// Consistent format with the HTML5 picker
+	dateFormat: 'yy-mm-dd'
+});
+$("#new_phoneledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
+	placeholder: "Select a vendor",
+	allowClear: true
+});
+<?php } ?>
 
 $("#new_phoneledger select[name='clientCompanyId']").select2({
 	placeholder: "Select a client",
@@ -560,11 +571,6 @@ $("#new_phoneledger select[name='verticalId']").select2({
 
 $("#new_phoneledger select[name='ledgerMonth']").select2({
 	placeholder: "Select the ledger month",
-	allowClear: true
-});
-
-$("#new_phoneledger select[name='vendorCompanyId1'], #new_phoneledger select[name='vendorCompanyId2'], #new_phoneledger select[name='vendorCompanyId3'], #new_phoneledger select[name='vendorCompanyId4'], #new_phoneledger select[name='vendorCompanyId5']").select2({
-	placeholder: "Select a vendor",
 	allowClear: true
 });
 
@@ -908,10 +914,21 @@ $("#new_phoneledger select[name='userId']").select2({
 ?>
 
 <script type="text/javascript">
-$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=loPaymentDate1], #edit_phoneledger input[name=loPaymentDate2], #edit_phoneledger input[name=loPaymentDate3], #edit_phoneledger input[name=loPaymentDate4], #edit_phoneledger input[name=loPaymentDate5], #edit_phoneledger input[name=commissionDate]").datepicker({
+$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate]").datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
+
+<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+$("#edit_phoneledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
+	// Consistent format with the HTML5 picker
+	dateFormat: 'yy-mm-dd'
+});
+$("#edit_phoneledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
+	placeholder: "Select a vendor",
+	allowClear: true
+});
+<?php } ?>
 
 $("#edit_phoneledger select[name='clientCompanyId']").select2({
 	placeholder: "Select a client",
@@ -925,11 +942,6 @@ $("#edit_phoneledger select[name='verticalId']").select2({
 
 $("#edit_phoneledger select[name='ledgerMonth']").select2({
 	placeholder: "Select the ledger month",
-	allowClear: true
-});
-
-$("#edit_phoneledger select[name='vendorCompanyId1'], #edit_phoneledger select[name='vendorCompanyId2'], #edit_phoneledger select[name='vendorCompanyId3'], #edit_phoneledger select[name='vendorCompanyId4'], #edit_phoneledger select[name='vendorCompanyId5']").select2({
-	placeholder: "Select a vendor",
 	allowClear: true
 });
 
