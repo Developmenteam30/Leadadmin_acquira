@@ -587,7 +587,8 @@ class Leads
 		$sql = "SELECT * FROM ledger_offline WHERE ledgerId = ? ";
 		$params[] = $ledgerId;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND userId = ? ";
+			$sql .= "AND ( userId1 = ? OR userId2 = ? ) ";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
 
@@ -636,7 +637,8 @@ class Leads
 		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND userId = ? ";
+			$sql .= "AND ( userId1 = ? OR userId2 = ? ) ";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
 
@@ -662,7 +664,8 @@ class Leads
 		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND userId = ? ";
+			$sql .= "AND ( userId1 = ? OR userId2 = ? )";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
 
@@ -680,10 +683,11 @@ class Leads
 	public function getLedgerByDivision( $divisionId, $type ) {
 		$results = array();
 
-		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u.fullName ";
+		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
-		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE l.divisionId = ? ";
 		$sql .= "AND l.type = ? ";
@@ -707,16 +711,18 @@ class Leads
 		if( !empty( $onlyMonths ) ) {
 			$sql  = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
 		} else {
-			$sql  = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u.fullName ";
+			$sql  = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
 		}
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
-		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE l.type = ? ";
 		$params[] = $type;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND l.userId = ? ";
+			$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? )";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
 		if( !empty( $month ) ) {
@@ -773,7 +779,7 @@ class Leads
 					$i
 				);
 			}
-			$sql .= "cc.name AS clientCompanyName,u.fullName ";
+			$sql .= "cc.name AS clientCompanyName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
 		}
 		$sql .= "FROM ledger_phones l ";
 		for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
@@ -790,10 +796,12 @@ class Leads
 			);
 		}
 		$sql .= "LEFT JOIN companies cc ON l.clientCompanyId = cc.idCompany ";
-		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "WHERE 1=1 ";
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND l.userId = ? ";
+			$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? ) ";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
 		if( !empty( $month ) ) {
@@ -821,7 +829,7 @@ class Leads
 			$query->execute( $params );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get offline ledger: ' . $e->getMessage() );
+			$this->logError( 'Unable to get phone ledger: ' . $e->getMessage() );
 		}
 
 		return $results;
@@ -834,15 +842,17 @@ class Leads
 		if( !empty( $onlyMonths ) ) {
 			$sql  = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
 		} else {
-			$sql  = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,vc.name AS vendorCompanyName,cc.name AS clientCompanyName,u.fullName ";
+			$sql  = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,vc.name AS vendorCompanyName,cc.name AS clientCompanyName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
 		}
 		$sql .= "FROM ledger_offline l ";
 		$sql .= "LEFT JOIN companies vc ON l.vendorCompanyId = vc.idCompany ";
 		$sql .= "LEFT JOIN companies cc ON l.clientCompanyId = cc.idCompany ";
-		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "WHERE 1=1 ";
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND l.userId = ? ";
+			$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? )";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
 		if( !empty( $month ) ) {
@@ -882,12 +892,13 @@ class Leads
 		if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
 			$sql  = "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
 		} else {
-			$sql  = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u.fullName,u.idUser,'ledger' AS source,0 AS indexId ";
+			$sql  = "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.type,l.userId1,l.userId2,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,'ledger' AS source,0 AS indexId ";
 		}
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
 		$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
-		$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE 1=1 ";
 		if( $type !== null ) {
@@ -895,7 +906,8 @@ class Leads
 			$params[] = $type;
 		}
 		if( !empty( $userId ) ) {
-			$sql .= "AND l.userId = ? ";
+			$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? ) ";
+			$params[] = $userId;
 			$params[] = $userId;
 		} else {
 			$sql .= "AND l.paymentDate IS NOT NULL ";
@@ -914,7 +926,7 @@ class Leads
 			if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
 				$sql .= "SELECT DISTINCT(" . str_replace( 'ledgerMonth', "CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01')", $distinctColumn ) . ") AS month ";
 			} else {
-				$sql .= "SELECT r.date as ledgerId,1 AS divisionId,c.idCompany AS companyId,5 AS verticalId,i.paymentDate,'ACH' AS paymentMethod,CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01') AS ledgerMonth,ROUND(SUM(r.value)*0.50,2) AS invoiceAmount,i.invoiceNumber AS invoiceNum,ROUND(SUM(r.value)*0.50,2) AS paymentAmount,NULL AS commissionAmount,NULL as commissionDate,0 AS type,u.idUser AS userId,CONCAT('E',r.date) AS entryId,c.name AS companyName,'E-mail' AS divisionName,'Email Marketing' AS verticalName,u.fullName,u.idUser,'email' AS source,0 AS indexId ";
+				$sql .= "SELECT r.date as ledgerId,1 AS divisionId,c.idCompany AS companyId,5 AS verticalId,i.paymentDate,'ACH' AS paymentMethod,CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01') AS ledgerMonth,ROUND(SUM(r.value)*0.50,2) AS invoiceAmount,i.invoiceNumber AS invoiceNum,ROUND(SUM(r.value)*0.50,2) AS paymentAmount,NULL AS commissionAmount1,NULL AS commissionAmount2,NULL AS commissionDate1,NULL AS commissionDate2,0 AS type,u.idUser AS userId1,NULL AS userId2,CONCAT('E',r.date) AS entryId,c.name AS companyName,'E-mail' AS divisionName,'Email Marketing' AS verticalName,u.fullName AS fullname1,NULL AS fullName2,'email' AS source,0 AS indexId ";
 			}
 			$sql .= "FROM url_mapping m ";
 			$sql .= "INNER JOIN feedinc fi ON m.idFeedIn = fi.idFeedIn ";
@@ -944,14 +956,16 @@ class Leads
 			if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
 				$sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
 			} else {
-				$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.loPaymentDate AS paymentDate,l.loPaymentMethod AS paymentMethod,l.ledgerMonth,l.loInvoiceAmount AS invoiceAmount,l.loInvoiceNum AS invoiceNum,l.loPaymentAmount AS paymentAmount,l.commissionAmount,l.commissionDate,0 AS type,l.userId,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u.fullName,u.idUser,'ledger_offline' AS source,0 AS indexId ";
+				$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.loPaymentDate AS paymentDate,l.loPaymentMethod AS paymentMethod,l.ledgerMonth,l.loInvoiceAmount AS invoiceAmount,l.loInvoiceNum AS invoiceNum,l.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,0 AS type,l.userId1,l.userId2,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,'ledger_offline' AS source,0 AS indexId ";
 			}
 			$sql .= "FROM ledger_offline l ";
 			$sql .= "LEFT JOIN companies c ON l.vendorCompanyId = c.idCompany ";
-			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+			$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+			$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 			$sql .= "WHERE 1=1 ";
 			if( !empty( $userId ) ) {
-				$sql .= "AND l.userId = ? ";
+				$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? ) ";
+				$params[] = $userId;
 				$params[] = $userId;
 			} else {
 				$sql .= "AND l.loPaymentDate IS NOT NULL ";
@@ -968,16 +982,18 @@ class Leads
 			if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
 				$sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
 			} else {
-				$sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,lv.loPaymentDate AS paymentDate,lv.loPaymentMethod AS paymentMethod,l.ledgerMonth,lv.loInvoiceAmount AS invoiceAmount,lv.loInvoiceNum AS invoiceNum,lv.loPaymentAmount AS paymentAmount,l.commissionAmount,l.commissionDate,0 AS type,l.userId,CONCAT('L',l.ledgerId,'-',lv.indexId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u.fullName,u.idUser,'ledger_phones' AS source,lv.indexId ";
+				$sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,lv.loPaymentDate AS paymentDate,lv.loPaymentMethod AS paymentMethod,l.ledgerMonth,lv.loInvoiceAmount AS invoiceAmount,lv.loInvoiceNum AS invoiceNum,lv.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,0 AS type,l.userId1,l.userId2,CONCAT('L',l.ledgerId,'-',lv.indexId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,'ledger_phones' AS source,lv.indexId ";
 			}
 			$sql .= "FROM ledger_phones l ";
 			$sql .= "LEFT JOIN ledger_phones_vendors lv ON l.ledgerId = lv.ledgerId ";
 			$sql .= "LEFT JOIN companies c ON lv.vendorCompanyId = c.idCompany ";
-			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+			$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+			$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 			$sql .= "LEFT JOIN verticals v ON divisionId = 5 AND l.verticalId = v.verticalId ";
 			$sql .= "WHERE 1=1 ";
 			if( !empty( $userId ) ) {
-				$sql .= "AND l.userId = ? ";
+				$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? ) ";
+				$params[] = $userId;
 				$params[] = $userId;
 			} else {
 				$sql .= "AND lv.loPaymentDate IS NOT NULL ";
@@ -996,14 +1012,16 @@ class Leads
 			if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
 				$sql .= "SELECT DISTINCT(" . $distinctColumn . ") as month ";
 			} else {
-				$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount,l.commissionDate,1 AS type,l.userId,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u.fullName,u.idUser,'ledger_offline' AS source,0 AS indexId ";
+				$sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,1 AS type,l.userId1,l.userId2,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,'ledger_offline' AS source,0 AS indexId ";
 			}
 			$sql .= "FROM ledger_offline l ";
 			$sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
-			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+			$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+			$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 			$sql .= "WHERE 1=1 ";
 			if( !empty( $userId ) ) {
-				$sql .= "AND l.userId = ? ";
+				$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? ) ";
+				$params[] = $userId;
 				$params[] = $userId;
 			} else {
 				$sql .= "AND l.paymentDate IS NOT NULL ";
@@ -1020,15 +1038,17 @@ class Leads
 			if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
 				$sql .= "SELECT DISTINCT(" . $distinctColumn . ") as month ";
 			} else {
-				$sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount,l.commissionDate,1 AS type,l.userId,CONCAT('L',l.ledgerId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u.fullName,u.idUser,'ledger_phones' AS source,0 AS indexId ";
+				$sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,1 AS type,l.userId1,l.userId2,CONCAT('L',l.ledgerId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,'ledger_phones' AS source,0 AS indexId ";
 			}
 			$sql .= "FROM ledger_phones l ";
 			$sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
-			$sql .= "LEFT JOIN users u ON l.userId = u.idUser ";
+			$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+			$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 			$sql .= "LEFT JOIN verticals v ON divisionId = 5 AND l.verticalId = v.verticalId ";
 			$sql .= "WHERE 1=1 ";
 			if( !empty( $userId ) ) {
-				$sql .= "AND l.userId = ? ";
+				$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? ) ";
+				$params[] = $userId;
 				$params[] = $userId;
 			} else {
 				$sql .= "AND l.paymentDate IS NOT NULL ";

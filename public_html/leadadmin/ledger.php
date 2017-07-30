@@ -99,22 +99,41 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
-			if( $c && !empty( $_REQUEST['commissionDate'] ) ) {
+			if( $c && !empty( $_REQUEST['commissionDate1'] ) ) {
 				try {
-					$commissionDate = new DateTime( $_REQUEST['commissionDate'] );
+					$commissionDate1 = new DateTime( $_REQUEST['commissionDate1'] );
 				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid commission date.';
+					$result['error'] = 'Please enter a valid commission date 1.';
 					$c = false;
 				}
 			}
 
-			if( $c && !empty( $_REQUEST['commissionAmount'] ) && is_numeric( $_REQUEST['commissionAmount'] ) === FALSE ) {
-				$result['error'] = 'Commission amount must be a numeric value.';
+			if( $c && !empty( $_REQUEST['commissionAmount1'] ) && is_numeric( $_REQUEST['commissionAmount1'] ) === FALSE ) {
+				$result['error'] = 'Commission amount 1 must be a numeric value.';
 				$c = false;
 			}
 
-			if( $c && !empty( $_REQUEST['commissionAmount'] ) && floatval( $_REQUEST['commissionAmount'] ) < 0 ) {
-				$result['error'] = 'Commission amount cannot be less than zero.';
+			if( $c && !empty( $_REQUEST['commissionAmount1'] ) && floatval( $_REQUEST['commissionAmount1'] ) < 0 ) {
+				$result['error'] = 'Commission amount 1 cannot be less than zero.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['commissionDate2'] ) ) {
+				try {
+					$commissionDate2 = new DateTime( $_REQUEST['commissionDate2'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date 2.';
+					$c = false;
+				}
+			}
+
+			if( $c && !empty( $_REQUEST['commissionAmount2'] ) && is_numeric( $_REQUEST['commissionAmount2'] ) === FALSE ) {
+				$result['error'] = 'Commission amount 2 must be a numeric value.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['commissionAmount2'] ) && floatval( $_REQUEST['commissionAmount2'] ) < 0 ) {
+				$result['error'] = 'Commission amount 2 cannot be less than zero.';
 				$c = false;
 			}
 
@@ -132,10 +151,13 @@ if(isset($_REQUEST['a'])){
 					'invoiceAmount' => empty( $_REQUEST['invoiceAmount'] ) ? 0.00 : $_REQUEST['invoiceAmount'],
 					'invoiceNum' => empty( $_REQUEST['invoiceNum'] ) ? null : $_REQUEST['invoiceNum'],
 					'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
-					'commissionDate' => !isset( $commissionDate ) ? null : $commissionDate->format( 'Y-m-d' ),
-					'commissionAmount' => empty( $_REQUEST['commissionAmount'] ) ? null : $_REQUEST['commissionAmount'],
+					'commissionDate1' => !isset( $commissionDate1 ) ? null : $commissionDate1->format( 'Y-m-d' ),
+					'commissionAmount1' => empty( $_REQUEST['commissionAmount1'] ) ? null : $_REQUEST['commissionAmount1'],
+					'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
+					'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
 					'type' => $type,
-					'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
+					'userId1' => empty( $_REQUEST['userId1'] ) ? null : $_REQUEST['userId1'],
+					'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
 				) );
 
 				if( null === $ledgerId ) {
@@ -253,22 +275,41 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
-			if( $c && !empty( $_REQUEST['commissionDate'] ) ) {
+			if( $c && !empty( $_REQUEST['commissionDate1'] ) ) {
 				try {
-					$commissionDate = new DateTime( $_REQUEST['commissionDate'] );
+					$commissionDate1 = new DateTime( $_REQUEST['commissionDate1'] );
 				} catch ( Exception $e ) {
-					$result['error'] = 'Please enter a valid commission date.';
+					$result['error'] = 'Please enter a valid commission date 1.';
 					$c = false;
 				}
 			}
 
-			if( $c && !empty( $_REQUEST['commissionAmount'] ) && is_numeric( $_REQUEST['commissionAmount'] ) === FALSE ) {
-				$result['error'] = 'Commission amount must be a numeric value.';
+			if( $c && !empty( $_REQUEST['commissionAmount1'] ) && is_numeric( $_REQUEST['commissionAmount1'] ) === FALSE ) {
+				$result['error'] = 'Commission amount 1 must be a numeric value.';
 				$c = false;
 			}
 
-			if( $c && !empty( $_REQUEST['commissionAmount'] ) && floatval( $_REQUEST['commissionAmount'] ) < 0 ) {
-				$result['error'] = 'Commission amount cannot be less than zero.';
+			if( $c && !empty( $_REQUEST['commissionAmount1'] ) && floatval( $_REQUEST['commissionAmount1'] ) < 0 ) {
+				$result['error'] = 'Commission amount 1 cannot be less than zero.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['commissionDate2'] ) ) {
+				try {
+					$commissionDate2 = new DateTime( $_REQUEST['commissionDate2'] );
+				} catch ( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date 2.';
+					$c = false;
+				}
+			}
+
+			if( $c && !empty( $_REQUEST['commissionAmount2'] ) && is_numeric( $_REQUEST['commissionAmount2'] ) === FALSE ) {
+				$result['error'] = 'Commission amount 2 must be a numeric value.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['commissionAmount2'] ) && floatval( $_REQUEST['commissionAmount2'] ) < 0 ) {
+				$result['error'] = 'Commission amount 2 cannot be less than zero.';
 				$c = false;
 			}
 
@@ -286,9 +327,12 @@ if(isset($_REQUEST['a'])){
 					'invoiceAmount' => empty( $_REQUEST['invoiceAmount'] ) ? 0.00 : $_REQUEST['invoiceAmount'],
 					'invoiceNum' => empty( $_REQUEST['invoiceNum'] ) ? null : $_REQUEST['invoiceNum'],
 					'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
-					'commissionDate' => !isset( $commissionDate ) ? null : $commissionDate->format( 'Y-m-d' ),
-					'commissionAmount' => empty( $_REQUEST['commissionAmount'] ) ? null : $_REQUEST['commissionAmount'],
-					'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
+					'commissionDate1' => !isset( $commissionDate1 ) ? null : $commissionDate1->format( 'Y-m-d' ),
+					'commissionAmount1' => empty( $_REQUEST['commissionAmount1'] ) ? null : $_REQUEST['commissionAmount1'],
+					'userId1' => empty( $_REQUEST['userId1'] ) ? null : $_REQUEST['userId1'],
+					'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
+					'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
+					'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
 				) );
 
 				if( null === $ledgerId ) {
@@ -404,21 +448,39 @@ if(isset($_REQUEST['d'])){
 					'required' => true,
 				),
 				array(
-					'id' => 'userId',
-					'label' => 'Salesperson',
+					'id' => 'userId1',
+					'label' => 'Salesperson 1',
 					'type' => 'select',
 					'required' => true,
 					'placeholder' => 'Select a salesperson',
 					'choices' => $leads->getStaffUsers(),
 				),
 				array(
-					'id' => 'commissionDate',
-					'label' => 'Commission Date',
+					'id' => 'commissionDate1',
+					'label' => 'Commission Date 1',
 					'type' => 'text',
 				),
 				array(
-					'id' => 'commissionAmount',
-					'label' => 'Commission Amt',
+					'id' => 'commissionAmount1',
+					'label' => 'Commission Amt 1',
+					'type' => 'currency',
+				),
+				array(
+					'id' => 'userId2',
+					'label' => 'Salesperson 2',
+					'type' => 'select',
+					'required' => true,
+					'placeholder' => 'Select a salesperson',
+					'choices' => $leads->getStaffUsers(),
+				),
+				array(
+					'id' => 'commissionDate2',
+					'label' => 'Commission Date 2',
+					'type' => 'text',
+				),
+				array(
+					'id' => 'commissionAmount2',
+					'label' => 'Commission Amt 2',
 					'type' => 'currency',
 				),
 				array(
@@ -438,7 +500,7 @@ if(isset($_REQUEST['d'])){
 ?>
 
 <script type="text/javascript">
-$('#new_ledger input[name=paymentDate], #new_ledger input[name=commissionDate]').datepicker({
+$('#new_ledger input[name=paymentDate], #new_ledger input[name=commissionDate1], #new_ledger input[name=commissionDate2]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
@@ -463,7 +525,7 @@ $("#new_ledger select[name='ledgerMonth']").select2({
 	allowClear: true
 });
 
-$("#new_ledger select[name='userId']").select2({
+$("#new_ledger select[name='userId1'], #new_ledger select[name='userId2']").select2({
 	placeholder: "Select a salesperson",
 	allowClear: true
 });
@@ -615,30 +677,53 @@ $("#new_ledger select[name='divisionId']").change( function() {
 						'readonly' => true,
 					),
 					array(
-						'id' => 'userId',
-						'label' => 'Salesperson',
+						'id' => 'userId1',
+						'label' => 'Salesperson 1',
 						'type' => 'select',
 						'required' => true,
 						'placeholder' => 'Select a salesperson',
 						'choices' => $leads->getStaffUsers(),
-						'value' => $entry->userId,
+						'value' => $entry->userId1,
 						'readonly' => true,
 					),
 					array(
-						'id' => 'commissionDate',
-						'label' => 'Commission Date',
+						'id' => 'commissionDate1',
+						'label' => 'Commission Date 1',
 						'type' => 'text',
-						'value' => $entry->commissionDate,
+						'value' => $entry->commissionDate1,
 						'readonly' => true,
 					),
 					array(
-						'id' => 'commissionAmount',
-						'label' => 'Commission Amt',
+						'id' => 'commissionAmount1',
+						'label' => 'Commission Amt 1',
 						'type' => 'currency',
-						'value' => $entry->commissionAmount,
+						'value' => $entry->commissionAmount1,
 						'readonly' => true,
 					),
 					array(
+						'id' => 'userId2',
+						'label' => 'Salesperson 2',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a salesperson',
+						'choices' => $leads->getStaffUsers(),
+						'value' => $entry->userId2,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionDate2',
+						'label' => 'Commission Date 2',
+						'type' => 'text',
+						'value' => $entry->commissionDate2,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionAmount2',
+						'label' => 'Commission Amt 2',
+						'type' => 'currency',
+						'value' => $entry->commissionAmount2,
+						'readonly' => true,
+					),					array(
 						'id' => 'a',
 						'type' => 'hidden',
 						'value' => 'deleteLedger',
@@ -738,25 +823,46 @@ $("#new_ledger select[name='divisionId']").change( function() {
 						'value' => $entry->paymentAmount,
 					),
 					array(
-						'id' => 'userId',
-						'label' => 'Salesperson',
+						'id' => 'userId1',
+						'label' => 'Salesperson 1',
 						'type' => 'select',
 						'required' => true,
 						'placeholder' => 'Select a salesperson',
 						'choices' => $leads->getStaffUsers(),
-						'value' => $entry->userId,
+						'value' => $entry->userId1,
 					),
 					array(
-						'id' => 'commissionDate',
-						'label' => 'Commission Date',
+						'id' => 'commissionDate1',
+						'label' => 'Commission Date 1',
 						'type' => 'text',
-						'value' => $entry->commissionDate,
+						'value' => $entry->commissionDate1,
 					),
 					array(
-						'id' => 'commissionAmount',
-						'label' => 'Commission Amt',
+						'id' => 'commissionAmount1',
+						'label' => 'Commission Amt 1',
 						'type' => 'currency',
-						'value' => $entry->commissionAmount,
+						'value' => $entry->commissionAmount1,
+					),
+					array(
+						'id' => 'userId2',
+						'label' => 'Salesperson 2',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a salesperson',
+						'choices' => $leads->getStaffUsers(),
+						'value' => $entry->userId2,
+					),
+					array(
+						'id' => 'commissionDate2',
+						'label' => 'Commission Date 2',
+						'type' => 'text',
+						'value' => $entry->commissionDate2,
+					),
+					array(
+						'id' => 'commissionAmount2',
+						'label' => 'Commission Amt 2',
+						'type' => 'currency',
+						'value' => $entry->commissionAmount2,
 					),
 					array(
 						'id' => 'a',
@@ -774,7 +880,7 @@ $("#new_ledger select[name='divisionId']").change( function() {
 ?>
 
 <script type="text/javascript">
-$('#editledger input[name=paymentDate], #editledger input[name=commissionDate]').datepicker({
+$('#editledger input[name=paymentDate], #editledger input[name=commissionDate1], #editledger input[name=commissionDate2]').datepicker({
 	// Consistent format with the HTML5 picker
 	dateFormat: 'yy-mm-dd'
 });
@@ -799,7 +905,7 @@ $("#editledger select[name='ledgerMonth']").select2({
 	allowClear: true
 });
 
-$("#editledger select[name='userId']").select2({
+$("#editledger select[name='userId1'], #editledger select[name='userId2']").select2({
 	placeholder: "Select a salesperson",
 	allowClear: true
 });
@@ -937,7 +1043,12 @@ include(INCLUDES."c_header.php");
 					if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
 						$invoiceTotal += $entry->invoiceAmount;
 						$paymentTotal += $entry->paymentAmount;
-						$commissionTotal += $entry->commissionAmount;
+						if ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) {
+							$commissionTotal += $entry->commissionAmount1;
+						}
+						if ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) {
+							$commissionTotal += $entry->commissionAmount2;
+						}
 
 						$ledger = new DateTime( $entry->ledgerMonth );
 ?>
@@ -950,8 +1061,8 @@ include(INCLUDES."c_header.php");
 			<td><?php echo $entry->paymentDate; ?></td>
 			<td data-tf-sortKey="<?php echo number_format( $entry->paymentAmount, 2 ); ?>">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-			<td><?php echo $entry->fullName; ?></td>
-			<td data-tf-sortKey="<?php echo number_format( $entry->commissionAmount, 2 ); ?>">$<?php echo number_format( $entry->commissionAmount, 2 ); ?><?php if( !empty( $entry->commissionDate ) && !empty( $entry->commissionAmount ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?></td>
+			<td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? htmlentities( $entry->fullName1 ) : '&nbsp;'; ?><br/><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? htmlentities( $entry->fullName2 ) : '&nbsp;';  ?></td>
+			<td data-tf-sortKey="<?php echo number_format( $entry->commissionAmount1, 2 ); ?>"><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?><?php if( ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) && !empty( $entry->commissionDate1 ) && !empty( $entry->commissionAmount1 ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?><br/><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?><?php if( ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) && !empty( $entry->commissionDate2 ) && !empty( $entry->commissionAmount2 ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?></td>
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
 			<td class="text-center">
 <div class="btn-group">

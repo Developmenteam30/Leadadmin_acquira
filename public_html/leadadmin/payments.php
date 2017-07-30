@@ -509,7 +509,7 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-			<td><?php echo $entry->fullName; ?></td>
+			<td><?php echo $entry->fullName1; ?>&nbsp;<br/><?php echo $entry->fullName2; ?>&nbsp;</td>
 			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
