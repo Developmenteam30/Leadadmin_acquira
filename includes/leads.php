@@ -2404,14 +2404,13 @@ class Leads
 	public function setInvoiceDetails( $date, $idCompany, $invoiceNumber, $paymentDate, $userId ) {
 
 		try {
-			$query = $this->db->prepare( "REPLACE INTO invoices( date, idCompany, invoiceNumber, paymentDate, userId, paid ) VALUES( ?, ?, ?, ?, ?, ? )" );
+			$query = $this->db->prepare( "REPLACE INTO invoices( date, idCompany, invoiceNumber, paymentDate, userId ) VALUES( ?, ?, ?, ?, ? )" );
 			$query->execute( array(
 				$date,
 				$idCompany,
 				!empty( $invoiceNumber ) ? $invoiceNumber : null,
 				!empty( $paymentDate ) ? $paymentDate : null,
 				!empty( $userId ) ? $userId : null,
-				!empty( $invoiceNumber ) ? 1 : 0,
 			) );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to update invoice value: ' . $e->getMessage() );
@@ -2423,25 +2422,14 @@ class Leads
 		$paid = false;
 
 		try {
-			$query = $this->db->prepare( "SELECT paid FROM invoices WHERE date = ? AND idCompany = ?" );
+			$query = $this->db->prepare( "SELECT paymentDate FROM invoices WHERE date = ? AND idCompany = ?" );
 			$query->execute( array( $date, $idCompany ) );
-			$paid = $query->fetchColumn() ? true : false;
+			$paid = !empty( $query->fetchColumn() ) ? true : false;
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get invoice status: ' . $e->getMessage() );
 		}
 
 		return $paid;
-	}
-
-	public function setInvoiceStatus( $date, $idCompany, $paid = false ) {
-
-		try {
-			$query = $this->db->prepare( "REPLACE INTO invoices( date, idCompany, paid ) VALUES( ?, ?, ? )" );
-			$query->execute( array( $date, $idCompany, $paid ? 1 : 0 ) );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to update invoice value: ' . $e->getMessage() );
-			return;
-		}
 	}
 
 	public function getRevenueInboundMappings( $date, $idCompany, $idFeedIn, $url ) {
