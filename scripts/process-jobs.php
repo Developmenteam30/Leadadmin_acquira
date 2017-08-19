@@ -4,16 +4,16 @@ if( extension_loaded( 'newrelic' ) ) {
 	newrelic_set_appname( 'Qatalyst Scripts' );
 }
 
-include( __DIR__ . "/../includes/c_config.php");
+include( __DIR__ . "/../includes/c_config.php" );
 
 require_once( INCLUDES . 'leads.php' );
 require_once( INCLUDES . 'processLeads.php' );
 
 $mysqlErrorSource = 'Process Jobs';
-require_once(INCLUDES."f_site.php");
+require_once( INCLUDES . "f_site.php" );
 
-ini_set("auto_detect_line_endings", true);
-set_time_limit(0);
+ini_set( "auto_detect_line_endings", true );
+set_time_limit( 0 );
 
 $leads = Leads::getInstance();
 $job = $leads->getPendingJob();
@@ -55,7 +55,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 	}
 
-	$body  = "Job Results\r\n";
+	$body = "Job Results\r\n";
 	$body .= "\r\n";
 	$body .= "Job ID: {$job->jobId}\r\n";
 	$body .= "Job Type: clear-outbound-queue\r\n";
@@ -69,11 +69,90 @@ if( 'clear-outbound-queue' === $job->type ) {
 	}
 	$body .= "\r\n";
 
-	$from = 'lmsalerts@'.SITE_URL;
+	$from = 'lmsalerts@' . SITE_URL;
 	$fromName = CONFIG_COMPANY_NAME;
 	$to = MANAGER_EMAIL;
 	$subject = 'Job Results - Clear Outbound Queue';
 	$header = "From:" . $fromName . " <" . $from . ">\n";
+	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
+
+} else if( 'retry-outbound-rejections' === $job->type ) {
+
+	$fields = unserialize( $job->fields );
+	$status = 'Unknown error.';
+
+	if( empty( $job->destination ) || empty( $fields['label'] ) || empty( $fields['dateStart'] ) || empty( $fields['dateEnd'] ) ) {
+
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Missing required fields',
+		) );
+		$status = 'ERROR: Missing required fields.';
+
+	} else {
+
+		print "Retrying outbound rejections for: {$job->destination} {$fields['label']}\n";
+
+		$cnt = 0;
+		try {
+			$date = new \DateTime( $fields['dateStart'] );
+			$dateEnd = new \DateTime( $fields['dateEnd'] );
+
+			while( $date <= $dateEnd ) {
+				print "Trying date: " . $date->format( ' Y-m-d' ) . PHP_EOL;
+				$statusCnt = $leads->retryOutboundRejections( $job->destination, $date->format( ' Y-m-d' ) );
+				if( $statusCnt === null ) {
+					$leads->updateJob( $job->jobId, array(
+						'status' => 'error',
+						'message' => 'Database error while retrying outbound rejections',
+					) );
+					$status = 'Database error retrying outbound rejections';
+					break;
+				}
+				$cnt += $statusCnt;
+				$date->add( new \DateInterval( 'P1D' ) );
+			}
+			if( 'Unknown error.' == $status ) {
+				$leads->updateJob( $job->jobId, array(
+					'status' => 'finished',
+				) );
+				$status = "Successful";
+			}
+
+		} catch( Exception $e ) {
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'error',
+				'message' => 'Exception: ' . $e->getMessage(),
+			) );
+			$status = 'ERROR: Exception: ' . $e->getMessage();
+		}
+	}
+
+	$user = $leads->getUser( $job->idUser );
+	if( empty( $user ) || empty( $user->email ) ) {
+		return;
+	}
+
+	$body = "Job Results\r\n";
+	$body .= "\r\n";
+	$body .= "Job ID: {$job->jobId}\r\n";
+	$body .= "Job Type: retry-outbound-rejections\r\n";
+	$body .= "\r\n";
+	$body .= "Feed ID: {$job->destination}\r\n";
+	$body .= "Feed Label: {$fields['label']}\r\n";
+	$body .= "\r\n";
+	$body .= "Job Status: {$status}\r\n";
+	if( $cnt !== null ) {
+		$body .= "Total Records: {$cnt}\r\n";
+	}
+	$body .= "\r\n";
+
+	$from = 'lmsalerts@' . SITE_URL;
+	$fromName = CONFIG_COMPANY_NAME;
+	$to = filter_var( $user->email, FILTER_SANITIZE_EMAIL );
+	$subject = 'Job Results - Retry Outbound Rejections';
+	$header = "From:" . $fromName . " <" . $from . ">\n";
+	$header .= "CC: " . OWNER_EMAIL . "\r\n";
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 
 } else if( 'export-incoming' === $job->type ) {
@@ -121,7 +200,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 		return;
 	}
 
-	$body  = "Job Results\r\n";
+	$body = "Job Results\r\n";
 	$body .= "\r\n";
 	$body .= "Job ID: {$job->jobId}\r\n";
 	$body .= "Job Type: export-incoming\r\n";
@@ -141,7 +220,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 	}
 	$body .= "\r\n";
 
-	$from = 'lmsalerts@'.SITE_URL;
+	$from = 'lmsalerts@' . SITE_URL;
 	$fromName = CONFIG_COMPANY_NAME;
 	$to = filter_var( $user->email, FILTER_SANITIZE_EMAIL );
 	$subject = 'Job Results - Export Incoming Data';
@@ -173,7 +252,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 		exit;
 	}
 
-	$allowedFields = explode(";", $feedParams->allowedFields);
+	$allowedFields = explode( ";", $feedParams->allowedFields );
 	$fields = unserialize( $job->fields );
 
 	$counts = array(
@@ -184,7 +263,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 	);
 
 	$cnt = 0;
-	while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
+	while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== false ) {
 
 		$data = array();
 
@@ -197,16 +276,16 @@ if( 'clear-outbound-queue' === $job->type ) {
 						if( !empty( $fields['field_time'] ) && is_numeric( $fields['field_time'] ) ) {
 							$time_col = $fields['field_time'];
 							// Remove extraneous data from the date field
-							if( strpos( $raw_data[$col], ' ' ) !== FALSE ) {
+							if( strpos( $raw_data[$col], ' ' ) !== false ) {
 								list( $date, $garbage ) = explode( ' ', $raw_data[$col], 2 );
 							} else {
 								$date = $raw_data[$col];
 							}
-							$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $date . ( !empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '' ) ) );
+							$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $date . ( !empty( $raw_data[$time_col] ) ? ' ' . $raw_data[$time_col] : '' ) ) );
 						} else {
 							$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
 						}
-					} elseif( 'dob' == $field ) {
+					} else if( 'dob' == $field ) {
 						$data['dob'] = date( "Y-m-d", strtotime( $raw_data[$col] ) );
 					} else {
 						$data[$field] = $raw_data[$col];
@@ -217,7 +296,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 		// Fix zip codes with a missing leading zeros
 		if( !empty( $data['zip'] ) ) {
-			$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT);
+			$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT );
 		}
 
 		if( isset( $data['email'] ) ) {
@@ -230,7 +309,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 		if( $result['valid'] ) {
 
-			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId );
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date( 'Y-m-d' ), null, $job->jobId );
 			if( null === $inboundId ) {
 				print " - DBFAIL\n";
 				$counts['failures']++;
@@ -239,10 +318,10 @@ if( 'clear-outbound-queue' === $job->type ) {
 				if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $data, $inboundId ) ) === null ) {
 					print " - VALID\n";
 					$counts['success']++;
-    	    	} else {
+				} else {
 					print " - ERROR\n";
 					$counts['invalid']++;
-        		}
+				}
 			}
 
 		} else {
@@ -250,11 +329,11 @@ if( 'clear-outbound-queue' === $job->type ) {
 			$counts['invalid']++;
 
 			print " - ERROR\n";
-			foreach($result['errors'] as $error) {
+			foreach( $result['errors'] as $error ) {
 				print "\t{$error}\n";
 			}
 
-			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $job->jobId );
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date( 'Y-m-d' ), $result['errors'][0], $job->jobId );
 
 		}
 
@@ -264,7 +343,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 		unset( $data );
 
 	}
-	fclose($handle);
+	fclose( $handle );
 
 	if( $cnt == intval( $job->records ) ) {
 		$leads->updateJob( $job->jobId, array(
@@ -324,7 +403,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 		}
 
 		$params = array();
-		$sql  = "SELECT * FROM data_inbound ";
+		$sql = "SELECT * FROM data_inbound ";
 		$sql .= "WHERE 1=1 ";
 		$sql .= "AND idFeedIn = ? ";
 		$params[] = $population->idFeedIn;
@@ -345,16 +424,16 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 		$cnt = 0;
 		if( !empty( $query ) ) {
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 
-			    print "Record: {$row['idRecord']} {$row['idFeedIn']}\n";
+				print "Record: {$row['idRecord']} {$row['idFeedIn']}\n";
 
-			    if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $row, $row['idRecord'], $job->destination ) ) === null ) {
+				if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $row, $row['idRecord'], $job->destination ) ) === null ) {
 					echo "\tSUCCESS\n";
 					$cnt++;
-			    } else {
-			        echo "\t{$pushError}\n";
-			    }
+				} else {
+					echo "\t{$pushError}\n";
+				}
 			}
 		}
 
@@ -394,7 +473,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 	$lists = array();
 	if( 'multiple' == $fields['list'] ) {
 		foreach( $fields as $key => $val ) {
-			if( strpos( $key,'suppress_multiselect_' ) !== FALSE && isset( $val ) ) {
+			if( strpos( $key, 'suppress_multiselect_' ) !== false && isset( $val ) ) {
 				$lists[] = intval( $val );
 			}
 		}
@@ -420,11 +499,11 @@ if( 'clear-outbound-queue' === $job->type ) {
 	);
 
 	$cnt = 0;
-	while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== FALSE ) {
+	while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== false ) {
 
-		$raw_data = trim ( $raw_data[0] );
+		$raw_data = trim( $raw_data[0] );
 
-		if( strpos( $raw_data, '@' ) !== FALSE && !filter_var( $raw_data, FILTER_VALIDATE_EMAIL ) ) {
+		if( strpos( $raw_data, '@' ) !== false && !filter_var( $raw_data, FILTER_VALIDATE_EMAIL ) ) {
 			$counts['invalid']++;
 		} else {
 			foreach( $lists as $list ) {
@@ -441,7 +520,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 		$cnt++;
 	}
-	fclose($handle);
+	fclose( $handle );
 
 	if( $cnt == intval( $job->records ) ) {
 		$leads->updateJob( $job->jobId, array(
@@ -461,7 +540,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 	print "Invalid: {$counts['invalid']}\n";
 	print "Failures: {$counts['failures']}\n";
 
-	$body  = "Job Results\r\n";
+	$body = "Job Results\r\n";
 	$body .= "\r\n";
 	$body .= "Job ID: {$job->jobId}\r\n";
 	$body .= "Job Type: suppression\r\n";
@@ -474,7 +553,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 	$body .= "Failures: {$counts['failures']}\r\n";
 	$body .= "\r\n";
 
-	$from = 'lmsalerts@'.SITE_URL;
+	$from = 'lmsalerts@' . SITE_URL;
 	$fromName = CONFIG_COMPANY_NAME;
 	$to = MANAGER_EMAIL;
 	$subject = 'Job Results - Suppression Import';
