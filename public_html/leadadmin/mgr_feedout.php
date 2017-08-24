@@ -127,7 +127,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
-						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? 1 : 0,
+						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? '1' : '0',
 						'queued' => 0,
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
@@ -201,7 +201,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
-						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? 1 : 0,
+						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? '1' : '0',
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
 					);
@@ -1065,8 +1065,8 @@ if( isset( $_REQUEST['d'] ) ) {
                                 <input type='text' name='delay' value='<?php echo $feed_delay; ?>'/> Minutes
                             </p>
                             <p>
-                                <input type='radio' name='delayDump' value='0' <?php if( empty( $delayDump ) ) { ?>checked='checked'<?php } ?>/> Trickle dump delayed records based on actual timestamps (default)<br/>
-                                <input type='radio' name='delayDump' value='1' <?php if( !empty( $delayDump ) ) { ?>checked='checked'<?php } ?>/> Mass dump all delayed records for the entire day
+                                <input type='radio' name='delayDump' value='0' <?php if( empty( $feed_delayDump ) ) { ?>checked='checked'<?php } ?>/> Trickle dump delayed records based on actual timestamps (default)<br/>
+                                <input type='radio' name='delayDump' value='1' <?php if( !empty( $feed_delayDump ) ) { ?>checked='checked'<?php } ?>/> Mass dump all delayed records for the entire day
                             </p>
 
                         </td>
