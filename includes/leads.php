@@ -19,11 +19,11 @@ class Leads
 		return self::$instance;
 	}
 
-	public function __construct() {
+	public function __construct( $persistent = true ) {
 
 		// Connect to the database
 		try {
-			$this->db = new PDO( 'mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME, $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p'], array( \PDO::ATTR_PERSISTENT => true ) );
+			$this->db = new PDO( 'mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME, $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p'], array( \PDO::ATTR_PERSISTENT => $persistent ) );
 			$this->db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
 		} catch( PDOException $e ) {
 
