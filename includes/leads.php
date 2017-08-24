@@ -3784,11 +3784,12 @@ class Leads
 			} else {
 				if( !empty( $feed->delay ) ) {
 					if( !empty( $feed->delayDump ) ) {
-						$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
+						$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
+						$query->execute( array( $idFeedOut, DB_TIMEZONE, LOCAL_TIMEZONE, $feed->delay ) );
 					} else {
 						$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
+						$query->execute( array( $idFeedOut, $feed->delay ) );
 					}
-					$query->execute( array( $idFeedOut, $feed->delay ) );
 				} else {
 					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500" );
 					$query->execute( array( $idFeedOut ) );
