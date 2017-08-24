@@ -390,7 +390,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 			return;
 		}
 
-		$leads_export = new Leads();
+		$leads_export = new Leads( false );
 
 		$feedParams = $leads->getInboundFeed( $population->idFeedIn );
 		if( empty( $feedParams ) ) {

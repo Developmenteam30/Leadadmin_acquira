@@ -131,6 +131,10 @@ class Leads
 	}
 
 	public function setBufferedQuery() {
+		$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true );
+	}
+
+	public function unsetBufferedQuery() {
 		$this->db->setAttribute( PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false );
 	}
 
@@ -3581,7 +3585,7 @@ class Leads
 				$query .= "LIMIT " . intval( $settings['limit'] );
 			}
 
-			$this->setBufferedQuery();
+			$this->unsetBufferedQuery();
 
 			$result['query'] = $query;
 			$query = $this->db->Prepare( $query );
@@ -3596,6 +3600,8 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to export inbound records: ' . $e->getMessage() );
 			return;
+		} finally {
+			$this->setBufferedQuery();
 		}
 
 		fclose( $file );
@@ -3622,7 +3628,7 @@ class Leads
 
 		try {
 
-			$this->setBufferedQuery();
+			$this->unsetBufferedQuery();
 
 			$fields = array();
 
@@ -3634,6 +3640,8 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to export Comcast records: ' . $e->getMessage() );
 			return;
+		} finally {
+			$this->setBufferedQuery();
 		}
 
 		fclose( $file );
@@ -3653,7 +3661,7 @@ class Leads
 
 		try {
 
-			$this->setBufferedQuery();
+			$this->unsetBufferedQuery();
 
 			$fields = array();
 
@@ -3665,6 +3673,8 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to export cable records: ' . $e->getMessage() );
 			return;
+		} finally {
+			$this->setBufferedQuery();
 		}
 
 		fclose( $file );
@@ -3674,7 +3684,7 @@ class Leads
 
 		try {
 
-			$this->setBufferedQuery();
+			$this->unsetBufferedQuery();
 
 			$query = $this->db->prepare( $sql );
 			$query->execute( $fields );
@@ -3683,6 +3693,8 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to export records: ' . $e->getMessage() );
 			return null;
+		} finally {
+			$this->setBufferedQuery();
 		}
 
 		return null;
