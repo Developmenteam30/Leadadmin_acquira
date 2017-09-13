@@ -127,7 +127,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
-						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? '1' : '0',
+						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? 1 : 0,
 						'queued' => 0,
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
@@ -201,7 +201,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
 						'delay' => empty( $_REQUEST['delay'] ) ? null : $_REQUEST['delay'],
-						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? '1' : '0',
+						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? 1 : 0,
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
 					);
