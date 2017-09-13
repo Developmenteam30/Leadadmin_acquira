@@ -133,7 +133,7 @@ class ProcessLeads
 			foreach( $feedsOut as $feed ) {
 
 				// Is this population parameter enabled? Allow if we are importing.
-				if( empty( $idFeedOut ) && empty( $feed->enabled ) ) {
+				if( empty( $idFeedOut ) && ( empty( $feed->enabled ) || !empty( $feed->delayDump ) ) ) {
 					continue;
 				}
 

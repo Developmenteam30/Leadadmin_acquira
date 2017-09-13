@@ -1782,7 +1782,7 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT fp.*, fo.label, fo.dailyLimit FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ? AND fp.enabled = '1'" );
+			$query = $this->db->prepare( "SELECT fp.*, fo.label, fo.dailyLimit, fo.delayDump FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ? AND fp.enabled = '1'" );
 			$query->execute( array( $idFeedIn ) );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -2027,15 +2027,31 @@ class Leads
 
 		try {
 			if( !empty( $mod ) ) {
-				$query = $this->db->prepare( "SELECT idFeedOut,queued FROM feedout WHERE cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' ) AND MOD(idFeedOut,2) = ?" );
+				$query = $this->db->prepare( "SELECT idFeedOut,queued,delay FROM feedout WHERE delayDump = 0 AND cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' ) AND MOD(idFeedOut,2) = ?" );
 				$query->execute( array( 'even' === $mod ? 0 : 1 ) );
 			} else {
-				$query = $this->db->prepare( "SELECT idFeedOut,queued FROM feedout WHERE cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' )" );
+				$query = $this->db->prepare( "SELECT idFeedOut,queued,delay FROM feedout WHERE delayDump = 0 AND cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' )" );
 				$query->execute();
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound feeds cron: ' . $e->getMessage() );
+		}
+
+		return $results;
+
+	}
+
+	public function getOutboundFeedsDelayDump() {
+
+		$results = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT idFeedOut,queued,delay FROM feedout WHERE delayDump = 1 AND cron = '1' AND status IN( 'active', 'hidden' )" );
+			$query->execute();
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound feeds delay dump: ' . $e->getMessage() );
 		}
 
 		return $results;
@@ -3825,8 +3841,13 @@ class Leads
 
 		try {
 			if( !empty( $feed->delay ) ) {
-				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 1" );
-				$query->execute( array( $idFeedOut, $feed->delay ) );
+				if( !empty( $feed->delayDump ) ) {
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
+					$query->execute( array( $idFeedOut, DB_TIMEZONE, LOCAL_TIMEZONE, $feed->delay ) );
+				} else {
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 1" );
+					$query->execute( array( $idFeedOut, $feed->delay ) );
+				}
 			} else {
 				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 1" );
 				$query->execute( array( $idFeedOut ) );
@@ -3852,7 +3873,7 @@ class Leads
 						$query = $this->db->prepare( "SELECT RELEASE_LOCK(?);" );
 						$query->execute( array( $lockName ) );
 						//$this->unlockTables();
-						return;
+						return null;
 					}
 
 				}
@@ -3865,16 +3886,16 @@ class Leads
 
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get pending outbound queue record: ' . $e->getMessage() );
-			return;
-		}
-
-		try {
-			$query = $this->db->prepare( "SELECT RELEASE_LOCK(?);" );
-			$query->execute( array( $lockName ) );
-			//$this->unlockTables();
-		} catch( Leads_PDOException $e ) {
-			$pdoException = $e->getPrevious();
-			$this->logError( 'Unable to unlock tables: ' . $pdoException->getMessage() );
+			return null;
+		} finally {
+			try {
+				$query = $this->db->prepare( "SELECT RELEASE_LOCK(?);" );
+				$query->execute( array( $lockName ) );
+				//$this->unlockTables();
+			} catch( Leads_PDOException $e ) {
+				$pdoException = $e->getPrevious();
+				$this->logError( 'Unable to unlock tables: ' . $pdoException->getMessage() );
+			}
 		}
 
 		return null;
