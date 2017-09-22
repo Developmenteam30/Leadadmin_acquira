@@ -472,9 +472,11 @@ $('#newphoneledger, #editphoneledger').on('hide.bs.modal', function(e) {
 	$(this).find('.modal-body').html('');
 });
 
-$("#genericledger select[name='ledgerType']").select2({
-	placeholder: "Select a ledger type",
-	allowClear: true
+$('#genericledger').on('shown.bs.modal', function(e) {
+	$("#genericledger select[name='ledgerType']").select2({
+		placeholder: "Select a ledger type",
+		allowClear: true
+	});
 });
 
 $("#genericledger select[name='ledgerType']").on('change', function(e) {
