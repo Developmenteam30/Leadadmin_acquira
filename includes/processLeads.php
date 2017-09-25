@@ -128,7 +128,7 @@ class ProcessLeads
 
 		}
 
-		$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn );
+		$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn, false );
 		if( !empty( $feedsOut ) && is_array( $feedsOut ) ) {
 			foreach( $feedsOut as $feed ) {
 

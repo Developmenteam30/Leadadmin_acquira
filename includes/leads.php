@@ -1778,11 +1778,15 @@ class Leads
 		return $result;
 	}
 
-	public function getInboundPopulationSettings( $idFeedIn ) {
+	public function getInboundPopulationSettings( $idFeedIn, $enabled = true ) {
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT fp.*, fo.label, fo.dailyLimit, fo.delayDump FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ? AND fp.enabled = '1'" );
+			$sql = "SELECT fp.*, fo.label, fo.dailyLimit, fo.delayDump FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ?";
+			if( $enabled ) {
+				$sql .= " AND fp.enabled = '1'";
+			}
+			$query = $this->db->prepare( $sql );
 			$query->execute( array( $idFeedIn ) );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
