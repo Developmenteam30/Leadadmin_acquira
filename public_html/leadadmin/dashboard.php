@@ -263,13 +263,13 @@ if($incomingFeeds === false){
 
 		}
 ?>
-	<tr class="clickable striped-master" onclick="toggleHidden('incoming_companyFeedList', {'sub':<?php echo $idCompany; ?>});">
+	<tr class="clickable striped-master" onclick="toggleHidden('incoming_companyFeedList_<?php echo $categoryKey; ?>', {'sub':<?php echo $idCompany; ?>});">
 		<td><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
 		<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button></td>
 		<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
 		<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
 	</tr>
-	<tr id="incoming_companyFeedList_<?php echo $idCompany; ?>" class="hidden-custom">
+	<tr id="incoming_companyFeedList_<?php echo $categoryKey . '_' . $idCompany; ?>" class="hidden-custom">
 		<td colspan="3">
 			<table class="table table-bordered table-condensed table-striped">
 <?php
@@ -380,7 +380,7 @@ if($outgoingFeeds === false){
 		}
 		$grandTotalFeeds += count($companyFeedList);
 ?>
-	<tr class="clickable striped-master" onclick="toggleHidden('outgoing_companyFeedList', {'sub':<?php echo $idCompany; ?>});">
+	<tr class="clickable striped-master" onclick="toggleHidden('outgoing_companyFeedList_<?php echo $categoryKey; ?>', {'sub':<?php echo $idCompany; ?>});">
 		<td><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
 		<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button></td>
 		<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
@@ -396,7 +396,7 @@ if($outgoingFeeds === false){
 ?>
 		<td class="text-right <?php print $bg; ?>"><?php echo number_format( $totalQueued, 0 ); ?></td>
 	</tr>
-	<tr id="outgoing_companyFeedList_<?php echo $idCompany; ?>" class="hidden-custom">
+	<tr id="outgoing_companyFeedList_<?php echo $categoryKey . '_' . $idCompany; ?>" class="hidden-custom">
 		<td colspan="4">
 			<table class="table table-bordered table-condensed table-striped">
 <?php
