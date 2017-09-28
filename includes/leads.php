@@ -3558,13 +3558,17 @@ class Leads
 			}
 
 			if( !empty( $settings['dateStart'] ) && strtotime( $settings['dateStart'] ) !== FALSE ) {
-				$query .= "AND timestamp >= ? ";
+				$query .= "AND timestamp >= CONVERT_TZ(?,?,?) ";
 				$fields[] = date( 'Y-m-d', strtotime( $settings['dateStart'] ) ) . ' 00:00:00';
+				$fields[] = LOCAL_TIMEZONE;
+				$fields[] = DB_TIMEZONE;
 			}
 
 			if( !empty( $settings['dateEnd'] ) && strtotime( $settings['dateEnd'] ) !== FALSE ) {
-				$query .= "AND timestamp <= ? ";
+				$query .= "AND timestamp <= CONVERT_TZ(?,?,?) ";
 				$fields[] = date( 'Y-m-d', strtotime( $settings['dateEnd'] ) ) . ' 23:59:59';
+				$fields[] = LOCAL_TIMEZONE;
+				$fields[] = DB_TIMEZONE;
 			}
 
 			if( !empty( $settings['urlList'] ) && is_array( $settings['urlList'] ) ) {
@@ -4041,13 +4045,9 @@ class Leads
 	public function getOutboundDailyCount( $idFeedOut ) {
 		$cnt = null;
 
-		// Timestamps in data_outbound may need to be converted to a different timezone
-		$utcDate = new DateTime( 'now', new DateTimeZone( LOCAL_TIMEZONE ) );
-		$utcDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
-
 		try {
 			$query = $this->db->prepare( "SELECT SUM(accepted) FROM stats_outbound WHERE idFeedOut = ? AND stamp = ?" );
-			$query->execute( array( $idFeedOut, $utcDate->format( 'Y-m-d' ) ) );
+			$query->execute( array( $idFeedOut, date( 'Y-m-d' ) ) );
 			$cnt = $query->fetchColumn();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to check outbound daily count: ' . $e->getMessage() );

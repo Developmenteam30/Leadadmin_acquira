@@ -407,10 +407,14 @@ if( 'clear-outbound-queue' === $job->type ) {
 		$sql .= "WHERE 1=1 ";
 		$sql .= "AND idFeedIn = ? ";
 		$params[] = $population->idFeedIn;
-		$sql .= "AND timestamp >= ? ";
-		$params[] = $fields['dateStart'];
-		$sql .= "AND timestamp <= ? ";
+		$sql .= "AND timestamp >= CONVERT_TZ(?,?,?) ";
+		$params[] = $fields['dateStart'] . ' 00:00:00';
+		$params[] = LOCAL_TIMEZONE;
+		$params[] = DB_TIMEZONE;
+		$sql .= "AND timestamp <= CONVERT_TZ(?,?,?) ";
 		$params[] = $fields['dateEnd'] . ' 23:59:59';
+		$params[] = LOCAL_TIMEZONE;
+		$params[] = DB_TIMEZONE;
 		if( !empty( $fields['includeRejects'] ) ) {
 			$sql .= "AND ( result IS NULL OR result LIKE 'Third-party rejection [%' ) ";
 		} else {
