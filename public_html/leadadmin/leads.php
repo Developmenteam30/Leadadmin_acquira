@@ -1,6 +1,6 @@
 <?php
 
-include("../../includes/c_config.php");
+include( "../../includes/c_config.php" );
 
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
@@ -21,14 +21,14 @@ while( $date->format( 'Ym' ) >= '201701' ) {
 	$date->sub( new DateInterval( 'P1M' ) );
 }
 
-if(isset($_REQUEST['a'])){
+if( isset( $_REQUEST['a'] ) ) {
 	Header( 'Content-Type: application/json' );
 
 	$result = array(
 		'status' => 0
-		, 'error' => 'Action does not exist.'
+		, 'error' => 'Action does not exist.',
 	);
-	switch($_REQUEST['a']){
+	switch( $_REQUEST['a'] ) {
 		case "addPhoneLedger":
 			$result['error'] = 'Failed when trying to add a new ledger entry.';
 
@@ -42,21 +42,21 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-            if( empty( $_REQUEST['verticalId'] ) ) {
-                $result['error'] = 'Please select a vertical from the list.';
-                $c = false;
-            }
+			if( empty( $_REQUEST['verticalId'] ) ) {
+				$result['error'] = 'Please select a vertical from the list.';
+				$c = false;
+			}
 
 			if( !empty( $_REQUEST['orderDate'] ) ) {
 				try {
 					$orderDate = new DateTime( $_REQUEST['orderDate'] );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid order date.';
 					break;
 				}
 			}
 
-			if( !empty( $_REQUEST['invoiceAmount'] ) && is_numeric( $_REQUEST['invoiceAmount'] ) === FALSE ) {
+			if( !empty( $_REQUEST['invoiceAmount'] ) && is_numeric( $_REQUEST['invoiceAmount'] ) === false ) {
 				$result['error'] = 'Invoice amount must be a numeric value.';
 				break;
 			}
@@ -74,13 +74,13 @@ if(isset($_REQUEST['a'])){
 			if( !empty( $_REQUEST['paymentDate'] ) ) {
 				try {
 					$paymentDate = new DateTime( $_REQUEST['paymentDate'] );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid payment date.';
 					break;
 				}
 			}
 
-			if( !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === FALSE ) {
+			if( !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === false ) {
 				$result['error'] = 'Payment amount must be a numeric value.';
 				break;
 			}
@@ -91,7 +91,7 @@ if(isset($_REQUEST['a'])){
 			}
 
 			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
-				if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && is_numeric( $_REQUEST['loInvoiceAmount' . $i] ) === FALSE ) {
+				if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && is_numeric( $_REQUEST['loInvoiceAmount' . $i] ) === false ) {
 					$result['error'] = 'LO #' . $i . ' invoice amount must be a numeric value.';
 					break 2;
 				}
@@ -101,7 +101,7 @@ if(isset($_REQUEST['a'])){
 					break 2;
 				}
 
-				if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && is_numeric( $_REQUEST['loPaymentAmount' . $i] ) === FALSE ) {
+				if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && is_numeric( $_REQUEST['loPaymentAmount' . $i] ) === false ) {
 					$result['error'] = 'LO #' . $i . ' payment amount must be a numeric value.';
 					break 2;
 				}
@@ -113,8 +113,8 @@ if(isset($_REQUEST['a'])){
 
 				if( !empty( $_REQUEST['loPaymentDate' . $i] ) ) {
 					try {
-						${loPaymentDate . $i} = new DateTime( $_REQUEST['loPaymentDate' . $i] );
-					} catch ( Exception $e ) {
+						${'loPaymentDate' . $i} = new DateTime( $_REQUEST['loPaymentDate' . $i] );
+					} catch( Exception $e ) {
 						$result['error'] = 'Please enter a valid LO #' . $i . ' payment date.';
 						break 2;
 					}
@@ -124,13 +124,13 @@ if(isset($_REQUEST['a'])){
 			if( !empty( $_REQUEST['commissionDate1'] ) ) {
 				try {
 					$commissionDate1 = new DateTime( $_REQUEST['commissionDate1'] );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid commission date 1.';
 					break;
 				}
 			}
 
-			if( !empty( $_REQUEST['commissionAmount1'] ) && is_numeric( $_REQUEST['commissionAmount1'] ) === FALSE ) {
+			if( !empty( $_REQUEST['commissionAmount1'] ) && is_numeric( $_REQUEST['commissionAmount1'] ) === false ) {
 				$result['error'] = 'Commission amount 1 must be a numeric value.';
 				break;
 			}
@@ -143,13 +143,13 @@ if(isset($_REQUEST['a'])){
 			if( !empty( $_REQUEST['commissionDate2'] ) ) {
 				try {
 					$commissionDate2 = new DateTime( $_REQUEST['commissionDate2'] );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid commission date 2.';
 					break;
 				}
 			}
 
-			if( !empty( $_REQUEST['commissionAmount2'] ) && is_numeric( $_REQUEST['commissionAmount2'] ) === FALSE ) {
+			if( !empty( $_REQUEST['commissionAmount2'] ) && is_numeric( $_REQUEST['commissionAmount2'] ) === false ) {
 				$result['error'] = 'Commission amount 2 must be a numeric value.';
 				break;
 			}
@@ -193,7 +193,7 @@ if(isset($_REQUEST['a'])){
 					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId' . $i] ) ? null : $_REQUEST['vendorCompanyId' . $i],
 					'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum' . $i] ) ? null : $_REQUEST['loInvoiceNum' . $i],
 					'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount' . $i] ) ? null : $_REQUEST['loInvoiceAmount' . $i],
-					'loPaymentDate' => !isset( ${ 'loPaymentDate' . $i } ) ? null : ${ 'loPaymentDate' . $i}->format( 'Y-m-d' ),
+					'loPaymentDate' => !isset( ${'loPaymentDate' . $i} ) ? null : ${'loPaymentDate' . $i}->format( 'Y-m-d' ),
 					'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod' . $i] ) ? null : $_REQUEST['loPaymentMethod' . $i],
 					'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount' . $i] ) ? null : $_REQUEST['loPaymentAmount' . $i],
 				) );
@@ -202,7 +202,7 @@ if(isset($_REQUEST['a'])){
 			$leads->auditLog( 'LEDGER-PHONE:ADD', $ledgerId );
 			$result['status'] = 1;
 			$result['error'] = 'Successfully added a new ledger entry.';
-		break;
+			break;
 
 		case "deletePhoneLedger":
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
@@ -231,7 +231,7 @@ if(isset($_REQUEST['a'])){
 			$result['status'] = 1;
 			$result['error'] = 'Leads ledger deleted successfully.';
 
-		break;
+			break;
 
 		case "editPhoneLedger":
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
@@ -251,21 +251,21 @@ if(isset($_REQUEST['a'])){
 				break;
 			}
 
-            if( empty( $_REQUEST['verticalId'] ) ) {
-                $result['error'] = 'Please select a vertical from the list.';
-                $c = false;
-            }
+			if( empty( $_REQUEST['verticalId'] ) ) {
+				$result['error'] = 'Please select a vertical from the list.';
+				$c = false;
+			}
 
 			if( !empty( $_REQUEST['orderDate'] ) ) {
 				try {
 					$orderDate = new DateTime( $_REQUEST['orderDate'] );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid order date.';
 					break;
 				}
 			}
 
-			if( !empty( $_REQUEST['invoiceAmount'] ) && is_numeric( $_REQUEST['invoiceAmount'] ) === FALSE ) {
+			if( !empty( $_REQUEST['invoiceAmount'] ) && is_numeric( $_REQUEST['invoiceAmount'] ) === false ) {
 				$result['error'] = 'Invoice amount must be a numeric value.';
 				break;
 			}
@@ -283,13 +283,13 @@ if(isset($_REQUEST['a'])){
 			if( !empty( $_REQUEST['paymentDate'] ) ) {
 				try {
 					$paymentDate = new DateTime( $_REQUEST['paymentDate'] );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid payment date.';
 					break;
 				}
 			}
 
-			if( !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === FALSE ) {
+			if( !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === false ) {
 				$result['error'] = 'Payment amount must be a numeric value.';
 				break;
 			}
@@ -300,7 +300,7 @@ if(isset($_REQUEST['a'])){
 			}
 
 			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
-				if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && is_numeric( $_REQUEST['loInvoiceAmount' . $i] ) === FALSE ) {
+				if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && is_numeric( $_REQUEST['loInvoiceAmount' . $i] ) === false ) {
 					$result['error'] = 'LO #' . $i . ' invoice amount must be a numeric value.';
 					break 2;
 				}
@@ -310,7 +310,7 @@ if(isset($_REQUEST['a'])){
 					break 2;
 				}
 
-				if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && is_numeric( $_REQUEST['loPaymentAmount' . $i] ) === FALSE ) {
+				if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && is_numeric( $_REQUEST['loPaymentAmount' . $i] ) === false ) {
 					$result['error'] = 'LO #' . $i . ' payment amount must be a numeric value.';
 					break 2;
 				}
@@ -323,7 +323,7 @@ if(isset($_REQUEST['a'])){
 				if( !empty( $_REQUEST['loPaymentDate' . $i] ) ) {
 					try {
 						${'loPaymentDate' . $i} = new DateTime( $_REQUEST['loPaymentDate' . $i] );
-					} catch ( Exception $e ) {
+					} catch( Exception $e ) {
 						$result['error'] = 'Please enter a valid LO #' . $i . ' payment date.';
 						break 2;
 					}
@@ -333,13 +333,13 @@ if(isset($_REQUEST['a'])){
 			if( !empty( $_REQUEST['commissionDate1'] ) ) {
 				try {
 					$commissionDate1 = new DateTime( $_REQUEST['commissionDate1'] );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid commission date 1.';
 					break;
 				}
 			}
 
-			if( !empty( $_REQUEST['commissionAmount1'] ) && is_numeric( $_REQUEST['commissionAmount1'] ) === FALSE ) {
+			if( !empty( $_REQUEST['commissionAmount1'] ) && is_numeric( $_REQUEST['commissionAmount1'] ) === false ) {
 				$result['error'] = 'Commission amount 1 must be a numeric value.';
 				break;
 			}
@@ -352,13 +352,13 @@ if(isset($_REQUEST['a'])){
 			if( !empty( $_REQUEST['commissionDate2'] ) ) {
 				try {
 					$commissionDate2 = new DateTime( $_REQUEST['commissionDate2'] );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid commission date 2.';
 					break;
 				}
 			}
 
-			if( !empty( $_REQUEST['commissionAmount2'] ) && is_numeric( $_REQUEST['commissionAmount2'] ) === FALSE ) {
+			if( !empty( $_REQUEST['commissionAmount2'] ) && is_numeric( $_REQUEST['commissionAmount2'] ) === false ) {
 				$result['error'] = 'Commission amount 2 must be a numeric value.';
 				break;
 			}
@@ -402,7 +402,7 @@ if(isset($_REQUEST['a'])){
 					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId' . $i] ) ? null : $_REQUEST['vendorCompanyId' . $i],
 					'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum' . $i] ) ? null : $_REQUEST['loInvoiceNum' . $i],
 					'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount' . $i] ) ? null : $_REQUEST['loInvoiceAmount' . $i],
-					'loPaymentDate' => !isset( ${ 'loPaymentDate' . $i } ) ? null : ${ 'loPaymentDate' . $i}->format( 'Y-m-d' ),
+					'loPaymentDate' => !isset( ${'loPaymentDate' . $i} ) ? null : ${'loPaymentDate' . $i}->format( 'Y-m-d' ),
 					'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod' . $i] ) ? null : $_REQUEST['loPaymentMethod' . $i],
 					'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount' . $i] ) ? null : $_REQUEST['loPaymentAmount' . $i],
 				) );
@@ -411,31 +411,31 @@ if(isset($_REQUEST['a'])){
 			$leads->auditLog( 'LEDGER-PHONE:EDIT', $_REQUEST['ledgerId'] );
 			$result['status'] = 1;
 			$result['error'] = 'Successfully edited ledger entry.';
-		break;
+			break;
 
 		case "getDivisionCompanies":
 			if( !empty( $_REQUEST['divisionId'] ) ) {
 				echo json_encode( $leads->getDivisionCompanies( $_REQUEST['divisionId'], null, PDO::FETCH_ASSOC ) );
 			} else {
-				echo json_encode( array( ) );
+				echo json_encode( array() );
 			}
 			exit;
-		break;
+			break;
 
 	}
-	echo json_encode($result);
+	echo json_encode( $result );
 	exit;
 }
 
-if(isset($_REQUEST['d'])){
-	switch($_REQUEST['d']){
+if( isset( $_REQUEST['d'] ) ) {
+	switch( $_REQUEST['d'] ) {
 		case 'errorCount':
 			Display::errorCount();
-		break;
+			break;
 
 		case 'errorList':
 			Display::errorList();
-		break;
+			break;
 
 		case "newPhoneLedger":
 
@@ -606,49 +606,49 @@ if(isset($_REQUEST['d'])){
 
 			Display::displayForm( 'new_phoneledger', $fields );
 
-?>
+			?>
 
-<script type="text/javascript">
-$("#new_phoneledger input[name=orderDate], #new_phoneledger input[name=paymentDate], #new_phoneledger input[name=commissionDate1], #new_phoneledger input[name=commissionDate2]").datepicker({
-	// Consistent format with the HTML5 picker
-	dateFormat: 'yy-mm-dd'
-});
+            <script type="text/javascript">
+				$("#new_phoneledger input[name=orderDate], #new_phoneledger input[name=paymentDate], #new_phoneledger input[name=commissionDate1], #new_phoneledger input[name=commissionDate2]").datepicker({
+					// Consistent format with the HTML5 picker
+					dateFormat: 'yy-mm-dd'
+				});
 
-<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
-$("#new_phoneledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
-	// Consistent format with the HTML5 picker
-	dateFormat: 'yy-mm-dd'
-});
-$("#new_phoneledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
-	placeholder: "Select a vendor",
-	allowClear: true
-});
-<?php } ?>
+				<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+				$("#new_phoneledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
+					// Consistent format with the HTML5 picker
+					dateFormat: 'yy-mm-dd'
+				});
+				$("#new_phoneledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
+					placeholder: "Select a vendor",
+					allowClear: true
+				});
+				<?php } ?>
 
-$("#new_phoneledger select[name='clientCompanyId']").select2({
-	placeholder: "Select a client",
-	allowClear: true
-});
+				$("#new_phoneledger select[name='clientCompanyId']").select2({
+					placeholder: "Select a client",
+					allowClear: true
+				});
 
-$("#new_phoneledger select[name='verticalId']").select2({
-	placeholder: "Select a vertical",
-	allowClear: true
-});
+				$("#new_phoneledger select[name='verticalId']").select2({
+					placeholder: "Select a vertical",
+					allowClear: true
+				});
 
-$("#new_phoneledger select[name='ledgerMonth']").select2({
-	placeholder: "Select the ledger month",
-	allowClear: true
-});
+				$("#new_phoneledger select[name='ledgerMonth']").select2({
+					placeholder: "Select the ledger month",
+					allowClear: true
+				});
 
-$("#new_phoneledger select[name='userId1'], #new_phoneledger select[name='userId2']").select2({
-	placeholder: "Select a salesperson",
-	allowClear: true
-});
-</script>
+				$("#new_phoneledger select[name='userId1'], #new_phoneledger select[name='userId2']").select2({
+					placeholder: "Select a salesperson",
+					allowClear: true
+				});
+            </script>
 
-<?php
+			<?php
 
-		break;
+			break;
 
 		case "deletePhoneLedger":
 			$ledgerId = !empty( $_REQUEST['ledgerId'] ) ? $_REQUEST['ledgerId'] : '';
@@ -830,7 +830,7 @@ $("#new_phoneledger select[name='userId1'], #new_phoneledger select[name='userId
 
 			}
 
-		break;
+			break;
 
 		case "editPhoneLedger":
 			$ledgerId = !empty( $_REQUEST['ledgerId'] ) ? $_REQUEST['ledgerId'] : '';
@@ -931,39 +931,39 @@ $("#new_phoneledger select[name='userId1'], #new_phoneledger select[name='userId
 						'required' => true,
 						'placeholder' => 'Select a vendor',
 						'choices' => $leads->getDivisionCompanies( 5, null ),
-						'value' => $entry->{ 'vendorCompanyId' . $i },
+						'value' => $entry->{'vendorCompanyId' . $i},
 					);
 					$fields[] = array(
 						'id' => 'loInvoiceNum' . $i,
 						'label' => 'LO Invoice #',
 						'type' => 'text',
-						'value' => $entry->{ 'loInvoiceNum' . $i },
+						'value' => $entry->{'loInvoiceNum' . $i},
 					);
 					$fields[] = array(
 						'id' => 'loInvoiceAmount' . $i,
 						'label' => 'LO Amount',
 						'type' => 'currency',
 						'required' => true,
-						'value' => $entry->{ 'loInvoiceAmount' . $i },
+						'value' => $entry->{'loInvoiceAmount' . $i},
 					);
 					$fields[] = array(
 						'id' => 'loPaymentDate' . $i,
 						'label' => 'Date Paid',
 						'type' => 'text',
-						'value' => $entry->{ 'loPaymentDate' . $i },
+						'value' => $entry->{'loPaymentDate' . $i},
 					);
 					$fields[] = array(
 						'id' => 'loPaymentMethod' . $i,
 						'label' => 'Payment Method',
 						'type' => 'text',
-						'value' => $entry->{ 'loPaymentMethod' . $i },
+						'value' => $entry->{'loPaymentMethod' . $i},
 					);
 					$fields[] = array(
 						'id' => 'loPaymentAmount' . $i,
 						'label' => 'Payment Amount',
 						'type' => 'currency',
 						'required' => true,
-						'value' => $entry->{ 'loPaymentAmount' . $i },
+						'value' => $entry->{'loPaymentAmount' . $i},
 					);
 				}
 
@@ -1032,69 +1032,73 @@ $("#new_phoneledger select[name='userId1'], #new_phoneledger select[name='userId
 
 
 				Display::displayForm( 'edit_phoneledger', $fields );
-?>
+				?>
 
-<script type="text/javascript">
-$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2]").datepicker({
-	// Consistent format with the HTML5 picker
-	dateFormat: 'yy-mm-dd'
-});
+                <script type="text/javascript">
+					$('#editphoneledger').on('shown.bs.modal', function (e) {
+						$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2]").datepicker({
+							// Consistent format with the HTML5 picker
+							dateFormat: 'yy-mm-dd'
+						});
 
-<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
-$("#edit_phoneledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
-	// Consistent format with the HTML5 picker
-	dateFormat: 'yy-mm-dd'
-});
-$("#edit_phoneledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
-	placeholder: "Select a vendor",
-	allowClear: true
-});
-<?php } ?>
+						<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+						$("#edit_phoneledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
+							// Consistent format with the HTML5 picker
+							dateFormat: 'yy-mm-dd'
+						});
+						$("#edit_phoneledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
+							placeholder: "Select a vendor",
+							allowClear: true
+						});
+						<?php } ?>
 
-$("#edit_phoneledger select[name='clientCompanyId']").select2({
-	placeholder: "Select a client",
-	allowClear: true
-});
+						$("#edit_phoneledger select[name='clientCompanyId']").select2({
+							placeholder: "Select a client",
+							allowClear: true
+						});
 
-$("#edit_phoneledger select[name='verticalId']").select2({
-	placeholder: "Select a vertical",
-	allowClear: true
-});
+						$("#edit_phoneledger select[name='verticalId']").select2({
+							placeholder: "Select a vertical",
+							allowClear: true
+						});
 
-$("#edit_phoneledger select[name='ledgerMonth']").select2({
-	placeholder: "Select the ledger month",
-	allowClear: true
-});
+						$("#edit_phoneledger select[name='ledgerMonth']").select2({
+							placeholder: "Select the ledger month",
+							allowClear: true
+						});
 
-$("#edit_phoneledger select[name='userId1'], #edit_phoneledger select[name='userId2']").select2({
-	placeholder: "Select a salesperson",
-	allowClear: true
-});
-</script>
+						$("#edit_phoneledger select[name='userId1'], #edit_phoneledger select[name='userId2']").select2({
+							placeholder: "Select a salesperson",
+							allowClear: true
+						});
+					});
+                </script>
 
-<?php
+				<?php
 			}
-		break;
+			break;
 	}
 	exit;
 }
 
 $title = 'Leads Ledger Entries';
-include(INCLUDES."c_header.php");
+include( INCLUDES . "c_header.php" );
 ?>
 <body>
 
-<?php include(INCLUDES.'c_nav.php'); ?>
+<?php include( INCLUDES . 'c_nav.php' ); ?>
 
 <div class="container-fluid">
 
-<h2>Leads Ledger</h2>
+    <h2>Leads Ledger</h2>
 
-<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button></p>
-<?php } ?>
+	<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+        <p>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button>
+        </p>
+	<?php } ?>
 
-<?php
+	<?php
 	$monthIn = !empty( $_REQUEST['month'] ) ? $_REQUEST['month'] : null;
 	$monthSelected = null;
 	$months = $leads->getPhoneLedger( true );
@@ -1177,125 +1181,126 @@ include(INCLUDES."c_header.php");
 
 			foreach( $months as $month => $val ) {
 
-?>
-<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
-<table class="table table-bordered table-condensed table-striped-double ledger-sort" id="phoneledger_<?php echo $month; ?>">
-	<thead>
-		<tr class="header">
-			<th rowspan="2" style="vertical-align: middle;">Entry #</th>
-			<th style="width:250px;">Client Name</th>
-			<th style="width:300px;">List Name</th>
-			<th>Order Date</th>
-			<th>Qty</th>
-			<th>QM Inv #</th>
-			<th>Inv Amt</th>
-			<th>Pmt Date</th>
-			<th>Pmt Mthd</th>
-			<th>Pmt Amt</th>
-			<th>Salesperson 1</th>
-			<th>Commissions 1</th>
-<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-			<th rowspan="2" style="vertical-align: middle;">Options</th>
-<?php } ?>
-		</tr>
-		<tr class="header">
-			<th colspan="2">Vendor Name</th>
-			<th>&nbsp;</th>
-			<th>&nbsp;</th>
-			<th>LO Inv #</th>
-			<th>LO Inv Amt</th>
-			<th>LO Pmt Date</th>
-			<th>LO Pmt Mthd</th>
-			<th>LO Pmt Amt</th>
-            <th>Salesperson 2</th>
-            <th>Commissions 2</th>
-		</tr>
-	</thead>
-<?php
-				$paymentTotal = 0;
-				foreach( $entries as $entry ) {
-					if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
-						$paymentTotal += $entry->paymentAmount;
+				?>
+                <h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
+                <table class="table table-bordered table-condensed table-striped-double ledger-sort" id="phoneledger_<?php echo $month; ?>">
+                    <thead>
+                    <tr class="header">
+                        <th rowspan="2" style="vertical-align: middle;">Entry #</th>
+                        <th style="width:250px;">Client Name</th>
+                        <th style="width:300px;">List Name</th>
+                        <th>Order Date</th>
+                        <th>Qty</th>
+                        <th>QM Inv #</th>
+                        <th>Inv Amt</th>
+                        <th>Pmt Date</th>
+                        <th>Pmt Mthd</th>
+                        <th>Pmt Amt</th>
+                        <th>Salesperson 1</th>
+                        <th>Commissions 1</th>
+						<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+                            <th rowspan="2" style="vertical-align: middle;">Options</th>
+						<?php } ?>
+                    </tr>
+                    <tr class="header">
+                        <th colspan="2">Vendor Name</th>
+                        <th>&nbsp;</th>
+                        <th>&nbsp;</th>
+                        <th>LO Inv #</th>
+                        <th>LO Inv Amt</th>
+                        <th>LO Pmt Date</th>
+                        <th>LO Pmt Mthd</th>
+                        <th>LO Pmt Amt</th>
+                        <th>Salesperson 2</th>
+                        <th>Commissions 2</th>
+                    </tr>
+                    </thead>
+					<?php
+					$paymentTotal = 0;
+					foreach( $entries as $entry ) {
+						if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+							$paymentTotal += $entry->paymentAmount;
 
-						$ledger = new DateTime( $entry->ledgerMonth );
-?>
-	<tbody>
-		<tr>
-			<td rowspan="2" class="text-center" style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
-			<td><?php echo htmlentities( $entry->clientCompanyName ); ?></td>
-			<td><?php echo htmlentities( $entry->listName ); ?></td>
-			<td><?php echo htmlentities( $entry->orderDate ); ?></td>
-			<td><?php echo number_format( $entry->qty, 0 ); ?></td>
-			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-			<td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
-			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
-			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-            <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? htmlentities( $entry->fullName1 ) : '&nbsp;'; ?></td>
-            <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?></td>
-<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-			<td class="text-center" rowspan="2" style="vertical-align: middle;">
-<div class="btn-group">
-	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editphoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
-	<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		<span class="caret"></span>
-		<span class="sr-only">Toggle Dropdown</span>
-	</button>
-	<ul class="dropdown-menu">
-		<li><a href="#" data-toggle="modal" data-target="#deletephoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
-	</ul>
-</div></td>
-<?php } ?>
-		</tr>
-		<tr>
-			<td colspan="2"><?php echo htmlentities( $entry->vendorCompanyName1 ); ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
-			<td><?php echo htmlentities( $entry->loInvoiceNum1 ); ?></td>
-			<td>$<?php echo number_format( $entry->loInvoiceAmount1, 2 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentDate1 ); ?></td>
-			<td><?php echo htmlentities( $entry->loPaymentMethod1 ); ?></td>
-			<td>$<?php echo number_format( $entry->loPaymentAmount1, 2 ); ?></td>
-            <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? htmlentities( $entry->fullName2 ) : '&nbsp;'; ?></td>
-            <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?></td>
-		</tr>
-	</tbody>
-<?php
+							$ledger = new DateTime( $entry->ledgerMonth );
+							?>
+                            <tbody>
+                            <tr>
+                                <td rowspan="2" class="text-center" style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
+                                <td><?php echo htmlentities( $entry->clientCompanyName ); ?></td>
+                                <td><?php echo htmlentities( $entry->listName ); ?></td>
+                                <td><?php echo htmlentities( $entry->orderDate ); ?></td>
+                                <td><?php echo number_format( $entry->qty, 0 ); ?></td>
+                                <td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+                                <td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
+                                <td><?php echo htmlentities( $entry->paymentDate ); ?></td>
+                                <td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
+                                <td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? htmlentities( $entry->fullName1 ) : '&nbsp;'; ?></td>
+                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?></td>
+								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+                                    <td class="text-center" rowspan="2" style="vertical-align: middle;">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editphoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+                                            <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <span class="caret"></span>
+                                                <span class="sr-only">Toggle Dropdown</span>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a href="#" data-toggle="modal" data-target="#deletephoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+								<?php } ?>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><?php echo htmlentities( $entry->vendorCompanyName1 ); ?></td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td><?php echo htmlentities( $entry->loInvoiceNum1 ); ?></td>
+                                <td>$<?php echo number_format( $entry->loInvoiceAmount1, 2 ); ?></td>
+                                <td><?php echo htmlentities( $entry->loPaymentDate1 ); ?></td>
+                                <td><?php echo htmlentities( $entry->loPaymentMethod1 ); ?></td>
+                                <td>$<?php echo number_format( $entry->loPaymentAmount1, 2 ); ?></td>
+                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? htmlentities( $entry->fullName2 ) : '&nbsp;'; ?></td>
+                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?></td>
+                            </tr>
+                            </tbody>
+							<?php
+						}
 					}
-				}
-?>
-</table>
-<?php
+					?>
+                </table>
+				<?php
 			}
 		}
 	}
-?>
+	?>
 
 </div>
 
 <script type="text/javascript">
-$('.form-inline select').change(function() {
-	$('.form-inline').submit();
-});
-/*
-$('.ledger-sort').each(function() { console.log($(this).attr('id'));
-	var tf = new TableFilter($(this).attr('id'), {
-		base_path: '/leadadmin/libraries/tablefilter/',
-		grid: false,
-		filters_row_index: 1,
-		extensions: [{
-			name: 'sort',
-			types: [
-				'String','String','String','String','String','ymddate','String','us','String','String','us',
-			],
-			image_asc_class_name: 'custom-ascending',
-			image_desc_class_name: 'custom-descending'
-		}],
-		sort: true
+	$('.form-inline select').change(function () {
+		$('.form-inline').submit();
 	});
-	tf.init();
-});
-*/
+	/*
+	$('.ledger-sort').each(function() { console.log($(this).attr('id'));
+		var tf = new TableFilter($(this).attr('id'), {
+			base_path: '/leadadmin/libraries/tablefilter/',
+			grid: false,
+			filters_row_index: 1,
+			extensions: [{
+				name: 'sort',
+				types: [
+					'String','String','String','String','String','ymddate','String','us','String','String','us',
+				],
+				image_asc_class_name: 'custom-ascending',
+				image_desc_class_name: 'custom-descending'
+			}],
+			sort: true
+		});
+		tf.init();
+	});
+	*/
 </script>
 
 <?php require_once( INCLUDES . 'modals.php' ); ?>

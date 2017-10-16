@@ -1164,29 +1164,31 @@ if( isset( $_REQUEST['d'] ) ) {
 				?>
 
                 <script type="text/javascript">
-					$("#edit_offlineledger input[name=orderDate], #edit_offlineledger input[name=mailDate], #edit_offlineledger input[name=paymentDate], #edit_offlineledger input[name=loPaymentDate], #edit_offlineledger input[name=commissionDate1], #edit_offlineledger input[name=commissionDate2]").datepicker({
-						// Consistent format with the HTML5 picker
-						dateFormat: 'yy-mm-dd'
-					});
+					$('#editofflineledger').on('shown.bs.modal', function (e) {
+						$("#edit_offlineledger input[name=orderDate], #edit_offlineledger input[name=mailDate], #edit_offlineledger input[name=paymentDate], #edit_offlineledger input[name=loPaymentDate], #edit_offlineledger input[name=commissionDate1], #edit_offlineledger input[name=commissionDate2]").datepicker({
+							// Consistent format with the HTML5 picker
+							dateFormat: 'yy-mm-dd'
+						});
 
-					$("#edit_offlineledger select[name='clientCompanyId']").select2({
-						placeholder: "Select a client",
-						allowClear: true
-					});
+						$("#edit_offlineledger select[name='clientCompanyId']").select2({
+							placeholder: "Select a client",
+							allowClear: true
+						});
 
-					$("#edit_offlineledger select[name='ledgerMonth']").select2({
-						placeholder: "Select the ledger month",
-						allowClear: true
-					});
+						$("#edit_offlineledger select[name='ledgerMonth']").select2({
+							placeholder: "Select the ledger month",
+							allowClear: true
+						});
 
-					$("#edit_offlineledger select[name='vendorCompanyId']").select2({
-						placeholder: "Select a vendor",
-						allowClear: true
-					});
+						$("#edit_offlineledger select[name='vendorCompanyId']").select2({
+							placeholder: "Select a vendor",
+							allowClear: true
+						});
 
-					$("#edit_offlineledger select[name='userId1'], #edit_offlineledger select[name='userId2']").select2({
-						placeholder: "Select a salesperson",
-						allowClear: true
+						$("#edit_offlineledger select[name='userId1'], #edit_offlineledger select[name='userId2']").select2({
+							placeholder: "Select a salesperson",
+							allowClear: true
+						});
 					});
                 </script>
 
