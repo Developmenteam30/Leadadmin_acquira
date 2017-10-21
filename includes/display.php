@@ -4,8 +4,7 @@ require_once( INCLUDES . 'leads.php' );
 
 class Display
 {
-	public static function errorCount()
-	{
+	public static function errorCount() {
 		$leads = Leads::getInstance();
 		$errorCount = $leads->getErrorCount();
 		if( $errorCount === false ) {
@@ -15,19 +14,18 @@ class Display
 		}
 	}
 
-	public static function errorList()
-	{
+	public static function errorList() {
 		$leads = Leads::getInstance();
 		$errorList = $leads->getErrors();
-?>
-<div class="fr">
-	<a href="#" class="nonLink" onclick="closeContent("errorList");" >Close [X]</a>
-</div>
-<?php
+		?>
+        <div class="fr">
+            <a href="#" class="nonLink" onclick="closeContent(" errorList");" >Close [X]</a>
+        </div>
+		<?php
 
 		if( $errorList === null ) {
 			print "Error fetching the errors list.";
-		} else if ( sizeOf( $errorList ) == 0 ) {
+		} else if( sizeOf( $errorList ) == 0 ) {
 			print "No errors on file today.";
 		} else {
 			foreach( $errorList as $error ) {
@@ -39,8 +37,7 @@ class Display
 		}
 	}
 
-	public static function displayForm( $name, $fields = array(), $title = '' )
-	{
+	public static function displayForm( $name, $fields = array(), $title = '' ) {
 		print "<div class=\"form-input\">\n";
 		if( !empty( $title ) ) {
 			printf( '<h3>%s</h3>',
@@ -57,45 +54,47 @@ class Display
 				continue;
 			}
 
-			printf( "\t<div>\n" );
+			if( !in_array( $field['type'], array( '_toggle_start', '_toggle_end' ) ) ) {
+				printf( "\t<div>\n" );
+			}
 
 			if( in_array( $field['type'], array( 'text', 'number', 'tel', 'date', 'email', 'password', 'url' ) ) ) {
 
 				printf( "\t<label data-for=\"%s\">%s</label>\n",
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlentities( $field['label'] )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlentities( $field['label'] )
 				);
 				printf( "\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s />\n",
-						htmlspecialchars( $field['type'], ENT_QUOTES | ENT_HTML5 ),
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						( !empty( $field['value'] ) ? htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) : '' ),
-						( 'number' == $field['type'] ? ' pattern="[0-9]*"' : '' ),
-						( !empty( $field['required'] ) ? ' required' : '' ),
-						( !empty( $field['readonly'] ) ? ' readonly' : '' )
+					htmlspecialchars( $field['type'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					( !empty( $field['value'] ) ? htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) : '' ),
+					( 'number' == $field['type'] ? ' pattern="[0-9]*"' : '' ),
+					( !empty( $field['required'] ) ? ' required' : '' ),
+					( !empty( $field['readonly'] ) ? ' readonly' : '' )
 				);
 
 			} else if( 'currency' == $field['type'] ) {
 
 				printf( "\t<label data-for=\"%s\">%s</label>\n",
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlentities( $field['label'] )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlentities( $field['label'] )
 				);
 				printf( "\t<input class=\"form-control\" type=\"text\" name=\"%s\" id=\"%s\" pattern=\"^\\$?(([1-9](\\d*|\\d{0,2}(,\\d{3})*))|0)(\\.\\d{1,2})?$\" value=\"%s\"%s%s />\n",
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						( !empty( $field['value'] ) ? htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) : '' ),
-						( !empty( $field['required'] ) ? ' required' : '' ),
-						( !empty( $field['readonly'] ) ? ' readonly' : '' )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					( !empty( $field['value'] ) ? htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) : '' ),
+					( !empty( $field['required'] ) ? ' required' : '' ),
+					( !empty( $field['readonly'] ) ? ' readonly' : '' )
 				);
 
 			} else if( 'checkbox' == $field['type'] ) {
 
 				printf( "\t<label data-for=\"%s\">%s%s</label>%s\n",
-						htmlspecialchars( $field['id'] ),
-						htmlspecialchars( $field['label'] ),
-						( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' ),
-						( !empty( $field['label_append'] ) ? $field['label_append'] : '' )
+					htmlspecialchars( $field['id'] ),
+					htmlspecialchars( $field['label'] ),
+					( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' ),
+					( !empty( $field['label_append'] ) ? $field['label_append'] : '' )
 				);
 				print '<div class="checkbox-choices">';
 				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
@@ -115,9 +114,9 @@ class Display
 			} else if( 'radio' == $field['type'] ) {
 
 				printf( "\t<label data-for=\"%s\">%s%s</label>\n",
-						htmlspecialchars( $field['id'] ),
-						htmlspecialchars( $field['label'] ),
-						( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' )
+					htmlspecialchars( $field['id'] ),
+					htmlspecialchars( $field['label'] ),
+					( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' )
 				);
 				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
 					foreach( $field['choices'] as $key => $val ) {
@@ -135,21 +134,21 @@ class Display
 			} else if( 'textarea' == $field['type'] ) {
 
 				printf( "\t<label data-for=\"%s\">%s</label>\n",
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlentities( $field['label'] )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlentities( $field['label'] )
 				);
 				printf( "\t<textarea class=\"form-control\" name=\"%s\" id=\"%s\"%s>%s</textarea>\n",
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						( !empty( $field['required'] ) ? ' required' : '' ),
-						( !empty( $field['value'] ) ? htmlentities( $field['value'] ) : '' )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					( !empty( $field['required'] ) ? ' required' : '' ),
+					( !empty( $field['value'] ) ? htmlentities( $field['value'] ) : '' )
 				);
 
 			} else if( 'select' == $field['type'] ) {
 
 				printf( "\t<label data-for=\"%s\">%s</label>\n",
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlentities( $field['label'] )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlentities( $field['label'] )
 				);
 				printf( "\t<select class=\"form-control\" name=\"%s%s\" id=\"%s\"%s%s>\n",
 					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
@@ -179,7 +178,7 @@ class Display
 								if( array_key_exists( $rec_key, $field['value'] ) ) {
 									$selected = true;
 								}
-							} else if( !empty( $field['value'] ) && $rec_key == $field['value'] ) {
+							} else if( isset( $field['value'] ) && $rec_key == $field['value'] ) {
 								$selected = true;
 							}
 							printf( "\t\t\t<option value=\"%s\"%s>%s</option>\n",
@@ -195,7 +194,7 @@ class Display
 							if( array_key_exists( $key, $field['value'] ) ) {
 								$selected = true;
 							}
-						} else if( !empty( $field['value'] ) && $key == $field['value'] ) {
+						} else if( isset( $field['value'] ) && $key == $field['value'] ) {
 							$selected = true;
 						}
 						printf( "\t\t<option value=\"%s\"%s>%s</option>\n",
@@ -239,25 +238,43 @@ class Display
 					htmlentities( $field['label'] )
 				);
 
+			} else if( '_toggle_start' == $field['type'] ) {
+
+				printf( "\t<button class=\"btn btn-xs btn-info\" type=\"button\" data-toggle=\"collapse\" data-target=\"#%s\" aria-expanded=\"false\" aria-controls=\"%s\">%s</button>\n",
+					htmlspecialchars( $field['id'] ),
+					htmlspecialchars( $field['id'] ),
+					htmlspecialchars( $field['value'] )
+				);
+				printf( "\t<div class=\"%s\" id=\"%s\">\n",
+					!empty( $field['collapsed'] ) ? 'collapse' : 'collapse in',
+					htmlspecialchars( $field['id'] )
+				);
+
+			} else if( '_toggle_end' == $field['type'] ) {
+
+				printf( "\t</div>\n" );
+
 			} else if( '_html' == $field['type'] ) {
 
 				printf( "\t<label data-for=\"%s\">%s</label>\n",
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
 				);
 				printf( "\t<span>%s</span>\n", $field['value'] );
 
 			} else if( '_text' == $field['type'] ) {
 
 				printf( "\t<label data-for=\"%s\">%s</label>\n",
-						htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-						htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
+					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
+					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
 				);
 				printf( "\t<span>%s</span>\n", htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) );
 
 			}
 
-			printf( "\t</div>\n" );
+			if( !in_array( $field['type'], array( '_toggle_start', '_toggle_end' ) ) ) {
+				printf( "\t</div>\n" );
+			}
 
 		}
 

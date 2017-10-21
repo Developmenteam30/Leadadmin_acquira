@@ -512,9 +512,17 @@ if( isset( $_REQUEST['d'] ) ) {
 				),
 			);
 
+			$fields[] = array(
+				'type' => '_divider',
+			);
+
 			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+
 				$fields[] = array(
-					'type' => '_divider',
+					'type' => '_toggle_start',
+					'value' => 'Vendor #' . $i,
+                    'id' => 'vendor_collapse_' . $i,
+                    'collapsed' => $i > 1 ? true : false,
 				);
 
 				$fields[] = array(
@@ -551,6 +559,14 @@ if( isset( $_REQUEST['d'] ) ) {
 					'label' => 'Payment Amount',
 					'type' => 'currency',
 					'required' => true,
+				);
+
+				$fields[] = array(
+					'type' => '_divider',
+				);
+
+				$fields[] = array(
+					'type' => '_toggle_end',
 				);
 			}
 
@@ -921,7 +937,10 @@ if( isset( $_REQUEST['d'] ) ) {
 
 				for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
 					$fields[] = array(
-						'type' => '_divider',
+						'type' => '_toggle_start',
+						'value' => 'Vendor #' . $i,
+						'id' => 'vendor_collapse_' . $i,
+						'collapsed' => empty( $entry->{'vendorCompanyId' . $i} ) ? true : false,
 					);
 
 					$fields[] = array(
@@ -965,6 +984,14 @@ if( isset( $_REQUEST['d'] ) ) {
 						'required' => true,
 						'value' => $entry->{'loPaymentAmount' . $i},
 					);
+
+					$fields[] = array(
+						'type' => '_divider',
+					);
+
+					$fields[] = array(
+						'type' => '_toggle_end',
+                    );
 				}
 
 				$fields[] = array(
