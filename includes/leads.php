@@ -2,7 +2,8 @@
 
 require_once( 'c_config.php' );
 
-class Leads_PDOException extends PDOException {
+class Leads_PDOException extends PDOException
+{
 }
 
 class Leads
@@ -12,7 +13,7 @@ class Leads
 
 	public static function getInstance() {
 
-		if(!self::$instance) {
+		if( !self::$instance ) {
 			self::$instance = new self();
 		}
 
@@ -61,13 +62,13 @@ class Leads
 		$cols = array();
 		$vals = array();
 
-		foreach ( $data as $col => $val ) {
+		foreach( $data as $col => $val ) {
 			$cols[] = $this->quoteIdentifier( $col );
 			$vals[] = '?';
 		}
 
 		try {
-			$query = $this->db->prepare( 'INSERT INTO ' . $this->quoteIdentifier( $table ) . ' (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')' );
+			$query = $this->db->prepare( 'INSERT INTO ' . $this->quoteIdentifier( $table ) . ' (' . implode( ', ', $cols ) . ') VALUES (' . implode( ', ', $vals ) . ')' );
 			$query->execute( array_values( $data ) );
 			return $this->db->lastInsertId();
 		} catch( PDOException $e ) {
@@ -81,13 +82,13 @@ class Leads
 		$cols = array();
 		$vals = array();
 
-		foreach ( $data as $col => $val ) {
+		foreach( $data as $col => $val ) {
 			$cols[] = $this->quoteIdentifier( $col );
 			$vals[] = '?';
 		}
 
 		try {
-			$query = $this->db->prepare( 'REPLACE INTO ' . $this->quoteIdentifier( $table ) . ' (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')' );
+			$query = $this->db->prepare( 'REPLACE INTO ' . $this->quoteIdentifier( $table ) . ' (' . implode( ', ', $cols ) . ') VALUES (' . implode( ', ', $vals ) . ')' );
 			$query->execute( array_values( $data ) );
 			return $this->db->lastInsertId();
 		} catch( PDOException $e ) {
@@ -104,12 +105,12 @@ class Leads
 		if( empty( $data ) ) {
 			return null;
 		}
-		foreach ( $data as $col => $val ) {
+		foreach( $data as $col => $val ) {
 			$cols[] = $this->quoteIdentifier( $col ) . ' = ?';
 		}
 
 		if( !empty( $where ) ) {
-			foreach ( $where as $col => $val ) {
+			foreach( $where as $col => $val ) {
 				$where_cols[] = $this->quoteIdentifier( $col ) . ' = ?';
 			}
 		}
@@ -117,7 +118,7 @@ class Leads
 		try {
 			$sql = 'UPDATE ' . $this->quoteIdentifier( $table ) . ' SET ' . implode( ', ', $cols );
 			if( !empty( $where_cols ) ) {
-				$sql .= ' WHERE ' . implode(' AND ', $where_cols );
+				$sql .= ' WHERE ' . implode( ' AND ', $where_cols );
 			}
 
 			$query = $this->db->prepare( $sql );
@@ -293,7 +294,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT idUser,username,password,idCompany,level FROM users WHERE username = ?" );
 			$query->execute( array( $username ) );
-			$results = $query->fetch( );
+			$results = $query->fetch();
 
 			if( $results ) {
 
@@ -338,7 +339,7 @@ class Leads
 		try {
 			$this->insertRow( 'auditlog', array(
 				'userId' => LeadsSession::getUserId(),
-				'ipaddress' => $_SERVER['REMOTE_ADDR'], 
+				'ipaddress' => $_SERVER['REMOTE_ADDR'],
 				'action' => $action,
 				'notes' => $notes,
 			) );
@@ -351,7 +352,7 @@ class Leads
 	public function getAuditLog() {
 		try {
 			$query = $this->db->prepare( "SELECT a.logId,a.timestamp,a.ipaddress,a.userId,u.username,a.action,a.notes FROM auditlog a LEFT JOIN users u ON a.userId = u.idUser WHERE a.timestamp >= DATE_SUB(NOW(),INTERVAL 60 DAY) ORDER BY a.logId DESC" );
-			$query->execute( );
+			$query->execute();
 			return $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get auditlog: ' . $e->getMessage() );
@@ -372,7 +373,7 @@ class Leads
 				$query = $this->db->prepare( "SELECT 1 FROM companies WHERE name = ?" );
 				$query->execute( array( $name ) );
 			}
-			if( '1' == $query->fetchColumn( ) ) {
+			if( '1' == $query->fetchColumn() ) {
 				$result = true;
 			}
 		} catch( PDOException $e ) {
@@ -576,7 +577,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $sql );
 			$query->execute( $params );
-			$results = $query->fetch( PDO::FETCH_OBJ  );
+			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get ledger entry: ' . $e->getMessage() );
 		}
@@ -599,7 +600,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $sql );
 			$query->execute( $params );
-			$results = $query->fetch( PDO::FETCH_OBJ  );
+			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get offline ledger entry: ' . $e->getMessage() );
 		}
@@ -611,7 +612,7 @@ class Leads
 		$results = null;
 		$params = array();
 
-		$sql  = "SELECT l.*,";
+		$sql = "SELECT l.*,";
 		for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
 			$sql .= sprintf( "lv%d.vendorCompanyId AS vendorCompanyId%d,lv%d.loInvoiceNum AS loInvoiceNum%d,lv%d.loInvoiceAmount AS loInvoiceAmount%d,lv%d.loPaymentDate AS loPaymentDate%d,lv%d.loPaymentMethod AS loPaymentMethod%d,lv%d.loPaymentAmount AS loPaymentAmount%d,",
 				$i,
@@ -649,7 +650,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $sql );
 			$query->execute( $params );
-			$results = $query->fetch( PDO::FETCH_OBJ  );
+			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get phone ledger entry: ' . $e->getMessage() );
 		}
@@ -661,7 +662,7 @@ class Leads
 		$results = null;
 		$params = array();
 
-		$sql  = "SELECT l.*,lv.vendorCompanyId AS vendorCompanyId,lv.loInvoiceNum AS loInvoiceNum,lv.loInvoiceAmount AS loInvoiceAmount,lv.loPaymentDate AS loPaymentDate,lv.loPaymentMethod AS loPaymentMethod,lv.loPaymentAmount AS loPaymentAmount ";
+		$sql = "SELECT l.*,lv.vendorCompanyId AS vendorCompanyId,lv.loInvoiceNum AS loInvoiceNum,lv.loInvoiceAmount AS loInvoiceAmount,lv.loPaymentDate AS loPaymentDate,lv.loPaymentMethod AS loPaymentMethod,lv.loPaymentAmount AS loPaymentAmount ";
 		$sql .= "FROM ledger_phones l ";
 		$sql .= "LEFT JOIN ledger_phones_vendors lv ON l.ledgerId = lv.ledgerId AND lv.indexId = ? ";
 		$params[] = $indexId;
@@ -676,7 +677,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $sql );
 			$query->execute( $params );
-			$results = $query->fetch( PDO::FETCH_OBJ  );
+			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get phone ledger index entry: ' . $e->getMessage() );
 		}
@@ -687,7 +688,7 @@ class Leads
 	public function getLedgerByDivision( $divisionId, $type ) {
 		$results = array();
 
-		$sql  = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
+		$sql = "SELECT l.*,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
 		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
@@ -713,9 +714,9 @@ class Leads
 		$params = array();
 
 		if( !empty( $onlyMonths ) ) {
-			$sql  = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
+			$sql = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
 		} else {
-			$sql  = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
+			$sql = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
 		}
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
@@ -764,9 +765,9 @@ class Leads
 		$params = array();
 
 		if( !empty( $onlyMonths ) ) {
-			$sql  = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
+			$sql = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
 		} else {
-			$sql  = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,";
+			$sql = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,";
 			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
 				$sql .= sprintf( "vc%d.name AS vendorCompanyName%d,lv%d.loInvoiceNum AS loInvoiceNum%d,lv%d.loInvoiceAmount AS loInvoiceAmount%d,lv%d.loPaymentDate AS loPaymentDate%d,lv%d.loPaymentMethod AS loPaymentMethod%d,lv%d.loPaymentAmount AS loPaymentAmount%d,",
 					$i,
@@ -844,9 +845,9 @@ class Leads
 		$params = array();
 
 		if( !empty( $onlyMonths ) ) {
-			$sql  = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
+			$sql = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
 		} else {
-			$sql  = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,vc.name AS vendorCompanyName,cc.name AS clientCompanyName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
+			$sql = "SELECT l.*,CONCAT('O',l.ledgerId) AS entryId,vc.name AS vendorCompanyName,cc.name AS clientCompanyName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
 		}
 		$sql .= "FROM ledger_offline l ";
 		$sql .= "LEFT JOIN companies vc ON l.vendorCompanyId = vc.idCompany ";
@@ -894,9 +895,9 @@ class Leads
 		$params = array();
 
 		if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
-			$sql  = "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
+			$sql = "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
 		} else {
-			$sql  = "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.type,l.userId1,l.userId2,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,'ledger' AS source,0 AS indexId ";
+			$sql = "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.type,l.userId1,l.userId2,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,'ledger' AS source,0 AS indexId ";
 		}
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
@@ -1120,7 +1121,7 @@ class Leads
 		$params = array();
 
 		try {
-			$sql  = "SELECT o.*,c.name AS companyName,d.name AS divisionName,u.fullName,MAX(timestamp) AS lastDate ";
+			$sql = "SELECT o.*,c.name AS companyName,d.name AS divisionName,u.fullName,MAX(timestamp) AS lastDate ";
 			$sql .= "FROM opportunities o ";
 			$sql .= "LEFT JOIN companies c ON o.companyId = c.idCompany ";
 			$sql .= "LEFT JOIN users u ON o.userId = u.idUser ";
@@ -1225,16 +1226,19 @@ class Leads
 		$params = array();
 
 		try {
-			$sql  = "SELECT p.*,u.fullName,MAX(timestamp) AS lastDate ";
+			$sql = "SELECT p.*,u.fullName,MAX(timestamp) AS lastDate ";
 			$sql .= "FROM prospects p ";
 			$sql .= "LEFT JOIN users u ON p.userId = u.idUser ";
 			$sql .= "LEFT JOIN prospects_notes n ON p.prospectId = n.prospectId ";
 			$sql .= "WHERE 1=1 ";
 			if( !empty( $status ) && 'active' == $status ) {
-				$sql .= "AND p.status != 'retired' ";
-			} else if( !empty( $status ) ) {
-				$sql .= "AND p.status = ? ";
-				$params[] = $status;
+				$sql .= "AND p.isArchived = 0 ";
+			} else if( !empty( $status ) && 'archived' == $status ) {
+				$sql .= "AND p.isArchived = 1 ";
+			}
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				$sql .= "AND p.userId = ? ";
+				$params[] = LeadsSession::getUserId();
 			}
 			$sql .= "GROUP BY p.prospectId ";
 			$sql .= "ORDER BY p.prospectId DESC";
@@ -1346,7 +1350,7 @@ class Leads
 				$query->execute( array( $status ) );
 			} else {
 				$query = $this->db->prepare( "SELECT * FROM companies ORDER BY name" );
-				$query->execute( );
+				$query->execute();
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -1444,7 +1448,7 @@ class Leads
 				$query = $this->db->prepare( "SELECT 1 FROM verticals WHERE name = ? AND divisionId = ?" );
 				$query->execute( array( $name, $divisionId ) );
 			}
-			if( '1' == $query->fetchColumn( ) ) {
+			if( '1' == $query->fetchColumn() ) {
 				$result = true;
 			}
 		} catch( PDOException $e ) {
@@ -1571,7 +1575,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( "SELECT divisionId,name FROM divisions ORDER BY name" );
-			$query->execute( );
+			$query->execute();
 			$results = $query->fetchAll( $format );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get division list: ' . $e->getMessage() );
@@ -1585,7 +1589,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( "SELECT id,short_name FROM countries ORDER BY short_name" );
-			$query->execute( );
+			$query->execute();
 			$results = $query->fetchAll( $format );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get country list: ' . $e->getMessage() );
@@ -1613,7 +1617,7 @@ class Leads
 		if( LEGACY_DB ) {
 			try {
 				$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] ) . " LIKE feedinc_empty" );
-				$query->execute( );
+				$query->execute();
 			} catch( PDOException $e ) {
 				$this->db->rollBack();
 				$this->logError( 'Unable to create new inbound table: ' . $e->getMessage() );
@@ -1622,7 +1626,7 @@ class Leads
 
 			try {
 				$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] . "_invalid" ) . " LIKE feedinc_empty_invalid" );
-				$query->execute( );
+				$query->execute();
 			} catch( PDOException $e ) {
 				$this->db->rollBack();
 				$this->logError( 'Unable to create new inbound invalid table: ' . $e->getMessage() );
@@ -1658,7 +1662,7 @@ class Leads
 
 			try {
 				$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new ) );
-				$query->execute( );
+				$query->execute();
 			} catch( PDOException $e ) {
 				$this->db->rollBack();
 				$this->logError( 'Unable to rename inbound table: ' . $e->getMessage() );
@@ -1667,7 +1671,7 @@ class Leads
 
 			try {
 				$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old . "_invalid" ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new . "_invalid" ) );
-				$query->execute( );
+				$query->execute();
 			} catch( PDOException $e ) {
 				$this->db->rollBack();
 				$this->logError( 'Unable to rename inbound invalid table: ' . $e->getMessage() );
@@ -1714,7 +1718,7 @@ class Leads
 		$results = array();
 		$params = array();
 
-		$sql  = "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate ";
+		$sql = "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate ";
 		$sql .= "FROM feedinc f ";
 		$sql .= "LEFT JOIN companies c ON f.idCompany = c.idCompany ";
 		$sql .= "LEFT JOIN companies_notes n ON n.companyId = c.idCompany ";
@@ -1752,7 +1756,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT 1 FROM feedinc f LEFT JOIN companies c ON f.idCompany = c.idCompany WHERE c.idCompany = ? AND f.idFeedIn = ?" );
 			$query->execute( array( $idCompany, $idFeedIn ) );
-			if( '1' == $query->fetchColumn( ) ) {
+			if( '1' == $query->fetchColumn() ) {
 				$result = true;
 			}
 		} catch( PDOException $e ) {
@@ -1768,7 +1772,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT 1 FROM feedinc WHERE label = ?" );
 			$query->execute( array( $label ) );
-			if( '1' == $query->fetchColumn( ) ) {
+			if( '1' == $query->fetchColumn() ) {
 				$result = true;
 			}
 		} catch( PDOException $e ) {
@@ -1991,7 +1995,7 @@ class Leads
 		$results = array();
 		$params = array();
 
-		$sql  = "SELECT o.*,co.name,MAX(n.timestamp) AS lastDate ";
+		$sql = "SELECT o.*,co.name,MAX(n.timestamp) AS lastDate ";
 		$sql .= "FROM feedout o ";
 		$sql .= "LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut ";
 		$sql .= "LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn ";
@@ -2068,7 +2072,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT 1 FROM feedout o LEFT JOIN feedPopulation p ON p.idFeedOut = o.idFeedOut LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn LEFT JOIN companies ci ON ci.idCompany = i.idCompany LEFT JOIN companies co ON co.idCompany = o.idCompany WHERE ci.idCompany = ? AND o.idFeedOut = ?" );
 			$query->execute( array( $idCompany, $idFeedOut ) );
-			if( '1' == $query->fetchColumn( ) ) {
+			if( '1' == $query->fetchColumn() ) {
 				$result = true;
 			}
 		} catch( PDOException $e ) {
@@ -2084,7 +2088,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT 1 FROM feedout WHERE label = ?" );
 			$query->execute( array( $label ) );
-			if( '1' == $query->fetchColumn( ) ) {
+			if( '1' == $query->fetchColumn() ) {
 				$result = true;
 			}
 		} catch( PDOException $e ) {
@@ -2101,7 +2105,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_outbound WHERE stamp = ? AND idFeedOut = ?" );
 			$query->execute( array( date( 'Y-m-d' ), $idFeedOut ) );
-			$results = $query->fetch( );
+			$results = $query->fetch();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound stats: ' . $e->getMessage() );
 		}
@@ -2148,7 +2152,7 @@ class Leads
 			} else {
 				$query = $this->db->prepare( 'INSERT INTO stats_inbound(idFeedIn,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
 			}
-			$query->execute( array( $idFeedIn, $this->parseUrl( $fields['url'] ) , $statsDay ) );
+			$query->execute( array( $idFeedIn, $this->parseUrl( $fields['url'] ), $statsDay ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to insert stats_inbound record: ' . $e->getMessage() );
@@ -2197,13 +2201,13 @@ class Leads
 						$idFeedIn,
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
 					) );
-				break;
+					break;
 				case 'allGlobal':
 					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE result IS NULL AND " . $this->quoteIdentifier( $column ) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
 					) );
-				break;
+					break;
 				case 'url':
 					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE result IS NULL AND idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
@@ -2211,14 +2215,14 @@ class Leads
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
 						!empty( $requestValues['url'] ) ? $this->parseUrl( $requestValues['url'] ) : '',
 					) );
-				break;
+					break;
 				case 'urlGlobal':
 					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE result IS NULL AND " . $this->quoteIdentifier( $column ) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
 						!empty( $requestValues['url'] ) ? $this->parseUrl( $requestValues['url'] ) : '',
 					) );
-				break;
+					break;
 				case 'listcode':
 					$query = $this->db->prepare( "SELECT 1 FROM data_inbound WHERE result IS NULL AND idFeedIn = ? AND " . $this->quoteIdentifier( $column ) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1" );
 					$query->execute( array(
@@ -2232,7 +2236,7 @@ class Leads
 						!empty( $requestValues[$column] ) ? $requestValues[$column] : '',
 						!empty( $requestValues['listcode'] ) ? $requestValues['listcode'] : '',
 					) );
-				break;
+					break;
 			}
 
 			if( !empty( $query ) && $query->fetchColumn() ) {
@@ -2326,7 +2330,7 @@ class Leads
 			} else {
 				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
 			}
-			$query->execute( array( $idFeedOut, $this->parseUrl( $url ), date('Y-m-d') ) );
+			$query->execute( array( $idFeedOut, $this->parseUrl( $url ), date( 'Y-m-d' ) ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
@@ -2368,7 +2372,7 @@ class Leads
 	public function getUrlMappings() {
 		$results = array();
 
-		$query  = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
+		$query = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
@@ -2389,8 +2393,8 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( $query );
-			$query->execute( );
-			$results = $query->fetchAll( );
+			$query->execute();
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get URL mappings: ' . $e->getMessage() );
 		}
@@ -2463,7 +2467,7 @@ class Leads
 		$fields[] = substr( $date, 0, 4 ) . '-' . substr( $date, 4, 2 ) . '-%';
 		$fields[] = $date;
 
-		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(so.stamp) AS firstDate,MAX(so.stamp) AS lastDate ";
+		$query = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(so.stamp) AS firstDate,MAX(so.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
@@ -2491,7 +2495,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( $fields );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound revenue mappings: ' . $e->getMessage() );
 		}
@@ -2504,7 +2508,7 @@ class Leads
 		$fields = array();
 		$fields[] = $date;
 
-		$query  = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,SUM(DISTINCT r.value) AS revenue,ROUND(SUM(DISTINCT r.value)*0.50,2) AS partner,IF(SUM(r.value)>0,'0','1'),MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
+		$query = "SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,SUM(DISTINCT r.value) AS revenue,ROUND(SUM(DISTINCT r.value)*0.50,2) AS partner,IF(SUM(r.value)>0,'0','1'),MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "LEFT JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "LEFT JOIN companies ci ON i.idCompany = ci.idCompany ";
@@ -2532,7 +2536,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( $fields );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound client revenue mappings: ' . $e->getMessage() );
 		}
@@ -2544,7 +2548,7 @@ class Leads
 		$results = array();
 		$fields = array();
 
-		$query  = "SELECT ci.name AS inName,r.date AS month,SUM(r.value) AS revenue,ROUND(SUM(r.value)*0.50,2) AS partner,i.idCompany AS idCompany ";
+		$query = "SELECT ci.name AS inName,r.date AS month,SUM(r.value) AS revenue,ROUND(SUM(r.value)*0.50,2) AS partner,i.idCompany AS idCompany ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
@@ -2563,7 +2567,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( $fields );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound client revenue month mappings: ' . $e->getMessage() );
 		}
@@ -2575,7 +2579,7 @@ class Leads
 		$results = array();
 		$fields = array();
 
-		$query  = "SELECT SUM(r.value) AS revenue,ROUND(SUM(r.value)*0.50,2) AS partner ";
+		$query = "SELECT SUM(r.value) AS revenue,ROUND(SUM(r.value)*0.50,2) AS partner ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
@@ -2596,7 +2600,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( $fields );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound client revenue month total: ' . $e->getMessage() );
 		}
@@ -2604,10 +2608,10 @@ class Leads
 		return $results;
 	}
 
-	public function getRevenueInboundCompanies( ) {
+	public function getRevenueInboundCompanies() {
 		$results = array();
 
-		$query  = "SELECT ci.name AS name,ci.idCompany AS idCompany ";
+		$query = "SELECT ci.name AS name,ci.idCompany AS idCompany ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
@@ -2616,8 +2620,8 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( $query );
-			$query->execute( );
-			$results = $query->fetchAll( );
+			$query->execute();
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound revenue companies: ' . $e->getMessage() );
 		}
@@ -2628,7 +2632,7 @@ class Leads
 	public function getRevenueInboundFeeds( $idCompany ) {
 		$results = array();
 
-		$query  = "SELECT i.idFeedIn,i.description AS inDescription ";
+		$query = "SELECT i.idFeedIn,i.description AS inDescription ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
 		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
@@ -2639,7 +2643,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( array( $idCompany ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound revenue feeds: ' . $e->getMessage() );
 		}
@@ -2650,7 +2654,7 @@ class Leads
 	public function getRevenueInboundURLs( $idFeedIn ) {
 		$results = array();
 
-		$query  = "SELECT url ";
+		$query = "SELECT url ";
 		$query .= "FROM url_mapping ";
 		$query .= "WHERE idFeedIn = ? ";
 		$query .= "GROUP BY 1 ";
@@ -2659,7 +2663,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( array( $idFeedIn ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound revenue URLs: ' . $e->getMessage() );
 		}
@@ -2672,7 +2676,7 @@ class Leads
 		$fields = array();
 		$fields[] = $date;
 
-		$query  = "SELECT m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
+		$query = "SELECT m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,r.value AS revenue,MIN(s.stamp) AS firstDate,MAX(s.stamp) AS lastDate ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
 		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
@@ -2700,7 +2704,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( $fields );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound revenue mappings: ' . $e->getMessage() );
 		}
@@ -2708,10 +2712,10 @@ class Leads
 		return $results;
 	}
 
-	public function getRevenueOutboundCompanies( ) {
+	public function getRevenueOutboundCompanies() {
 		$results = array();
 
-		$query  = "SELECT co.name AS name,co.idCompany AS idCompany ";
+		$query = "SELECT co.name AS name,co.idCompany AS idCompany ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedout i ON m.idFeedOut = i.idFeedOut ";
 		$query .= "INNER JOIN companies co ON i.idCompany = co.idCompany ";
@@ -2720,8 +2724,8 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( $query );
-			$query->execute( );
-			$results = $query->fetchAll( );
+			$query->execute();
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound revenue companies: ' . $e->getMessage() );
 		}
@@ -2732,7 +2736,7 @@ class Leads
 	public function getRevenueOutboundFeeds( $idCompany ) {
 		$results = array();
 
-		$query  = "SELECT o.idFeedOut,o.description AS outDescription ";
+		$query = "SELECT o.idFeedOut,o.description AS outDescription ";
 		$query .= "FROM url_mapping m ";
 		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
 		$query .= "INNER JOIN companies ci ON o.idCompany = ci.idCompany ";
@@ -2743,7 +2747,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( array( $idCompany ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound revenue feeds: ' . $e->getMessage() );
 		}
@@ -2754,7 +2758,7 @@ class Leads
 	public function getRevenueOutboundURLs( $idFeedOut ) {
 		$results = array();
 
-		$query  = "SELECT url ";
+		$query = "SELECT url ";
 		$query .= "FROM url_mapping ";
 		$query .= "WHERE idFeedOut = ? ";
 		$query .= "GROUP BY 1 ";
@@ -2763,7 +2767,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( array( $idFeedOut ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound revenue URLs: ' . $e->getMessage() );
 		}
@@ -2807,7 +2811,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT timestamp,result,leadstamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL ORDER BY timestamp DESC LIMIT " . intval( $offset ) . ",100" );
 			$query->execute( array( $idFeedIn ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound rejections: ' . $e->getMessage() );
 		}
@@ -2867,7 +2871,7 @@ class Leads
 	public function getJobs( $idCompany = null ) {
 		try {
 			$params = array();
-			$sql  = "SELECT j.jobId,j.type,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username ";
+			$sql = "SELECT j.jobId,j.type,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username ";
 			$sql .= "FROM jobs j ";
 			$sql .= "LEFT JOIN users u ON j.idUser = u.idUser ";
 			$sql .= "LEFT JOIN feedinc f ON j.destination = f.idFeedIn ";
@@ -2934,7 +2938,7 @@ class Leads
 
 		try {
 			$params = array();
-			$sql  = "SELECT idRecord,email,url,result ";
+			$sql = "SELECT idRecord,email,url,result ";
 			$sql .= "FROM data_inbound ";
 			$sql .= "WHERE jobId = ? ";
 			$params[] = $jobId;
@@ -2962,7 +2966,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT o.timestamp,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o USE INDEX (result) INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.result IS NOT NULL ORDER BY o.timestamp DESC LIMIT " . intval( $offset ) . ",100" );
 			$query->execute( array( $idFeedOut ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound rejections: ' . $e->getMessage() );
 		}
@@ -2984,7 +2988,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( "UPDATE data_outbound SET timestamp = NULL, processed = 0, result = NULL WHERE result IS NOT NULL AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?" );
-			$query->execute( array( $idFeedOut, $utcStart->format('c'), $utcEnd->format('c') ) );
+			$query->execute( array( $idFeedOut, $utcStart->format( 'c' ), $utcEnd->format( 'c' ) ) );
 
 			$count = $query->rowCount();
 
@@ -3023,7 +3027,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp = ? AND idFeedIn = ?" );
 			$query->execute( array( date( 'Y-m-d' ), $idFeedIn ) );
-			$results = $query->fetch( );
+			$results = $query->fetch();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound stats: ' . $e->getMessage() );
 		}
@@ -3037,7 +3041,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT url,IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp = ? AND idFeedIn = ? GROUP BY url" );
 			$query->execute( array( date( 'Y-m-d' ), $idFeedIn ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound URL stats: ' . $e->getMessage() );
 		}
@@ -3051,7 +3055,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT url,MIN(stamp) AS date FROM stats_inbound WHERE idFeedIn = ? GROUP BY url" );
 			$query->execute( array( $idFeedIn ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound URL dates: ' . $e->getMessage() );
 		}
@@ -3064,13 +3068,13 @@ class Leads
 		$params = array();
 
 		if( !empty( $breakdown ) && $breakdown == 'month' ) {
-			$query  = "SELECT url,LEFT(stamp,7) date,SUM(accepted) accepted,SUM(rejected) rejected ";
+			$query = "SELECT url,LEFT(stamp,7) date,SUM(accepted) accepted,SUM(rejected) rejected ";
 		} else if( !empty( $breakdown ) && $breakdown == 'year' ) {
-			$query  = "SELECT url,LEFT(stamp,4) date,SUM(accepted) accepted,SUM(rejected) rejected ";
+			$query = "SELECT url,LEFT(stamp,4) date,SUM(accepted) accepted,SUM(rejected) rejected ";
 		} else if( !empty( $breakdown ) && $breakdown == 'total' ) {
-			$query  = "SELECT url,'TOTAL' as date,SUM(accepted) accepted,SUM(rejected) rejected ";
+			$query = "SELECT url,'TOTAL' as date,SUM(accepted) accepted,SUM(rejected) rejected ";
 		} else {
-			$query  = "SELECT url,stamp AS date,SUM(accepted) accepted,SUM(rejected) rejected ";
+			$query = "SELECT url,stamp AS date,SUM(accepted) accepted,SUM(rejected) rejected ";
 		}
 
 		$query .= "FROM stats_inbound ";
@@ -3084,20 +3088,20 @@ class Leads
 		}
 
 		if( !empty( $dateStart ) && !empty( $dateEnd ) ) {
-			if( strtotime($dateStart) > strtotime($dateEnd) ) {
-				$dateStart = date("Y-m-d", strtotime($dateEnd));
-				$dateEnd = date("Y-m-d", strtotime($dateStart));
+			if( strtotime( $dateStart ) > strtotime( $dateEnd ) ) {
+				$dateStart = date( "Y-m-d", strtotime( $dateEnd ) );
+				$dateEnd = date( "Y-m-d", strtotime( $dateStart ) );
 			} else {
-				$dateStart = date("Y-m-d", strtotime($dateStart));
-				$dateEnd = date("Y-m-d", strtotime($dateEnd));
+				$dateStart = date( "Y-m-d", strtotime( $dateStart ) );
+				$dateEnd = date( "Y-m-d", strtotime( $dateEnd ) );
 			}
-			$query .= "AND stamp >= '".$dateStart."' AND stamp <= '".$dateEnd."' ";
+			$query .= "AND stamp >= '" . $dateStart . "' AND stamp <= '" . $dateEnd . "' ";
 		}
 
 		$query .= "GROUP BY 1,2 ";
 		if( !empty( $sort ) && 'url' == $sort ) {
 			$query .= "ORDER BY 1,2";
-		} elseif( !empty( $sort ) && 'count' == $sort ) {
+		} else if( !empty( $sort ) && 'count' == $sort ) {
 			$query .= "ORDER BY 3,1";
 		} else {
 			$query .= "ORDER BY 2,1";
@@ -3106,7 +3110,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( $params );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound URL dates: ' . $e->getMessage() );
 		}
@@ -3161,7 +3165,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT url,MIN(stamp) AS date FROM stats_outbound WHERE idFeedOut = ? GROUP BY url" );
 			$query->execute( array( $idFeedOut ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound URL dates: ' . $e->getMessage() );
 		}
@@ -3174,13 +3178,13 @@ class Leads
 		$params = array();
 
 		if( !empty( $breakdown ) && $breakdown == 'month' ) {
-			$query  = "SELECT url,LEFT(stamp,7) date,SUM(accepted) accepted,SUM(rejected) rejected ";
+			$query = "SELECT url,LEFT(stamp,7) date,SUM(accepted) accepted,SUM(rejected) rejected ";
 		} else if( !empty( $breakdown ) && $breakdown == 'year' ) {
-			$query  = "SELECT url,LEFT(stamp,4) date,SUM(accepted) accepted,SUM(rejected) rejected ";
+			$query = "SELECT url,LEFT(stamp,4) date,SUM(accepted) accepted,SUM(rejected) rejected ";
 		} else if( !empty( $breakdown ) && $breakdown == 'total' ) {
-			$query  = "SELECT url,'TOTAL' as date,SUM(accepted) accepted,SUM(rejected) rejected ";
+			$query = "SELECT url,'TOTAL' as date,SUM(accepted) accepted,SUM(rejected) rejected ";
 		} else {
-			$query  = "SELECT url,stamp AS date,SUM(accepted) accepted,SUM(rejected) rejected ";
+			$query = "SELECT url,stamp AS date,SUM(accepted) accepted,SUM(rejected) rejected ";
 		}
 
 		$query .= "FROM stats_outbound ";
@@ -3194,20 +3198,20 @@ class Leads
 		}
 
 		if( !empty( $dateStart ) && !empty( $dateEnd ) ) {
-			if( strtotime($dateStart) > strtotime($dateEnd) ) {
-				$dateStart = date("Y-m-d", strtotime($dateEnd));
-				$dateEnd = date("Y-m-d", strtotime($dateStart));
+			if( strtotime( $dateStart ) > strtotime( $dateEnd ) ) {
+				$dateStart = date( "Y-m-d", strtotime( $dateEnd ) );
+				$dateEnd = date( "Y-m-d", strtotime( $dateStart ) );
 			} else {
-				$dateStart = date("Y-m-d", strtotime($dateStart));
-				$dateEnd = date("Y-m-d", strtotime($dateEnd));
+				$dateStart = date( "Y-m-d", strtotime( $dateStart ) );
+				$dateEnd = date( "Y-m-d", strtotime( $dateEnd ) );
 			}
-			$query .= "AND stamp >= '".$dateStart."' AND stamp <= '".$dateEnd."' ";
+			$query .= "AND stamp >= '" . $dateStart . "' AND stamp <= '" . $dateEnd . "' ";
 		}
 
 		$query .= "GROUP BY 1,2 ";
 		if( !empty( $sort ) && 'url' == $sort ) {
 			$query .= "ORDER BY 1,2";
-		} elseif( !empty( $sort ) && 'count' == $sort ) {
+		} else if( !empty( $sort ) && 'count' == $sort ) {
 			$query .= "ORDER BY 3,1";
 		} else {
 			$query .= "ORDER BY 2,1";
@@ -3216,7 +3220,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( $params );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound URL dates: ' . $e->getMessage() );
 		}
@@ -3259,13 +3263,39 @@ class Leads
 		return $cnt;
 	}
 
+	public function getCompanySalesNotifications() {
+		$cnt = null;
+
+		try {
+			$sql = "SELECT c.name,u.email,MAX(n.timestamp) AS lastDate FROM ( ";
+			$sql .= "SELECT idCompany FROM dnrdmktg.feedinc WHERE status IN ('active') ";
+			$sql .= "UNION ";
+			$sql .= "SELECT idCompany FROM dnrdmktg.feedout WHERE status IN ('active') ";
+			$sql .= ") AS f ";
+			$sql .= "LEFT JOIN dnrdmktg.companies c ON c.idCompany = f.idCompany ";
+			$sql .= "LEFT JOIN dnrdmktg.users u ON u.idUser = c.accountManager ";
+			$sql .= "LEFT JOIN dnrdmktg.companies_notes n ON n.companyId = c.idCompany ";
+			$sql .= "WHERE c.accountManager IS NOT NULL ";
+			$sql .= "AND u.level > 0 ";
+			$sql .= "GROUP BY c.idCompany HAVING ( lastDate IS NULL OR lastDate < DATE_SUB(NOW(),INTERVAL 1 MONTH)) ";
+			$query = $this->db->prepare( $sql );
+			$query->execute();
+			$cnt = $query->fetchAll();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company sales notifications: ' . $e->getMessage() );
+			return $cnt;
+		}
+
+		return $cnt;
+	}
+
 	public function inboundEmailSearch( $email ) {
 		$results = array();
 
 		try {
 			$query = $this->db->prepare( "SELECT i.*,f.label FROM data_inbound i INNER JOIN feedinc f ON i.idFeedIn = f.idFeedIn WHERE email = ?" );
 			$query->execute( array( $email ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound email search results: ' . $e->getMessage() );
 		}
@@ -3279,7 +3309,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT MIN(timestamp) FROM data_inbound WHERE email = ?" );
 			$query->execute( array( $email ) );
-			$results = $query->fetchColumn( );
+			$results = $query->fetchColumn();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound email search results: ' . $e->getMessage() );
 		}
@@ -3290,7 +3320,7 @@ class Leads
 	public function outboundEmailSearch( $email ) {
 		$results = array();
 
-		$query  = "SELECT i.*,o.idFeedOut,f.label ";
+		$query = "SELECT i.*,o.idFeedOut,f.label ";
 		$query .= "FROM data_inbound i ";
 		$query .= "INNER JOIN data_outbound o ON o.idRecord = i.idRecord ";
 		$query .= "LEFT JOIN feedout f ON o.idFeedOut = f.idFeedOut ";
@@ -3299,7 +3329,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( $query );
 			$query->execute( array( $email ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound email search results: ' . $e->getMessage() );
 		}
@@ -3314,7 +3344,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT MIN(o.idRecord) FROM data_outbound o JOIN data_inbound i ON i.idRecord=o.idRecord WHERE o.idFeedOut = ? AND i.url = ?" );
 			$query->execute( array( $idFeedOut, $url ) );
-			$results = $query->fetchColumn( );
+			$results = $query->fetchColumn();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get first outbound record: ' . $e->getMessage() );
 		}
@@ -3344,7 +3374,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT f.label,s.idFeedIn,MAX(s.stamp) AS timestamp, SUM(s.accepted) AS cnt FROM stats_inbound s LEFT JOIN feedinc f ON f.idFeedIn = s.idFeedIn WHERE url = ? GROUP BY idFeedIn" );
 			$query->execute( array( $url ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound URL search results: ' . $e->getMessage() );
 		}
@@ -3358,7 +3388,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT f.label,s.idFeedOut,MAX(s.stamp) AS timestamp,SUM(s.accepted) AS cnt FROM stats_outbound s LEFT JOIN feedout f ON f.idFeedOut = s.idFeedOut WHERE url = ? GROUP BY idFeedOut" );
 			$query->execute( array( $url ) );
-			$results = $query->fetchAll( );
+			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get outbound URL search results: ' . $e->getMessage() );
 		}
@@ -3369,7 +3399,7 @@ class Leads
 	public function archiveErrors() {
 		try {
 			$query = $this->db->prepare( "DELETE FROM errorlog WHERE stamp <= DATE_SUB(NOW(), INTERVAL 15 DAY)" );
-			$query->execute( );
+			$query->execute();
 			return $query->rowCount();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete old errorlog entries: ' . $e->getMessage() );
@@ -3405,7 +3435,7 @@ class Leads
 	public function getLegacyInboundTables() {
 		try {
 			$query = $this->db->prepare( "SHOW TABLES LIKE 'feedinc_%_invalid'" );
-			$query->execute( );
+			$query->execute();
 			return $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get old legacy inbound tables: ' . $e->getMessage() );
@@ -3417,7 +3447,7 @@ class Leads
 	public function archiveLegacyInbound( $table ) {
 		try {
 			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( $table ) . " WHERE received <= DATE_SUB(NOW(), INTERVAL 15 DAY)" );
-			$query->execute( );
+			$query->execute();
 			return $query->rowCount();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete old legacy inbound entries: ' . $e->getMessage() );
@@ -3474,7 +3504,7 @@ class Leads
 		if( LEGACY_DB ) {
 			try {
 				$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $label ) . " WHERE processed = '0'" );
-				$query->execute( );
+				$query->execute();
 			} catch( PDOException $e ) {
 				$this->logError( 'Unable to delete queued records (2): ' . $e->getMessage() );
 				return null;
@@ -3527,7 +3557,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+		$fileLink = 'exports/' . $feed->label . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -3541,7 +3571,7 @@ class Leads
 
 			$fields = array();
 
-			$query  = "SELECT ";
+			$query = "SELECT ";
 			$comma = false;
 			foreach( $settings['columns'] as $column ) {
 				if( $comma ) {
@@ -3557,14 +3587,14 @@ class Leads
 				$query .= "AND result IS NULL ";
 			}
 
-			if( !empty( $settings['dateStart'] ) && strtotime( $settings['dateStart'] ) !== FALSE ) {
+			if( !empty( $settings['dateStart'] ) && strtotime( $settings['dateStart'] ) !== false ) {
 				$query .= "AND timestamp >= CONVERT_TZ(?,?,?) ";
 				$fields[] = date( 'Y-m-d', strtotime( $settings['dateStart'] ) ) . ' 00:00:00';
 				$fields[] = LOCAL_TIMEZONE;
 				$fields[] = DB_TIMEZONE;
 			}
 
-			if( !empty( $settings['dateEnd'] ) && strtotime( $settings['dateEnd'] ) !== FALSE ) {
+			if( !empty( $settings['dateEnd'] ) && strtotime( $settings['dateEnd'] ) !== false ) {
 				$query .= "AND timestamp <= CONVERT_TZ(?,?,?) ";
 				$fields[] = date( 'Y-m-d', strtotime( $settings['dateEnd'] ) ) . ' 23:59:59';
 				$fields[] = LOCAL_TIMEZONE;
@@ -3616,7 +3646,7 @@ class Leads
 
 			$query->execute( $fields );
 			$cnt = 0;
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				$cnt++;
 				fputcsv( $file, $row );
 			}
@@ -3642,7 +3672,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . "comcast_".$jobId.".csv";
+		$fileLink = 'exports/' . "comcast_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -3656,8 +3686,8 @@ class Leads
 
 			$fields = array();
 
-			$query  = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE email LIKE '%@comcast.net' AND result IS NULL" );
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			$query = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE email LIKE '%@comcast.net' AND result IS NULL" );
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, $row );
 			}
 
@@ -3675,7 +3705,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . "cable_".$jobId.".csv";
+		$fileLink = 'exports/' . "cable_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -3689,8 +3719,8 @@ class Leads
 
 			$fields = array();
 
-			$query  = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE ( email LIKE '%@att.net' OR email LIKE '%@bellsouth.net' OR email LIKE '%@earthlink.net' ) AND result IS NULL" );
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			$query = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE ( email LIKE '%@att.net' OR email LIKE '%@bellsouth.net' OR email LIKE '%@earthlink.net' ) AND result IS NULL" );
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, $row );
 			}
 
@@ -3733,7 +3763,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+		$fileLink = 'exports/' . $feed->label . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -3762,7 +3792,7 @@ class Leads
 
 			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ?" );
 			$query->execute( array( $idFeedOut ) );
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, array(
 					$row['url'],
 					$row['ip'],
@@ -3804,7 +3834,7 @@ class Leads
 
 			if( LEGACY_DB ) {
 				$query = $this->db->prepare( "SELECT *,urlTrim AS url,stamp AS leadstamp FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '0' ORDER BY stamp DESC LIMIT 500" );
-				$query->execute( );
+				$query->execute();
 			} else {
 				if( !empty( $feed->delay ) ) {
 					if( !empty( $feed->delayDump ) ) {
@@ -3968,7 +3998,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feed->label."_".$jobId.".csv";
+		$fileLink = 'exports/' . $feed->label . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -3996,8 +4026,8 @@ class Leads
 		try {
 
 			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE processed = 1 AND o.idFeedOut = ? AND o.result IS NOT NULL" );
-			$query->execute( );
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			$query->execute();
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, array(
 					$row['url'],
 					$row['ip'],
@@ -4033,7 +4063,7 @@ class Leads
 	public function getOutboundTables() {
 		try {
 			$query = $this->db->prepare( "SELECT label,successString,idFeedOut FROM feedout" );
-			$query->execute( );
+			$query->execute();
 			return $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get old legacy outbound tables: ' . $e->getMessage() );
@@ -4100,7 +4130,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( "SELECT s.idCompany,c.name,COUNT(*) AS cnt FROM suppression s LEFT JOIN companies c ON s.idCompany = c.idCompany GROUP BY s.idCompany" );
-			$query->execute( array( ) );
+			$query->execute( array() );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get suppression counts: ' . $e->getMessage() );
@@ -4113,7 +4143,7 @@ class Leads
 		$result = false;
 
 		if( empty( $email ) || strpos( $email, '@' ) === false ) {
-			return $result;			
+			return $result;
 		}
 
 		list( $local, $domain ) = explode( '@', $email, 2 );
@@ -4127,7 +4157,7 @@ class Leads
 				$query->execute( array( $email, $domain ) );
 			}
 
-			if( '1' == $query->fetchColumn( ) ) {
+			if( '1' == $query->fetchColumn() ) {
 				$result = true;
 			}
 		} catch( PDOException $e ) {
@@ -4155,12 +4185,12 @@ class Leads
 		try {
 			if( empty( $idCompany ) ) {
 				$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany = 0" );
-				$query->execute( array( ) );
+				$query->execute( array() );
 			} else {
 				$query = $this->db->prepare( "SELECT email FROM suppression WHERE idCompany = ?" );
 				$query->execute( array( $idCompany ) );
 			}
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fwrite( $fh, $row['email'] . PHP_EOL );
 			}
 			$result['reason'] = 'Success';
@@ -4177,9 +4207,9 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( "SELECT email FROM suppression" );
-			$query->execute( );
-			while ( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
-				if( strpos( $row['email'], '@' ) !== FALSE && !filter_var( $row['email'], FILTER_VALIDATE_EMAIL ) ) {
+			$query->execute();
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				if( strpos( $row['email'], '@' ) !== false && !filter_var( $row['email'], FILTER_VALIDATE_EMAIL ) ) {
 					$delete = $this->db->prepare( "DELETE FROM suppression WHERE email = ?" );
 					$delete->execute( array( $row['email'] ) );
 					print $row['email'] . PHP_EOL;
@@ -4227,7 +4257,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp >= ? AND o.timestamp <= ? AND i.url = ?" );
 			$query->execute( array( $idFeedOut, $date . ' 00:00:00', $date . ' 23:59:59', $url ) );
-			$records = $query->fetchAll( );
+			$records = $query->fetchAll();
 
 			foreach( $records as $record ) {
 				$query = $this->db->prepare( "REPLACE INTO stats_outbound(idFeedOut,url,stamp,accepted,rejected) VALUES(?,?,?,?,?)" );
@@ -4271,7 +4301,7 @@ class Leads
 
 	public function logError( $message, $db = false, $email = true ) {
 
-		$stamp = date('Y-m-d H:i:s');
+		$stamp = date( 'Y-m-d H:i:s' );
 		$errfile = fopen( SITE_ROOT . 'error' . FD . 'leads-log', 'a' );
 		if( $errfile ) {
 			fwrite( $errfile, $stamp . ' ' . $message . PHP_EOL );
@@ -4293,16 +4323,16 @@ class Leads
 
 		if( $email ) {
 			// Limit notification emails to one per minute to prevent flooding
-			$time = @file_get_contents( SITE_ROOT."error".FD."email-stamp" );
-			if( $time === FALSE || ( $time < ( time() - 60 ) ) ) {
-				file_put_contents( SITE_ROOT."error".FD."email-stamp", time() );
+			$time = @file_get_contents( SITE_ROOT . "error" . FD . "email-stamp" );
+			if( $time === false || ( $time < ( time() - 60 ) ) ) {
+				file_put_contents( SITE_ROOT . "error" . FD . "email-stamp", time() );
 			} else {
 				return;
 			}
 
-			$from = 'lmsalerts@'.SITE_URL;
+			$from = 'lmsalerts@' . SITE_URL;
 			$body = $stamp . ' ' . $message . PHP_EOL;
-			$fromName = CONFIG_COMPANY_NAME.' List Management System';
+			$fromName = CONFIG_COMPANY_NAME . ' List Management System';
 			$to = ADMINISTRATOR_EMAIL;
 			$subject = 'List Management ERROR';
 			$header = "From:" . $fromName . " <" . $from . ">\n";
@@ -4320,7 +4350,7 @@ class Leads
 		try {
 			$query = $this->db->prepare( "SELECT COUNT(*) AS cnt FROM errorlog WHERE stamp LIKE ?" );
 			$query->execute( array( date( 'Y-m-d' ) . '%' ) );
-			return $query->fetchColumn( );
+			return $query->fetchColumn();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get error count: ' . $e->getMessage() );
 		}

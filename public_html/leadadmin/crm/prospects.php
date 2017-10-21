@@ -1,6 +1,6 @@
 <?php
 
-include("../../../includes/c_config.php");
+include( "../../../includes/c_config.php" );
 
 require_once( INCLUDES . 'session.php' );
 require_once( INCLUDES . 'f_site.php' );
@@ -13,14 +13,14 @@ $status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
 
 require_once( INCLUDES . 'display.php' );
 
-if(isset($_REQUEST['a'])){
+if( isset( $_REQUEST['a'] ) ) {
 	Header( 'Content-Type: application/json' );
 
 	$result = array(
 		'status' => 0,
 		'error' => 'Action does not exist.',
 	);
-	switch($_REQUEST['a']){
+	switch( $_REQUEST['a'] ) {
 		case "addNewNote":
 			$c = true;
 			$result['error'] = 'Failed when trying to add a new prospect note.';
@@ -43,7 +43,7 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
-			if($c){
+			if( $c ) {
 				$noteId = $leads->addProspectNote( array(
 					'prospectId' => $_REQUEST['prospectId'],
 					'userId' => LeadsSession::getUserId(),
@@ -56,28 +56,18 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
-			if($c){
+			if( $c ) {
 				$result['status'] = 1;
 				$result['error'] = 'Successfully added new prospect note.';
 			}
-		break;
+			break;
 
 		case "addNewProspect":
 			$c = true;
 			$result['error'] = 'Failed when trying to add a new prospect';
 
-			if( $c && empty( $_REQUEST['status'] ) ) {
-				$result['error'] = 'Please select a status from the list.';
-				$c = false;
-			}
-
 			if( $c && empty( $_REQUEST['company'] ) ) {
 				$result['error'] = 'Please type in a company name.';
-				$c = false;
-			}
-
-			if( $c && empty( $_REQUEST['userId'] ) ) {
-				$result['error'] = 'Please select a salesperson from the list.';
 				$c = false;
 			}
 
@@ -86,16 +76,25 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
-			if($c){
+			$userId = LeadsSession::getUserId();
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				if( $c && empty( $_REQUEST['userId'] ) ) {
+					$result['error'] = 'Please select a salesperson from the list.';
+					$c = false;
+				}
+				$userId = empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'];
+			}
+
+			if( $c ) {
 				$prospectId = $leads->addProspect( array(
 					'company' => $_REQUEST['company'],
 					'name' => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
 					'title' => empty( $_REQUEST['title'] ) ? null : $_REQUEST['title'],
 					'phone' => empty( $_REQUEST['phone'] ) ? null : $_REQUEST['phone'],
 					'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
-					'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
+					'userId' => $userId,
 					'divisions' => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
-					'status' => $_REQUEST['status'],
+					'percentage' => intval( $_REQUEST['percentage'] ),
 				) );
 				if( null === $prospectId ) {
 					$c = false;
@@ -113,11 +112,11 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
-			if($c){
+			if( $c ) {
 				$result['status'] = 1;
 				$result['error'] = 'Successfully added new prospect.';
 			}
-		break;
+			break;
 
 		case "alterProspect":
 			$c = true;
@@ -136,34 +135,34 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
-			if( $c && empty( $_REQUEST['status'] ) ) {
-				$result['error'] = 'Please select a status from the list.';
-				$c = false;
-			}
-
 			if( $c && empty( $_REQUEST['company'] ) ) {
 				$result['error'] = 'Please type in a company name.';
 				$c = false;
 			}
 
-			if( $c && empty( $_REQUEST['userId'] ) ) {
-				$result['error'] = 'Please select a salesperson from the list.';
-				$c = false;
+			$userId = LeadsSession::getUserId();
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+				if( $c && empty( $_REQUEST['userId'] ) ) {
+					$result['error'] = 'Please select a salesperson from the list.';
+					$c = false;
+				}
+				$userId = empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'];
 			}
 
-			if($c){
+			if( $c ) {
 				$alterProspectResult = $leads->updateProspect( $_REQUEST['prospectId'], array(
 					'company' => $_REQUEST['company'],
 					'name' => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
 					'title' => empty( $_REQUEST['title'] ) ? null : $_REQUEST['title'],
 					'phone' => empty( $_REQUEST['phone'] ) ? null : $_REQUEST['phone'],
 					'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
-					'userId' => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
+					'userId' => $userId,
 					'divisions' => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
-					'status' => $_REQUEST['status'],
+					'percentage' => intval( $_REQUEST['percentage'] ),
+					'isArchived' => !empty( $_REQUEST['isArchived'] ) ? 1 : 0,
 				) );
 
-				if($alterProspectResult === false){
+				if( $alterProspectResult === false ) {
 					$c = false;
 					$result['error'] = 'Database failure, could not alter prospect.';
 				} else {
@@ -172,38 +171,31 @@ if(isset($_REQUEST['a'])){
 
 			}
 
-			if($c){
+			if( $c ) {
 				$result['status'] = 1;
 				$result['error'] = 'Successfully altered existing prospect.';
 			}
-		break;
+			break;
 	}
-	echo json_encode($result);
+	echo json_encode( $result );
 	exit;
 }
 
-if(isset($_REQUEST['d'])){
-	switch($_REQUEST['d']){
+if( isset( $_REQUEST['d'] ) ) {
+	switch( $_REQUEST['d'] ) {
 		case 'errorCount':
 			Display::errorCount();
-		break;
+			break;
 
 		case 'errorList':
 			Display::errorList();
-		break;
+			break;
 
 		case "dialog_newprospect":
 
 			$divisions = $leads->getDivisions();
 
 			$fields = array(
-				array(
-					'id' => 'status',
-					'label' => 'Status',
-					'type' => 'select',
-					'placeholder' => 'Select a status',
-					'choices' => $crmStatuses,
-				),
 				array(
 					'id' => 'company',
 					'label' => 'Company',
@@ -238,6 +230,20 @@ if(isset($_REQUEST['d'])){
 					'choice_append' => '<br/>',
 				),
 				array(
+					'id' => 'percentage',
+					'label' => 'Pct Complete',
+					'type' => 'select',
+					'placeholder' => 'Select a progress',
+					'choices' => array(
+						'0' => 'New Lead (0%)',
+						'25' => 'Initial Contact Made (25%)',
+						'50' => 'Opportunity Defined (50%)',
+						'75' => 'Agreement/IO Pending (75%)',
+						'100' => 'Closed (100%)',
+					),
+					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ? true : false,
+				),
+				array(
 					'id' => 'userId',
 					'label' => 'Salesperson',
 					'type' => 'select',
@@ -258,16 +264,16 @@ if(isset($_REQUEST['d'])){
 
 			Display::displayForm( 'new_prospect', $fields );
 
-		break;
+			break;
 
 		case "dialog_editprospect":
 			$prospectId = !empty( $_REQUEST['prospectId'] ) ? $_REQUEST['prospectId'] : '';
 			$prospect = $leads->getProspect( $prospectId );
 
 			if( empty( $prospect ) ) {
-?>
-<p>There is no prospect that exists by that ID.</p>
-<?php
+				?>
+                <p>There is no prospect that exists by that ID.</p>
+				<?php
 
 				break;
 
@@ -283,14 +289,6 @@ if(isset($_REQUEST['d'])){
 			}
 
 			$fields = array(
-				array(
-					'id' => 'status',
-					'label' => 'Status',
-					'type' => 'select',
-					'placeholder' => 'Select a status',
-					'choices' => $crmStatuses,
-					'value' => $prospect->status,
-				),
 				array(
 					'id' => 'company',
 					'label' => 'Company',
@@ -331,12 +329,38 @@ if(isset($_REQUEST['d'])){
 					'value' => $divisions_selected,
 				),
 				array(
+					'id' => 'percentage',
+					'label' => 'Pct Complete',
+					'type' => 'select',
+					'placeholder' => 'Select a progress',
+					'choices' => array(
+						'0' => 'New Lead (0%)',
+						'25' => 'Initial Contact Made (25%)',
+						'50' => 'Opportunity Defined (50%)',
+						'75' => 'Agreement/IO Pending (75%)',
+						'100' => 'Closed (100%)',
+					),
+					'value' => $prospect->percentage,
+				),
+				array(
 					'id' => 'userId',
 					'label' => 'Salesperson',
 					'type' => 'select',
 					'placeholder' => 'Select a salesperson',
 					'choices' => $leads->getStaffUsers(),
 					'value' => $prospect->userId,
+					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ? true : false,
+				),
+				array(
+					'id' => 'isArchived',
+					'label' => 'Archived',
+					'type' => 'checkbox',
+					'choices' => array(
+						'1' => 'Archive/Hide this record',
+					),
+					'value' => array(
+						'1' => !empty( $prospect->isArchived ) ? 1 : 0,
+					),
 				),
 				array(
 					'id' => 'prospectId',
@@ -352,7 +376,7 @@ if(isset($_REQUEST['d'])){
 
 			Display::displayForm( 'edit_prospect', $fields );
 
-		break;
+			break;
 
 
 		case "dialog_prospectnotes":
@@ -360,9 +384,9 @@ if(isset($_REQUEST['d'])){
 			$prospect = $leads->getProspect( $prospectId );
 
 			if( empty( $prospect ) ) {
-?>
-<p>There is no prospect that exists by that ID.</p>
-<?php
+				?>
+                <p>There is no prospect that exists by that ID.</p>
+				<?php
 
 				break;
 
@@ -402,307 +426,315 @@ if(isset($_REQUEST['d'])){
 				}
 			}
 
-		break;
+			break;
 	}
 	exit;
 }
 
 $title = 'CRM Prospect Manager';
-include(INCLUDES."c_header.php");
+include( INCLUDES . "c_header.php" );
 ?>
 <body>
 
-<?php include(INCLUDES.'c_nav.php'); ?>
+<?php include( INCLUDES . 'c_nav.php' ); ?>
 
 <div class="container-fluid">
 
-<h2>Prospects</h2>
+    <h2>Prospects</h2>
 
-<form class="pull-right" id="status-select" method="get">
-<select id="status" name="status">
-	<option value=""<?php if( null === $status ) { print ' selected="selected"'; } ?>>Show all prospects</option>
-	<option value="active"<?php if( 'active' === $status ) { print ' selected="selected"'; } ?>>Show active prospects</option>
-<?php
-	foreach( $crmStatuses as $key => $val ) {
-		printf( '<option value="%s"%s>Show "%s" prospects</option>' . PHP_EOL,
-			$key,
-			$status === $key ? ' selected="selected"' : "",
-			$val
-		);
-	}
-?>
-</select>
-</form>
+    <form class="pull-right" id="status-select" method="get">
+        <select id="status" name="status">
+            <option value=""<?php if( null === $status ) {
+				print ' selected="selected"';
+			} ?>>Show all prospects
+            </option>
+            <option value="active"<?php if( 'active' === $status ) {
+				print ' selected="selected"';
+			} ?>>Show active prospects
+            </option>
+            <option value="archived"<?php if( 'archived' === $status ) {
+				print ' selected="selected"';
+			} ?>>Show archived prospects
+            </option>
+        </select>
+    </form>
 
-<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newprospect">Add a new prospect</button></p>
+    <p>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newprospect">Add a new prospect</button>
+    </p>
 
-<?php
+	<?php
 	$prospects = $leads->getProspects( $status );
 	if( empty( $prospects ) ) {
 
 		print '<p>No prospects exist in the database.</p>';
 
 	} else {
-?>
+		?>
 
-<table class="table table-bordered table-condensed table-striped" id="crm-prospects">
-	<thead>
-		<tr class="bgGray header">
-			<th>Company</th>
-			<th>Name</th>
-			<th class="hidden-xs">Title</th>
-			<th class="hidden-xs">Phone</th>
-			<th class="hidden-xs">Email</th>
-			<th>Divisions</th>
-			<th>Status</th>
-			<th>Updated</th>
-			<th>Options</th>
-		</tr>
-	</thead>
-	<tbody>
-<?php
-		$divisions = $leads->getDivisions();
-		foreach( $prospects as $prospect ) {
-			$divisions_selected = '';
-			$tmp = explode( ',', $prospect->divisions );
-			foreach( $tmp as $key => $val ) {
-				if( isset( $divisions[$val] ) ) {
-					if( !empty( $divisions_selected ) ) {
-						$divisions_selected .= '<br/>';
+        <table class="table table-bordered table-condensed table-striped" id="crm-prospects">
+            <thead>
+            <tr class="bgGray header">
+                <th>Company</th>
+                <th>Name</th>
+                <th class="hidden-xs">Title</th>
+                <th class="hidden-xs">Phone</th>
+                <th class="hidden-xs">Email</th>
+                <th>Divisions</th>
+                <th>Percentage</th>
+                <th>Updated</th>
+                <th>Options</th>
+            </tr>
+            </thead>
+            <tbody>
+			<?php
+			$divisions = $leads->getDivisions();
+			foreach( $prospects as $prospect ) {
+				$divisions_selected = '';
+				$tmp = explode( ',', $prospect->divisions );
+				foreach( $tmp as $key => $val ) {
+					if( isset( $divisions[$val] ) ) {
+						if( !empty( $divisions_selected ) ) {
+							$divisions_selected .= '<br/>';
+						}
+						$divisions_selected .= $divisions[$val];
 					}
-					$divisions_selected .= $divisions[$val];
 				}
-			}
-?>
-		<tr>
-			<td><?php echo htmlentities( $prospect->company ); ?></td>
-			<td><?php echo htmlentities( $prospect->name ); ?></td>
-			<td class="hidden-xs"><?php echo htmlentities( $prospect->title ); ?></td>
-			<td class="hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
-			<td class="hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
-			<td><?php echo $divisions_selected; ?></td>
-			<td><?php echo htmlentities( $crmStatuses[$prospect->status] ); ?></td>
-			<td><?php echo !empty( $prospect->lastDate ) ? htmlentities( date( 'Y-m-d', strtotime( $prospect->lastDate ) ) ) : ''; ?></td>
-			<td class="text-center">
-<div class="btn-group">
-	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
-	<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		<span class="caret"></span>
-		<span class="sr-only">Toggle Dropdown</span>
-	</button>
-	<ul class="dropdown-menu">
-		<li><a href="#" data-toggle="modal" data-target="#prospectnotes" data-prospect-id="<?php echo $prospect->prospectId; ?>">Notes</a></li>
-	</ul>
-</div></td>
-		</tr>
-<?php
-		}
-?>
-	</tbody>
-</table>
 
-<?php
+				$progressClass = 'progress-bar-success';
+				if( $prospect->percentage < 75 ) {
+					$progressClass = 'progress-bar-danger';
+				} else if( $prospect->percentage < 100 ) {
+					$progressClass = 'progress-bar-warning';
+				}
+				?>
+                <tr>
+                    <td><?php echo htmlentities( $prospect->company ); ?></td>
+                    <td><?php echo htmlentities( $prospect->name ); ?></td>
+                    <td class="hidden-xs"><?php echo htmlentities( $prospect->title ); ?></td>
+                    <td class="hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
+                    <td class="hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
+                    <td><?php echo $divisions_selected; ?></td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar <?php echo $progressClass; ?>" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2.5em; width: <?php echo intval( $prospect->percentage ); ?>%">
+								<?php echo intval( $prospect->percentage ); ?>%
+                            </div>
+                        </div>
+                    </td>
+                    <td><?php echo !empty( $prospect->lastDate ) ? htmlentities( date( 'Y-m-d', strtotime( $prospect->lastDate ) ) ) : ''; ?></td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
+                            <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a href="#" data-toggle="modal" data-target="#prospectnotes" data-prospect-id="<?php echo $prospect->prospectId; ?>">Notes</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+				<?php
+			}
+			?>
+            </tbody>
+        </table>
+
+		<?php
 	}
 
-?>
+	?>
 </div>
 
 <div class="modal fade" id="newprospect" tabindex="-1" role="dialog" aria-labelledby="newprospect_title">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="newprospect_title">Add a new prospect</h4>
-			</div>
-			<div class="modal-body">
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-newprospect" type="button" class="btn btn-primary">Add Prospect</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="newprospect_title">Add a new prospect</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-newprospect" type="button" class="btn btn-primary">Add Prospect</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="prospectnotes" tabindex="-1" role="dialog" aria-labelledby="prospectnotes_title">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="prospectnotes_title">Prospect Notes</h4>
-			</div>
-			<div class="modal-body">
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-prospectnotes" type="button" class="btn btn-primary">Add A New Note</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="prospectnotes_title">Prospect Notes</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-prospectnotes" type="button" class="btn btn-primary">Add A New Note</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="editprospect" tabindex="-1" role="dialog" aria-labelledby="editprospect_title">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="editprospect_title">Edit an prospect</h4>
-			</div>
-			<div class="modal-body"></div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-editprospect" type="button" class="btn btn-primary">Save changes</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editprospect_title">Edit an prospect</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-editprospect" type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript">
-$('#modal-save-newprospect').click( function(event) {
-	event.preventDefault();
+	$('#modal-save-newprospect').click(function (event) {
+		event.preventDefault();
 
-	var response = $.ajax({
-		url: "prospects.php",
-		type: "POST",
-		async: true,
-		data: $("#new_prospect").serialize()
-	}).done(function(result){
-		if(result.status == 1){
-			window.location.reload(true);
-		} else {
-			alert(result.error);
-		}
+		var response = $.ajax({
+			url: "prospects.php",
+			type: "POST",
+			async: true,
+			data: $("#new_prospect").serialize()
+		}).done(function (result) {
+			if (result.status == 1) {
+				window.location.reload(true);
+			} else {
+				alert(result.error);
+			}
+		});
 	});
-});
 
-$('#newprospect').on('show.bs.modal', function(e) {
-	var modal = $(this);
+	$('#newprospect').on('show.bs.modal', function (e) {
+		var modal = $(this);
 
-	$.ajax({
-		cache: false,
-		type: 'POST',
-		url: 'prospects.php',
-		data: {
-			'd': 'dialog_newprospect'
-		},
-		success: function(data) {
-			modal.find('.modal-body').html(data);
-		}
+		$.ajax({
+			cache: false,
+			type: 'POST',
+			url: 'prospects.php',
+			data: {
+				'd': 'dialog_newprospect'
+			},
+			success: function (data) {
+				modal.find('.modal-body').html(data);
+			}
+		});
 	});
-});
 
-$('#modal-save-editprospect').click(function(event) {
-	event.preventDefault();
+	$('#modal-save-editprospect').click(function (event) {
+		event.preventDefault();
 
-	var response = $.ajax({
-		url: "prospects.php",
-		type: "POST",
-		async: true,
-		data: $("#edit_prospect").serialize()
-	}).done(function(result){
-		if(result.status == 1){
-			window.location.reload(true);
-		} else {
-			alert(result.error);
-		}
+		var response = $.ajax({
+			url: "prospects.php",
+			type: "POST",
+			async: true,
+			data: $("#edit_prospect").serialize()
+		}).done(function (result) {
+			if (result.status == 1) {
+				window.location.reload(true);
+			} else {
+				alert(result.error);
+			}
+		});
 	});
-});
 
-$('#editprospect').on('show.bs.modal', function(e) {
-	var modal = $(this);
-	var prospectId = $(e.relatedTarget).data('prospect-id');
+	$('#editprospect').on('show.bs.modal', function (e) {
+		var modal = $(this);
+		var prospectId = $(e.relatedTarget).data('prospect-id');
 
-	$.ajax({
-		cache: false,
-		type: 'POST',
-		url: 'prospects.php',
-		data: {
-			'd': 'dialog_editprospect',
-			'prospectId': prospectId
-		},
-		success: function(data) {
-			modal.find('.modal-body').html(data);
-		}
+		$.ajax({
+			cache: false,
+			type: 'POST',
+			url: 'prospects.php',
+			data: {
+				'd': 'dialog_editprospect',
+				'prospectId': prospectId
+			},
+			success: function (data) {
+				modal.find('.modal-body').html(data);
+			}
+		});
 	});
-});
 
-$('#modal-save-prospectnotes').click(function(event) {
-	event.preventDefault();
+	$('#modal-save-prospectnotes').click(function (event) {
+		event.preventDefault();
 
-	var response = $.ajax({
-		url: "prospects.php",
-		type: "POST",
-		async: true,
-		data: $("#note_prospect").serialize()
-	}).done(function(result){
-		if(result.status == 1){
-			window.location.reload(true);
-		} else {
-			alert(result.error);
-		}
+		var response = $.ajax({
+			url: "prospects.php",
+			type: "POST",
+			async: true,
+			data: $("#note_prospect").serialize()
+		}).done(function (result) {
+			if (result.status == 1) {
+				window.location.reload(true);
+			} else {
+				alert(result.error);
+			}
+		});
 	});
-});
 
-$('#prospectnotes').on('show.bs.modal', function(e) {
-	var modal = $(this);
-	var prospectId = $(e.relatedTarget).data('prospect-id');
+	$('#prospectnotes').on('show.bs.modal', function (e) {
+		var modal = $(this);
+		var prospectId = $(e.relatedTarget).data('prospect-id');
 
-	$.ajax({
-		cache: false,
-		type: 'POST',
-		url: 'prospects.php',
-		data: {
-			'd': 'dialog_prospectnotes',
-			'prospectId': prospectId
-		},
-		success: function(data) {
-			modal.find('.modal-body').html(data);
-		}
+		$.ajax({
+			cache: false,
+			type: 'POST',
+			url: 'prospects.php',
+			data: {
+				'd': 'dialog_prospectnotes',
+				'prospectId': prospectId
+			},
+			success: function (data) {
+				modal.find('.modal-body').html(data);
+			}
+		});
 	});
-});
 
-$('#newprospect, #editprospect, #prospectnotes').on('hide.bs.modal', function(e) {
-	$(this).find('.modal-body').html('');
-});
-
-$('#status-select select').change(function(e) {
-	e.preventDefault();
-	$('#status-select').submit();
-});
-
-$('table').each(function() {
-	var tf = new TableFilter($(this).attr('id'), {
-		base_path: '/leadadmin/libraries/tablefilter/',
-		grid: false,
-		filters_row_index: 1,
-		extensions: [{
-			name: 'sort',
-			types: [
-				'String', // Company
-				'String', // Division
-				'String', // Affiliate
-				'String', // Salesperson
-				'String', // Status
-				'ymdddate', // Updated
-				'String', // Products
-				'us', // Rev
-				'us', // Exp
-				'Number', // Start Qty
-				'us', // Rev/Wk
-				'us', // Exp/Wk
-				'us', // GP/Wk
-				'Number', // Goal Qty
-				'us', // Rev/Wk
-				'us', // Exp/Wk
-				'us' // GP/Wk
-			],
-			image_asc_class_name: 'custom-ascending',
-			image_desc_class_name: 'custom-descending'
-		}],
-		sort: true
+	$('#newprospect, #editprospect, #prospectnotes').on('hide.bs.modal', function (e) {
+		$(this).find('.modal-body').html('');
 	});
-	tf.init();
-});
+
+	$('#status-select select').change(function (e) {
+		e.preventDefault();
+		$('#status-select').submit();
+	});
+
+	$('table').each(function () {
+		var tf = new TableFilter($(this).attr('id'), {
+			base_path: '/leadadmin/libraries/tablefilter/',
+			grid: false,
+			filters_row_index: 1,
+			extensions: [{
+				name: 'sort',
+				types: [
+					'String', // Company
+					'String', // Name
+					'String', // Title
+					'String', // Phone
+					'String', // Email
+					'String', // Divisions
+					'Number', // Percentage
+					{type: 'date', locale: 'en-US'} // Updated
+				],
+				image_asc_class_name: 'custom-ascending',
+				image_desc_class_name: 'custom-descending'
+			}],
+			sort: true
+		});
+		tf.init();
+	});
 </script>
 
 </body>
