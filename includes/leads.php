@@ -3267,7 +3267,7 @@ class Leads
 		$cnt = null;
 
 		try {
-			$sql = "SELECT c.name,u.email,MAX(n.timestamp) AS lastDate FROM ( ";
+			$sql = "SELECT c.idCompany,c.name,u.email,MAX(n.timestamp) AS lastDate FROM ( ";
 			$sql .= "SELECT idCompany FROM dnrdmktg.feedinc WHERE status IN ('active') ";
 			$sql .= "UNION ";
 			$sql .= "SELECT idCompany FROM dnrdmktg.feedout WHERE status IN ('active') ";
@@ -3275,8 +3275,12 @@ class Leads
 			$sql .= "LEFT JOIN dnrdmktg.companies c ON c.idCompany = f.idCompany ";
 			$sql .= "LEFT JOIN dnrdmktg.users u ON u.idUser = c.accountManager ";
 			$sql .= "LEFT JOIN dnrdmktg.companies_notes n ON n.companyId = c.idCompany ";
+			$sql .= "LEFT JOIN dnrdmktg.notifications_companies nc ON nc.idCompany = c.idCompany ";
+			$sql .= "LEFT JOIN dnrdmktg.feedinc i ON i.idCompany = c.idCompany ";
 			$sql .= "WHERE c.accountManager IS NOT NULL ";
 			$sql .= "AND u.level > 0 ";
+			$sql .= "AND ( nc.lastNotification IS NULL OR nc.lastNotification < DATE_SUB(NOW(),INTERVAL 7 DAY)) ";
+			$sql .= "AND i.status IN ('active','hidden') ";
 			$sql .= "GROUP BY c.idCompany HAVING ( lastDate IS NULL OR lastDate < DATE_SUB(NOW(),INTERVAL 1 MONTH)) ";
 			$query = $this->db->prepare( $sql );
 			$query->execute();
@@ -3287,6 +3291,17 @@ class Leads
 		}
 
 		return $cnt;
+	}
+
+	public function updateCompanyNotificationDate( $companyId ) {
+		try {
+			$query = $this->db->prepare( "REPLACE INTO notifications_companies VALUES (?,NOW())" );
+			$query->execute( array( $companyId ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to update company notification: ' . $e->getMessage() );
+			return null;
+		}
 	}
 
 	public function inboundEmailSearch( $email ) {

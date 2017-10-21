@@ -265,7 +265,7 @@ if($incomingFeeds === false){
 ?>
 	<tr class="clickable striped-master" onclick="toggleHidden('incoming_companyFeedList_<?php echo $categoryKey; ?>', {'sub':<?php echo $idCompany; ?>});">
 		<td><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
-		<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button></td>
+		<td class="text-center"><button type="button" class="btn <?php echo ( empty( $feed->lastDate ) || strtotime( $feed->lastDate ) < strtotime( '1 month ago') ) ? 'btn-danger' : 'btn-primary'; ?> btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button></td>
 		<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
 		<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
 	</tr>
@@ -382,7 +382,7 @@ if($outgoingFeeds === false){
 ?>
 	<tr class="clickable striped-master" onclick="toggleHidden('outgoing_companyFeedList_<?php echo $categoryKey; ?>', {'sub':<?php echo $idCompany; ?>});">
 		<td><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
-		<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button></td>
+        <td class="text-center"><button type="button" class="btn <?php echo ( empty( $feed->lastDate ) || strtotime( $feed->lastDate ) < strtotime( '1 month ago') ) ? 'btn-danger' : 'btn-primary'; ?> btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button></td>
 		<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
 		<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
 <?php
