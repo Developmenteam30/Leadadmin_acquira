@@ -9,7 +9,8 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
-$status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
+$filterStatus = !empty( $_REQUEST['filterStatus'] ) ? $_REQUEST['filterStatus'] : null;
+$filterUserId = !empty( $_REQUEST['filterUserId'] ) ? $_REQUEST['filterUserId'] : null;
 
 require_once( INCLUDES . 'display.php' );
 
@@ -72,8 +73,17 @@ if( isset( $_REQUEST['a'] ) ) {
 			}
 
 			if( $c && empty( $_REQUEST['note'] ) ) {
-				$result['error'] = 'Please type an intial note about this prospect.';
+				$result['error'] = 'Please type an initial note about this prospect.';
 				$c = false;
+			}
+
+			if( !empty( $_REQUEST['expectedClose'] ) ) {
+				try {
+					$expectedClose = new DateTime( $_REQUEST['expectedClose'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid expected close date.';
+					break;
+				}
 			}
 
 			$userId = LeadsSession::getUserId();
@@ -89,12 +99,13 @@ if( isset( $_REQUEST['a'] ) ) {
 				$prospectId = $leads->addProspect( array(
 					'company' => $_REQUEST['company'],
 					'name' => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
-					'title' => empty( $_REQUEST['title'] ) ? null : $_REQUEST['title'],
+					'opportunity' => empty( $_REQUEST['opportunity'] ) ? null : $_REQUEST['opportunity'],
 					'phone' => empty( $_REQUEST['phone'] ) ? null : $_REQUEST['phone'],
 					'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
 					'userId' => $userId,
 					'divisions' => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
 					'percentage' => intval( $_REQUEST['percentage'] ),
+					'expectedClose' => !isset( $expectedClose ) ? null : $expectedClose->format( 'Y-m-d' ),
 				) );
 				if( null === $prospectId ) {
 					$c = false;
@@ -140,6 +151,15 @@ if( isset( $_REQUEST['a'] ) ) {
 				$c = false;
 			}
 
+			if( !empty( $_REQUEST['expectedClose'] ) ) {
+				try {
+					$expectedClose = new DateTime( $_REQUEST['expectedClose'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid expected close date.';
+					break;
+				}
+			}
+
 			$userId = LeadsSession::getUserId();
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
 				if( $c && empty( $_REQUEST['userId'] ) ) {
@@ -153,13 +173,14 @@ if( isset( $_REQUEST['a'] ) ) {
 				$alterProspectResult = $leads->updateProspect( $_REQUEST['prospectId'], array(
 					'company' => $_REQUEST['company'],
 					'name' => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
-					'title' => empty( $_REQUEST['title'] ) ? null : $_REQUEST['title'],
+					'opportunity' => empty( $_REQUEST['opportunity'] ) ? null : $_REQUEST['opportunity'],
 					'phone' => empty( $_REQUEST['phone'] ) ? null : $_REQUEST['phone'],
 					'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
 					'userId' => $userId,
 					'divisions' => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
 					'percentage' => intval( $_REQUEST['percentage'] ),
 					'isArchived' => !empty( $_REQUEST['isArchived'] ) ? 1 : 0,
+					'expectedClose' => !isset( $expectedClose ) ? null : $expectedClose->format( 'Y-m-d' ),
 				) );
 
 				if( $alterProspectResult === false ) {
@@ -208,8 +229,8 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'text',
 				),
 				array(
-					'id' => 'title',
-					'label' => 'Contact Title',
+					'id' => 'opportunity',
+					'label' => 'Opportunity Description',
 					'type' => 'text',
 				),
 				array(
@@ -242,6 +263,11 @@ if( isset( $_REQUEST['d'] ) ) {
 						'100' => 'Closed (100%)',
 					),
 					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ? true : false,
+				),
+				array(
+					'id' => 'expectedClose',
+					'label' => 'Expected Close Date',
+					'type' => 'text',
 				),
 				array(
 					'id' => 'userId',
@@ -303,10 +329,10 @@ if( isset( $_REQUEST['d'] ) ) {
 					'value' => $prospect->name,
 				),
 				array(
-					'id' => 'title',
-					'label' => 'Contact Title',
+					'id' => 'opportunity',
+					'label' => 'Opportunity Description',
 					'type' => 'text',
-					'value' => $prospect->title,
+					'value' => $prospect->opportunity,
 				),
 				array(
 					'id' => 'phone',
@@ -341,6 +367,12 @@ if( isset( $_REQUEST['d'] ) ) {
 						'100' => 'Closed (100%)',
 					),
 					'value' => $prospect->percentage,
+				),
+				array(
+					'id' => 'expectedClose',
+					'label' => 'Expected Close Date',
+					'type' => 'text',
+					'value' => $prospect->expectedClose,
 				),
 				array(
 					'id' => 'userId',
@@ -442,21 +474,39 @@ include( INCLUDES . "c_header.php" );
 
     <h2>Prospects</h2>
 
-    <form class="pull-right" id="status-select" method="get">
-        <select id="status" name="status">
-            <option value=""<?php if( null === $status ) {
+    <form class="pull-right" id="filter-select" method="get">
+        <select id="filterStatus" name="filterStatus">
+            <option value=""<?php if( null === $filterStatus ) {
 				print ' selected="selected"';
 			} ?>>Show all prospects
             </option>
-            <option value="active"<?php if( 'active' === $status ) {
+            <option value="active"<?php if( 'active' === $filterStatus ) {
 				print ' selected="selected"';
 			} ?>>Show active prospects
             </option>
-            <option value="archived"<?php if( 'archived' === $status ) {
+            <option value="archived"<?php if( 'archived' === $filterStatus ) {
 				print ' selected="selected"';
 			} ?>>Show archived prospects
             </option>
         </select>
+		<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+            <select id="filterUserId" name="filterUserId">
+                <option value=""<?php if( empty( $filterUserId ) ) {
+					print ' selected="selected"';
+				} ?>>Show all users
+                </option>
+				<?php
+				$users = $leads->getStaffUsers();
+				foreach( $users as $key => $val ) {
+					printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+						htmlentities( $key ),
+						$filterUserId == $key ? ' selected="selected"' : '',
+						htmlentities( $val )
+					);
+				}
+				?>
+            </select>
+		<?php } ?>
     </form>
 
     <p>
@@ -464,7 +514,10 @@ include( INCLUDES . "c_header.php" );
     </p>
 
 	<?php
-	$prospects = $leads->getProspects( $status );
+	if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+		$filterUserId = LeadsSession::getUserId();
+	}
+	$prospects = $leads->getProspects( $filterStatus, $filterUserId );
 	if( empty( $prospects ) ) {
 
 		print '<p>No prospects exist in the database.</p>';
@@ -477,7 +530,7 @@ include( INCLUDES . "c_header.php" );
             <tr class="bgGray header">
                 <th>Company</th>
                 <th>Name</th>
-                <th class="hidden-xs">Title</th>
+                <th class="hidden-xs">Opportunity</th>
                 <th class="hidden-xs">Phone</th>
                 <th class="hidden-xs">Email</th>
                 <th>Divisions</th>
@@ -511,7 +564,7 @@ include( INCLUDES . "c_header.php" );
                 <tr>
                     <td><?php echo htmlentities( $prospect->company ); ?></td>
                     <td><?php echo htmlentities( $prospect->name ); ?></td>
-                    <td class="hidden-xs"><?php echo htmlentities( $prospect->title ); ?></td>
+                    <td class="hidden-xs"><?php echo htmlentities( $prospect->opportunity ); ?></td>
                     <td class="hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
                     <td class="hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
                     <td><?php echo $divisions_selected; ?></td>
@@ -521,6 +574,7 @@ include( INCLUDES . "c_header.php" );
 								<?php echo intval( $prospect->percentage ); ?>%
                             </div>
                         </div>
+                        <?php echo htmlentities( $prospect->expectedClose ); ?>
                     </td>
                     <td><?php echo !empty( $prospect->lastDate ) ? htmlentities( date( 'Y-m-d', strtotime( $prospect->lastDate ) ) ) : ''; ?></td>
                     <td class="text-center">
@@ -706,9 +760,16 @@ include( INCLUDES . "c_header.php" );
 		$(this).find('.modal-body').html('');
 	});
 
-	$('#status-select select').change(function (e) {
+	$('#filter-select select').change(function (e) {
 		e.preventDefault();
-		$('#status-select').submit();
+		$('#filter-select').submit();
+	});
+
+	$('#newprospect, #editprospect').on('shown.bs.modal', function (e) {
+		$(".modal-body input[name=expectedClose]").datepicker({
+			// Consistent format with the HTML5 picker
+			dateFormat: 'yy-mm-dd'
+		});
 	});
 
 	$('table').each(function () {
@@ -721,7 +782,7 @@ include( INCLUDES . "c_header.php" );
 				types: [
 					'String', // Company
 					'String', // Name
-					'String', // Title
+					'String', // Opportunity
 					'String', // Phone
 					'String', // Email
 					'String', // Divisions

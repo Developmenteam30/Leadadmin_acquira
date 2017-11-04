@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="1f026af0-8c67-4a37-aabf-abcfb6ba5bdf" name="xenon" url="https://dev.qmleads.com">
+        <fileTransfer host="xenon.playnicetogether.com" port="22" privateKey="C:\Users\Ryan Smith\Dropbox (Personal)\SSH Configuration\Keys\aws-20101229.pem" rootFolder="/var/www/html/development/qmleads.com/" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

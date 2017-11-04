@@ -1221,7 +1221,7 @@ class Leads
 		return null;
 	}
 
-	public function getProspects( $status = null ) {
+	public function getProspects( $status = null, $userId = null ) {
 		$results = array();
 		$params = array();
 
@@ -1236,9 +1236,9 @@ class Leads
 			} else if( !empty( $status ) && 'archived' == $status ) {
 				$sql .= "AND p.isArchived = 1 ";
 			}
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			if( !empty( $userId ) ) {
 				$sql .= "AND p.userId = ? ";
-				$params[] = LeadsSession::getUserId();
+				$params[] = $userId;
 			}
 			$sql .= "GROUP BY p.prospectId ";
 			$sql .= "ORDER BY p.prospectId DESC";

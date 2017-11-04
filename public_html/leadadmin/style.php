@@ -305,6 +305,10 @@ div.navContainer, div.logoutContainer{
 
 div.logoContainer { width: 225px; }
 
+.progress {
+    margin-bottom: 0;
+}
+
 .crm-highlight {
 	color: #FF0000;
 	font-weight: bold;
