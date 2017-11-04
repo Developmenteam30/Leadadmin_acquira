@@ -521,8 +521,8 @@ if( isset( $_REQUEST['d'] ) ) {
 				$fields[] = array(
 					'type' => '_toggle_start',
 					'value' => 'Vendor #' . $i,
-                    'id' => 'vendor_collapse_' . $i,
-                    'collapsed' => $i > 1 ? true : false,
+					'id' => 'vendor_collapse_' . $i,
+					'collapsed' => $i > 1 ? true : false,
 				);
 
 				$fields[] = array(
@@ -991,7 +991,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 					$fields[] = array(
 						'type' => '_toggle_end',
-                    );
+					);
 				}
 
 				$fields[] = array(
@@ -1062,6 +1062,15 @@ if( isset( $_REQUEST['d'] ) ) {
 				?>
 
                 <script type="text/javascript">
+					$('#editphoneledger').on('shown.bs.collapse', function (e) {
+						<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+						$("#edit_phoneledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
+							placeholder: "Select a vendor",
+							allowClear: true
+						});
+						<?php } ?>
+                        console.log('firing');
+					});
 					$('#editphoneledger').on('shown.bs.modal', function (e) {
 						$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2]").datepicker({
 							// Consistent format with the HTML5 picker
