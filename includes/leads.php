@@ -2044,10 +2044,10 @@ class Leads
 
 		try {
 			if( !empty( $mod ) ) {
-				$query = $this->db->prepare( "SELECT idFeedOut,queued,delay FROM feedout WHERE delayDump = 0 AND cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' ) AND MOD(idFeedOut,2) = ?" );
+				$query = $this->db->prepare( "SELECT idFeedOut,queued,delay FROM feedout WHERE cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' ) AND MOD(idFeedOut,2) = ?" );
 				$query->execute( array( 'even' === $mod ? 0 : 1 ) );
 			} else {
-				$query = $this->db->prepare( "SELECT idFeedOut,queued,delay FROM feedout WHERE delayDump = 0 AND cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' )" );
+				$query = $this->db->prepare( "SELECT idFeedOut,queued,delay FROM feedout WHERE cron = '1' AND queued > 0 AND status IN( 'active', 'hidden' )" );
 				$query->execute();
 			}
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
