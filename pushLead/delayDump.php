@@ -1,12 +1,16 @@
 <?php
 
+chdir( dirname( __FILE__ ) );
+
 include( "../includes/c_config.php" );
 
 require_once( INCLUDES . 'leads.php' );
 require_once( INCLUDES . 'processLeads.php' );
 
 $leads = Leads::getInstance();
+$leads->setNetTimeouts( 3600 );
 $leads_export = new Leads( false );
+$leads_export->setNetTimeouts( 3600 );
 
 $feeds = $leads->getOutboundFeedsDelayDump();
 if( empty( $feeds ) || !is_array( $feeds ) ) {
@@ -15,26 +19,26 @@ if( empty( $feeds ) || !is_array( $feeds ) ) {
 
 foreach( $feeds as $feed ) {
 
-	print "Processing outbound feed: " . $feed->idFeedOut . PHP_EOL;
+	print date( 'c' ) .  " - Processing outbound feed: " . $feed->idFeedOut . PHP_EOL;
 
 	$populations = $leads->getPopulations( $feed->idFeedOut );
 	if( empty( $populations ) || !is_array( $populations ) ) {
-		echo "\tNo populations setup for feed" . PHP_EOL;
+		echo date( 'c' ) . " - \tNo populations setup for feed" . PHP_EOL;
 		continue;
 	}
 
 	foreach( $populations as $population ) {
 
-		print "\tProcessing population: " . $population->idAssoc . PHP_EOL;
+		print date( 'c' ) . " - \tProcessing population: " . $population->idAssoc . PHP_EOL;
 
 		if( empty( $population->enabled ) ) {
-			echo "\t\tSkipping disabled population" . PHP_EOL;
+			echo date( 'c' ) . " - \t\tSkipping disabled population" . PHP_EOL;
 			continue;
 		}
 
 		$feedParams = $leads->getInboundFeed( $population->idFeedIn );
 		if( empty( $feedParams ) ) {
-			echo "\t\tCannot find incoming feed: " . $population->idFeedIn . PHP_EOL;
+			echo date( 'c' ) . " - \t\tCannot find incoming feed: " . $population->idFeedIn . PHP_EOL;
 			continue;
 		}
 
@@ -56,19 +60,19 @@ foreach( $feeds as $feed ) {
 		$query = $leads_export->exportRecords( $sql, $params );
 
 		if( empty( $query ) ) {
-			echo "\t\tNo records found" . PHP_EOL;
+			echo date( 'c' ) . " - \t\tNo records found" . PHP_EOL;
 			continue;
 		}
 
 		$cnt = 0;
 		while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 
-			print "\t\tRecord: {$row['idRecord']} {$row['idFeedIn']}\n";
+			print date( 'c' ) . " - \t\tRecord: {$row['idRecord']} {$row['idFeedIn']}\n";
 
 			if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $row, $row['idRecord'], $feed->idFeedOut ) ) === null ) {
-				echo "\t\t\tSUCCESS\n";
+				echo date( 'c' ) . " - \t\t\tSUCCESS\n";
 			} else {
-				echo "\t{$pushError}\n";
+				echo date( 'c' ) . " - \t{$pushError}\n";
 			}
 		}
 	}

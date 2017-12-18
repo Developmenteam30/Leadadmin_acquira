@@ -157,6 +157,15 @@ class Leads
 		}
 	}
 
+	public function setNetTimeouts( $timeout = 60 ) {
+		try {
+			$this->db->query( "SET @@local.net_read_timeout = " . intval( $timeout ) );
+			$this->db->query( "SET @@local.net_write_timeout = " . intval( $timeout ) );
+		} catch( PDOException $e ) {
+			throw new Leads_PDOException( 'Unable to set net timeouts', null, $e );
+		}
+	}
+
 	public function getConfiguration( $config_key ) {
 		$value = null;
 
