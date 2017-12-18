@@ -406,6 +406,8 @@ class ProcessLeads
 				$feedOut->postUrl,
 				true
 			);
+
+			$geturl = $feedOut->postUrl . ' POST BODY: ' . http_build_query( $requestdata );
 		}
 
 		// Check if the response we got is a success for this feed.
