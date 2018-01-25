@@ -124,7 +124,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 				<li><a href="#" class="nonLink" onclick="display('errorList', {}, true);">Errors: <span id="errorCount"></span></a></li>
 <?php } ?>
-				<li><a href="logout.php">Log Out</a></li>
+				<li><a href="/leadadmin/logout.php">Log Out</a></li>
 			</ul>
 		</div><!-- .navbar-collapse -->
 	</div><!-- .container-fluid -->
