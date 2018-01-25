@@ -12,6 +12,11 @@ $leads = Leads::getInstance();
 $filterStatus = !empty( $_REQUEST['filterStatus'] ) ? $_REQUEST['filterStatus'] : null;
 $filterUserId = !empty( $_REQUEST['filterUserId'] ) ? $_REQUEST['filterUserId'] : null;
 
+$staffUsers = array(
+	'47' => 'Bobby Lindsey',
+	'3' => 'Chris Meehan',
+);
+
 require_once( INCLUDES . 'display.php' );
 
 if( isset( $_REQUEST['a'] ) ) {
@@ -298,7 +303,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			if( empty( $prospect ) ) {
 				?>
-                <p>There is no prospect that exists by that ID.</p>
+				<p>There is no prospect that exists by that ID.</p>
 				<?php
 
 				break;
@@ -417,7 +422,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			if( empty( $prospect ) ) {
 				?>
-                <p>There is no prospect that exists by that ID.</p>
+				<p>There is no prospect that exists by that ID.</p>
 				<?php
 
 				break;
@@ -472,49 +477,52 @@ include( INCLUDES . "c_header.php" );
 
 <div class="container-fluid">
 
-    <h2>Prospects</h2>
+	<h2>Prospects</h2>
 
-    <form class="pull-right" id="filter-select" method="get">
-        <select id="filterStatus" name="filterStatus">
-            <option value=""<?php if( null === $filterStatus ) {
+	<form class="pull-right" id="filter-select" method="get">
+		<select id="filterStatus" name="filterStatus">
+			<option value=""<?php if( null === $filterStatus ) {
 				print ' selected="selected"';
 			} ?>>Show all prospects
-            </option>
-            <option value="active"<?php if( 'active' === $filterStatus ) {
+			</option>
+			<option value="active"<?php if( 'active' === $filterStatus ) {
 				print ' selected="selected"';
 			} ?>>Show active prospects
-            </option>
-            <option value="archived"<?php if( 'archived' === $filterStatus ) {
+			</option>
+			<option value="archived"<?php if( 'archived' === $filterStatus ) {
 				print ' selected="selected"';
 			} ?>>Show archived prospects
-            </option>
-        </select>
-		<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-            <select id="filterUserId" name="filterUserId">
-                <option value=""<?php if( empty( $filterUserId ) ) {
-					print ' selected="selected"';
-				} ?>>Show all users
-                </option>
-				<?php
-				$users = $leads->getStaffUsers();
-				foreach( $users as $key => $val ) {
-					printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
-						htmlentities( $key ),
-						$filterUserId == $key ? ' selected="selected"' : '',
-						htmlentities( $val )
-					);
-				}
-				?>
-            </select>
-		<?php } ?>
-    </form>
+			</option>
+		</select>
+		<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			$users = $leads->getStaffUsers();
+		} else {
+			$users = $staffUsers;
+		} ?>
+		<select id="filterUserId" name="filterUserId">
+			<option value=""<?php if( empty( $filterUserId ) ) {
+				print ' selected="selected"';
+			} ?>>Show all users
+			</option>
+			<?php
+			foreach( $users as $key => $val ) {
+				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+					htmlentities( $key ),
+					$filterUserId == $key ? ' selected="selected"' : '',
+					htmlentities( $val )
+				);
+			}
+			?>
+		</select>
+	</form>
 
-    <p>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newprospect">Add a new prospect</button>
-    </p>
+	<p>
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newprospect">Add a new prospect</button>
+	</p>
 
 	<?php
-	if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+
+	if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) && !array_key_exists( $filterUserId, $staffUsers ) ) {
 		$filterUserId = LeadsSession::getUserId();
 	}
 	$prospects = $leads->getProspects( $filterStatus, $filterUserId );
@@ -525,21 +533,21 @@ include( INCLUDES . "c_header.php" );
 	} else {
 		?>
 
-        <table class="table table-bordered table-condensed table-striped" id="crm-prospects">
-            <thead>
-            <tr class="bgGray header">
-                <th>Company</th>
-                <th>Name</th>
-                <th class="hidden-xs">Opportunity</th>
-                <th class="hidden-xs">Phone</th>
-                <th class="hidden-xs">Email</th>
-                <th>Divisions</th>
-                <th>Percentage</th>
-                <th>Updated</th>
-                <th>Options</th>
-            </tr>
-            </thead>
-            <tbody>
+		<table class="table table-bordered table-condensed table-striped" id="crm-prospects">
+			<thead>
+			<tr class="bgGray header">
+				<th>Company</th>
+				<th>Name</th>
+				<th class="hidden-xs">Opportunity</th>
+				<th class="hidden-xs">Phone</th>
+				<th class="hidden-xs">Email</th>
+				<th>Divisions</th>
+				<th>Percentage</th>
+				<th>Updated</th>
+				<th>Options</th>
+			</tr>
+			</thead>
+			<tbody>
 			<?php
 			$divisions = $leads->getDivisions();
 			foreach( $prospects as $prospect ) {
@@ -561,40 +569,40 @@ include( INCLUDES . "c_header.php" );
 					$progressClass = 'progress-bar-warning';
 				}
 				?>
-                <tr>
-                    <td><?php echo htmlentities( $prospect->company ); ?></td>
-                    <td><?php echo htmlentities( $prospect->name ); ?></td>
-                    <td class="hidden-xs"><?php echo htmlentities( $prospect->opportunity ); ?></td>
-                    <td class="hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
-                    <td class="hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
-                    <td><?php echo $divisions_selected; ?></td>
-                    <td>
-                        <div class="progress">
-                            <div class="progress-bar <?php echo $progressClass; ?>" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2.5em; width: <?php echo intval( $prospect->percentage ); ?>%">
+				<tr>
+					<td><?php echo htmlentities( $prospect->company ); ?></td>
+					<td><?php echo htmlentities( $prospect->name ); ?></td>
+					<td class="hidden-xs"><?php echo htmlentities( $prospect->opportunity ); ?></td>
+					<td class="hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
+					<td class="hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
+					<td><?php echo $divisions_selected; ?></td>
+					<td>
+						<div class="progress">
+							<div class="progress-bar <?php echo $progressClass; ?>" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2.5em; width: <?php echo intval( $prospect->percentage ); ?>%">
 								<?php echo intval( $prospect->percentage ); ?>%
-                            </div>
-                        </div>
-                        <?php echo htmlentities( $prospect->expectedClose ); ?>
-                    </td>
-                    <td><?php echo !empty( $prospect->lastDate ) ? htmlentities( date( 'Y-m-d', strtotime( $prospect->lastDate ) ) ) : ''; ?></td>
-                    <td class="text-center">
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
-                            <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="caret"></span>
-                                <span class="sr-only">Toggle Dropdown</span>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a href="#" data-toggle="modal" data-target="#prospectnotes" data-prospect-id="<?php echo $prospect->prospectId; ?>">Notes</a></li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
+							</div>
+						</div>
+						<?php echo htmlentities( $prospect->expectedClose ); ?>
+					</td>
+					<td><?php echo !empty( $prospect->lastDate ) ? htmlentities( date( 'Y-m-d', strtotime( $prospect->lastDate ) ) ) : ''; ?></td>
+					<td class="text-center">
+						<div class="btn-group">
+							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
+							<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<span class="caret"></span>
+								<span class="sr-only">Toggle Dropdown</span>
+							</button>
+							<ul class="dropdown-menu">
+								<li><a href="#" data-toggle="modal" data-target="#prospectnotes" data-prospect-id="<?php echo $prospect->prospectId; ?>">Notes</a></li>
+							</ul>
+						</div>
+					</td>
+				</tr>
 				<?php
 			}
 			?>
-            </tbody>
-        </table>
+			</tbody>
+		</table>
 
 		<?php
 	}
@@ -603,53 +611,53 @@ include( INCLUDES . "c_header.php" );
 </div>
 
 <div class="modal fade" id="newprospect" tabindex="-1" role="dialog" aria-labelledby="newprospect_title">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="newprospect_title">Add a new prospect</h4>
-            </div>
-            <div class="modal-body">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="modal-save-newprospect" type="button" class="btn btn-primary">Add Prospect</button>
-            </div>
-        </div>
-    </div>
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="newprospect_title">Add a new prospect</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-newprospect" type="button" class="btn btn-primary">Add Prospect</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <div class="modal fade" id="prospectnotes" tabindex="-1" role="dialog" aria-labelledby="prospectnotes_title">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="prospectnotes_title">Prospect Notes</h4>
-            </div>
-            <div class="modal-body">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="modal-save-prospectnotes" type="button" class="btn btn-primary">Add A New Note</button>
-            </div>
-        </div>
-    </div>
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="prospectnotes_title">Prospect Notes</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-prospectnotes" type="button" class="btn btn-primary">Add A New Note</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <div class="modal fade" id="editprospect" tabindex="-1" role="dialog" aria-labelledby="editprospect_title">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="editprospect_title">Edit an prospect</h4>
-            </div>
-            <div class="modal-body"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="modal-save-editprospect" type="button" class="btn btn-primary">Save changes</button>
-            </div>
-        </div>
-    </div>
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="editprospect_title">Edit an prospect</h4>
+			</div>
+			<div class="modal-body"></div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-editprospect" type="button" class="btn btn-primary">Save changes</button>
+			</div>
+		</div>
+	</div>
 </div>
 
 <script type="text/javascript">
