@@ -68,7 +68,7 @@ function onlyalphanumsp($str){
 
 function hasinvalidchars($str){
 	$test=false;
-	$validchars="1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@#/-._&! ";
+	$validchars="1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@#/-._&!, ";
 	for ($count=0; $count<strlen($str); $count++)
 	{
 		if (strpos($validchars, $str[$count])===false)

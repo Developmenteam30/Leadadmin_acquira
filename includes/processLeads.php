@@ -672,6 +672,11 @@ class ProcessLeads
 			$data['url'] = 'http://' . $data['url'];
 		}
 
+		// Fix zip codes with a missing leading zero
+		if( !empty( $data['zip'] ) ) {
+			$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT );
+		}
+
 		foreach( $requiredFields as $requiredKey ) {
 			switch( $requiredKey ) {
 				case 'phone':

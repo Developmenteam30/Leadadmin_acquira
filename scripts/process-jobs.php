@@ -294,7 +294,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 			}
 		}
 
-		// Fix zip codes with a missing leading zeros
+		// Fix zip codes with a missing leading zero
 		if( !empty( $data['zip'] ) ) {
 			$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT );
 		}
