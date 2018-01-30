@@ -7,7 +7,7 @@ class ProcessLeads
 {
 	public static function assignValue( $key, $value, &$requestdata ) {
 
-		if( strpos( $key, '|' ) !== FALSE ) {
+		if( strpos( $key, '|' ) !== false ) {
 			// Send a subarray with the data
 			$vars = explode( '|', $key );
 			if( sizeOf( $vars ) == 3 ) {
@@ -15,7 +15,7 @@ class ProcessLeads
 			} else {
 				$requestdata[$vars[0]][$vars[1]] = $value;
 			}
-		} else if( strpos( $key, '#' ) !== FALSE ) {
+		} else if( strpos( $key, '#' ) !== false ) {
 			// Send a JSON object with the data
 			$vars = explode( '#', $key );
 
@@ -41,7 +41,7 @@ class ProcessLeads
 						break;
 					}
 				}
-			break;
+				break;
 
 			case 'reject':
 				$valueAcceptable = true;
@@ -52,18 +52,18 @@ class ProcessLeads
 						break;
 					}
 				}
-			break;
+				break;
 
 			default:
 				$valueAcceptable = true;
-			break;
+				break;
 
 		}
 
 		return $valueAcceptable;
 	}
 
-	function curlLead( $requestdata, $url, $post, $verifypeer = false, $returntransfer = true, $header = false, $httpheader = NULL, $followlocation = false ) {
+	function curlLead( $requestdata, $url, $post, $verifypeer = false, $returntransfer = true, $header = false, $httpheader = null, $followlocation = false ) {
 
 		$ch = curl_init();
 
@@ -83,7 +83,7 @@ class ProcessLeads
 		curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, $followlocation );
 		curl_setopt( $ch, CURLOPT_TIMEOUT, 65 );
 
-		$response = curl_exec ( $ch );
+		$response = curl_exec( $ch );
 		if( curl_errno( $ch ) != 0 ) {
 			$response = "CURL Error: " . curl_error( $ch );
 		}
@@ -104,14 +104,14 @@ class ProcessLeads
 			if( false === $urlExists ) {
 
 				$body = sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
-							str_replace( '.', '*', $data['url'] )
+					str_replace( '.', '*', $data['url'] )
 				);
 
 				$from = 'lmsalerts@' . SITE_URL;
 				$fromName = CONFIG_COMPANY_NAME . ' List Management System';
 				$to = MANAGER_EMAIL;
 				$subject = 'List Management - New URL Alert';
-				$header	 = "From:" . $fromName . " <" . $from . ">\r\n";
+				$header = "From:" . $fromName . " <" . $from . ">\r\n";
 				$header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
 				$header .= "Reply-To: <" . $from . ">\r\n";
 				$header .= "X-Sender: <" . $from . ">\r\n";
@@ -164,7 +164,7 @@ class ProcessLeads
 				if( !is_null( $feed->dailyLimit ) && intval( $feed->dailyLimit ) > 0 ) {
 					$cnt = $leads->getOutboundDailyCount( $feed->idFeedOut );
 					if( $cnt && $cnt > $feed->dailyLimit ) {
-						$leads->logError( 'Feed '.$feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
+						$leads->logError( 'Feed ' . $feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
 						continue;
 					}
 				}
@@ -240,27 +240,30 @@ class ProcessLeads
 			$row->stamp = $row->leadstamp;
 		}
 
-		// Check global and local suppression lists
-		if( !empty( $row->email ) && $leads->checkSuppression( $row->email, null ) ) {
+		// Check global and local suppression lists for email feeds
+		if( $feedOut->feedCategory != 'phone' ) {
 
-			$result['text'] = 'LOCAL REJECTION: Email is suppressed (global)';
-			$leads->outboundProcess( $row->idRecord, $feedOut->idFeedOut, $row->url, $result['text'] );
+			if( !empty( $row->email ) && $leads->checkSuppression( $row->email, null ) ) {
 
-			if( $debug ) {
-				print "\t" . $result['text'] . PHP_EOL;
+				$result['text'] = 'LOCAL REJECTION: Email is suppressed (global)';
+				$leads->outboundProcess( $row->idRecord, $feedOut->idFeedOut, $row->url, $result['text'] );
+
+				if( $debug ) {
+					print "\t" . $result['text'] . PHP_EOL;
+				}
+				return $result;
+
+			} else if( !empty( $row->email ) && $leads->checkSuppression( $row->email, $feedOut->idCompany ) ) {
+
+				$result['text'] = 'LOCAL REJECTION: Email is suppressed (company)';
+				$leads->outboundProcess( $row->idRecord, $feedOut->idFeedOut, $row->url, $result['text'] );
+
+				if( $debug ) {
+					print "\t" . $result['text'] . PHP_EOL;
+				}
+				return $result;
+
 			}
-			return $result;
-
-		} else if( !empty( $row->email ) && $leads->checkSuppression( $row->email, $feedOut->idCompany ) ) {
-
-			$result['text'] = 'LOCAL REJECTION: Email is suppressed (company)';
-			$leads->outboundProcess( $row->idRecord, $feedOut->idFeedOut, $row->url,$result['text'] );
-
-			if( $debug ) {
-				print "\t" . $result['text'] . PHP_EOL;
-			}
-			return $result;
-
 		}
 
 		$requestdata = array();
@@ -271,16 +274,16 @@ class ProcessLeads
 			}
 		}
 
-		for( $count = 0; $count < count( $varFields); $count++ ) { //Compile mapped fields into the post array.
+		for( $count = 0; $count < count( $varFields ); $count++ ) { //Compile mapped fields into the post array.
 			if( !empty( $varFields[$count] ) ) {
-				switch( $fieldMap[$count] ){
+				switch( $fieldMap[$count] ) {
 					case 'urlAssign':
 						$urlassignments = explode( ";", $feedOut->urlassignments );
 						$urlassignment = '';
 						foreach( $urlassignments as $instructions ) {
 							if( !empty( $instructions ) ) {
 								$fieldValuePair = explode( "=", $instructions );
-								if( stripos( $row->url, $fieldValuePair[0]) !== false ) {
+								if( stripos( $row->url, $fieldValuePair[0] ) !== false ) {
 									if( $debug ) {
 										echo "\tMatched assignment: " . $fieldValuePair[0] . "\n";
 									}
@@ -293,35 +296,35 @@ class ProcessLeads
 						break;
 
 					case 'dobUS':
-						ProcessLeads::assignValue( $varFields[$count], date("m-d-Y", strtotime( $row->dob ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y", strtotime( $row->dob ) ), $requestdata );
 						break;
 
 					case 'stampUS':
-						ProcessLeads::assignValue( $varFields[$count], date("m-d-Y H:i:s", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y H:i:s", strtotime( $row->stamp ) ), $requestdata );
 						break;
 
 					case 'stampUS_dateOnly':
-						ProcessLeads::assignValue( $varFields[$count], date("m-d-Y", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y", strtotime( $row->stamp ) ), $requestdata );
 						break;
 
 					case 'stamp_YYYYmmdd':
-						ProcessLeads::assignValue( $varFields[$count], date("Ymd", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "Ymd", strtotime( $row->stamp ) ), $requestdata );
 						break;
 
 					case 'stamp_YYYY-mm-dd':
-						ProcessLeads::assignValue( $varFields[$count], date("Y-m-d", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "Y-m-d", strtotime( $row->stamp ) ), $requestdata );
 						break;
 
 					case 'stampUSAMPM':
-						ProcessLeads::assignValue( $varFields[$count], date("m-d-Y h:i:sA", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y h:i:sA", strtotime( $row->stamp ) ), $requestdata );
 						break;
 
 					case 'stampUS+AMPM':
-						ProcessLeads::assignValue( $varFields[$count], date("m-d-Y h:i:s A", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y h:i:s A", strtotime( $row->stamp ) ), $requestdata );
 						break;
 
 					case 'stampUS_slashes':
-						ProcessLeads::assignValue( $varFields[$count], date("m/d/Y H:i:s", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m/d/Y H:i:s", strtotime( $row->stamp ) ), $requestdata );
 						break;
 
 					default:
@@ -334,7 +337,7 @@ class ProcessLeads
 
 		if( $debug ) {
 			echo "\tPosting Array: \n";
-			print_r($requestdata);
+			print_r( $requestdata );
 		}
 
 		$geturl = '';
@@ -351,7 +354,7 @@ class ProcessLeads
 			}
 			if( $debug ) {
 				echo "\tGet URL: \n";
-				echo "\t" . $geturl."\n";
+				echo "\t" . $geturl . "\n";
 				echo "\tPosting data.\n";
 			}
 			$result['text'] = ProcessLeads::curlLead(
@@ -373,7 +376,7 @@ class ProcessLeads
 			}
 			if( $debug ) {
 				echo "\tGet URL (CSV): \n";
-				echo "\t" . $geturl."\n";
+				echo "\t" . $geturl . "\n";
 				echo "\tPosting data.\n";
 			}
 			$result['text'] = ProcessLeads::curlLead( "", $geturl, false );
@@ -450,179 +453,215 @@ class ProcessLeads
 
 		$c = true;
 
-		switch($fieldType){
+		switch( $fieldType ) {
 			case 'listcode':
-				if($c && strlen($value) > 20){
-					$c = false; $result['reason'] = 'List code (listcode) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 20 ) {
+					$c = false;
+					$result['reason'] = 'List code (listcode) exceeds maximum allowed length.';
 				}
-				if($c && hasinvalidchars($value)){
-					$c = false; $result['reason'] = 'List code (listcode) contains invalid characters.';
+				if( $c && hasinvalidchars( $value ) ) {
+					$c = false;
+					$result['reason'] = 'List code (listcode) contains invalid characters.';
 				}
-			break;
+				break;
 
 			case 'url':
-				if($c && strlen($value) > 500){
-					$c = false; $result['reason'] = 'URL (url) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 500 ) {
+					$c = false;
+					$result['reason'] = 'URL (url) exceeds maximum allowed length.';
 				}
-				if($c && !filter_var( $value, FILTER_VALIDATE_URL ) ) {
-					$c = false; $result['reason'] = 'URL (url) is invalid.';
+				if( $c && !filter_var( $value, FILTER_VALIDATE_URL ) ) {
+					$c = false;
+					$result['reason'] = 'URL (url) is invalid.';
 				}
-			break;
+				break;
 
 			case 'ip':
-				if($c && strlen($value) > 45){
-					$c = false; $result['reason'] = 'IP (ip) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 45 ) {
+					$c = false;
+					$result['reason'] = 'IP (ip) exceeds maximum allowed length.';
 				}
-				if($c && !filter_var( $value, FILTER_VALIDATE_IP ) ) {
-					$c = false; $result['reason'] = 'IP (ip) is invalid.';
+				if( $c && !filter_var( $value, FILTER_VALIDATE_IP ) ) {
+					$c = false;
+					$result['reason'] = 'IP (ip) is invalid.';
 				}
-			break;
+				break;
 
 			case 'stamp':
-				if( $c && strtotime($value) === false ) {
-					$c = false; $result['reason'] = 'Action Date (stamp) is invalid.';
+				if( $c && strtotime( $value ) === false ) {
+					$c = false;
+					$result['reason'] = 'Action Date (stamp) is invalid.';
 				}
-				if($c
+				if( $c
 					&& $feedParams->rejectOldLeads
-					&& strtotime($value) < strtotime($feedParams->rejectOldLeadsMaxAge)
-				){
-					$c = false; $result['reason'] = 'Action Date (stamp) is too old, lead rejected.';
+					&& strtotime( $value ) < strtotime( $feedParams->rejectOldLeadsMaxAge )
+				) {
+					$c = false;
+					$result['reason'] = 'Action Date (stamp) is too old, lead rejected.';
 				}
-			break;
+				break;
 
 			case 'email':
-				if($c && strlen($value) > 150){
-					$c = false; $result['reason'] = 'Email (email) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 150 ) {
+					$c = false;
+					$result['reason'] = 'Email (email) exceeds maximum allowed length.';
 				}
-				if($c && !filter_var( $value, FILTER_VALIDATE_EMAIL ) ) {
-					$c = false; $result['reason'] = 'Email (email) is invalid.';
+				if( $c && !filter_var( $value, FILTER_VALIDATE_EMAIL ) ) {
+					$c = false;
+					$result['reason'] = 'Email (email) is invalid.';
 				}
-			break;
+				break;
 
 			case 'fname':
-				if($c && strlen($value) > 50){
-					$c = false; $result['reason'] = 'First Name (fname) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 50 ) {
+					$c = false;
+					$result['reason'] = 'First Name (fname) exceeds maximum allowed length.';
 				}
-				if($c && strlen($value) < 1){
-					$c = false; $result['reason'] = 'First Name (fname) does not meet required length.';
+				if( $c && strlen( $value ) < 1 ) {
+					$c = false;
+					$result['reason'] = 'First Name (fname) does not meet required length.';
 				}
-				if($c && hasinvalidchars($value)){
-					$c = false; $result['reason'] = 'First Name (fname) contains invalid characters.';
+				if( $c && hasinvalidchars( $value ) ) {
+					$c = false;
+					$result['reason'] = 'First Name (fname) contains invalid characters.';
 				}
 				break;
 
 			case 'lname':
-				if($c && strlen($value) > 50){
-					$c = false; $result['reason'] = 'Last Name (lname) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 50 ) {
+					$c = false;
+					$result['reason'] = 'Last Name (lname) exceeds maximum allowed length.';
 				}
-				if($c && strlen($value) < 1){
-					$c = false; $result['reason'] = 'Last Name (lname) does not meet required length.';
+				if( $c && strlen( $value ) < 1 ) {
+					$c = false;
+					$result['reason'] = 'Last Name (lname) does not meet required length.';
 				}
-				if($c && hasinvalidchars($value)){
-					$c = false; $result['reason'] = 'Last Name (lname) contains invalid characters.';
+				if( $c && hasinvalidchars( $value ) ) {
+					$c = false;
+					$result['reason'] = 'Last Name (lname) contains invalid characters.';
 				}
 				break;
 
 			case 'addr':
-				if($c && strlen($value) > 150){
-					$c = false; $result['reason'] = 'Address Line 1 (addr) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 150 ) {
+					$c = false;
+					$result['reason'] = 'Address Line 1 (addr) exceeds maximum allowed length.';
 				}
-				if($c && strlen($value) < 3){
-					$c = false; $result['reason'] = 'Address Line 1 (addr) does not meet required length.';
+				if( $c && strlen( $value ) < 3 ) {
+					$c = false;
+					$result['reason'] = 'Address Line 1 (addr) does not meet required length.';
 				}
-				if($c && hasinvalidchars($value)){
-					$c = false; $result['reason'] = 'Address Line 1 (addr) contains invalid characters.';
+				if( $c && hasinvalidchars( $value ) ) {
+					$c = false;
+					$result['reason'] = 'Address Line 1 (addr) contains invalid characters.';
 				}
-			break;
+				break;
 
 			case 'addr2':
-				if($c && strlen($value) > 150){
-					$c = false; $result['reason'] = 'Address Line 2 (addr2) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 150 ) {
+					$c = false;
+					$result['reason'] = 'Address Line 2 (addr2) exceeds maximum allowed length.';
 				}
-				if($c && strlen($value) < 3){
-					$c = false; $result['reason'] = 'Address Line 2 (addr2) does not meet required length.';
+				if( $c && strlen( $value ) < 3 ) {
+					$c = false;
+					$result['reason'] = 'Address Line 2 (addr2) does not meet required length.';
 				}
-				if($c && hasinvalidchars($value)){
-					$c = false; $result['reason'] = 'Address Line 2 (addr2) contains invalid characters.';
+				if( $c && hasinvalidchars( $value ) ) {
+					$c = false;
+					$result['reason'] = 'Address Line 2 (addr2) contains invalid characters.';
 				}
 				break;
 
 			case 'city':
-				if($c && strlen($value) > 75){
-					$c = false; $result['reason'] = 'City (city) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 75 ) {
+					$c = false;
+					$result['reason'] = 'City (city) exceeds maximum allowed length.';
 				}
-				if($c && strlen($value) < 3){
-					$c = false; $result['reason'] = 'City (city) does not meet required length.';
+				if( $c && strlen( $value ) < 3 ) {
+					$c = false;
+					$result['reason'] = 'City (city) does not meet required length.';
 				}
-				if($c && hasinvalidchars($value)){
-					$c = false; $result['reason'] = 'City (city) contains invalid characters.';
+				if( $c && hasinvalidchars( $value ) ) {
+					$c = false;
+					$result['reason'] = 'City (city) contains invalid characters.';
 				}
-			break;
+				break;
 
 			case 'state':
-				if($c && strlen($value) > 25){
-					$c = false; $result['reason'] = 'State (state) exceeds maximum allowed length.';
+				if( $c && strlen( $value ) > 25 ) {
+					$c = false;
+					$result['reason'] = 'State (state) exceeds maximum allowed length.';
 				}
-				if($c && strlen($value) < 2){
-					$c = false; $result['reason'] = 'State (state) does not meet required length.';
+				if( $c && strlen( $value ) < 2 ) {
+					$c = false;
+					$result['reason'] = 'State (state) does not meet required length.';
 				}
-				if($c && !onlyalphas($value)){
-					$c = false; $result['reason'] = 'State (state) contains invalid characters.';
+				if( $c && !onlyalphas( $value ) ) {
+					$c = false;
+					$result['reason'] = 'State (state) contains invalid characters.';
 				}
 				break;
 
 			case 'zip':
 				if( strlen( $value ) < 5 || strlen( $value ) > 10 ) {
-					$c = false; $result['reason'] = 'Zip (zip) is an invalid length.';
+					$c = false;
+					$result['reason'] = 'Zip (zip) is an invalid length.';
 				}
-				if( $c && hasinvalidzipchars( $value ) ){
-					$c = false; $result['reason'] = 'Zip (zip) contains invalid characters.';
+				if( $c && hasinvalidzipchars( $value ) ) {
+					$c = false;
+					$result['reason'] = 'Zip (zip) contains invalid characters.';
 				}
-			break;
+				break;
 
 			case 'dob':
-				if(	 $c
+				if( $c
 					&& (
-						strtotime($value) == -1
-						|| strtotime($value) == false
+						strtotime( $value ) == -1
+						|| strtotime( $value ) == false
 					)
-				){
-					$c = false; $result['reason'] = 'Date of Birth (dob) is invalid.';
+				) {
+					$c = false;
+					$result['reason'] = 'Date of Birth (dob) is invalid.';
 				}
-			break;
+				break;
 
 			case 'gender':
-				$allowedGenders = array('m','f','male','female','na','not applicable');
+				$allowedGenders = array( 'm', 'f', 'male', 'female', 'na', 'not applicable' );
 				if( $c && (
-						!in_array(strtolower($value), $allowedGenders)
-				)){
-					$c = false; $result['reason'] = 'Gender is an invalid value.';
+					!in_array( strtolower( $value ), $allowedGenders )
+					) ) {
+					$c = false;
+					$result['reason'] = 'Gender is an invalid value.';
 				}
-			break;
+				break;
 
 			case 'landline':
-				if($c && strlen($value) != 10){
-					$c = false; $result['reason'] = 'Default Phone (landline) is an invalid length.';
+				if( $c && strlen( $value ) != 10 ) {
+					$c = false;
+					$result['reason'] = 'Default Phone (landline) is an invalid length.';
 				}
-				if($c && !onlynos($value)){
-					$c = false; $result['reason'] = 'Default Phone (landline) contains invalid characters.';
+				if( $c && !onlynos( $value ) ) {
+					$c = false;
+					$result['reason'] = 'Default Phone (landline) contains invalid characters.';
 				}
-			break;
+				break;
 
 			case 'cellphone':
-				if($c && strlen($value) != 10){
-					$c = false; $result['reason'] = 'Alternate Phone (cellphone) is an invalid length.';
+				if( $c && strlen( $value ) != 10 ) {
+					$c = false;
+					$result['reason'] = 'Alternate Phone (cellphone) is an invalid length.';
 				}
-				if($c && !onlynos($value)){
-					$c = false; $result['reason'] = 'Alternate Phone (cellphone) contains invalid characters.';
+				if( $c && !onlynos( $value ) ) {
+					$c = false;
+					$result['reason'] = 'Alternate Phone (cellphone) contains invalid characters.';
 				}
-			break;
+				break;
 
 		}
 
 		if( $c ) {
 			$result['valid'] = true;
-			$result['reason'] = ucfirst( $fieldType ) .' passed validation.';
+			$result['reason'] = ucfirst( $fieldType ) . ' passed validation.';
 		}
 
 		return $result;
@@ -684,19 +723,19 @@ class ProcessLeads
 						$result['valid'] = false;
 						$result['errors'][] = 'A phone number is required, either landline or cellphone. They cannot both be empty.';
 					}
-				break;
+					break;
 
 				default:
 					if( empty( $data[$requiredKey] ) ) {
 						$result['valid'] = false;
 						$result['errors'][] = ucfirst( $requiredKey ) . ' is a required field, and may not be empty.';
 					}
-				break;
+					break;
 			}
 		}
 
 		foreach( $allowedFields as $allowedField ) {
-			if(	!empty( $data[$allowedField] ) ) {
+			if( !empty( $data[$allowedField] ) ) {
 				$validateResult = ProcessLeads::validateField( $allowedField, $data[$allowedField], $feedParams );
 				if( !$validateResult['valid'] ) {
 					$result['valid'] = false;
@@ -705,7 +744,7 @@ class ProcessLeads
 			}
 		}
 
-		if( in_array('url', $allowedFields ) ) { //URL is expected so trim it and store in the database.
+		if( in_array( 'url', $allowedFields ) ) { //URL is expected so trim it and store in the database.
 			if( empty( $data['url'] ) ) {
 				$data['url'] = '';
 			}
@@ -725,7 +764,8 @@ class ProcessLeads
 			}
 		}
 
-		if( !empty( $data['email'] ) ) {
+		// Check global suppression list for email feeds
+		if( !empty( $data['email'] ) && $feedParams->feedCategory != 'phone' ) {
 			$exists = $leads->checkSuppression( $data['email'], null );
 			if( $exists === true ) {
 				$result['valid'] = false;
@@ -746,7 +786,7 @@ class ProcessLeads
 			if( $dupeCount === null ) {
 				$result['valid'] = false;
 				$result['errors'][] = 'Database failure - could not check duplicate email.';
-			} elseif( $dupeCount === true ) {
+			} else if( $dupeCount === true ) {
 				$result['valid'] = false;
 				$result['errors'][] = 'Duplicate email.';
 			}
@@ -757,7 +797,7 @@ class ProcessLeads
 			if( $dupeCount === null ) {
 				$result['valid'] = false;
 				$result['errors'][] = 'Database failure - could not check duplicate landline.';
-			} elseif( $dupeCount === true ) {
+			} else if( $dupeCount === true ) {
 				$result['valid'] = false;
 				$result['errors'][] = 'Duplicate landline phone.';
 			}
@@ -768,7 +808,7 @@ class ProcessLeads
 			if( $dupeCount === null ) {
 				$result['valid'] = false;
 				$result['errors'][] = 'Database failure - could not check duplicate cellphone.';
-			} elseif( $dupeCount === true ) {
+			} else if( $dupeCount === true ) {
 				$result['valid'] = false;
 				$result['errors'][] = 'Duplicate cellphone.';
 			}
@@ -779,18 +819,18 @@ class ProcessLeads
 				require_once( INCLUDES . 'siftLogic.php' );
 				$sl = new SiftLogic;
 				if( $sl->check(
-					$data['email'],
-					!empty( $data['ip'] ) ? $data['ip'] : null,
-					!empty( $data['fname'] ) ? $data['fname'] : null,
-					!empty( $data['lname'] ) ? $data['lname'] : null,
-					!empty( $data['addr'] ) ? $data['addr'] : null,
-					!empty( $data['addr2'] ) ? $data['addr2'] : null,
-					!empty( $data['city'] ) ? $data['city'] : null,
-					!empty( $data['state'] ) ? $data['state'] : null,
-					!empty( $data['zip'] ) ? $data['zip'] : null,
-					!empty( $data['country'] ) ? $data['country'] : null,
-					false
-				) === false ) {
+						$data['email'],
+						!empty( $data['ip'] ) ? $data['ip'] : null,
+						!empty( $data['fname'] ) ? $data['fname'] : null,
+						!empty( $data['lname'] ) ? $data['lname'] : null,
+						!empty( $data['addr'] ) ? $data['addr'] : null,
+						!empty( $data['addr2'] ) ? $data['addr2'] : null,
+						!empty( $data['city'] ) ? $data['city'] : null,
+						!empty( $data['state'] ) ? $data['state'] : null,
+						!empty( $data['zip'] ) ? $data['zip'] : null,
+						!empty( $data['country'] ) ? $data['country'] : null,
+						false
+					) === false ) {
 					$result['valid'] = false;
 					$result['errors'][] = 'Email address was rejected by our third-party filters [SL]';
 				}
