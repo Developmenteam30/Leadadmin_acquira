@@ -481,13 +481,14 @@ class ProcessLeads
 					$c = false;
 					$result['reason'] = 'IP (ip) exceeds maximum allowed length.';
 				}
-				if( $c && !filter_var( $value, FILTER_VALIDATE_IP ) ) {
+				if( $c && !filter_var( $value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) && !filter_var( $value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
 					$c = false;
 					$result['reason'] = 'IP (ip) is invalid.';
 				}
 				break;
 
-			case 'stamp':
+			case
+			'stamp':
 				if( $c && strtotime( $value ) === false ) {
 					$c = false;
 					$result['reason'] = 'Action Date (stamp) is invalid.';
