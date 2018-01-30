@@ -2290,6 +2290,7 @@ class Leads
 
 		if( $processed !== 1 ) {
 			try {
+				// TODO: Use MySQL triggers instead of this method.
 				$query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
 				$query->execute( array( $idFeedOut ) );
 			} catch( PDOException $e ) {
@@ -4114,13 +4115,9 @@ class Leads
 	public function getInboundDailyCount( $idFeedIn ) {
 		$cnt = null;
 
-		// Timestamps in data_inbound may need to be converted to a different timezone
-		$utcDate = new DateTime( 'now', new DateTimeZone( LOCAL_TIMEZONE ) );
-		$utcDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
-
 		try {
 			$query = $this->db->prepare( "SELECT SUM(accepted) FROM stats_inbound WHERE idFeedIn = ? AND stamp = ?" );
-			$query->execute( array( $idFeedIn, $utcDate->format( 'Y-m-d' ) ) );
+			$query->execute( array( $idFeedIn, date( 'Y-m-d' ) ) );
 			$cnt = $query->fetchColumn();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to check inbound daily count: ' . $e->getMessage() );
