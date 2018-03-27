@@ -725,20 +725,16 @@ class Leads
 		if( !empty( $onlyMonths ) ) {
 			$sql = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
 		} else {
-			$sql = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
+			$sql = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,c2.name AS vendorCompanyName ";
 		}
 		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
+		$sql .= "LEFT JOIN companies c2 ON l.vendorCompanyId = c2.idCompany ";
 		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
 		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
 		$sql .= "WHERE l.type = ? ";
 		$params[] = $type;
-		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? )";
-			$params[] = LeadsSession::getUserId();
-			$params[] = LeadsSession::getUserId();
-		}
 		if( !empty( $month ) ) {
 			if( strlen( $month ) == 4 ) {
 				$sql .= "AND LEFT(l.ledgerMonth,4) = ? ";
@@ -813,11 +809,6 @@ class Leads
 		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
 		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "WHERE 1=1 ";
-		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? ) ";
-			$params[] = LeadsSession::getUserId();
-			$params[] = LeadsSession::getUserId();
-		}
 		if( !empty( $month ) ) {
 			if( strlen( $month ) == 4 ) {
 				$sql .= "AND LEFT(l.ledgerMonth,4) = ? ";
@@ -864,11 +855,6 @@ class Leads
 		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
 		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "WHERE 1=1 ";
-		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
-			$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? )";
-			$params[] = LeadsSession::getUserId();
-			$params[] = LeadsSession::getUserId();
-		}
 		if( !empty( $month ) ) {
 			if( strlen( $month ) == 4 ) {
 				$sql .= "AND LEFT(l.ledgerMonth,4) = ? ";

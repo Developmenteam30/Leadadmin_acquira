@@ -1174,7 +1174,7 @@ include( INCLUDES . "c_header.php" );
 				);
 				$years[$year] = true;
 			}
-			if( empty( $QUARTERS[$quarter] ) ) {
+			if( empty( $quarters[$quarter] ) ) {
 				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
 					$quarter,
 					$monthIn == $quarter ? ' selected="selected"' : '',
@@ -1252,10 +1252,19 @@ include( INCLUDES . "c_header.php" );
                     </tr>
                     </thead>
 					<?php
-					$paymentTotal = 0;
+					$invoiceAmount = $loInvoiceAmount = $commissionTotal = $paymentTotal = $loPaymentTotal = 0;
 					foreach( $entries as $entry ) {
 						if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+							$invoiceAmount += $entry->invoiceAmount;
+							$loInvoiceAmount += $entry->loInvoiceAmount1;
+							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) {
+								$commissionTotal += $entry->commissionAmount1;
+							}
+							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) {
+								$commissionTotal += $entry->commissionAmount2;
+							}
 							$paymentTotal += $entry->paymentAmount;
+							$loPaymentTotal += $entry->loPaymentAmount1;
 
 							$ledger = new DateTime( $entry->ledgerMonth );
 							?>
@@ -1271,7 +1280,7 @@ include( INCLUDES . "c_header.php" );
                                 <td><?php echo htmlentities( $entry->paymentDate ); ?></td>
                                 <td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
                                 <td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? htmlentities( $entry->fullName1 ) : '&nbsp;'; ?></td>
+                                <td><?php echo htmlentities( $entry->fullName1 ); ?></td>
                                 <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?></td>
 								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
                                     <td class="text-center" rowspan="2" style="vertical-align: middle;">
@@ -1297,7 +1306,7 @@ include( INCLUDES . "c_header.php" );
                                 <td><?php echo htmlentities( $entry->loPaymentDate1 ); ?></td>
                                 <td><?php echo htmlentities( $entry->loPaymentMethod1 ); ?></td>
                                 <td>$<?php echo number_format( $entry->loPaymentAmount1, 2 ); ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? htmlentities( $entry->fullName2 ) : '&nbsp;'; ?></td>
+                                <td><?php htmlentities( $entry->fullName2 ); ?></td>
                                 <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?></td>
                             </tr>
                             </tbody>
@@ -1305,6 +1314,40 @@ include( INCLUDES . "c_header.php" );
 						}
 					}
 					?>
+	                <tfoot>
+	                <tr>
+		                <td class="text-center" rowspan="2">Totals</td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>$<?php echo number_format( $invoiceAmount, 2 ); ?></td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+		                <td>&nbsp;</td>
+		                <td rowspan="2">$<?php echo number_format( $commissionTotal, 2 ); ?></td>
+		                <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+			                <td>&nbsp;</td>
+		                <?php } ?>
+	                </tr>
+	                <tr>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>$<?php echo number_format( $loInvoiceAmount, 2 ); ?></td>
+		                <td>&nbsp;</td>
+		                <td>&nbsp;</td>
+		                <td>$<?php echo number_format( $loPaymentTotal, 2 ); ?></td>
+		                <td>&nbsp;</td>
+		                <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+			                <td>&nbsp;</td>
+		                <?php } ?>
+	                </tr>
+	                </tfoot>
                 </table>
 				<?php
 			}

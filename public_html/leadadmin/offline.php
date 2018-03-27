@@ -634,7 +634,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			?>
 
-            <script type="text/javascript">
+			<script type="text/javascript">
 				$("#new_offlineledger input[name=orderDate], #new_offlineledger input[name=mailDate], #new_offlineledger input[name=paymentDate], #new_offlineledger input[name=loPaymentDate], #new_offlineledger input[name=commissionDate1], #new_offlineledger input[name=commissionDate2]").datepicker({
 					// Consistent format with the HTML5 picker
 					dateFormat: 'yy-mm-dd'
@@ -659,7 +659,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					placeholder: "Select a salesperson",
 					allowClear: true
 				});
-            </script>
+			</script>
 
 			<?php
 
@@ -1163,7 +1163,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				Display::displayForm( 'edit_offlineledger', $fields );
 				?>
 
-                <script type="text/javascript">
+				<script type="text/javascript">
 					$('#editofflineledger').on('shown.bs.modal', function (e) {
 						$("#edit_offlineledger input[name=orderDate], #edit_offlineledger input[name=mailDate], #edit_offlineledger input[name=paymentDate], #edit_offlineledger input[name=loPaymentDate], #edit_offlineledger input[name=commissionDate1], #edit_offlineledger input[name=commissionDate2]").datepicker({
 							// Consistent format with the HTML5 picker
@@ -1190,7 +1190,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 					});
-                </script>
+				</script>
 
 				<?php
 			}
@@ -1208,14 +1208,14 @@ include( INCLUDES . "c_header.php" );
 
 <div class="container-fluid">
 
-    <h2>Offline Ledger</h2>
+	<h2>Offline Ledger</h2>
 
 	<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-        <p>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new
-                entry
-            </button>
-        </p>
+		<p>
+			<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new
+				entry
+			</button>
+		</p>
 	<?php } ?>
 
 	<?php
@@ -1276,7 +1276,6 @@ include( INCLUDES . "c_header.php" );
 		print '</select>' . PHP_EOL;
 		print '</div>' . PHP_EOL;
 		print '</form>' . PHP_EOL;
-
 	}
 
 	if( empty( $monthSelected ) ) {
@@ -1308,107 +1307,152 @@ include( INCLUDES . "c_header.php" );
 			foreach( $months as $month => $val ) {
 
 				?>
-                <h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
-                <table class="table table-bordered table-condensed table-striped-double ledger-sort"
-                       id="offlineledger_<?php echo $month; ?>">
-                    <thead>
-                    <tr class="header">
-                        <th rowspan="2" style="vertical-align: middle;">Entry #</th>
-                        <th style="width:250px;">Client Name</th>
-                        <th style="width:300px;">Mailer Name</th>
-                        <th>Client PO</th>
-                        <th>Type</th>
-                        <th>Salesperson 1</th>
-                        <th>Salesperson 2</th>
-                        <th>Order Date</th>
-                        <th>QM Inv #</th>
-                        <th>Amount</th>
-                        <th>Pmt Date</th>
-                        <th>Pmt Mthd</th>
-                        <th>Pmt Amt</th>
+				<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
+				<table class="table table-bordered table-condensed table-striped-double ledger-sort"
+				       id="offlineledger_<?php echo $month; ?>">
+					<thead>
+					<tr class="header">
+						<th rowspan="2" style="vertical-align: middle;">Entry #</th>
+						<th style="width:250px;">Client Name</th>
+						<th style="width:300px;">Mailer Name</th>
+						<th>Client PO</th>
+						<th>Type</th>
+						<th>Salesperson 1</th>
+						<th>Salesperson 2</th>
+						<th>Order Date</th>
+						<th>QM Inv #</th>
+						<th>Amount</th>
+						<th>Pmt Date</th>
+						<th>Pmt Mthd</th>
+						<th>Pmt Amt</th>
 						<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-                            <th rowspan="2" style="vertical-align: middle;">Options</th>
+							<th rowspan="2" style="vertical-align: middle;">Options</th>
 						<?php } ?>
-                    </tr>
-                    <tr class="header">
-                        <th>Vendor Name</th>
-                        <th>List Name</th>
-                        <th>QM PO #</th>
-                        <th>Qty</th>
-                        <th>Commissions 1</th>
-                        <th>Commissions 2</th>
-                        <th>Mail Date</th>
-                        <th>LO Inv #</th>
-                        <th>LO Inv Amt</th>
-                        <th>LO Pmt Date</th>
-                        <th>LO Pmt Mthd</th>
-                        <th>LO Pmt Amt</th>
-                    </tr>
-                    </thead>
+					</tr>
+					<tr class="header">
+						<th>Vendor Name</th>
+						<th>List Name</th>
+						<th>QM PO #</th>
+						<th>Qty</th>
+						<th>Commissions 1</th>
+						<th>Commissions 2</th>
+						<th>Mail Date</th>
+						<th>LO Inv #</th>
+						<th>LO Inv Amt</th>
+						<th>LO Pmt Date</th>
+						<th>LO Pmt Mthd</th>
+						<th>LO Pmt Amt</th>
+					</tr>
+					</thead>
 					<?php
-					$paymentTotal = 0;
+					$invoiceAmount = $loInvoiceAmount = $commissionTotal = $paymentTotal = $loPaymentTotal = 0;
 					foreach( $entries as $entry ) {
 						if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+							$invoiceAmount += $entry->invoiceAmount;
+							$loInvoiceAmount += $entry->loInvoiceAmount;
+							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) {
+								$commissionTotal += $entry->commissionAmount1;
+							}
+							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) {
+								$commissionTotal += $entry->commissionAmount2;
+							}
 							$paymentTotal += $entry->paymentAmount;
+							$loPaymentTotal += $entry->loPaymentAmount;
 
 							$ledger = new DateTime( $entry->ledgerMonth );
 							?>
-                            <tbody>
-                            <tr>
-                                <td rowspan="2" class="text-center"
-                                    style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
-                                <td><?php echo htmlentities( $entry->clientCompanyName ); ?></td>
-                                <td><?php echo htmlentities( $entry->mailerName ); ?></td>
-                                <td><?php echo htmlentities( $entry->clientPoNum ); ?></td>
-                                <td><?php echo isset( $itemTypes[$entry->orderType] ) ? $itemTypes[$entry->orderType] : ''; ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? htmlentities( $entry->fullName1 ) : '&nbsp;'; ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? htmlentities( $entry->fullName2 ) : '&nbsp;'; ?></td>
-                                <td><?php echo htmlentities( $entry->orderDate ); ?></td>
-                                <td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-                                <td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
-                                <td><?php echo htmlentities( $entry->paymentDate ); ?></td>
-                                <td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-                                <td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+							<tbody>
+							<tr>
+								<td rowspan="2" class="text-center"
+								    style="vertical-align:middle;"><?php echo htmlentities( $entry->entryId ); ?></td>
+								<td><?php echo htmlentities( $entry->clientCompanyName ); ?></td>
+								<td><?php echo htmlentities( $entry->mailerName ); ?></td>
+								<td><?php echo htmlentities( $entry->clientPoNum ); ?></td>
+								<td><?php echo isset( $itemTypes[$entry->orderType] ) ? $itemTypes[$entry->orderType] : ''; ?></td>
+								<td><?php echo htmlentities( $entry->fullName1 ); ?></td>
+								<td><?php echo htmlentities( $entry->fullName2 ); ?></td>
+								<td><?php echo htmlentities( $entry->orderDate ); ?></td>
+								<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+								<td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
+								<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
+								<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
+								<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-                                    <td class="text-center" rowspan="2" style="vertical-align: middle;">
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
-                                                    data-target="#editofflineledger"
-                                                    data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit
-                                            </button>
-                                            <button type="button" class="btn btn-primary btn-xs dropdown-toggle"
-                                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                <span class="caret"></span>
-                                                <span class="sr-only">Toggle Dropdown</span>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><a href="#" data-toggle="modal" data-target="#deleteofflineledger"
-                                                       data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
+									<td class="text-center" rowspan="2" style="vertical-align: middle;">
+										<div class="btn-group">
+											<button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+											        data-target="#editofflineledger"
+											        data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit
+											</button>
+											<button type="button" class="btn btn-primary btn-xs dropdown-toggle"
+											        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												<span class="caret"></span>
+												<span class="sr-only">Toggle Dropdown</span>
+											</button>
+											<ul class="dropdown-menu">
+												<li><a href="#" data-toggle="modal" data-target="#deleteofflineledger"
+												       data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
+											</ul>
+										</div>
+									</td>
 								<?php } ?>
-                            </tr>
-                            <tr>
-                                <td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>
-                                <td><?php echo htmlentities( $entry->listName ); ?></td>
-                                <td><?php echo htmlentities( $entry->ourPoNum ); ?></td>
-                                <td><?php echo number_format( $entry->qty, 0 ); ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?></td>
-                                <td><?php echo htmlentities( $entry->mailDate ); ?></td>
-                                <td><?php echo htmlentities( $entry->loInvoiceNum ); ?></td>
-                                <td>$<?php echo number_format( $entry->loInvoiceAmount, 2 ); ?></td>
-                                <td><?php echo htmlentities( $entry->loPaymentDate ); ?></td>
-                                <td><?php echo htmlentities( $entry->loPaymentMethod ); ?></td>
-                                <td>$<?php echo number_format( $entry->loPaymentAmount, 2 ); ?></td>
-                            </tr>
-                            </tbody>
+							</tr>
+							<tr>
+								<td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>
+								<td><?php echo htmlentities( $entry->listName ); ?></td>
+								<td><?php echo htmlentities( $entry->ourPoNum ); ?></td>
+								<td><?php echo number_format( $entry->qty, 0 ); ?></td>
+								<td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?></td>
+								<td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?></td>
+								<td><?php echo htmlentities( $entry->mailDate ); ?></td>
+								<td><?php echo htmlentities( $entry->loInvoiceNum ); ?></td>
+								<td>$<?php echo number_format( $entry->loInvoiceAmount, 2 ); ?></td>
+								<td><?php echo htmlentities( $entry->loPaymentDate ); ?></td>
+								<td><?php echo htmlentities( $entry->loPaymentMethod ); ?></td>
+								<td>$<?php echo number_format( $entry->loPaymentAmount, 2 ); ?></td>
+							</tr>
+							</tbody>
 							<?php
 						}
 					}
 					?>
-                </table>
+					<tfoot>
+					<tr>
+						<td class="text-center" rowspan="2">Totals</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>$<?php echo number_format( $invoiceAmount, 2 ); ?></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+						<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+							<td>&nbsp;</td>
+						<?php } ?>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td colspan="2">$<?php echo number_format( $commissionTotal, 2 ); ?></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>$<?php echo number_format( $loInvoiceAmount, 2 ); ?></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>$<?php echo number_format( $loPaymentTotal, 2 ); ?></td>
+						<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+							<td>&nbsp;</td>
+						<?php } ?>
+					</tr>
+					</tfoot>
+				</table>
 				<?php
 			}
 		}

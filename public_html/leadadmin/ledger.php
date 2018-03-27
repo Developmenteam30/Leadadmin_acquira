@@ -158,6 +158,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'type' => $type,
 					'userId1' => empty( $_REQUEST['userId1'] ) ? null : $_REQUEST['userId1'],
 					'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
+					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId'] ) ? null : $_REQUEST['vendorCompanyId'],
 				) );
 
 				if( null === $ledgerId ) {
@@ -333,6 +334,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
 					'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
 					'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
+					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId'] ) ? null : $_REQUEST['vendorCompanyId'],
 				) );
 
 				if( null === $ledgerId ) {
@@ -432,6 +434,13 @@ if( isset( $_REQUEST['d'] ) ) {
 					'choices' => $ledgerMonths,
 				),
 				array(
+					'id' => 'vendorCompanyId',
+					'label' => 'Vendor',
+					'type' => 'select',
+					'placeholder' => 'Select a vendor',
+					'choices' => array(),
+				),
+				array(
 					'id' => 'paymentDate',
 					'label' => 'Date Paid',
 					'type' => 'text',
@@ -499,12 +508,13 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			?>
 
-            <script type="text/javascript">
+			<script type="text/javascript">
 				$('#new_ledger input[name=paymentDate], #new_ledger input[name=commissionDate1], #new_ledger input[name=commissionDate2]').datepicker({
 					// Consistent format with the HTML5 picker
 					dateFormat: 'yy-mm-dd'
 				});
 
+				//$('#new_ledger').on('shown.bs.modal', function (e) {
 				$("#new_ledger select[name='divisionId']").select2({
 					placeholder: "Select a division",
 					allowClear: true
@@ -517,6 +527,11 @@ if( isset( $_REQUEST['d'] ) ) {
 
 				$("#new_ledger select[name='verticalId']").select2({
 					placeholder: "Select a vertical",
+					allowClear: true
+				});
+
+				$("#new_ledger select[name='vendorCompanyId']").select2({
+					placeholder: "Select a vendor",
 					allowClear: true
 				});
 
@@ -552,6 +567,19 @@ if( isset( $_REQUEST['d'] ) ) {
 									allowClear: true
 								});
 							}
+
+							var vendorCompanyId = $("#new_ledger select[name='vendorCompanyId']")
+							if (vendorCompanyId) {
+								vendorCompanyId.empty();
+								vendorCompanyId.append('<option></option>');
+								$.each(data, function (i, obj) {
+									vendorCompanyId.append('<option value="' + obj.idCompany + '">' + obj.name + '</option>');
+								});
+								vendorCompanyId.select2({
+									placeholder: "Select a vendor",
+									allowClear: true
+								});
+							}
 						}
 					}); //close $.ajax()
 
@@ -578,8 +606,10 @@ if( isset( $_REQUEST['d'] ) ) {
 							}
 						}
 					}); //close $.ajax()
+
 				});
-            </script>
+				//});
+			</script>
 
 			<?php
 
@@ -653,6 +683,15 @@ if( isset( $_REQUEST['d'] ) ) {
 						'required' => true,
 						'choices' => $ledgerMonths,
 						'value' => $ledgerMonth->format( 'Ym' ),
+						'readonly' => true,
+					),
+					array(
+						'id' => 'vendorCompanyId',
+						'label' => 'Vendor',
+						'type' => 'select',
+						'placeholder' => 'Select a vendor',
+						'choices' => $leads->getDivisionCompanies( $entry->divisionId, $entry->vendorCompanyId ),
+						'value' => $entry->vendorCompanyId,
 						'readonly' => true,
 					),
 					array(
@@ -805,6 +844,14 @@ if( isset( $_REQUEST['d'] ) ) {
 						'value' => $ledgerMonth->format( 'Ym' ),
 					),
 					array(
+						'id' => 'vendorCompanyId',
+						'label' => 'Vendor',
+						'type' => 'select',
+						'placeholder' => 'Select a vendor',
+						'choices' => $leads->getDivisionCompanies( $entry->divisionId, $entry->vendorCompanyId ),
+						'value' => $entry->vendorCompanyId,
+					),
+					array(
 						'id' => 'paymentDate',
 						'label' => 'Date Paid',
 						'type' => 'text',
@@ -879,7 +926,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				Display::displayForm( 'edit_ledger', $fields );
 				?>
 
-                <script type="text/javascript">
+				<script type="text/javascript">
 					$('#editledger').on('shown.bs.modal', function (e) {
 						console.log('test');
 						$('#editledger input[name=paymentDate], #editledger input[name=commissionDate1], #editledger input[name=commissionDate2]').datepicker({
@@ -902,6 +949,11 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 
+						$("#editledger select[name='vendorCompanyId']").select2({
+							placeholder: "Select a vendor",
+							allowClear: true
+						});
+
 						$("#editledger select[name='ledgerMonth']").select2({
 							placeholder: "Select the ledger month",
 							allowClear: true
@@ -912,7 +964,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 					});
-                </script>
+				</script>
 
 				<?php
 			}
@@ -930,12 +982,12 @@ include( INCLUDES . "c_header.php" );
 
 <div class="container-fluid">
 
-    <h2><?php echo( $type == 0 ? 'Publisher' : 'Advertiser' ); ?></h2>
+	<h2><?php echo( $type == 0 ? 'Publisher' : 'Advertiser' ); ?></h2>
 
 	<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-        <p>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button>
-        </p>
+		<p>
+			<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button>
+		</p>
 	<?php } ?>
 
 	<?php
@@ -1022,26 +1074,27 @@ include( INCLUDES . "c_header.php" );
 
 			foreach( $months as $month => $val ) {
 				?>
-                <h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
-                <table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $month; ?>">
-                    <thead>
-                    <tr class="header">
-                        <th>Entry #</th>
-                        <th>Company Name</th>
-                        <th>Vertical</th>
-                        <th>Invoice Amount</th>
-                        <th>Invoice #</th>
-                        <th>Date Paid</th>
-                        <th>Payment Amount</th>
-                        <th>Method</th>
-                        <th>Salesperson</th>
-                        <th>Commissions</th>
+				<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
+				<table class="table table-bordered table-condensed table-striped ledger-sort" id="ledger_<?php echo $month; ?>">
+					<thead>
+					<tr class="header">
+						<th>Entry #</th>
+						<th>Company Name</th>
+						<th>Vertical</th>
+						<th>Invoice Amount</th>
+						<th>Invoice #</th>
+						<th>Date Paid</th>
+						<th>Vendor</th>
+						<th>Payment Amount</th>
+						<th>Method</th>
+						<th>Salesperson</th>
+						<th>Commissions</th>
 						<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-                            <th>Options</th>
+							<th>Options</th>
 						<?php } ?>
-                    </tr>
-                    </thead>
-                    <tbody>
+					</tr>
+					</thead>
+					<tbody>
 					<?php
 					$invoiceTotal = $paymentTotal = $commissionTotal = 0;
 					foreach( $entries as $entry ) {
@@ -1057,59 +1110,60 @@ include( INCLUDES . "c_header.php" );
 
 							$ledger = new DateTime( $entry->ledgerMonth );
 							?>
-                            <tr>
-                                <td><?php echo htmlentities( $entry->entryId ); ?></td>
-                                <td><?php echo htmlentities( $entry->companyName ); ?></td>
-                                <td><?php echo htmlentities( $entry->verticalName ); ?></td>
-                                <td data-tf-sortKey="<?php echo number_format( $entry->invoiceAmount, 2 ); ?>">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
-                                <td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-                                <td><?php echo $entry->paymentDate; ?></td>
-                                <td data-tf-sortKey="<?php echo number_format( $entry->paymentAmount, 2 ); ?>">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-                                <td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? htmlentities( $entry->fullName1 ) : '&nbsp;'; ?><br/><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? htmlentities( $entry->fullName2 ) : '&nbsp;'; ?></td>
-                                <td data-tf-sortKey="<?php echo number_format( $entry->commissionAmount1, 2 ); ?>"><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?><?php if( ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) && !empty( $entry->commissionDate1 ) && !empty( $entry->commissionAmount1 ) ) {
+							<tr>
+								<td><?php echo htmlentities( $entry->entryId ); ?></td>
+								<td><?php echo htmlentities( $entry->companyName ); ?></td>
+								<td><?php echo htmlentities( $entry->verticalName ); ?></td>
+								<td data-tf-sortKey="<?php echo number_format( $entry->invoiceAmount, 2 ); ?>">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
+								<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+								<td><?php echo $entry->paymentDate; ?></td>
+								<td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>
+								<td data-tf-sortKey="<?php echo number_format( $entry->paymentAmount, 2 ); ?>">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+								<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
+								<td><?php echo htmlentities( $entry->fullName1 ); ?><br/><?php echo htmlentities( $entry->fullName2 ); ?></td>
+								<td data-tf-sortKey="<?php echo number_format( $entry->commissionAmount1, 2 ); ?>"><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?><?php if( ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) && !empty( $entry->commissionDate1 ) && !empty( $entry->commissionAmount1 ) ) {
 										echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
 									} ?><br/><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?><?php if( ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) && !empty( $entry->commissionDate2 ) && !empty( $entry->commissionAmount2 ) ) {
 										echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
 									} ?></td>
 								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-                                    <td class="text-center">
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
-                                            <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                <span class="caret"></span>
-                                                <span class="sr-only">Toggle Dropdown</span>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li><a href="#" data-toggle="modal" data-target="#deleteledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
+									<td class="text-center">
+										<div class="btn-group">
+											<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+											<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+												<span class="caret"></span>
+												<span class="sr-only">Toggle Dropdown</span>
+											</button>
+											<ul class="dropdown-menu">
+												<li><a href="#" data-toggle="modal" data-target="#deleteledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
+											</ul>
+										</div>
+									</td>
 								<?php } ?>
-                            </tr>
+							</tr>
 							<?php
 						}
 					}
 					?>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <td>Monthly Totals</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>$<?php echo number_format( $invoiceTotal, 2 ); ?></td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
+					</tbody>
+					<tfoot>
+					<tr>
+						<td>Monthly Totals</td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>$<?php echo number_format( $invoiceTotal, 2 ); ?></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+						<td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
 						<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-                            <td>&nbsp;</td>
+							<td>&nbsp;</td>
 						<?php } ?>
-                    </tr>
-                    </tfoot>
-                </table>
+					</tr>
+					</tfoot>
+				</table>
 				<?php
 			}
 		}
