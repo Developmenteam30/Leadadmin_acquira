@@ -15,6 +15,7 @@ $filterUserId = !empty( $_REQUEST['filterUserId'] ) ? $_REQUEST['filterUserId'] 
 $staffUsers = array(
 	'47' => 'Bobby Lindsey',
 	'3' => 'Chris Meehan',
+	'63' => 'Naomi Barbeau',
 );
 
 require_once( INCLUDES . 'display.php' );
