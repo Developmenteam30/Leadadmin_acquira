@@ -103,7 +103,7 @@ class ProcessLeads
 			$urlExists = $leads->checkInboundURLExists( $feedParams->idFeedIn, $data['url'] );
 			if( false === $urlExists ) {
 
-				$body = sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
+				$body = sprintf( "\r\nWe received a new URL on this feed.\r\n\r\nCompany: {$feedParams->companyName}\r\n\r\nFeed: {$feedParams->label}\r\n\r\nURL: %s\r\n\r\n",
 					str_replace( '.', '*', $data['url'] )
 				);
 
