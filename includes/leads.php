@@ -2108,6 +2108,20 @@ class Leads
 		return $results;
 	}
 
+	public function getOutboundStatsRange( $idFeedOut, $stampStart, $stampEnd ) {
+		$results = array( 'accepted' => 0, 'rejected' => 0 );
+
+		try {
+			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_outbound WHERE stamp >= ? AND stamp <= ? AND idFeedOut = ?" );
+			$query->execute( array( $stampStart, $stampEnd, $idFeedOut ) );
+			$results = $query->fetch();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get outbound stats: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function inboundAdd( $idFeedIn, $fields, $statsDay, $error = null, $jobId = null ) {
 		$this->db->beginTransaction();
 
@@ -3031,6 +3045,19 @@ class Leads
 		return $results;
 	}
 
+	public function getInboundStatsRange( $idFeedIn, $stampStart, $stampEnd ) {
+		$results = array( 'accepted' => 0, 'rejected' => 0 );
+
+		try {
+			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp >= ? AND stamp <= ? AND idFeedIn = ?" );
+			$query->execute( array( $stampStart, $stampEnd, $idFeedIn ) );
+			$results = $query->fetch();
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get inbound stats: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
 	public function getInboundURLStats( $idFeedIn ) {
 		$results = array();
 
