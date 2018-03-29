@@ -191,8 +191,8 @@ div.chartValue { float: left; width: 75px; }
 <div class="container-fluid">
 <?php
 $feedCategories = array(
-	'email' => 'Email',
 	'phone' => 'Phone',
+	'email' => 'Email',
 );
 foreach( $feedCategories as $categoryKey => $categoryVal ) {
 ?>
