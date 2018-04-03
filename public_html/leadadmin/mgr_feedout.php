@@ -703,6 +703,13 @@ if( isset( $_REQUEST['d'] ) ) {
 				'cellphone' => '2125559999',
 				'country' => 'US',
 				'listcode' => '',
+				'listId' => 'listId1',
+				'custom1' => 'custom1',
+				'custom2' => 'custom2',
+				'custom3' => 'custom3',
+				'custom4' => 'custom4',
+				'custom5' => 'custom5',
+				'custom6' => 'custom6',
 			);
 
 			print "<p><strong>HTTP Method:</strong> " . $feed->feedType . "</p>";
@@ -1444,7 +1451,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			<?php
 			break;
 		case 'varField':
-			$e = $_REQUEST['e'];
+			$e = $_REQUEST['e'] ?? '';
 			?>
             <div>
                 API Field: <input type='text' name='varFields[]' value=''/> Mapped To: <select name='fieldMap[]'>

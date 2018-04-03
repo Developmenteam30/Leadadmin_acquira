@@ -465,6 +465,13 @@ class ProcessLeads
 				}
 				break;
 
+			case 'listId':
+				if( $c && strlen( $value ) > 255 ) {
+					$c = false;
+					$result['reason'] = 'listId exceeds maximum allowed length of 255 characters.';
+				}
+				break;
+
 			case 'url':
 				if( $c && strlen( $value ) > 500 ) {
 					$c = false;
@@ -487,8 +494,7 @@ class ProcessLeads
 				}
 				break;
 
-			case
-			'stamp':
+			case 'stamp':
 				if( $c && strtotime( $value ) === false ) {
 					$c = false;
 					$result['reason'] = 'Action Date (stamp) is invalid.';
@@ -655,6 +661,18 @@ class ProcessLeads
 				if( $c && !onlynos( $value ) ) {
 					$c = false;
 					$result['reason'] = 'Alternate Phone (cellphone) contains invalid characters.';
+				}
+				break;
+
+			case 'custom1':
+			case 'custom2':
+			case 'custom3':
+			case 'custom4':
+			case 'custom5':
+			case 'custom6':
+				if( $c && strlen( $value ) > 255 ) {
+					$c = false;
+					$result['reason'] = $fieldType . ' exceeds maximum allowed length of 255 characters.';
 				}
 				break;
 

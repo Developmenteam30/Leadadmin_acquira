@@ -33,6 +33,7 @@ $company = $leads->getCompany( $feed->idCompany );
 $fields = array(
 	'pswd' => array( 'type' => 'varchar(16)', 'format' => '', 'notes' => $feed->password ),
 	'listcode' => array( 'type' => 'varchar(20)', 'format' => '', 'notes' => 'Campaign ID or List Descriptor' ),
+	'leadId' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Lead ID or List Descriptor' ),
 	'url' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Source of the lead' ),
 	'ip' => array( 'type' => 'varchar(16)', 'format' => '', 'notes' => 'IP Address' ),
 	'stamp' => array( 'type' => 'datetime', 'format' => 'YYYY-MM-DD hh:mm:ss', 'notes' => 'Lead action date' ),
@@ -49,6 +50,12 @@ $fields = array(
 	'gender' => array( 'type' => 'char(1)', 'format' => 'M, F', 'notes' => 'Gender' ),
 	'landline' => array( 'type' => 'varchar(20)', 'format' => '##########', 'notes' => 'Default phone' ),
 	'cellphone' => array( 'type' => 'varchar(20)', 'format' => '##########', 'notes' => 'Alternate phone' ),
+	'custom1' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 1' ),
+	'custom2' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 2' ),
+	'custom3' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 3' ),
+	'custom4' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 4' ),
+	'custom5' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 5' ),
+	'custom6' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 6' ),
 );
 
 $requiredArray = explode( ';', 'pswd;' . $feed->required );

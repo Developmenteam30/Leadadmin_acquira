@@ -2129,6 +2129,7 @@ class Leads
 			$idRecord = $this->insertRow( 'data_inbound', array(
 				'idFeedIn' => $idFeedIn,
 				'listcode' => empty( $fields['listcode'] ) ? null : substr( $fields['listcode'], 0, 20 ),
+				'leadId' => empty( $fields['email'] ) ? null : substr( $fields['leadId'], 0, 255 ),
 				'leadstamp' => empty( $fields['stamp'] ) ? null : date( 'Y-m-d H:i:s', strtotime( $fields['stamp'] ) ),
 				'url' => empty( $fields['url'] ) ? null : substr( $this->parseUrl( $fields['url'] ), 0, 255 ),
 				'ip' => empty( $fields['ip'] ) ? null : substr( $fields['ip'], 0, 45 ),
@@ -2147,6 +2148,12 @@ class Leads
 				'country' => empty( $fields['country'] ) ? null : substr( $fields['country'], 0, 75 ),
 				'result' => empty( $error ) ? null : $error,
 				'jobId' => empty( $jobId ) ? null : $jobId,
+				'custom1' => empty( $fields['email'] ) ? null : substr( $fields['custom1'], 0, 255 ),
+				'custom2' => empty( $fields['email'] ) ? null : substr( $fields['custom2'], 0, 255 ),
+				'custom3' => empty( $fields['email'] ) ? null : substr( $fields['custom3'], 0, 255 ),
+				'custom4' => empty( $fields['email'] ) ? null : substr( $fields['custom4'], 0, 255 ),
+				'custom5' => empty( $fields['email'] ) ? null : substr( $fields['custom5'], 0, 255 ),
+				'custom6' => empty( $fields['email'] ) ? null : substr( $fields['custom6'], 0, 255 ),
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
@@ -3824,6 +3831,13 @@ class Leads
 			'gender',
 			'landline',
 			'cellphone',
+			'leadId',
+			'custom1',
+			'custom2',
+			'custom3',
+			'custom4',
+			'custom5',
+			'custom6',
 		) );
 
 		try {
@@ -3847,6 +3861,13 @@ class Leads
 					$row['gender'],
 					$row['landline'],
 					$row['cellphone'],
+					$row['leadId'],
+					$row['custom1'],
+					$row['custom2'],
+					$row['custom3'],
+					$row['custom4'],
+					$row['custom5'],
+					$row['custom6'],
 				) );
 
 				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['url'], null );
@@ -4059,6 +4080,13 @@ class Leads
 			'gender',
 			'landline',
 			'cellphone',
+			'leadId',
+			'custom1',
+			'custom2',
+			'custom3',
+			'custom4',
+			'custom5',
+			'custom6',
 		) );
 
 		try {
@@ -4082,6 +4110,13 @@ class Leads
 					$row['gender'],
 					$row['landline'],
 					$row['cellphone'],
+					$row['leadId'],
+					$row['custom1'],
+					$row['custom2'],
+					$row['custom3'],
+					$row['custom4'],
+					$row['custom5'],
+					$row['custom6'],
 				) );
 
 				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['url'], null );
