@@ -703,7 +703,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'cellphone' => '2125559999',
 				'country' => 'US',
 				'listcode' => '',
-				'listId' => 'listId1',
+				'leadId' => '12345',
 				'custom1' => 'custom1',
 				'custom2' => 'custom2',
 				'custom3' => 'custom3',

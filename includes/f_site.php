@@ -5,7 +5,7 @@
 //Core Values//
 $recordFields = array(
 	'listcode',
-	'listId',
+	'leadId',
 	'url',
 	'ip',
 	'stamp',

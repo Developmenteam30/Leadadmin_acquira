@@ -465,10 +465,10 @@ class ProcessLeads
 				}
 				break;
 
-			case 'listId':
+			case 'leadId':
 				if( $c && strlen( $value ) > 255 ) {
 					$c = false;
-					$result['reason'] = 'listId exceeds maximum allowed length of 255 characters.';
+					$result['reason'] = 'leadId exceeds maximum allowed length of 255 characters.';
 				}
 				break;
 
