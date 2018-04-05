@@ -1197,6 +1197,7 @@ include( INCLUDES . "c_header.php" );
 				{type: 'formatted-number', decimal: '.', thousands: ','},
 				'string',
 				{type: 'date', locale: 'en-US'},
+				'string',
 				{type: 'formatted-number', decimal: '.', thousands: ','},
 				'string',
 				'string',
