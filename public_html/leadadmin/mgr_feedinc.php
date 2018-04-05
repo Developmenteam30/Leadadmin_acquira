@@ -127,6 +127,11 @@ if( isset( $_REQUEST['a'] ) ) {
 				$result['error'] = 'Please enter a numeric value for the choke percent.';
 			}
 
+			if( $c && !empty( $_REQUEST['costPerLead'] ) && is_numeric( $_REQUEST['costPerLead'] ) === false ) {
+				$c = false;
+				$result['error'] = 'Please enter a numeric value for the cost per lead.';
+			}
+
 			if( $c && !empty( $_REQUEST['chokePercent'] ) && ( intval( $_REQUEST['chokePercent'] ) < 0 || intval( $_REQUEST['chokePercent'] ) > 100 ) ) {
 				$c = false;
 				$result['error'] = 'Please enter a value between 0 and 100 for the choke percent.';
@@ -199,6 +204,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'custom4Label' => empty( $_REQUEST['custom4Label'] ) ? null : $_REQUEST['custom4Label'],
 						'custom5Label' => empty( $_REQUEST['custom5Label'] ) ? null : $_REQUEST['custom5Label'],
 						'custom6Label' => empty( $_REQUEST['custom6Label'] ) ? null : $_REQUEST['custom6Label'],
+						'costPerLead' => empty( $_REQUEST['costPerLead'] ) ? 0.00 : floatval( $_REQUEST['costPerLead'] ),
 					) );
 
 					if( null === $idFeedIn ) {
@@ -321,6 +327,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'custom4Label' => empty( $_REQUEST['custom4Label'] ) ? null : $_REQUEST['custom4Label'],
 						'custom5Label' => empty( $_REQUEST['custom5Label'] ) ? null : $_REQUEST['custom5Label'],
 						'custom6Label' => empty( $_REQUEST['custom6Label'] ) ? null : $_REQUEST['custom6Label'],
+						'costPerLead' => empty( $_REQUEST['costPerLead'] ) ? 0.00 : floatval( $_REQUEST['costPerLead'] ),
 					) );
 
 					if( null === $status ) {
@@ -473,6 +480,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'custom4Label',
 				'custom5Label',
 				'custom6Label',
+				'costPerLead',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -800,6 +808,14 @@ if( isset( $_REQUEST['d'] ) ) {
 							<p>The percentage of leads that will randomly be rejected. For example, entering a value of "20" means that approximately 20% of all leads coming in will be rejected. This feature ONLY applies to feeds that are setup as "live" on the outgoing side. Normally this value is zero.</p>
 							<p>
 								<input type="text" name="chokePercent" id="chokePercent" value="<?php echo $feed_chokePercent; ?>"/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Cost Per Lead</p></td>
+						<td>
+							<p>
+								<input type="text" name="costPerLead" value="<?php echo htmlentities( $feed_costPerLead ); ?>"/>
 							</p>
 						</td>
 					</tr>

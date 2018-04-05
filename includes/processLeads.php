@@ -128,6 +128,14 @@ class ProcessLeads
 
 		}
 
+		$waterfall = array(
+			'enabled' => false,
+			'success' => false,
+			'reason' => null,
+			'inboundId' => null,
+			'idFeedIn' => null,
+			'url' => null,
+		);
 		$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn, false );
 		if( !empty( $feedsOut ) && is_array( $feedsOut ) ) {
 			foreach( $feedsOut as $feed ) {
@@ -190,27 +198,65 @@ class ProcessLeads
 					}
 				}
 
-				$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ( ( empty( $idFeedOut ) && !empty( $feed->livedata ) ) ? -1 : 0 ), $urlRewritten );
+				if( empty( $idFeedOut ) && !empty( $feed->waterfall ) ) {
 
-				// If this is a "livedata" population, immediately try to send the record through to the receiving feed
-				if( empty( $idFeedOut ) && !empty( $feed->livedata ) ) {
+					$waterfall['enabled'] = true;
 
+					// If we already had a successful waterfall submission, skip the rest of the waterfall candidates.
+					if( $waterfall['success'] ) {
+						continue;
+					}
+
+					$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], -1, $urlRewritten );
 					$record = $leads->getOutboundRecord( $inboundId, $feed->idFeedOut, -1 );
 					if( !empty( $record ) ) {
 						$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
 						$status = ProcessLeads::pushOutboundData( $feedOut, $record );
-						if( ( isset( $status['status'] ) && $status['status'] != true ) || ( !empty( $feedParams->chokePercent ) && random_int( 1, 100 ) <= $feedParams->chokePercent ) ) {
-
-							$reason = sprintf( 'Third-party rejection [Reason: %s] [Code: %s%s]',
+						if( ( isset( $status['status'] ) && $status['status'] === true ) ) {
+							$waterfall['success'] = true;
+						} else {
+							$waterfall['reason'] = sprintf( 'Third-party rejection [Reason: %s] [Code: %s%s]',
 								( isset( $status['status'] ) && $status['status'] != true && !empty( $status['text'] ) ) ? $status['text'] : 'Record failure',
 								$feed->idFeedOut,
 								( isset( $status['status'] ) && $status['status'] != true ) ? '0' : '1'
 							);
-							$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $data['url'], date( 'Y-m-d' ), $reason );
+							$waterfall['inboundId'] = $inboundId;
+							$waterfall['idFeedIn'] = $feedParams->idFeedIn;
+							$waterfall['url'] = $data['url'];
 						}
 					}
+
+				} else {
+
+					$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ( ( empty( $idFeedOut ) && !empty( $feed->livedata ) ) ? -1 : 0 ), $urlRewritten );
+
+					// If this is a "livedata" population, immediately try to send the record through to the receiving feed
+					if( empty( $idFeedOut ) && !empty( $feed->livedata ) ) {
+
+						$record = $leads->getOutboundRecord( $inboundId, $feed->idFeedOut, -1 );
+						if( !empty( $record ) ) {
+							$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
+							$status = ProcessLeads::pushOutboundData( $feedOut, $record );
+							if( ( isset( $status['status'] ) && $status['status'] != true ) || ( !empty( $feedParams->chokePercent ) && random_int( 1, 100 ) <= $feedParams->chokePercent ) ) {
+
+								$reason = sprintf( 'Third-party rejection [Reason: %s] [Code: %s%s]',
+									( isset( $status['status'] ) && $status['status'] != true && !empty( $status['text'] ) ) ? $status['text'] : 'Record failure',
+									$feed->idFeedOut,
+									( isset( $status['status'] ) && $status['status'] != true ) ? '0' : '1'
+								);
+								$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $data['url'], date( 'Y-m-d' ), $reason );
+							}
+						}
+					}
+
 				}
 			} // foreach $feedsOut
+		}
+
+		// If there was at least one waterfall enabled and we went through all candidates without a successful response, send the last error message to the incoming feed.
+		if( $waterfall['enabled'] && !$waterfall['success'] ) {
+			$leads->inboundProcess( $waterfall['inboundId'], $waterfall['idFeedIn'], $waterfall['url'], date( 'Y-m-d' ), $waterfall['reason'] );
+			$reason = $waterfall['reason'];
 		}
 
 		return $reason;

@@ -335,6 +335,11 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['revenuePerLead'] ) && is_numeric( $_REQUEST['revenuePerLead'] ) === false ) {
+				$result['error'] = 'Revenue per lead must be a numeric value.';
+				break;
+			}
+
 			if( $action == 'new' ) {
 
 				$idAssoc = $leads->addPopulation( array(
@@ -349,7 +354,9 @@ if( isset( $_REQUEST['a'] ) ) {
 					'filterListcode' => !empty( $filterListcode ) ? $filterListcode : null,
 					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
-					'livedata' => !empty( $_REQUEST['livedata'] ) ? 1 : 0,
+					'livedata' => !empty( $_REQUEST['livedata'] ) && 'livedata' == $_REQUEST['livedata'] ? 1 : 0,
+					'waterfall' => !empty( $_REQUEST['livedata'] ) && 'waterfall' == $_REQUEST['livedata'] ? 1 : 0,
+					'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 				) );
 
 				if( empty( $idAssoc ) ) {
@@ -376,7 +383,9 @@ if( isset( $_REQUEST['a'] ) ) {
 					'filterListcode' => !empty( $filterListcode ) ? $filterListcode : null,
 					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
-					'livedata' => !empty( $_REQUEST['livedata'] ) ? 1 : 0,
+					'livedata' => !empty( $_REQUEST['livedata'] ) && 'livedata' == $_REQUEST['livedata'] ? 1 : 0,
+					'waterfall' => !empty( $_REQUEST['livedata'] ) && 'waterfall' == $_REQUEST['livedata'] ? 1 : 0,
+					'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 				) );
 
 				if( empty( $dbResult ) ) {
@@ -774,7 +783,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			$feed = $leads->getOutboundFeed( $idFeedOut );
 			if( empty( $feed ) ) {
 				?>
-                <p>Database failure - could not fetch requested feed information.</p>
+				<p>Database failure - could not fetch requested feed information.</p>
 				<?php
 				exit;
 			}
@@ -857,239 +866,239 @@ if( isset( $_REQUEST['d'] ) ) {
 				$companies = $leads->getCompanies();
 			}
 			?>
-            <form id="<?php echo $id; ?>">
-                <input type='hidden' name='idFeedOut' value='<?php echo $feed_idFeedOut; ?>'/>
-                <input type="hidden" name="a" value="manageFeed"/>
-                <input type="hidden" name="action" value="<?php echo $mode; ?>"/>
-                <table class="table table-bordered table-condensed table-striped">
-                    <tr>
-                        <td><p>Feed Label</p></td>
-                        <td>
-                            <p>
-                                <input type='text' name='label' value='<?php echo $feed_label; ?>'
-                                />
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Description</p></td>
-                        <td>
-                            <p>
-                                <input type='text' name='description' value='<?php echo htmlentities( $feed_description ); ?>' class='long'/>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Company</p></td>
-                        <td>
-                            <p>
+			<form id="<?php echo $id; ?>">
+				<input type='hidden' name='idFeedOut' value='<?php echo $feed_idFeedOut; ?>'/>
+				<input type="hidden" name="a" value="manageFeed"/>
+				<input type="hidden" name="action" value="<?php echo $mode; ?>"/>
+				<table class="table table-bordered table-condensed table-striped">
+					<tr>
+						<td><p>Feed Label</p></td>
+						<td>
+							<p>
+								<input type='text' name='label' value='<?php echo $feed_label; ?>'
+								/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Description</p></td>
+						<td>
+							<p>
+								<input type='text' name='description' value='<?php echo htmlentities( $feed_description ); ?>' class='long'/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Company</p></td>
+						<td>
+							<p>
 								<?php if( $companies === false ) { ?>
-                                    Database failure - could not fetch company list
+									Database failure - could not fetch company list
 								<?php } else if( !is_object( $companies ) && $companies == 0 ) { ?>
-                                    There are no companies in the database. Please create a company before
-                                    creating a feed.
+									There are no companies in the database. Please create a company before
+									creating a feed.
 								<?php } else { ?>
-                                    <select name='idCompany'>
-                                        <option></option>
+									<select name='idCompany'>
+										<option></option>
 										<?php foreach( $companies as $company ) { ?>
-                                            <option value='<?php echo $company->idCompany; ?>'
+											<option value='<?php echo $company->idCompany; ?>'
 											        <?php if( $company->idCompany == $feed_idCompany ){
 											        ?>selected='selected'<?php } ?>
-                                            ><?php echo htmlentities( $company->name ); ?></option>
+											><?php echo htmlentities( $company->name ); ?></option>
 										<?php } ?>
-                                    </select>
+									</select>
 								<?php } ?>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Feed Category</p></td>
-                        <td>
-                            <p>
-                                <input type="radio" name="feedCategory" value="email"<?php if( empty( $feed_feedCategory ) || 'email' == $feed_feedCategory ) {
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Feed Category</p></td>
+						<td>
+							<p>
+								<input type="radio" name="feedCategory" value="email"<?php if( empty( $feed_feedCategory ) || 'email' == $feed_feedCategory ) {
 									print ' checked="checked"';
 								} ?> /> Email<br/>
-                                <input type="radio" name="feedCategory" value="phone"<?php if( 'phone' == $feed_feedCategory ) {
+								<input type="radio" name="feedCategory" value="phone"<?php if( 'phone' == $feed_feedCategory ) {
 									print ' checked="checked"';
 								} ?> /> Phone<br/>
-                                <input type="radio" name="feedCategory" value="both"<?php if( 'both' == $feed_feedCategory ) {
+								<input type="radio" name="feedCategory" value="both"<?php if( 'both' == $feed_feedCategory ) {
 									print ' checked="checked"';
 								} ?> /> Both
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Feed Type</p></td>
-                        <td>
-                            <p>
-                                <select name='feedType'>
-                                    <option value='curlGET' <?php if( $feed_feedType == 'curlGET' ){ ?>selected='selected'<?php } ?>>HTTP GET</option>
-                                    <option value='curlPOST' <?php if( $feed_feedType == 'curlPOST' ){ ?>selected='selected'<?php } ?>>HTTP POST</option>
-                                    <option value='JSON' <?php if( $feed_feedType == 'JSON' ){ ?>selected='selected'<?php } ?>>JSON</option>
-                                    <option value='csvString' <?php if( $feed_feedType == 'csvString' ){ ?>selected='selected'<?php } ?>>CSV string</option>
-                                </select>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Post URL</p></td>
-                        <td>
-                            <p>
-                                <input type='text' name='postUrl' value='<?php echo $feed_postUrl; ?>' class='long'/>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Static Fields</p></td>
-                        <td>
-                            <p>
-                                These are fields that are assigned values specific to this feed, usually provided by the receiving
-                                client.
-                            </p>
-                            <p>
-                                <a href='#' class='nonLink' onclick='element("staticFields_container", "staticField", {});'
-                                >Add New Static Field</a>
-                            </p>
-                            <div>
-                                <div id='staticFields_container'>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Feed Type</p></td>
+						<td>
+							<p>
+								<select name='feedType'>
+									<option value='curlGET' <?php if( $feed_feedType == 'curlGET' ){ ?>selected='selected'<?php } ?>>HTTP GET</option>
+									<option value='curlPOST' <?php if( $feed_feedType == 'curlPOST' ){ ?>selected='selected'<?php } ?>>HTTP POST</option>
+									<option value='JSON' <?php if( $feed_feedType == 'JSON' ){ ?>selected='selected'<?php } ?>>JSON</option>
+									<option value='csvString' <?php if( $feed_feedType == 'csvString' ){ ?>selected='selected'<?php } ?>>CSV string</option>
+								</select>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Post URL</p></td>
+						<td>
+							<p>
+								<input type='text' name='postUrl' value='<?php echo $feed_postUrl; ?>' class='long'/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Static Fields</p></td>
+						<td>
+							<p>
+								These are fields that are assigned values specific to this feed, usually provided by the receiving
+								client.
+							</p>
+							<p>
+								<a href='#' class='nonLink' onclick='element("staticFields_container", "staticField", {});'
+								>Add New Static Field</a>
+							</p>
+							<div>
+								<div id='staticFields_container'>
 									<?php foreach( $feed_staticFields as $sF ) {
 										$valuePair = explode( "=", $sF );
 										?>
-                                        <div>
-                                            <input type='text'
-                                                   name='staticFields_field[]'
-                                                   value='<?php echo $valuePair[0]; ?>'
-                                            /> = <input type='text'
-                                                        name='staticFields_value[]'
-                                                        value='<?php echo $valuePair[1]; ?>'
-                                            />
-                                            <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                        </div>
+										<div>
+											<input type='text'
+											       name='staticFields_field[]'
+											       value='<?php echo $valuePair[0]; ?>'
+											/> = <input type='text'
+											            name='staticFields_value[]'
+											            value='<?php echo $valuePair[1]; ?>'
+											/>
+											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+										</div>
 									<?php } ?>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Mapped Fields</p></td>
-                        <td>
-                            <p>These are fields that are assigned values for each lead. Enter the field name from the receiving
-                                client's API spec, and select the lead value to be mapped from the drop-down.
-                            </p>
-                            <p>
-                                <a href='#' class='nonLink' onclick='element("varFields_container", "varField", {});'
-                                >Add New Mapped Field</a>
-                            </p>
-                            <div>
-                                <div id='varFields_container'>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Mapped Fields</p></td>
+						<td>
+							<p>These are fields that are assigned values for each lead. Enter the field name from the receiving
+								client's API spec, and select the lead value to be mapped from the drop-down.
+							</p>
+							<p>
+								<a href='#' class='nonLink' onclick='element("varFields_container", "varField", {});'
+								>Add New Mapped Field</a>
+							</p>
+							<div>
+								<div id='varFields_container'>
 									<?php $sFCount = 0;
 									foreach( $feed_varFields as $vF ) { ?>
-                                        <div>
-                                            API Field: <input type='text'
-                                                              name='varFields[]'
-                                                              value='<?php echo $vF; ?>'
-                                            /> Mapped To: <select
-                                                    name='fieldMap[]'
-                                            >
+										<div>
+											API Field: <input type='text'
+											                  name='varFields[]'
+											                  value='<?php echo $vF; ?>'
+											/> Mapped To: <select
+													name='fieldMap[]'
+											>
 												<?php foreach( $recordFields as $rF ) { ?>
-                                                    <option value='<?php echo $rF; ?>'
+													<option value='<?php echo $rF; ?>'
 														<?php if( $feed_fieldMap[$sFCount] == $rF ) {
 															echo "selected='selected'";
 														} ?>
-                                                    ><?php echo $rF; ?></option>
+													><?php echo $rF; ?></option>
 												<?php } ?>
 												<?php foreach( $additionalMapFields as $aF ) { ?>
-                                                    <option value='<?php echo $aF; ?>'
+													<option value='<?php echo $aF; ?>'
 														<?php if( $feed_fieldMap[$sFCount] == $aF ) {
 															echo "selected='selected'";
 														} ?>
-                                                    ><?php echo $aF; ?></option>
+													><?php echo $aF; ?></option>
 												<?php } ?>
-                                            </select>
-                                            <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                        </div>
+											</select>
+											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+										</div>
 										<?php $sFCount++;
 									} ?>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>URL Assignments</p></td>
-                        <td>
-                            <p>
-                                If you utilize the urlAssign mapped field, when the feed is processing it will populate the mapped
-                                field with values according to what you set here, that way you can have multiple different
-                                unique id's per url within the same feed.
-                            </p>
-                            <p>
-                                <a href='#' class='nonLink' onclick='element("urlassignments_container", "urlassignment", {});'
-                                >Add New URL Assignment</a>
-                            </p>
-                            <div>
-                                <div id='urlassignments_container'>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>URL Assignments</p></td>
+						<td>
+							<p>
+								If you utilize the urlAssign mapped field, when the feed is processing it will populate the mapped
+								field with values according to what you set here, that way you can have multiple different
+								unique id's per url within the same feed.
+							</p>
+							<p>
+								<a href='#' class='nonLink' onclick='element("urlassignments_container", "urlassignment", {});'
+								>Add New URL Assignment</a>
+							</p>
+							<div>
+								<div id='urlassignments_container'>
 									<?php foreach( $feed_urlassignments as $uA ) {
 										$valuePair = explode( "=", $uA );
 										?>
-                                        <div>
-                                            <input type='text'
-                                                   name='urlassignments_url[]'
-                                                   value='<?php echo $valuePair[0]; ?>'
-                                            /> = <input type='text'
-                                                        name='urlassignments_id[]'
-                                                        value='<?php echo $valuePair[1]; ?>'
-                                            />
-                                            <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                        </div>
+										<div>
+											<input type='text'
+											       name='urlassignments_url[]'
+											       value='<?php echo $valuePair[0]; ?>'
+											/> = <input type='text'
+											            name='urlassignments_id[]'
+											            value='<?php echo $valuePair[1]; ?>'
+											/>
+											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+										</div>
 									<?php } ?>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Success String</p></td>
-                        <td>
-                            <p>This is the smallest form of the success response from the receiving client's API spec.</p>
-                            <p>
-                                <input type='text' name='successString' value='<?php echo htmlentities( $feed_successString ); ?>' class='long'/>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Daily Feed Limit</p></td>
-                        <td>
-                            <p>Leave blank for no limit (default). If a value is supplied here, the feed will stop sending records after the daily limit is reached.</p>
-                            <p>
-                                <input type='text' name='dailyLimit' value='<?php echo $feed_dailyLimit; ?>'/>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Feed Delay</p></td>
-                        <td>
-                            <p>Leave blank for no delay (default). If a value is supplied here, records will sit in the queue for this number of minutes before being processed.</p>
-                            <p>
-                                <input type='text' name='delay' value='<?php echo $feed_delay; ?>'/> Minutes
-                            </p>
-                            <p>
-                                <input type='radio' name='delayDump' value='0' <?php if( empty( $feed_delayDump ) ) { ?>checked='checked'<?php } ?>/> Trickle dump delayed records based on actual timestamps (default)<br/>
-                                <input type='radio' name='delayDump' value='1' <?php if( !empty( $feed_delayDump ) ) { ?>checked='checked'<?php } ?>/> Mass dump all delayed records for the entire day
-                            </p>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Success String</p></td>
+						<td>
+							<p>This is the smallest form of the success response from the receiving client's API spec.</p>
+							<p>
+								<input type='text' name='successString' value='<?php echo htmlentities( $feed_successString ); ?>' class='long'/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Daily Feed Limit</p></td>
+						<td>
+							<p>Leave blank for no limit (default). If a value is supplied here, the feed will stop sending records after the daily limit is reached.</p>
+							<p>
+								<input type='text' name='dailyLimit' value='<?php echo $feed_dailyLimit; ?>'/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Feed Delay</p></td>
+						<td>
+							<p>Leave blank for no delay (default). If a value is supplied here, records will sit in the queue for this number of minutes before being processed.</p>
+							<p>
+								<input type='text' name='delay' value='<?php echo $feed_delay; ?>'/> Minutes
+							</p>
+							<p>
+								<input type='radio' name='delayDump' value='0' <?php if( empty( $feed_delayDump ) ) { ?>checked='checked'<?php } ?>/> Trickle dump delayed records based on actual timestamps (default)<br/>
+								<input type='radio' name='delayDump' value='1' <?php if( !empty( $feed_delayDump ) ) { ?>checked='checked'<?php } ?>/> Mass dump all delayed records for the entire day
+							</p>
 
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Feed Status</p></td>
-                        <td>
-                            <p>
-                                <input type='radio' name='status' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Visible)<br/>
-                                <input type='radio' name='status' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
-                                <input type='radio' name='status' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> Retired
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </form>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Feed Status</p></td>
+						<td>
+							<p>
+								<input type='radio' name='status' value='active' <?php if( empty( $feed_status ) || 'active' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Visible)<br/>
+								<input type='radio' name='status' value='hidden' <?php if( 'hidden' == $feed_status ) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
+								<input type='radio' name='status' value='retired' <?php if( 'retired' == $feed_status ) { ?>checked='checked'<?php } ?>/> Retired
+							</p>
+						</td>
+					</tr>
+				</table>
+			</form>
 			<?php
 			break;
 
@@ -1115,11 +1124,11 @@ if( isset( $_REQUEST['d'] ) ) {
 			<?php
 			if( $feed === false ) {
 				?>
-                <p>Database failure - could not fetch feed information.</p>
+				<p>Database failure - could not fetch feed information.</p>
 				<?php
 			} else if( !is_object( $feed ) && $feed == 0 ) {
 				?>
-                <p>Error fetching feed information - feed does not exist.</p>
+				<p>Error fetching feed information - feed does not exist.</p>
 				<?php
 			} else {
 
@@ -1131,21 +1140,21 @@ if( isset( $_REQUEST['d'] ) ) {
 				} else {
 
 					?>
-                    <p>Importing Data into Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
-                    <form id="form-import">
-                        <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
-                        <input type="hidden" name="a" value="import-legacy-data"/>
-                        <input type="hidden" name="label" value="<?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?>"/>
-                        <table class="table table-bordered table-condensed table-striped">
-                            <tr>
-                                <td colspan='2'><p class='aCenter'>Import Settings</p></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Inbound population
-                                </td>
-                                <td>
-                                    <select name="idAssoc">
+					<p>Importing Data into Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
+					<form id="form-import">
+						<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+						<input type="hidden" name="a" value="import-legacy-data"/>
+						<input type="hidden" name="label" value="<?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?>"/>
+						<table class="table table-bordered table-condensed table-striped">
+							<tr>
+								<td colspan='2'><p class='aCenter'>Import Settings</p></td>
+							</tr>
+							<tr>
+								<td>
+									Inbound population
+								</td>
+								<td>
+									<select name="idAssoc">
 										<?php foreach( $populations as $population ) {
 											$feedIn = $leads->getInboundFeed( $population->idFeedIn );
 											printf( '<option value="%s">Pop #%s - Feed In #%s (%s)</option>' . PHP_EOL,
@@ -1155,39 +1164,39 @@ if( isset( $_REQUEST['d'] ) ) {
 												htmlspecialchars( $feedIn->label, ENT_QUOTES )
 											);
 										} ?>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Period
-                                </td>
-                                <td>
-                                    <p>Period goes from midnight of the first date to 11:59p of the second date. Maximum of 6 months in the past.</p>
-                                    <p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date( "Y-m-d" ); ?>'/>
-                                        to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date( "Y-m-d", strtotime( 'Tomorrow' ) ); ?>'/></p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Limit</p>
-                                </td>
-                                <td>
-                                    <p>Set a limit on the number of records that are returned. Leave blank to return ALL records.</p>
-                                    <p><input type="text" name="limit" value=""/></p>
-                                    </p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Rejects</p>
-                                </td>
-                                <td>
-                                    <p><input type="checkbox" name="includeRejects" value="1" checked="checked"/> Include live feed rejections and choked records in the import.</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </form>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									Period
+								</td>
+								<td>
+									<p>Period goes from midnight of the first date to 11:59p of the second date. Maximum of 6 months in the past.</p>
+									<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date( "Y-m-d" ); ?>'/>
+										to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date( "Y-m-d", strtotime( 'Tomorrow' ) ); ?>'/></p>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									Limit</p>
+								</td>
+								<td>
+									<p>Set a limit on the number of records that are returned. Leave blank to return ALL records.</p>
+									<p><input type="text" name="limit" value=""/></p>
+									</p>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									Rejects</p>
+								</td>
+								<td>
+									<p><input type="checkbox" name="includeRejects" value="1" checked="checked"/> Include live feed rejections and choked records in the import.</p>
+								</td>
+							</tr>
+						</table>
+					</form>
 					<?php
 				}
 			}
@@ -1215,11 +1224,11 @@ if( isset( $_REQUEST['d'] ) ) {
 			<?php
 			if( $feed === false ) {
 				?>
-                <p>Database failure - could not fetch feed information.</p>
+				<p>Database failure - could not fetch feed information.</p>
 				<?php
 			} else if( !is_object( $feed ) && $feed == 0 ) {
 				?>
-                <p>Error fetching feed information - feed does not exist.</p>
+				<p>Error fetching feed information - feed does not exist.</p>
 				<?php
 			} else {
 
@@ -1231,27 +1240,27 @@ if( isset( $_REQUEST['d'] ) ) {
 				} else {
 
 					?>
-                    <p>Retry rejections for Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
-                    <form id="form-import">
-                        <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
-                        <input type="hidden" name="a" value="retry-outbound-rejections"/>
-                        <input type="hidden" name="label" value="<?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?>"/>
-                        <table class="table table-bordered table-condensed table-striped">
-                            <tr>
-                                <td colspan='2'><p class='aCenter'>Retry Rejections Settings</p></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Period
-                                </td>
-                                <td>
-                                    <p>Period goes from midnight of the first date to 11:59p of the second date. Maximum of 6 months in the past.</p>
-                                    <p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date( "Y-m-d" ); ?>'/>
-                                        to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date( "Y-m-d", strtotime( 'Tomorrow' ) ); ?>'/></p>
-                                </td>
-                            </tr>
-                        </table>
-                    </form>
+					<p>Retry rejections for Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
+					<form id="form-import">
+						<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+						<input type="hidden" name="a" value="retry-outbound-rejections"/>
+						<input type="hidden" name="label" value="<?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?>"/>
+						<table class="table table-bordered table-condensed table-striped">
+							<tr>
+								<td colspan='2'><p class='aCenter'>Retry Rejections Settings</p></td>
+							</tr>
+							<tr>
+								<td>
+									Period
+								</td>
+								<td>
+									<p>Period goes from midnight of the first date to 11:59p of the second date. Maximum of 6 months in the past.</p>
+									<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date( "Y-m-d" ); ?>'/>
+										to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date( "Y-m-d", strtotime( 'Tomorrow' ) ); ?>'/></p>
+								</td>
+							</tr>
+						</table>
+					</form>
 					<?php
 				}
 			}
@@ -1287,35 +1296,35 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			if( $feed === false ) {
 				?>
-                <p>Database failure - could not fetch feed information.</p>
+				<p>Database failure - could not fetch feed information.</p>
 				<?php
 			} else if( !is_object( $feed ) && $feed == 0 ) {
 				?>
-                <p>Error fetching feed information - feed does not exist.</p>
+				<p>Error fetching feed information - feed does not exist.</p>
 				<?php
 			} else {
 				?>
-                <p>Feed ID: <strong><?php echo $feed->idFeedOut; ?></strong><br/>Feed Label: <strong><?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?></strong></p>
+				<p>Feed ID: <strong><?php echo $feed->idFeedOut; ?></strong><br/>Feed Label: <strong><?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?></strong></p>
 
-                <form id="form-urlreport" class="form-inlin1e">
-                    <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
-                    <input type="hidden" name="d" value="dialog_urlreport"/>
-                    <input type="hidden" name="submit" value="submit"/>
+				<form id="form-urlreport" class="form-inlin1e">
+					<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+					<input type="hidden" name="d" value="dialog_urlreport"/>
+					<input type="hidden" name="submit" value="submit"/>
 
-                    <p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
-                    <div class="form-group">
-                        <label for="dateStart">Start Date:</label>
-                        <input type="text" id="dateStart" name="dateStart" class="form-control dateSelector" value="<?php echo htmlspecialchars( $_REQUEST['dateStart'], ENT_QUOTES ); ?>"/>
-                    </div>
+					<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
+					<div class="form-group">
+						<label for="dateStart">Start Date:</label>
+						<input type="text" id="dateStart" name="dateStart" class="form-control dateSelector" value="<?php echo htmlspecialchars( $_REQUEST['dateStart'], ENT_QUOTES ); ?>"/>
+					</div>
 
-                    <div class="form-group">
-                        <label for="dateEnd">End Date:</label>
-                        <input type="text" id="dateEnd" name="dateEnd" class="form-control dateSelector" value="<?php echo htmlspecialchars( $_REQUEST['dateEnd'], ENT_QUOTES ); ?>"/>
-                    </div>
+					<div class="form-group">
+						<label for="dateEnd">End Date:</label>
+						<input type="text" id="dateEnd" name="dateEnd" class="form-control dateSelector" value="<?php echo htmlspecialchars( $_REQUEST['dateEnd'], ENT_QUOTES ); ?>"/>
+					</div>
 
-                    <p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
-                    <div class="form-group">
-                        <label for="urls">URLs:</label>
+					<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
+					<div class="form-group">
+						<label for="urls">URLs:</label>
 						<?php
 						$urls = $leads->getOutboundURLDates( $idFeedOut );
 						if( $urls && is_array( $urls ) ) {
@@ -1326,11 +1335,11 @@ if( isset( $_REQUEST['d'] ) ) {
 							print "</select>\n";
 						}
 						?>
-                    </div>
+					</div>
 
-                    <div class="form-group">
-                        <label for="breakdown">Count By:</label>
-                        <select class="form-control" id="breakdown" name="breakdown">
+					<div class="form-group">
+						<label for="breakdown">Count By:</label>
+						<select class="form-control" id="breakdown" name="breakdown">
 							<?php
 							$choices = array(
 								'day' => 'Day',
@@ -1346,12 +1355,12 @@ if( isset( $_REQUEST['d'] ) ) {
 								);
 							}
 							?>
-                        </select>
-                    </div>
+						</select>
+					</div>
 
-                    <div class="form-group">
-                        <label for="id">Sort By:</label>
-                        <select class="form-control" id="sort" name="sort">
+					<div class="form-group">
+						<label for="id">Sort By:</label>
+						<select class="form-control" id="sort" name="sort">
 							<?php
 							$choices = array(
 								'date' => 'Date',
@@ -1366,10 +1375,10 @@ if( isset( $_REQUEST['d'] ) ) {
 								);
 							}
 							?>
-                        </select>
-                    </div>
+						</select>
+					</div>
 
-                </form>
+				</form>
 				<?php
 
 				if( !empty( $_REQUEST['submit'] ) ) {
@@ -1378,7 +1387,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 					if( empty( $stats ) ) {
 						?>
-                        <p>No records found.</p>
+						<p>No records found.</p>
 						<?php
 					} else {
 
@@ -1387,7 +1396,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						$file = fopen( $filePath, "w" );
 						if( !file_exists( $filePath ) ) {
 							?>
-                            <p>Failed to create CSV report file.</p>
+							<p>Failed to create CSV report file.</p>
 							<?php
 						} else {
 							$accepted = 0;
@@ -1433,37 +1442,37 @@ if( isset( $_REQUEST['d'] ) ) {
 			break;
 
 		case 'staticField':
-			$e = $_REQUEST['e'];
+			$e = $_REQUEST['e'] ?? '';
 			?>
-            <div>
-                <input type='text' name='staticFields_field[]' value=''/> = <input type='text' name='staticFields_value[]' value=''/>
-                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-            </div>
+			<div>
+				<input type='text' name='staticFields_field[]' value=''/> = <input type='text' name='staticFields_value[]' value=''/>
+				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+			</div>
 			<?php
 			break;
 		case 'urlassignment':
 			$e = $_REQUEST['e'];
 			?>
-            <div>
-                <input type='text' name='urlassignments_url[]' value='' placeholder='URL'/> = <input type='text' name='urlassignments_id[]' value='' placeholder='Unique ID'/>
-                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-            </div>
+			<div>
+				<input type='text' name='urlassignments_url[]' value='' placeholder='URL'/> = <input type='text' name='urlassignments_id[]' value='' placeholder='Unique ID'/>
+				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+			</div>
 			<?php
 			break;
 		case 'varField':
 			$e = $_REQUEST['e'] ?? '';
 			?>
-            <div>
-                API Field: <input type='text' name='varFields[]' value=''/> Mapped To: <select name='fieldMap[]'>
+			<div>
+				API Field: <input type='text' name='varFields[]' value=''/> Mapped To: <select name='fieldMap[]'>
 					<?php foreach( $recordFields as $rF ) { ?>
-                        <option value='<?php echo $rF; ?>'><?php echo $rF; ?></option>
+						<option value='<?php echo $rF; ?>'><?php echo $rF; ?></option>
 					<?php } ?>
 					<?php foreach( $additionalMapFields as $aF ) { ?>
-                        <option value='<?php echo $aF; ?>'><?php echo $aF; ?></option>
+						<option value='<?php echo $aF; ?>'><?php echo $aF; ?></option>
 					<?php } ?>
-                </select>
-                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-            </div>
+				</select>
+				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+			</div>
 			<?php
 			break;
 		case 'dialog_editpopsetting':
@@ -1472,7 +1481,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			$popset = $leads->getPopulationSetting( $idAssoc );
 			if( empty( $popset ) ) {
 				?>
-                <p>Database failure - could not fetch population setting.</p>
+				<p>Database failure - could not fetch population setting.</p>
 				<?php
 				exit;
 			}
@@ -1489,6 +1498,8 @@ if( isset( $_REQUEST['d'] ) ) {
 				'filterTypeListcode',
 				'forceUrl',
 				'livedata',
+				'waterfall',
+				'revenuePerLead',
 			);
 			foreach( $populationProperties as $pP ) {
 				if( isset( $popset ) ) {
@@ -1532,24 +1543,24 @@ if( isset( $_REQUEST['d'] ) ) {
 				$incomingFeeds = $leads->getInboundFeeds( $idCompany, 'active' );
 			}
 			?>
-            <form id="<?php echo $mode; ?>_pop">
-                <input type="hidden" name="idAssoc" value="<?php echo $popset_idAssoc; ?>"/>
-                <input type="hidden" name="idFeedOut" value="<?php echo $popset_idFeedOut; ?>"/>
-                <input type="hidden" name="a" value="managePopulation"/>
-                <input type="hidden" name="action" value="<?php echo $mode; ?>"/>
-                <table class="table table-bordered table-condensed table-striped">
+			<form id="<?php echo $mode; ?>_pop">
+				<input type="hidden" name="idAssoc" value="<?php echo $popset_idAssoc; ?>"/>
+				<input type="hidden" name="idFeedOut" value="<?php echo $popset_idFeedOut; ?>"/>
+				<input type="hidden" name="a" value="managePopulation"/>
+				<input type="hidden" name="action" value="<?php echo $mode; ?>"/>
+				<table class="table table-bordered table-condensed table-striped">
 					<?php if( 'edit' === $mode ) { ?>
-                        <tr>
-                            <td>Population ID</td>
-                            <td><?php echo $popset_idAssoc; ?></td>
-                        </tr>
+						<tr>
+							<td>Population ID</td>
+							<td><?php echo $popset_idAssoc; ?></td>
+						</tr>
 					<?php } ?>
-                    <tr>
-                        <td><p>Incoming Feed (To Populate From)</p></td>
-                        <td>
-                            <p>
-                                <select name="idFeedIn">
-                                    <option></option>
+					<tr>
+						<td><p>Incoming Feed (To Populate From)</p></td>
+						<td>
+							<p>
+								<select name="idFeedIn">
+									<option></option>
 									<?php
 									$lastCompany = '';
 									foreach( $incomingFeeds as $fI ) {
@@ -1560,11 +1571,11 @@ if( isset( $_REQUEST['d'] ) ) {
 											);
 										}
 										?>
-                                        <option value='<?php echo $fI->idFeedIn; ?>'
+										<option value='<?php echo $fI->idFeedIn; ?>'
 											<?php if( $fI->idFeedIn == $popset_idFeedIn ) {
 												echo "selected='selected'";
 											} ?>
-                                        >(<?php echo $fI->idFeedIn; ?>) <?php echo htmlentities( $fI->label ); ?></option>
+										>(<?php echo $fI->idFeedIn; ?>) <?php echo htmlentities( $fI->label ); ?></option>
 										<?php
 										if( $lastCompany !== $fI->name ) {
 											$lastCompany = $fI->name;
@@ -1572,345 +1583,352 @@ if( isset( $_REQUEST['d'] ) ) {
 										}
 									}
 									?>
-                                </select>
-                            </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>URL Filter Options</p></td>
-                        <td>
-                            <p>
-                                Using the 'Accept' option, urls that are listed here are the only ones that will be accepted into
-                                the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed here.
-                            </p>
-                            <p>
-                                <input type='radio'
-                                       name='filterTypeUrl'
-                                       id='filterTypeUrl_disabled'
-                                       value=''
+								</select>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>URL Filter Options</p></td>
+						<td>
+							<p>
+								Using the 'Accept' option, urls that are listed here are the only ones that will be accepted into
+								the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed here.
+							</p>
+							<p>
+								<input type='radio'
+								       name='filterTypeUrl'
+								       id='filterTypeUrl_disabled'
+								       value=''
 									<?php if(
 									empty( $popset_filterTypeUrl )
 									) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeUrl').hide(); <?php
+									   onclick="$('#toggler_filterTypeUrl').hide(); <?php
 									   ?>$('#filterUrl_descriptor').html('Do nothing with');"
-                                /> Disabled<br/>
-                                <input type='radio'
-                                       name='filterTypeUrl'
-                                       id='filterTypeUrl_accept'
-                                       value='accept'
+								/> Disabled<br/>
+								<input type='radio'
+								       name='filterTypeUrl'
+								       id='filterTypeUrl_accept'
+								       value='accept'
 									<?php if( $popset_filterTypeUrl == 'accept' ) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeUrl').show(); <?php
+									   onclick="$('#toggler_filterTypeUrl').show(); <?php
 									   ?>$('#filterUrl_descriptor').html('Accept');"
-                                /> Accept<br/>
-                                <input type='radio'
-                                       name='filterTypeUrl'
-                                       id='filterTypeUrl_reject'
-                                       value='reject'
+								/> Accept<br/>
+								<input type='radio'
+								       name='filterTypeUrl'
+								       id='filterTypeUrl_reject'
+								       value='reject'
 									<?php if( $popset_filterTypeUrl == 'reject' ) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeUrl').show(); <?php
+									   onclick="$('#toggler_filterTypeUrl').show(); <?php
 									   ?>$('#filterUrl_descriptor').html('Reject');"
-                                /> Reject<br/>
-                            </p>
-                            <div id='toggler_filterTypeUrl'
-                                 style='display:<?php
+								/> Reject<br/>
+							</p>
+							<div id='toggler_filterTypeUrl'
+							     style='display:<?php
 							     if( empty( $popset_filterTypeUrl ) ) {
 								     echo "none";
 							     } else {
 								     echo "block";
 							     }
 							     ?>;'
-                            >
-                                <p>The following urls:</p>
-                                <p>
-                                    <a href='#' class='nonLink'
-                                       onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Url" });'
-                                    >Add New URL to <span id='filterUrl_descriptor'></span></a>
-                                    | <a href='#' class='nonLink'
-                                         onclick='element("filterUrl_multipleInsert"<?php
+							>
+								<p>The following urls:</p>
+								<p>
+									<a href='#' class='nonLink'
+									   onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Url" });'
+									>Add New URL to <span id='filterUrl_descriptor'></span></a>
+									| <a href='#' class='nonLink'
+									     onclick='element("filterUrl_multipleInsert"<?php
 									     ?>, "element_multifilter"<?php
 									     ?>, { "type": "Url" });'
-                                    >Add Multiple</a>
-                                </p>
-                                <div id='filterUrl_multipleInsert'></div>
-                                <div id='filterUrl_container'>
+									>Add Multiple</a>
+								</p>
+								<div id='filterUrl_multipleInsert'></div>
+								<div id='filterUrl_container'>
 									<?php foreach( $popset_filterUrl as $filterUrl ) { ?>
-                                        <div>
-                                            <input type='text'
-                                                   name='filterUrl[]'
-                                                   value='<?php echo $filterUrl; ?>'
-                                            />
-                                            <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                        </div>
+										<div>
+											<input type='text'
+											       name='filterUrl[]'
+											       value='<?php echo $filterUrl; ?>'
+											/>
+											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+										</div>
 									<?php } ?>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Email Filter Options</p></td>
-                        <td>
-                            <p>
-                                Using the 'Accept' option, email domains that are listed here are the only ones that will be
-                                accepted into the feed. Using the 'Reject' option, all email domains will be accepted, except
-                                the ones listed here.
-                            </p>
-                            <p>
-                                <input type='radio'
-                                       name='filterTypeEmail'
-                                       id='filterTypeEmail_disabled'
-                                       value=''
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Email Filter Options</p></td>
+						<td>
+							<p>
+								Using the 'Accept' option, email domains that are listed here are the only ones that will be
+								accepted into the feed. Using the 'Reject' option, all email domains will be accepted, except
+								the ones listed here.
+							</p>
+							<p>
+								<input type='radio'
+								       name='filterTypeEmail'
+								       id='filterTypeEmail_disabled'
+								       value=''
 									<?php if(
 									empty( $popset_filterTypeEmail )
 									) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeEmail').hide(); <?php
+									   onclick="$('#toggler_filterTypeEmail').hide(); <?php
 									   ?>$('#filterEmail_descriptor').html('Do nothing with');"
-                                /> Disabled<br/>
-                                <input type='radio'
-                                       name='filterTypeEmail'
-                                       id='filterTypeEmail_accept'
-                                       value='accept'
+								/> Disabled<br/>
+								<input type='radio'
+								       name='filterTypeEmail'
+								       id='filterTypeEmail_accept'
+								       value='accept'
 									<?php if( $popset_filterTypeEmail == 'accept' ) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeEmail').show(); <?php
+									   onclick="$('#toggler_filterTypeEmail').show(); <?php
 									   ?>$('#filterEmail_descriptor').html('Accept');"
-                                /> Accept<br/>
-                                <input type='radio'
-                                       name='filterTypeEmail'
-                                       id='filterTypeEmail_reject'
-                                       value='reject'
+								/> Accept<br/>
+								<input type='radio'
+								       name='filterTypeEmail'
+								       id='filterTypeEmail_reject'
+								       value='reject'
 									<?php if( $popset_filterTypeEmail == 'reject' ) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeEmail').show(); <?php
+									   onclick="$('#toggler_filterTypeEmail').show(); <?php
 									   ?>$('#filterEmail_descriptor').html('Reject');"
-                                /> Reject<br/>
-                            </p>
-                            <div id='toggler_filterTypeEmail'
-                                 style='display:<?php
+								/> Reject<br/>
+							</p>
+							<div id='toggler_filterTypeEmail'
+							     style='display:<?php
 							     if( empty( $popset_filterTypeEmail ) ) {
 								     echo "none";
 							     } else {
 								     echo "block";
 							     }
 							     ?>;'
-                            >
-                                <p>The following email domains:</p>
-                                <p>
-                                    <a href='#' class='nonLink'
-                                       onclick='element("filterEmail_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Email"});'
-                                    >Add New Email Domain to <span id='filterEmail_descriptor'></span></a>
-                                </p>
-                                <div id='filterEmail_container'>
+							>
+								<p>The following email domains:</p>
+								<p>
+									<a href='#' class='nonLink'
+									   onclick='element("filterEmail_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Email"});'
+									>Add New Email Domain to <span id='filterEmail_descriptor'></span></a>
+								</p>
+								<div id='filterEmail_container'>
 									<?php foreach( $popset_filterEmail as $filterEmail ) { ?>
-                                        <div>
-                                            <input type='text'
-                                                   name='filterEmail[]'
-                                                   value='<?php echo $filterEmail; ?>'
-                                            />
-                                            <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                        </div>
+										<div>
+											<input type='text'
+											       name='filterEmail[]'
+											       value='<?php echo $filterEmail; ?>'
+											/>
+											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+										</div>
 									<?php } ?>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Listcode Filter Options</p></td>
-                        <td>
-                            <p>
-                                Using the 'Accept' option, listcodes that are listed here are the only ones that will be
-                                accepted into the feed. Using the 'Reject' option, all listcodes will be accepted, except
-                                the ones listed here.
-                            </p>
-                            <p>
-                                <input type='radio'
-                                       name='filterTypeListcode'
-                                       id='filterTypeListcode_disabled'
-                                       value=''
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Listcode Filter Options</p></td>
+						<td>
+							<p>
+								Using the 'Accept' option, listcodes that are listed here are the only ones that will be
+								accepted into the feed. Using the 'Reject' option, all listcodes will be accepted, except
+								the ones listed here.
+							</p>
+							<p>
+								<input type='radio'
+								       name='filterTypeListcode'
+								       id='filterTypeListcode_disabled'
+								       value=''
 									<?php if(
 									empty( $popset_filterTypeListcode )
 									) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeListcode').hide(); <?php
+									   onclick="$('#toggler_filterTypeListcode').hide(); <?php
 									   ?>$('#filterListcode_descriptor').html('Do nothing with');"
-                                /> Disabled<br/>
-                                <input type='radio'
-                                       name='filterTypeListcode'
-                                       id='filterTypeListcode_accept'
-                                       value='accept'
+								/> Disabled<br/>
+								<input type='radio'
+								       name='filterTypeListcode'
+								       id='filterTypeListcode_accept'
+								       value='accept'
 									<?php if( $popset_filterTypeListcode == 'accept' ) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeListcode').show(); <?php
+									   onclick="$('#toggler_filterTypeListcode').show(); <?php
 									   ?>$('#filterListcode_descriptor').html('Accept');"
-                                /> Accept<br/>
-                                <input type='radio'
-                                       name='filterTypeListcode'
-                                       id='filterTypeListcode_reject'
-                                       value='reject'
+								/> Accept<br/>
+								<input type='radio'
+								       name='filterTypeListcode'
+								       id='filterTypeListcode_reject'
+								       value='reject'
 									<?php if( $popset_filterTypeListcode == 'reject' ) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_filterTypeListcode').show(); <?php
+									   onclick="$('#toggler_filterTypeListcode').show(); <?php
 									   ?>$('#filterListcode_descriptor').html('Reject');"
-                                /> Reject<br/>
-                            </p>
-                            <div id='toggler_filterTypeListcode'
-                                 style='display:<?php
+								/> Reject<br/>
+							</p>
+							<div id='toggler_filterTypeListcode'
+							     style='display:<?php
 							     if( empty( $popset_filterTypeListcode ) ) {
 								     echo "none";
 							     } else {
 								     echo "block";
 							     }
 							     ?>;'
-                            >
-                                <p>The following email domains:</p>
-                                <p>
-                                    <a href='#' class='nonLink'
-                                       onclick='element("filterListcode_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Listcode"});'
-                                    >Add New Listcode to <span id='filterListcode_descriptor'></span></a>
-                                </p>
-                                <div id='filterListcode_container'>
+							>
+								<p>The following email domains:</p>
+								<p>
+									<a href='#' class='nonLink'
+									   onclick='element("filterListcode_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Listcode"});'
+									>Add New Listcode to <span id='filterListcode_descriptor'></span></a>
+								</p>
+								<div id='filterListcode_container'>
 									<?php foreach( $popset_filterListcode as $filterListcode ) { ?>
-                                        <div>
-                                            <input type='text'
-                                                   name='filterListcode[]'
-                                                   value='<?php echo $filterListcode; ?>'
-                                            />
-                                            <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                        </div>
+										<div>
+											<input type='text'
+											       name='filterListcode[]'
+											       value='<?php echo $filterListcode; ?>'
+											/>
+											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+										</div>
 									<?php } ?>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Force URL Options</p></td>
-                        <td>
-                            <p>
-                                Utilizing 'URL Forcing' changes the url listed in the incoming feed to a completely different URL
-                                for use in the outgoing feed.
-                            </p>
-                            <p>
-                                <input type='radio'
-                                       name='forceUrl'
-                                       id='forceUrl_disabled'
-                                       value='0'
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Force URL Options</p></td>
+						<td>
+							<p>
+								Utilizing 'URL Forcing' changes the url listed in the incoming feed to a completely different URL
+								for use in the outgoing feed.
+							</p>
+							<p>
+								<input type='radio'
+								       name='forceUrl'
+								       id='forceUrl_disabled'
+								       value='0'
 									<?php if( $popset_forceUrl != '1' ) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_forceUrlList').hide();"
-                                /> Disabled<br/>
-                                <input type='radio'
-                                       name='forceUrl'
-                                       id='forceUrl_enabled'
-                                       value='1'
+									   onclick="$('#toggler_forceUrlList').hide();"
+								/> Disabled<br/>
+								<input type='radio'
+								       name='forceUrl'
+								       id='forceUrl_enabled'
+								       value='1'
 									<?php if( $popset_forceUrl == '1' ) { ?>
-                                        checked='checked'
+										checked='checked'
 									<?php } ?>
-                                       onclick="$('#toggler_forceUrlList').show();"
-                                /> Enabled
-                            </p>
-                            <div id='toggler_forceUrlList'
-                                 style='display:<?php
+									   onclick="$('#toggler_forceUrlList').show();"
+								/> Enabled
+							</p>
+							<div id='toggler_forceUrlList'
+							     style='display:<?php
 							     if( $popset_forceUrl ) {
 								     echo "block";
 							     } else {
 								     echo "none";
 							     }
 							     ?>;'
-                            >
-                                <p>
-                                    Enter 'all' in the url field to force all non-specified urls to be changed to the new
-                                    url. Other specified urls will be changed to the listed forced url.
-                                </p>
-                                <div>
-                                    <p>Force Populating URLs to: </p>
-                                    <p>
-                                        <a href='#' class='nonLink' onclick='element("filterUrlList_container", "element_forceUrl", { "e": "<?php echo $e; ?>"});'
-                                        >Add URL To Force</a>
-                                    </p>
-                                    <div id='filterUrlList_container'>
+							>
+								<p>
+									Enter 'all' in the url field to force all non-specified urls to be changed to the new
+									url. Other specified urls will be changed to the listed forced url.
+								</p>
+								<div>
+									<p>Force Populating URLs to: </p>
+									<p>
+										<a href='#' class='nonLink' onclick='element("filterUrlList_container", "element_forceUrl", { "e": "<?php echo $e; ?>"});'
+										>Add URL To Force</a>
+									</p>
+									<div id='filterUrlList_container'>
 										<?php foreach( $popset_forceUrlList as $fU ) {
 											$valuePair = explode( "=", $fU );
 											?>
-                                            <div>
-                                                URL: <input type='text'
-                                                            name='forceUrlList_original[]'
-                                                            value='<?php echo $valuePair[0]; ?>'
-                                                /> Will be populated as: <input type='text'
-                                                                                name='forceUrlList_altered[]'
-                                                                                value='<?php echo $valuePair[1]; ?>'
-                                                >
-                                                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                            </div>
+											<div>
+												URL: <input type='text'
+												            name='forceUrlList_original[]'
+												            value='<?php echo $valuePair[0]; ?>'
+												/> Will be populated as: <input type='text'
+												                                name='forceUrlList_altered[]'
+												                                value='<?php echo $valuePair[1]; ?>'
+												>
+												<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+											</div>
 										<?php } ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Live data feed</p></td>
-                        <td>
-                            <p>
-                                Incoming records will be sent to this provider in REAL TIME as they come in. Do not use this option unless authorized. Most feeds have this option disabled.
-                            </p>
-                            <p>
-                                <input type='radio' name='livedata' id='livedata_disabled' value='0'
-									<?php if( $popset_livedata != '1' ) { ?> checked='checked' <?php } ?>/> Disabled (DEFAULT)<br/>
-                                <input type='radio' name='livedata' id='livedata_enabled' value='1'
-									<?php if( $popset_livedata == '1' ) { ?> checked='checked' <?php } ?>/> Enabled
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </form>
-            <script type="text/javascript">
+									</div>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Live data feed</p></td>
+						<td>
+							<p>
+								Incoming records will be sent to this provider in REAL TIME as they come in. Do not use this option unless authorized. Most feeds have this option disabled.
+							</p>
+							<p>
+								<input type='radio' name='livedata' id='livedata_disabled' value='0' <?php if( $popset_livedata != '1' && $popset_waterfall != '1' ) { ?> checked='checked' <?php } ?>/> Disabled (DEFAULT)<br/>
+								<input type='radio' name='livedata' id='livedata_enabled' value='livedata' <?php if( $popset_livedata == '1' ) { ?> checked='checked' <?php } ?>/> Enabled - Standard<br/>
+								<input type='radio' name='livedata' id='livedata_waterfall' value='waterfall' <?php if( $popset_waterfall == '1' ) { ?> checked='checked' <?php } ?>/> Enabled - Waterfall
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Revenue Per Lead</p></td>
+						<td>
+							<p>
+								<input type="text" name="revenuePerLead" value="<?php echo htmlentities( $popset_revenuePerLead ); ?>"/>
+							</p>
+						</td>
+					</tr>
+				</table>
+			</form>
+			<script type="text/javascript">
 				$("#new_pop select[name='idFeedIn'], #edit_pop select[name='idFeedIn']").select2({
 					placeholder: "Select an incoming feed",
 					allowClear: true
 				});
-            </script>
+			</script>
 			<?php
 			break;
 
 		case 'element_filter':
 			$t = $_REQUEST['options']['type'];
 			?>
-            <div>
-                <input type='text' name='filter<?php echo $t; ?>[]' value='<?php if( isset( $_REQUEST['value'] ) ) {
+			<div>
+				<input type='text' name='filter<?php echo $t; ?>[]' value='<?php if( isset( $_REQUEST['value'] ) ) {
 					echo $_REQUEST['value'];
 				} ?>'/>
-                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-            </div>
+				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+			</div>
 			<?php
 			break;
 
 		case 'element_forceUrl':
 			?>
-            <div>
-                URL: <input type='text' name='forceUrlList_original[]' value=''/> Will be populated as: <input type='text' name='forceUrlList_altered[]' value=''/>
-                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-            </div>
+			<div>
+				URL: <input type='text' name='forceUrlList_original[]' value=''/> Will be populated as: <input type='text' name='forceUrlList_altered[]' value=''/>
+				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+			</div>
 			<?php
 			break;
 
 		case 'element_multifilter':
 			$t = $_REQUEST['options']['type'];
 			?>
-            <textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi'></textarea>
-            <input type='button' value='Add Multiple Urls' onclick="splitMultiFilter('<?php echo $e; ?>', '<?php echo $t; ?>');"/>
+			<textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi'></textarea>
+			<input type='button' value='Add Multiple Urls' onclick="splitMultiFilter('<?php echo $e; ?>', '<?php echo $t; ?>');"/>
 			<?php
 			break;
 
@@ -1931,43 +1949,43 @@ if( isset( $_REQUEST['d'] ) ) {
 			$populationSettings = $leads->getPopulations( $idFeedOut );
 			$cacheFeedIn = array();
 			?>
-            <p>
-                Feed ID: <?php echo $feed->idFeedOut; ?><br/>
-                Label: <?php echo htmlentities( $feed->label ); ?><br/>
-                Description: <?php echo htmlentities( $feed->description ); ?>
-            </p>
+			<p>
+				Feed ID: <?php echo $feed->idFeedOut; ?><br/>
+				Label: <?php echo htmlentities( $feed->label ); ?><br/>
+				Description: <?php echo htmlentities( $feed->description ); ?>
+			</p>
 
-            <p>
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-newpop" data-dismiss="modal" data-feed-id="<?php echo $feed->idFeedOut; ?>">Add a new population parameter</button>
-            </p>
+			<p>
+				<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-newpop" data-dismiss="modal" data-feed-id="<?php echo $feed->idFeedOut; ?>">Add a new population parameter</button>
+			</p>
 			<?php
 			if( $populationSettings === false ) {
 				?>
-                <p>Error getting population settings.</p>
+				<p>Error getting population settings.</p>
 				<?php
 			} else if( $populationSettings == 0 ) {
 				?>
-                <p>No settings found.</p>
+				<p>No settings found.</p>
 				<?php
 			} else {
 				?>
-                <table class="table table-bordered table-condensed table-striped">
-                    <thead>
-                    <tr>
-                        <th><p>Populating Feed</p></th>
-                        <th><p>Population Status</p></th>
-                        <th><p>Filtering By URL</p></th>
-                        <th><p>URL Filter Settings</p></th>
-                        <th><p>Filtering By Email</p></th>
-                        <th><p>Email Filter Settings</p></th>
-                        <th><p>Filtering By Listcode</p></th>
-                        <th><p>Listcode Filter Settings</p></th>
-                        <th><p>Force URLs</p></th>
-                        <th><p>Force URL Settings</p></th>
-                        <th><p>Actions</p></th>
-                    </tr>
-                    </thead>
-                    <tbody>
+				<table class="table table-bordered table-condensed table-striped">
+					<thead>
+					<tr>
+						<th><p>Populating Feed</p></th>
+						<th><p>Population Status</p></th>
+						<th><p>Filtering By URL</p></th>
+						<th><p>URL Filter Settings</p></th>
+						<th><p>Filtering By Email</p></th>
+						<th><p>Email Filter Settings</p></th>
+						<th><p>Filtering By Listcode</p></th>
+						<th><p>Listcode Filter Settings</p></th>
+						<th><p>Force URLs</p></th>
+						<th><p>Force URL Settings</p></th>
+						<th><p>Actions</p></th>
+					</tr>
+					</thead>
+					<tbody>
 					<?php
 					foreach( $populationSettings as $popSet ) {
 						if( !isset( $cacheFeedIn[$popSet->idFeedIn] ) ) {
@@ -2056,52 +2074,52 @@ if( isset( $_REQUEST['d'] ) ) {
 							}
 						}
 						?>
-                        <tr>
-                            <td valign='top'>
-                                <p>
-                                    (<?php echo $popSet->idFeedIn; ?>)
+						<tr>
+							<td valign='top'>
+								<p>
+									(<?php echo $popSet->idFeedIn; ?>)
 									<?php echo $cacheFeedIn[$popSet->idFeedIn]->label; ?>
-                                </p>
-                            </td>
-                            <td valign='top' class="text-center">
-                                <input class="population-toggle" <?php if( !empty( $popSet->enabled ) ) {
+								</p>
+							</td>
+							<td valign='top' class="text-center">
+								<input class="population-toggle" <?php if( !empty( $popSet->enabled ) ) {
 									print 'checked="checked" ';
 								} ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Enabled" data-onstyle="success" data-off="Disabled" data-offstyle="danger" data-assoc-id="<?php echo $popSet->idAssoc; ?>" type="checkbox"/></td>
-                            </td>
-                            <td valign='top'>
-                                <p><?php echo $filterTypeUrl; ?></p>
-                            </td>
-                            <td valign='top'>
-                                <p><?php echo $filterUrl; ?></p>
-                            </td>
-                            <td valign='top'>
-                                <p><?php echo $filterTypeEmail; ?></p>
-                            </td>
-                            <td valign='top'>
-                                <p><?php echo $filterEmail; ?></p>
-                            </td>
-                            <td valign='top'>
-                                <p><?php echo $filterTypeListcode; ?></p>
-                            </td>
-                            <td valign='top'>
-                                <p><?php echo $filterListcode; ?></p>
-                            </td>
-                            <td valign='top'>
-                                <p><?php echo $forceUrl; ?></p>
-                            </td>
-                            <td valign='top'>
-                                <p><?php echo $forceUrlList; ?></p>
-                            </td>
-                            <td valign='top' class="text-center">
-                                <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#modal-editpop" data-feed-id="<?php echo $feed->idFeedOut; ?>" data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Edit</button>
-                            </td>
-                        </tr>
+							</td>
+							<td valign='top'>
+								<p><?php echo $filterTypeUrl; ?></p>
+							</td>
+							<td valign='top'>
+								<p><?php echo $filterUrl; ?></p>
+							</td>
+							<td valign='top'>
+								<p><?php echo $filterTypeEmail; ?></p>
+							</td>
+							<td valign='top'>
+								<p><?php echo $filterEmail; ?></p>
+							</td>
+							<td valign='top'>
+								<p><?php echo $filterTypeListcode; ?></p>
+							</td>
+							<td valign='top'>
+								<p><?php echo $filterListcode; ?></p>
+							</td>
+							<td valign='top'>
+								<p><?php echo $forceUrl; ?></p>
+							</td>
+							<td valign='top'>
+								<p><?php echo $forceUrlList; ?></p>
+							</td>
+							<td valign='top' class="text-center">
+								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#modal-editpop" data-feed-id="<?php echo $feed->idFeedOut; ?>" data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Edit</button>
+							</td>
+						</tr>
 						<?php
 					}
 					?>
-                    </tbody>
-                </table>
-                <script type="text/javascript">
+					</tbody>
+				</table>
+				<script type="text/javascript">
 					$('.population-toggle').bootstrapToggle();
 
 					$('.population-toggle').change(function () {
@@ -2119,7 +2137,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							}
 						});
 					});
-                </script>
+				</script>
 				<?php
 			}
 			?>
@@ -2128,7 +2146,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 		default:
 			?>
-            <p>Requested information doesn't exist.</p>
+			<p>Requested information doesn't exist.</p>
 			<?php
 			break;
 	}
@@ -2144,34 +2162,34 @@ include( INCLUDES . "c_header.php" );
 
 <div class="container-fluid">
 
-    <h2>Outgoing Feeds</h2>
+	<h2>Outgoing Feeds</h2>
 
 	<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) { ?>
 
-        <form class="pull-right" id="status-select" method="get">
-            <select id="status" name="status">
-                <option value="active"<?php if( 'active' === $status ) {
+		<form class="pull-right" id="status-select" method="get">
+			<select id="status" name="status">
+				<option value="active"<?php if( 'active' === $status ) {
 					print ' selected="selected"';
 				} ?>>Show active feeds
-                </option>
-                <option value="hidden"<?php if( 'hidden' === $status ) {
+				</option>
+				<option value="hidden"<?php if( 'hidden' === $status ) {
 					print ' selected="selected"';
 				} ?>>Show hidden feeds
-                </option>
-                <option value="retired"<?php if( 'retired' === $status ) {
+				</option>
+				<option value="retired"<?php if( 'retired' === $status ) {
 					print ' selected="selected"';
 				} ?>>Show retired feeds
-                </option>
-                <option value=""<?php if( null === $status ) {
+				</option>
+				<option value=""<?php if( null === $status ) {
 					print ' selected="selected"';
 				} ?>>Show all feeds
-                </option>
-            </select>
-        </form>
+				</option>
+			</select>
+		</form>
 
-        <p>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newfeed" data-feed-id="">Add a new feed</button>
-        </p>
+		<p>
+			<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newfeed" data-feed-id="">Add a new feed</button>
+		</p>
 
 	<?php } ?>
 
@@ -2190,11 +2208,11 @@ include( INCLUDES . "c_header.php" );
 	<?php
 	if( $outgoingFeeds === false ) {
 		?>
-        <p>Error when trying to fetch feeds: database error.</p>
+		<p>Error when trying to fetch feeds: database error.</p>
 		<?php
 	} else if( $outgoingFeeds == 0 ) {
 		?>
-        <p>Error when trying to fetch feeds: there are no feeds.</p>
+		<p>Error when trying to fetch feeds: there are no feeds.</p>
 		<?php
 	} else {
 		//Go through each and compile the company list.
@@ -2221,17 +2239,17 @@ include( INCLUDES . "c_header.php" );
 
 		uksort( $companyFeedLists, 'companyListSort' );
 		?>
-        <table class="table table-bordered table-condensed table-striped-custom">
-            <thead>
-            <tr>
-                <th class='fTO_companyName' colspan='2'>Company</th>
-                <th class='fTO_feedOverview' colspan='4'>Total Feeds</th>
-                <th class='fTO_accepted'>Total Accepted</th>
-                <th class='fTO_rejected'>Total Rejected</th>
-                <th class='fTO_rejected'>Total Queued</th>
-                <th class='fTO_options'>Options</th>
-            </tr>
-            </thead>
+		<table class="table table-bordered table-condensed table-striped-custom">
+			<thead>
+			<tr>
+				<th class='fTO_companyName' colspan='2'>Company</th>
+				<th class='fTO_feedOverview' colspan='4'>Total Feeds</th>
+				<th class='fTO_accepted'>Total Accepted</th>
+				<th class='fTO_rejected'>Total Rejected</th>
+				<th class='fTO_rejected'>Total Queued</th>
+				<th class='fTO_options'>Options</th>
+			</tr>
+			</thead>
 			<?php
 			$grandTotalFeeds = 0;
 			$grandTotalAccepted = 0;
@@ -2267,235 +2285,235 @@ include( INCLUDES . "c_header.php" );
 				}
 				$grandTotalFeeds += count( $companyFeedList );
 				?>
-                <tr class='fTORow fTO_Row bgGray'>
-                    <td colspan='2'><?php echo $companyCache[$idCompany]->name; ?></td>
-                    <td colspan='4'><?php echo count( $companyFeedList ); ?> (<?php echo $totalActive; ?> Active)</td>
-                    <td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
-                    <td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
-                    <td class="text-right"><?php echo number_format( $totalQueued, 0 ); ?></td>
-                    <td class="text-center">
-                        <button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button>
-                    </td>
-                </tr>
+				<tr class='fTORow fTO_Row bgGray'>
+					<td colspan='2'><?php echo $companyCache[$idCompany]->name; ?></td>
+					<td colspan='4'><?php echo count( $companyFeedList ); ?> (<?php echo $totalActive; ?> Active)</td>
+					<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
+					<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
+					<td class="text-right"><?php echo number_format( $totalQueued, 0 ); ?></td>
+					<td class="text-center">
+						<button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button>
+					</td>
+				</tr>
 				<?php
 				foreach( $companyFeedList as $feed ) {
 					?>
-                    <tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
-                        <td><?php echo $feed->idFeedOut; ?></td>
-                        <td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo htmlentities( $feed->label ); ?></td>
-                        <td><?php echo htmlentities( $feed->description ); ?></td>
-                        <td><?php echo htmlentities( $feed->statusPop ); ?></td>
-                        <td><?php echo ucfirst( $feed->status ); ?></td>
-                        <td><input class="cron-toggle" <?php if( !empty( $feed->cron ) ) {
+					<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
+						<td><?php echo $feed->idFeedOut; ?></td>
+						<td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo htmlentities( $feed->label ); ?></td>
+						<td><?php echo htmlentities( $feed->description ); ?></td>
+						<td><?php echo htmlentities( $feed->statusPop ); ?></td>
+						<td><?php echo ucfirst( $feed->status ); ?></td>
+						<td><input class="cron-toggle" <?php if( !empty( $feed->cron ) ) {
 								print 'checked="checked" ';
 							} ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Running" data-onstyle="success" data-off="Paused" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedOut; ?>" type="checkbox"/></td>
-                        <td class="text-right"><?php echo $feed->accepted; ?></td>
-                        <td class="text-right"><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode( $feed->idFeedOut ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
-                        <td class="text-right"><?php echo $feed->queued; ?></td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editfeed" data-mode="edit" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Edit Feed</button>
-                                <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <span class="caret"></span>
-                                    <span class="sr-only">Toggle Dropdown</span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" data-toggle="modal" data-target="#modal-showpop" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Show populations</a></li>
-                                    <li><a href="#" data-toggle="modal" data-target="#newfeed" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Duplicate feed</a></li>
-                                    <li><a href="#" data-toggle="modal" data-target="#modal-testrecord" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Send test record</a></li>
-                                    <li><a href="#" data-toggle="modal" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
-                                    <li><a href="#" data-toggle="modal" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
-                                    <li><a href="#" data-toggle="modal" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
-                                    <li><a href="#" data-toggle="modal" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Retry rejections</a></li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
+						<td class="text-right"><?php echo $feed->accepted; ?></td>
+						<td class="text-right"><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode( $feed->idFeedOut ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
+						<td class="text-right"><?php echo $feed->queued; ?></td>
+						<td class="text-center">
+							<div class="btn-group">
+								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editfeed" data-mode="edit" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Edit Feed</button>
+								<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									<span class="caret"></span>
+									<span class="sr-only">Toggle Dropdown</span>
+								</button>
+								<ul class="dropdown-menu">
+									<li><a href="#" data-toggle="modal" data-target="#modal-showpop" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Show populations</a></li>
+									<li><a href="#" data-toggle="modal" data-target="#newfeed" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Duplicate feed</a></li>
+									<li><a href="#" data-toggle="modal" data-target="#modal-testrecord" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Send test record</a></li>
+									<li><a href="#" data-toggle="modal" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
+									<li><a href="#" data-toggle="modal" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
+									<li><a href="#" data-toggle="modal" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
+									<li><a href="#" data-toggle="modal" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Retry rejections</a></li>
+								</ul>
+							</div>
+						</td>
+					</tr>
 					<?php
 				}
 			}
 			?>
-            <tfoot>
-            <tr>
-                <td colspan='2'>GRAND TOTAL</td>
-                <td colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
-                <td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
-                <td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
-                <td class="text-right"><?php echo number_format( $grandTotalQueued, 0 ); ?></td>
-                <td>&nbsp;</td>
-            </tr>
-            </tfoot>
-        </table>
+			<tfoot>
+			<tr>
+				<td colspan='2'>GRAND TOTAL</td>
+				<td colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
+				<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
+				<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
+				<td class="text-right"><?php echo number_format( $grandTotalQueued, 0 ); ?></td>
+				<td>&nbsp;</td>
+			</tr>
+			</tfoot>
+		</table>
 		<?php
 	}
 	?>
 
-    <div class="modal fade" id="newfeed" tabindex="-1" role="dialog" aria-labelledby="newfeed_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="newfeed_title">Add a new outgoing feed</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="modal-save-newfeed" type="button" class="btn btn-primary">Add feed</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="newfeed" tabindex="-1" role="dialog" aria-labelledby="newfeed_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="newfeed_title">Add a new outgoing feed</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-newfeed" type="button" class="btn btn-primary">Add feed</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="editfeed" tabindex="-1" role="dialog" aria-labelledby="editfeed_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="editfeed_title">Edit an outgoing feed</h4>
-                </div>
-                <div class="modal-body"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="modal-save-editfeed" type="button" class="btn btn-primary">Save changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="editfeed" tabindex="-1" role="dialog" aria-labelledby="editfeed_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="editfeed_title">Edit an outgoing feed</h4>
+				</div>
+				<div class="modal-body"></div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-editfeed" type="button" class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="modal-showpop" tabindex="-1" role="dialog" aria-labelledby="showpop_title">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="showpop_title">Population Settings</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modal-showpop" tabindex="-1" role="dialog" aria-labelledby="showpop_title">
+		<div class="modal-dialog modal-xl" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="showpop_title">Population Settings</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="modal-clearqueue" tabindex="-1" role="dialog" aria-labelledby="clearqueue_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="clearqueue_title">Clear queued records</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modal-clearqueue" tabindex="-1" role="dialog" aria-labelledby="clearqueue_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="clearqueue_title">Clear queued records</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="modal-testrecord" tabindex="-1" role="dialog" aria-labelledby="testrecord_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="testrecord_title">Send a test record</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modal-testrecord" tabindex="-1" role="dialog" aria-labelledby="testrecord_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="testrecord_title">Send a test record</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="modal-urlreport" tabindex="-1" role="dialog" aria-labelledby="urlreport_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="urlreport_title">URL Report</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="modal-save-urlreport" type="button" class="btn btn-primary">Run Report</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modal-urlreport" tabindex="-1" role="dialog" aria-labelledby="urlreport_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="urlreport_title">URL Report</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-urlreport" type="button" class="btn btn-primary">Run Report</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="modal-import" tabindex="-1" role="dialog" aria-labelledby="import_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="import_title">Import Legacy Data</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="modal-save-import" type="button" class="btn btn-primary">Import</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modal-import" tabindex="-1" role="dialog" aria-labelledby="import_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="import_title">Import Legacy Data</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-import" type="button" class="btn btn-primary">Import</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="modal-retry-rejections" tabindex="-1" role="dialog" aria-labelledby="retry_rejections_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="retry_rejections_title">Retry Rejections</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="modal-save-retry-rejections" type="button" class="btn btn-primary">Submit</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modal-retry-rejections" tabindex="-1" role="dialog" aria-labelledby="retry_rejections_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="retry_rejections_title">Retry Rejections</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-retry-rejections" type="button" class="btn btn-primary">Submit</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="modal-newpop" tabindex="-1" role="dialog" aria-labelledby="newpop_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="newpop_title">Add a new population parameter</h4>
-                </div>
-                <div class="modal-body">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="modal-save-newpop" type="button" class="btn btn-primary">Add population</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modal-newpop" tabindex="-1" role="dialog" aria-labelledby="newpop_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="newpop_title">Add a new population parameter</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-newpop" type="button" class="btn btn-primary">Add population</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="modal fade" id="modal-editpop" tabindex="-1" role="dialog" aria-labelledby="editpop_title">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="editpop_title">Edit a population parameter</h4>
-                </div>
-                <div class="modal-body"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="modal-save-editpop" type="button" class="btn btn-primary">Save changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="modal fade" id="modal-editpop" tabindex="-1" role="dialog" aria-labelledby="editpop_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="editpop_title">Edit a population parameter</h4>
+				</div>
+				<div class="modal-body"></div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-editpop" type="button" class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <script type="text/javascript">
+	<script type="text/javascript">
 		$('#modal-save-newfeed').click(function (event) {
 			event.preventDefault();
 
@@ -2846,7 +2864,7 @@ include( INCLUDES . "c_header.php" );
 			//alert('#'+e+'popset_filter'+t+'_multipleInsert');
 			$('#' + e + 'popset_filter' + t + '_multipleInsert').html("");
 		}
-    </script>
+	</script>
 
 </body>
 </html>
