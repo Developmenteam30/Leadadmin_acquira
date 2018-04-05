@@ -577,7 +577,7 @@ include( INCLUDES . "c_header.php" );
 					<td class="hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
 					<td class="hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
 					<td><?php echo $divisions_selected; ?></td>
-					<td>
+					<td data-tf-sortKey="<?php echo intval( $prospect->percentage ); ?>">
 						<div class="progress">
 							<div class="progress-bar <?php echo $progressClass; ?>" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2.5em; width: <?php echo intval( $prospect->percentage ); ?>%">
 								<?php echo intval( $prospect->percentage ); ?>%
