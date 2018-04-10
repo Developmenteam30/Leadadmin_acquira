@@ -789,12 +789,12 @@ include( INCLUDES . "c_header.php" );
 			extensions: [{
 				name: 'sort',
 				types: [
-					'String', // Company
-					'String', // Name
-					'String', // Opportunity
-					'String', // Phone
-					'String', // Email
-					'String', // Divisions
+					'caseinsensitivestring', // Company
+					'caseinsensitivestring', // Name
+					'caseinsensitivestring', // Opportunity
+					'caseinsensitivestring', // Phone
+					'caseinsensitivestring', // Email
+					'caseinsensitivestring', // Divisions
 					'Number', // Percentage
 					{type: 'date', locale: 'en-US'} // Updated
 				],

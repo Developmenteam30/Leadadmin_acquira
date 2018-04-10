@@ -1192,15 +1192,15 @@ include( INCLUDES . "c_header.php" );
 			filters_row_index: 1,
 			col_types: [
 				'number',
-				'string',
-				'string',
+				'caseinsensitivestring',
+				'caseinsensitivestring',
 				{type: 'formatted-number', decimal: '.', thousands: ','},
-				'string',
+				'caseinsensitivestring',
 				{type: 'date', locale: 'en-US'},
-				'string',
+				'caseinsensitivestring',
 				{type: 'formatted-number', decimal: '.', thousands: ','},
-				'string',
-				'string',
+				'caseinsensitivestring',
+				'caseinsensitivestring',
 				{type: 'formatted-number', decimal: '.', thousands: ','}
 			],
 			extensions: [{
