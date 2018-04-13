@@ -38,7 +38,8 @@ if(isset($_SERVER['SERVER_ADDR']) && $_SERVER['SERVER_ADDR'] == '127.0.0.1'){ //
         //$folder_delimiter = "\\";
         //Database Connection Configuration, Production Environment
         define("DATABASE_NAME", 'dnrdmktg');
-        define("DATABASE_HOST", 'qmleads.ck44eyk7mgen.us-east-1.rds.amazonaws.com');
+        //define("DATABASE_HOST", 'qmleads.ck44eyk7mgen.us-east-1.rds.amazonaws.com'); // PNT
+		define("DATABASE_HOST", 'qmleads.cxkrvmxyvmna.us-east-1.rds.amazonaws.com'); // QM
         define("ENVIRONMENT", 'prod');
         define("MIGRATING", false);
         define("DATABASE_HOST_MIGRATION", '');
@@ -82,3 +83,4 @@ define( 'LOCAL_TIMEZONE', 'America/New_York' );
 define( 'COMPANY_LEGAL_NAME', 'Qatalyst, Inc.' );
 define( 'COMPANY_ADDRESS_1', '100 4th Avenue South #138' );
 define( 'COMPANY_ADDRESS_2', 'St Petersburg, FL 33701' );
+define( 'MAX_PHONE_LEADS_VENDORS', 10 );
