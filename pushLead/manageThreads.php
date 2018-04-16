@@ -13,7 +13,7 @@ require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
 $recordsPerRun = 1000;
-$maxThreads = 40;
+$maxThreads = 20;
 
 function countProcesses( $idFeedOut ) {
 
