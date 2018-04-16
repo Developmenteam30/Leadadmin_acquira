@@ -268,11 +268,11 @@ class Leads
 		return $results;
 	}
 
-	public function getStaffUsers( $format = PDO::FETCH_KEY_PAIR ) {
+	public function getStaffUsers( $format = \PDO::FETCH_KEY_PAIR, $forceAll = false ) {
 		$results = null;
 
 		try {
-			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			if( $forceAll || LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
 				$query = $this->db->prepare( "SELECT idUser,fullName FROM users WHERE level = ? ORDER BY username" );
 				$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
 			} else {

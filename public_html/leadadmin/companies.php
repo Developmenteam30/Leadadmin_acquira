@@ -360,7 +360,7 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Account Manager',
 					'type' => 'select',
 					'placeholder' => 'Select an account manager',
-					'choices' => $leads->getStaffUsers(),
+					'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
 				),
 				array(
 					'id' => 'note',
@@ -679,7 +679,7 @@ $('#country').on('change',function(event) {
 					'label' => 'Account Manager',
 					'type' => 'select',
 					'placeholder' => 'Select an account manager',
-					'choices' => $leads->getStaffUsers(),
+					'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
 					'value' => $company->accountManager,
 				),
 				array(
