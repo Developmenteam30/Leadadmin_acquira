@@ -3,7 +3,7 @@
 //Verserion 1.1
 //ES20130827 v1.1: Added two new constants for folder names for use in urls and such.
 
-define("CONFIG_COMPANY_NAME", "Qatalyst Media");
+define("CONFIG_COMPANY_NAME", "Qatalyst");
 define("SITE_URL", "qmleads.com");
 
 $folder_delimiter = "/";
