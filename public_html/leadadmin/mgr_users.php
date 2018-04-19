@@ -64,7 +64,7 @@ if( isset( $_REQUEST['a'] ) ) {
 			$message .= "Password: " . $_REQUEST['password'] . "\r\n";
 			$message .= "\r\n";
 
-			mail( OWNER_EMAIL, CONFIG_COMPANY_NAME . ' User Added', $message, 'From: lmsalerts@' . SITE_URL . "\r\nBCC: " . ADMINISTRATOR_EMAIL, '-f' . 'lmsalerts@' . SITE_URL );
+			mail( OWNER_EMAIL_FROM, CONFIG_COMPANY_NAME . ' User Added', $message, 'From: lmsalerts@' . SITE_URL . "\r\nCC: " . OWNER_EMAIL . "\r\nBCC: " . ADMINISTRATOR_EMAIL, '-f' . 'lmsalerts@' . SITE_URL );
 
 			$leads->auditLog( 'USERS:ADD', $idUser );
 
@@ -110,17 +110,6 @@ if( isset( $_REQUEST['a'] ) ) {
 				$result['error'] = 'Unable to edit user';
 				break;
 			}
-
-			/*
-						$message  = "\r\n";
-						$message .= "A new user was created in the " . CONFIG_COMPANY_NAME . " System.\r\n";
-						$message .= "\r\n";
-						$message .= "Username: " . $_REQUEST['username'] . "\r\n";
-						$message .= "Password: " . $_REQUEST['password'] . "\r\n";
-						$message .= "\r\n";
-
-						mail( OWNER_EMAIL, CONFIG_COMPANY_NAME . ' User Added', $message, 'From: lmsalerts@'.SITE_URL . "\r\nBCC: " . ADMINISTRATOR_EMAIL, '-f' . 'lmsalerts@'.SITE_URL );
-			*/
 
 			$leads->auditLog( 'USERS:EDIT', $_REQUEST['idUser'] );
 
