@@ -523,9 +523,10 @@ include( INCLUDES . "c_header.php" );
 
 	<?php
 
-	if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) && !array_key_exists( $filterUserId, $staffUsers ) ) {
+	if( !empty( $filterUserId ) && !array_key_exists( $filterUserId, $staffUsers ) ) {
 		$filterUserId = LeadsSession::getUserId();
 	}
+
 	$prospects = $leads->getProspects( $filterStatus, $filterUserId );
 	if( empty( $prospects ) ) {
 
@@ -586,7 +587,7 @@ include( INCLUDES . "c_header.php" );
 						<?php echo htmlentities( $prospect->expectedClose ); ?>
 					</td>
 					<td><?php echo !empty( $prospect->lastDate ) ? htmlentities( date( 'Y-m-d', strtotime( $prospect->lastDate ) ) ) : ''; ?></td>
-					<td class="text-center">
+					<td class="text-center" style="min-width:75px;">
 						<div class="btn-group">
 							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
 							<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
