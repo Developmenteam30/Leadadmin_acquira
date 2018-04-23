@@ -322,6 +322,24 @@ div.logoContainer { width: 225px; }
 	white-space: nowrap;
 }
 
+.dashboard-incoming-col-large {
+	width: 55%;
+}
+.dashboard-incoming-col-small {
+	width: 15%;
+}
+
+.dashboard-outgoing-col-large {
+	width: 40%;
+}
+.dashboard-outgoing-col-large-embedded {
+	width: 55%;
+}
+.dashboard-outgoing-col-small {
+	width: 15%;
+}
+
+
 @media (min-width: 768px) {
 	.modal-xl {
 		width: 90%;

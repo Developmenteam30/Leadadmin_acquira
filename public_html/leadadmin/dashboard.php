@@ -119,8 +119,8 @@ if( isset( $_REQUEST['d'] ) ) {
 						?>
 						<tr>
 							<td><?php echo $url['url']; ?></td>
-							<td class="aRight"><?php echo number_format( $url['accepted'], 0 ); ?></td>
-							<td class="aRight"><?php echo number_format( $url['rejected'], 0 ); ?></td>
+							<td class="aRight dashboard-incoming-col-small"><?php echo number_format( $url['accepted'], 0 ); ?></td>
+							<td class="aRight dashboard-incoming-col-small"><?php echo number_format( $url['rejected'], 0 ); ?></td>
 						</tr>
 						<?php
 					}
@@ -308,24 +308,24 @@ include( INCLUDES . "c_header.php" );
 							}
 							?>
 							<tr class="clickable striped-master" onclick="toggleHidden('incoming_companyFeedList_<?php echo $categoryKey; ?>', {'sub':<?php echo $idCompany; ?>});">
-								<td><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
-								<td class="text-center">
+								<td class=" dashboard-incoming-col-large"><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
+								<td class="text-center dashboard-incoming-col-small">
 									<button type="button" class="btn <?php echo ( empty( $feed->lastDate ) || strtotime( $feed->lastDate ) < strtotime( '1 month ago' ) ) ? 'btn-danger' : 'btn-primary'; ?> btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button>
 								</td>
-								<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
-								<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
+								<td class="text-right dashboard-incoming-col-small"><?php echo number_format( $totalAccepted, 0 ); ?></td>
+								<td class="text-right dashboard-incoming-col-small"><?php echo number_format( $totalRejected, 0 ); ?></td>
 							</tr>
 							<tr id="incoming_companyFeedList_<?php echo $categoryKey . '_' . $idCompany; ?>" class="hidden-custom">
-								<td colspan="3">
+								<td colspan="4">
 									<table class="table table-bordered table-condensed table-striped">
 										<?php
 										foreach( $companyFeedList as $feed ) {
 											?>
 											<tr>
-												<td><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</td>
-												<td class="text-right"><?php echo number_format( $feed->dailyCount, 0 ); ?></td>
-												<td class="text-right"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo number_format( $feed->dailyCountInvalid, 0 ); ?></a></td>
-												<td class="text-center"><a class="btn btn-primary btn-xs nonLink" href="#" id="link_feedinc_<?php echo $feed->idFeedIn; ?>" onclick="display('feedinc', { 'sub':'<?php echo $feed->idFeedIn; ?>', 'idFeedIn':'<?php echo $feed->idFeedIn; ?>', 'hiddenText': 'Show URLs', 'shownText': 'Close' } );">Show URLs</a></td>
+												<td class="dashboard-incoming-col-large"><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</td>
+												<td class="text-center dashboard-incoming-col-small"><a class="btn btn-primary btn-xs nonLink" href="#" id="link_feedinc_<?php echo $feed->idFeedIn; ?>" onclick="display('feedinc', { 'sub':'<?php echo $feed->idFeedIn; ?>', 'idFeedIn':'<?php echo $feed->idFeedIn; ?>', 'hiddenText': 'Show URLs', 'shownText': 'Close' } );">Show URLs</a></td>
+												<td class="text-right dashboard-incoming-col-small"><?php echo number_format( $feed->dailyCount, 0 ); ?></td>
+												<td class="text-right dashboard-incoming-col-small"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo number_format( $feed->dailyCountInvalid, 0 ); ?></a></td>
 											</tr>
 											<tr>
 												<td class="hidden-custom" id="feedinc_<?php echo $feed->idFeedIn; ?>" colspan="4"></td>
@@ -429,12 +429,12 @@ include( INCLUDES . "c_header.php" );
 							$grandTotalFeeds += count( $companyFeedList );
 							?>
 							<tr class="clickable striped-master" onclick="toggleHidden('outgoing_companyFeedList_<?php echo $categoryKey; ?>', {'sub':<?php echo $idCompany; ?>});">
-								<td><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
-								<td class="text-center">
+								<td class="dashboard-outgoing-col-large"><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
+								<td class="text-center dashboard-outgoing-col-small">
 									<button type="button" class="btn <?php echo ( empty( $feed->lastDate ) || strtotime( $feed->lastDate ) < strtotime( '1 month ago' ) ) ? 'btn-danger' : 'btn-primary'; ?> btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button>
 								</td>
-								<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
-								<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
+								<td class="text-right dashboard-outgoing-col-small"><?php echo number_format( $totalAccepted, 0 ); ?></td>
+								<td class="text-right dashboard-outgoing-col-small"><?php echo number_format( $totalRejected, 0 ); ?></td>
 								<?php
 								if( $totalQueued > 5000 ) {
 									$bg = 'bg-danger';
@@ -444,19 +444,19 @@ include( INCLUDES . "c_header.php" );
 									$bg = 'bg-success';
 								}
 								?>
-								<td class="text-right <?php print $bg; ?>"><?php echo number_format( $totalQueued, 0 ); ?></td>
+								<td class="text-right dashboard-outgoing-col-small <?php print $bg; ?>"><?php echo number_format( $totalQueued, 0 ); ?></td>
 							</tr>
 							<tr id="outgoing_companyFeedList_<?php echo $categoryKey . '_' . $idCompany; ?>" class="hidden-custom">
-								<td colspan="4">
+								<td colspan="5">
 									<table class="table table-bordered table-condensed table-striped">
 										<?php
 										foreach( $companyFeedList as $feed ) {
 											?>
 											<tr>
-												<td><?php echo $feed->idFeedOut; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</td>
-												<td><?php echo number_format( $feed->dailyCount, 0 ); ?></td>
-												<td><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode( $feed->idFeedOut ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo number_format( $feed->dailyCountInvalid, 0 ); ?></a></td>
-												<td><?php echo number_format( $feed->dailyCountQueued, 0 ); ?></td>
+												<td class="dashboard-outgoing-col-large-embedded"><?php echo $feed->idFeedOut; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</td>
+												<td class="text-right dashboard-outgoing-col-small"><?php echo number_format( $feed->dailyCount, 0 ); ?></td>
+												<td class="text-right dashboard-outgoing-col-small"><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode( $feed->idFeedOut ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo number_format( $feed->dailyCountInvalid, 0 ); ?></a></td>
+												<td class="text-right dashboard-outgoing-col-small"><?php echo number_format( $feed->dailyCountQueued, 0 ); ?></td>
 											</tr>
 											<?php
 										}
