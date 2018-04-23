@@ -166,6 +166,20 @@ class Leads
 		}
 	}
 
+	public function getConnectionId() {
+
+		$results = null;
+		try {
+			$query = $this->db->prepare( "SELECT CONNECTION_ID()" );
+			$query->execute();
+			$results = $query->fetchColumn();
+		} catch( \PDOException $e ) {
+			$this->logError( 'Unable to get connection ID: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function getConfiguration( $config_key ) {
 		$value = null;
 
@@ -1221,10 +1235,13 @@ class Leads
 		$params = array();
 
 		try {
-			$sql = "SELECT p.*,u.fullName,MAX(timestamp) AS lastDate ";
-			$sql .= "FROM prospects p ";
+			$sql = "SELECT p.*,n.*,u.fullName ";
+			$sql .= "FROM prospects AS p ";
+			$sql .= "LEFT JOIN prospects_notes AS n ON n.prospectId = p.prospectId ";
 			$sql .= "LEFT JOIN users u ON p.userId = u.idUser ";
-			$sql .= "LEFT JOIN prospects_notes n ON p.prospectId = n.prospectId ";
+			$sql .= "JOIN (";
+			$sql .= "SELECT MAX(noteId) AS noteId FROM prospects_notes GROUP BY prospectId ";
+			$sql .= ") AS nm ON nm.noteId = n.noteId ";
 			$sql .= "WHERE 1=1 ";
 			if( !empty( $status ) && 'active' == $status ) {
 				$sql .= "AND p.isArchived = 0 ";
@@ -3065,6 +3082,7 @@ class Leads
 
 		return $results;
 	}
+
 	public function getInboundURLStats( $idFeedIn ) {
 		$results = array();
 

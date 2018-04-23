@@ -18,9 +18,9 @@ class Display
 		$leads = Leads::getInstance();
 		$errorList = $leads->getErrors();
 		?>
-        <div class="fr">
-            <a href="#" class="nonLink" onclick="closeContent(" errorList");" >Close [X]</a>
-        </div>
+		<div class="fr">
+			<a href="#" class="nonLink" onclick="closeContent(" errorList");" >Close [X]</a>
+		</div>
 		<?php
 
 		if( $errorList === null ) {
@@ -54,8 +54,8 @@ class Display
 				continue;
 			}
 
-			if( !in_array( $field['type'], array( '_toggle_start', '_toggle_end' ) ) ) {
-				printf( "\t<div>\n" );
+			if( !in_array( $field['type'], array( '_toggle_start', '_toggle_end', '_html', '_text', 'hidden' ) ) ) {
+				printf( "\t<div class='pnt-form-row'>\n" );
 			}
 
 			if( in_array( $field['type'], array( 'text', 'number', 'tel', 'date', 'email', 'password', 'url' ) ) ) {
@@ -256,10 +256,6 @@ class Display
 
 			} else if( '_html' == $field['type'] ) {
 
-				printf( "\t<label data-for=\"%s\">%s</label>\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
-				);
 				printf( "\t<span>%s</span>\n", $field['value'] );
 
 			} else if( '_text' == $field['type'] ) {
@@ -272,7 +268,7 @@ class Display
 
 			}
 
-			if( !in_array( $field['type'], array( '_toggle_start', '_toggle_end' ) ) ) {
+			if( !in_array( $field['type'], array( '_toggle_start', '_toggle_end', '_html', '_text', 'hidden' ) ) ) {
 				printf( "\t</div>\n" );
 			}
 

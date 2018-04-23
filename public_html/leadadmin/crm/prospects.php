@@ -15,6 +15,7 @@ $filterUserId = !empty( $_REQUEST['filterUserId'] ) ? $_REQUEST['filterUserId'] 
 $staffUsers = array(
 	'47' => 'Bobby Lindsey',
 	'3' => 'Chris Meehan',
+	'65' => 'Diana DiDiego',
 	'63' => 'Naomi Barbeau',
 );
 
@@ -45,8 +46,32 @@ if( isset( $_REQUEST['a'] ) ) {
 				}
 			}
 
+			if( $c && empty( $_REQUEST['actionType'] ) ) {
+				$result['error'] = 'Please select the action type.';
+				$c = false;
+			}
+
 			if( $c && empty( $_REQUEST['note'] ) ) {
 				$result['error'] = 'Please type your note.';
+				$c = false;
+			}
+
+			if( $c && strlen( $_REQUEST['note'] ) > 65535 ) {
+				$result['error'] = 'Please limit your note to 65,535 characters or less.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['followUpDate'] ) ) {
+				try {
+					$followUpDate = new DateTime( $_REQUEST['followUpDate'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid follow-up date.';
+					$c = false;
+				}
+			}
+
+			if( $c && strlen( $_REQUEST['nextSteps'] ) > 65535 ) {
+				$result['error'] = 'Please limit your next steps note to 65,535 characters or less.';
 				$c = false;
 			}
 
@@ -56,6 +81,9 @@ if( isset( $_REQUEST['a'] ) ) {
 					'userId' => LeadsSession::getUserId(),
 					'timestamp' => date( 'Y-m-d H:i:s' ),
 					'note' => trim( $_REQUEST['note'] ),
+					'actionType' => trim( $_REQUEST['actionType'] ),
+					'nextSteps' => trim( $_REQUEST['nextSteps'] ),
+					'followUpDate' => !isset( $followUpDate ) ? null : $followUpDate->format( 'Y-m-d' ),
 				) );
 				if( null === $noteId ) {
 					$c = false;
@@ -432,14 +460,54 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			$fields = array(
 				array(
+					'id' => 'html_start',
+					'type' => '_html',
+					'value' => '<div class="col-md-6">',
+					'active' => false,
+				),
+				array(
+					'id' => 'actionType',
+					'label' => 'Action Type',
+					'type' => 'select',
+					'choices' => array(
+						'phone' => 'Phone',
+						'email' => 'Email',
+						'text' => 'Text Message',
+						'skype' => 'Skype',
+						'inperson' => 'In Person',
+					),
+				),
+				array(
 					'id' => 'note',
 					'label' => 'Add a Note',
+					'type' => 'textarea',
+				),
+				array(
+					'id' => 'html_start',
+					'type' => '_html',
+					'value' => '</div><div class="col-md-6">',
+					'active' => false,
+				),
+				array(
+					'id' => 'followUpDate',
+					'label' => 'Follow Up Date',
+					'type' => 'text',
+				),
+				array(
+					'id' => 'nextSteps',
+					'label' => 'Next Steps',
 					'type' => 'textarea',
 				),
 				array(
 					'id' => 'prospectId',
 					'type' => 'hidden',
 					'value' => $prospect->prospectId,
+				),
+				array(
+					'id' => 'html_start',
+					'type' => '_html',
+					'value' => '</div>',
+					'active' => false,
 				),
 				array(
 					'id' => 'a',
@@ -455,11 +523,14 @@ if( isset( $_REQUEST['d'] ) ) {
 				print '<p>There are no notes on file for this prospect.</p>' . PHP_EOL;
 			} else {
 				foreach( $notes as $note ) {
-					printf( '<hr/><p>On <strong>%s</strong> at %s, <strong>%s</strong> wrote:<br/>%s</p>' . PHP_EOL,
+					printf( '<hr/><p>On <strong>%s</strong> at %s, <strong>%s</strong> wrote:</p>%s%s%s%s' . PHP_EOL,
 						date( 'D, M jS, Y', strtotime( $note->timestamp ) ),
 						date( 'g:ia', strtotime( $note->timestamp ) ),
 						htmlentities( $note->fullName ),
-						nl2br( htmlentities( $note->note ) )
+						!empty( $note->actionType ) ? ( '<p><strong>Action Taken:</strong> ' . nl2br( htmlentities( $note->actionType ) ) . '</p>' ) : '',
+						!empty( $note->note ) ? ( '<p><strong>Notes:</strong> ' . nl2br( htmlentities( $note->note ) ) . '</p>' ) : '',
+						!empty( $note->followUpDate ) ? ( '<p><strong>Follow-Up Date:</strong> ' . nl2br( htmlentities( $note->followUpDate ) ) . '</p>' ) : '',
+						!empty( $note->nextSteps ) ? ( '<p><strong>Next Steps:</strong> ' . nl2br( htmlentities( $note->nextSteps ) ) . '</p>' ) : ''
 					);
 				}
 			}
@@ -540,12 +611,13 @@ include( INCLUDES . "c_header.php" );
 			<tr class="bgGray header">
 				<th>Company</th>
 				<th>Name</th>
-				<th class="hidden-xs">Opportunity</th>
-				<th class="hidden-xs">Phone</th>
-				<th class="hidden-xs">Email</th>
+				<th class="hidden-md hidden-sm hidden-xs">Opportunity</th>
+				<th class="hidden-md hidden-sm hidden-xs">Phone</th>
+				<th class="hidden-md hidden-sm hidden-xs">Email</th>
 				<th>Divisions</th>
 				<th>Percentage</th>
-				<th>Updated</th>
+				<th>Follow-Up</th>
+				<th class="hidden-md hidden-sm hidden-xs">Updated</th>
 				<th>Options</th>
 			</tr>
 			</thead>
@@ -574,19 +646,20 @@ include( INCLUDES . "c_header.php" );
 				<tr>
 					<td><?php echo htmlentities( $prospect->company ); ?></td>
 					<td><?php echo htmlentities( $prospect->name ); ?></td>
-					<td class="hidden-xs"><?php echo htmlentities( $prospect->opportunity ); ?></td>
-					<td class="hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
-					<td class="hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
-					<td><?php echo $divisions_selected; ?></td>
+					<td class="hidden-md hidden-sm hidden-xs"><?php echo htmlentities( $prospect->opportunity ); ?></td>
+					<td class="hidden-md hidden-sm hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
+					<td class="hidden-md hidden-sm hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
+					<td class="pnt-nowrap"><?php echo $divisions_selected; ?></td>
 					<td data-tf-sortKey="<?php echo intval( $prospect->percentage ); ?>">
 						<div class="progress">
 							<div class="progress-bar <?php echo $progressClass; ?>" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2.5em; width: <?php echo intval( $prospect->percentage ); ?>%">
 								<?php echo intval( $prospect->percentage ); ?>%
 							</div>
 						</div>
-						<?php echo htmlentities( $prospect->expectedClose ); ?>
+						<?php echo !empty( $prospect->expectedClose ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->expectedClose ) ) : '&nbsp;'; ?>
 					</td>
-					<td><?php echo !empty( $prospect->lastDate ) ? htmlentities( date( 'Y-m-d', strtotime( $prospect->lastDate ) ) ) : ''; ?></td>
+					<td data-tf-sortKey="<?php echo htmlentities( $prospect->followUpDate ); ?>"><?php echo !empty( $prospect->followUpDate ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->followUpDate ) ) : ''; ?></td>
+					<td class="hidden-md hidden-sm hidden-xs" data-tf-sortKey="<?php echo htmlentities( $prospect->timestamp ); ?>"><?php echo !empty( $prospect->timestamp ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->timestamp ) ) : ''; ?></td>
 					<td class="text-center" style="min-width:75px;">
 						<div class="btn-group">
 							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
@@ -782,6 +855,13 @@ include( INCLUDES . "c_header.php" );
 		});
 	});
 
+	$('#prospectnotes').on('shown.bs.modal', function (e) {
+		$(".modal-body input[name=followUpDate]").datepicker({
+			// Consistent format with the HTML5 picker
+			dateFormat: 'yy-mm-dd'
+		});
+	});
+
 	$('table').each(function () {
 		var tf = new TableFilter($(this).attr('id'), {
 			base_path: '/leadadmin/libraries/tablefilter/',
@@ -797,6 +877,7 @@ include( INCLUDES . "c_header.php" );
 					'caseinsensitivestring', // Email
 					'caseinsensitivestring', // Divisions
 					'Number', // Percentage
+					{type: 'date', locale: 'en-US'}, // Follow-Up
 					{type: 'date', locale: 'en-US'} // Updated
 				],
 				image_asc_class_name: 'custom-ascending',

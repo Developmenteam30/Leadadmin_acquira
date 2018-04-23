@@ -216,8 +216,8 @@ input::-webkit-inner-spin-button {
 	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 
-div.headerRow { 
-	padding: 10px 10px 10px 10px; 
+div.headerRow {
+	padding: 10px 10px 10px 10px;
 }
 div.headerRow.client {
 	background-color: #dcdcdc;
@@ -312,6 +312,14 @@ div.logoContainer { width: 225px; }
 .crm-highlight {
 	color: #FF0000;
 	font-weight: bold;
+}
+
+.pnt-form-row {
+	margin-bottom: 0.5em;
+}
+
+.pnt-nowrap {
+	white-space: nowrap;
 }
 
 @media (min-width: 768px) {
