@@ -35,7 +35,7 @@ include( INCLUDES . "c_header.php" );
 
 	<?php
 
-	$employeeId = ( !empty( $_REQUEST['userId'] ) && LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) ? $_REQUEST['userId'] : LeadsSession::getUserId();
+	$employeeId = ( !empty( $_REQUEST['userId'] ) && LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) ? $_REQUEST['userId'] : LeadsSession::getUserId();
 	$monthId = !empty( $_REQUEST['month'] ) ? $_REQUEST['month'] : '000000';
 	$users = $leads->getStaffUsers( PDO::FETCH_OBJ );
 	if( empty( $users ) ) {
@@ -163,7 +163,7 @@ include( INCLUDES . "c_header.php" );
                                 <th>Payment Amount</th>
                                 <th>Payment Date</th>
                                 <th>Commission</th>
-								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
                                     <th>Actions</th>
 								<?php } ?>
                             </tr>
@@ -196,13 +196,13 @@ include( INCLUDES . "c_header.php" );
                                         <td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
                                         <td><?php echo htmlentities( $entry->paymentDate ); ?></td>
                                         <td>$<?php echo number_format( $commissionAmount, 2 ); ?></td>
-										<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
-                                            <td class="text-center"><?php if( '4' === $entry->divisionId ) { ?>
+										<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
+                                            <td class="text-center"><?php if( 'ledger_offline' === $entry->source ) { ?>
                                                     <button type="button" class="btn btn-primary btn-xs"
                                                             data-toggle="modal" data-target="#editofflineledger"
                                                             data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit
                                                     </button>
-												<?php } else if( '5' === $entry->divisionId ) { ?>
+												<?php } else if( 'ledger_phones' === $entry->source ) { ?>
                                                     <button type="button" class="btn btn-primary btn-xs"
                                                             data-toggle="modal" data-target="#editphoneledger"
                                                             data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit
@@ -228,7 +228,7 @@ include( INCLUDES . "c_header.php" );
                                 <td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
                                 <td>&nbsp;</td>
                                 <td>$<?php echo number_format( $commissionTotal, 2 ); ?></td>
-								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
                                     <td>&nbsp;</td>
 								<?php } ?>
                             </tr>

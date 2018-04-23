@@ -161,9 +161,9 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->commissionDate1 ); ?>&nbsp;<br/><?php echo htmlentities( $entry->commissionDate2 ); ?>&nbsp;</td>
 			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-center"><?php if( '4' === $entry->divisionId ) { ?>
+			<td class="text-center"><?php if( 'ledger_offline' === $entry->source ) { ?>
 <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
-<?php } else if( '5' === $entry->divisionId ) { ?>
+<?php } else if( 'ledger_phones' === $entry->source ) { ?>
 <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editphoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button> 
 <?php } else if( 'email' === $entry->source ) { print "&nbsp;"; ?>
 <?php } else { ?>

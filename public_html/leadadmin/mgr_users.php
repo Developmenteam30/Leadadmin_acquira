@@ -259,6 +259,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Client Import Access',
 							LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Client Dashboard Access',
 							LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
+							LEADS_SESSION_LEVEL_MANAGER => 'Manager',
 							LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
 						),
 						'required' => true,
@@ -327,6 +328,8 @@ include( INCLUDES . "c_header.php" );
 			$level = $user->level;
 			if( LEADS_SESSION_LEVEL_ADMIN == $level ) {
 				$level = 'Administrator';
+			} else if( LEADS_SESSION_LEVEL_MANAGER == $level ) {
+				$level = 'Manager';
 			} else if( LEADS_SESSION_LEVEL_STAFF == $level ) {
 				$level = 'Staff Member';
 			} else if( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD == $level ) {

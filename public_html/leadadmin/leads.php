@@ -32,7 +32,7 @@ if( isset( $_REQUEST['a'] ) ) {
 		case "addPhoneLedger":
 			$result['error'] = 'Failed when trying to add a new ledger entry.';
 
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$result['error'] = 'You do not have access to add/edit entries.';
 				break;
 			}
@@ -205,7 +205,7 @@ if( isset( $_REQUEST['a'] ) ) {
 			break;
 
 		case "deletePhoneLedger":
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$result['error'] = 'You do not have access to add/edit entries.';
 				break;
 			}
@@ -236,7 +236,7 @@ if( isset( $_REQUEST['a'] ) ) {
 		case "editPhoneLedger":
 			$result['error'] = 'Failed when trying to edit a ledger entry.';
 
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$result['error'] = 'You do not have access to add/edit entries.';
 				break;
 			}
@@ -1128,7 +1128,7 @@ include( INCLUDES . "c_header.php" );
 
     <h2>Leads Ledger</h2>
 
-	<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+	<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
         <p>
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button>
         </p>
@@ -1234,7 +1234,7 @@ include( INCLUDES . "c_header.php" );
                         <th>Pmt Amt</th>
                         <th>Salesperson 1</th>
                         <th>Commissions 1</th>
-						<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+						<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
                             <th rowspan="2" style="vertical-align: middle;">Options</th>
 						<?php } ?>
                     </tr>
@@ -1257,10 +1257,10 @@ include( INCLUDES . "c_header.php" );
 						if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
 							$invoiceAmount += $entry->invoiceAmount;
 							$loInvoiceAmount += $entry->loInvoiceAmount1;
-							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) {
+							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId1 ) {
 								$commissionTotal += $entry->commissionAmount1;
 							}
-							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) {
+							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId2 ) {
 								$commissionTotal += $entry->commissionAmount2;
 							}
 							$paymentTotal += $entry->paymentAmount;
@@ -1281,8 +1281,8 @@ include( INCLUDES . "c_header.php" );
                                 <td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
                                 <td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
                                 <td><?php echo htmlentities( $entry->fullName1 ); ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?></td>
-								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : '&nbsp;'; ?></td>
+								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
                                     <td class="text-center" rowspan="2" style="vertical-align: middle;">
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editphoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
@@ -1307,7 +1307,7 @@ include( INCLUDES . "c_header.php" );
                                 <td><?php echo htmlentities( $entry->loPaymentMethod1 ); ?></td>
                                 <td>$<?php echo number_format( $entry->loPaymentAmount1, 2 ); ?></td>
                                 <td><?php htmlentities( $entry->fullName2 ); ?></td>
-                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?></td>
+                                <td><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?></td>
                             </tr>
                             </tbody>
 							<?php
@@ -1328,7 +1328,7 @@ include( INCLUDES . "c_header.php" );
 		                <td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 		                <td>&nbsp;</td>
 		                <td rowspan="2">$<?php echo number_format( $commissionTotal, 2 ); ?></td>
-		                <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+		                <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
 			                <td>&nbsp;</td>
 		                <?php } ?>
 	                </tr>
@@ -1343,7 +1343,7 @@ include( INCLUDES . "c_header.php" );
 		                <td>&nbsp;</td>
 		                <td>$<?php echo number_format( $loPaymentTotal, 2 ); ?></td>
 		                <td>&nbsp;</td>
-		                <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) { ?>
+		                <?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
 			                <td>&nbsp;</td>
 		                <?php } ?>
 	                </tr>

@@ -121,7 +121,7 @@ if( isset( $_REQUEST['a'] ) ) {
 			}
 
 			$userId = LeadsSession::getUserId();
-			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				if( $c && empty( $_REQUEST['userId'] ) ) {
 					$result['error'] = 'Please select a salesperson from the list.';
 					$c = false;
@@ -195,7 +195,7 @@ if( isset( $_REQUEST['a'] ) ) {
 			}
 
 			$userId = LeadsSession::getUserId();
-			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				if( $c && empty( $_REQUEST['userId'] ) ) {
 					$result['error'] = 'Please select a salesperson from the list.';
 					$c = false;
@@ -296,7 +296,6 @@ if( isset( $_REQUEST['d'] ) ) {
 						'75' => 'Agreement/IO Pending (75%)',
 						'100' => 'Closed (100%)',
 					),
-					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ? true : false,
 				),
 				array(
 					'id' => 'expectedClose',
@@ -309,6 +308,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'select',
 					'placeholder' => 'Select a salesperson',
 					'choices' => $leads->getStaffUsers(),
+					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ? true : false,
 				),
 				array(
 					'id' => 'note',
@@ -415,7 +415,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'placeholder' => 'Select a salesperson',
 					'choices' => $leads->getStaffUsers(),
 					'value' => $prospect->userId,
-					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ? true : false,
+					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ? true : false,
 				),
 				array(
 					'id' => 'isArchived',
@@ -566,7 +566,7 @@ include( INCLUDES . "c_header.php" );
 			} ?>>Show archived prospects
 			</option>
 		</select>
-		<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+		<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 			$users = $leads->getStaffUsers();
 		} else {
 			$users = $staffUsers;

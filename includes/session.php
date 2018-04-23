@@ -9,6 +9,7 @@ $session = new PdoSessionHandler( $pdo );
 session_set_save_handler( $session );
 
 define( 'LEADS_SESSION_LEVEL_ADMIN', 90 );
+define( 'LEADS_SESSION_LEVEL_MANAGER', 75 );
 define( 'LEADS_SESSION_LEVEL_STAFF', 50 );
 define( 'LEADS_SESSION_LEVEL_CLIENT_DASHBOARD', 30 );
 define( 'LEADS_SESSION_LEVEL_CLIENT_IMPORT', 20 );

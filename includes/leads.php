@@ -286,7 +286,7 @@ class Leads
 		$results = null;
 
 		try {
-			if( $forceAll || LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+			if( $forceAll || LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$query = $this->db->prepare( "SELECT idUser,fullName FROM users WHERE level = ? ORDER BY username" );
 				$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
 			} else {
@@ -592,7 +592,7 @@ class Leads
 
 		$sql = "SELECT * FROM ledger WHERE ledgerId = ? ";
 		$params[] = $ledgerId;
-		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 			$sql .= "AND userId = ? ";
 			$params[] = LeadsSession::getUserId();
 		}
@@ -614,7 +614,7 @@ class Leads
 
 		$sql = "SELECT * FROM ledger_offline WHERE ledgerId = ? ";
 		$params[] = $ledgerId;
-		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 			$sql .= "AND ( userId1 = ? OR userId2 = ? ) ";
 			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
@@ -664,7 +664,7 @@ class Leads
 		}
 		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
-		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 			$sql .= "AND ( userId1 = ? OR userId2 = ? ) ";
 			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
@@ -691,7 +691,7 @@ class Leads
 		$params[] = $indexId;
 		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
-		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_ADMIN ) ) {
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 			$sql .= "AND ( userId1 = ? OR userId2 = ? )";
 			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
