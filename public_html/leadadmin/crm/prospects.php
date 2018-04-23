@@ -129,6 +129,25 @@ if( isset( $_REQUEST['a'] ) ) {
 				$userId = empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'];
 			}
 
+			if( $c && strlen( $_REQUEST['note'] ) > 65535 ) {
+				$result['error'] = 'Please limit your note to 65,535 characters or less.';
+				$c = false;
+			}
+
+			if( $c && !empty( $_REQUEST['followUpDate'] ) ) {
+				try {
+					$followUpDate = new DateTime( $_REQUEST['followUpDate'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid follow-up date.';
+					$c = false;
+				}
+			}
+
+			if( $c && strlen( $_REQUEST['nextSteps'] ) > 65535 ) {
+				$result['error'] = 'Please limit your next steps note to 65,535 characters or less.';
+				$c = false;
+			}
+
 			if( $c ) {
 				$prospectId = $leads->addProspect( array(
 					'company' => $_REQUEST['company'],
@@ -152,6 +171,9 @@ if( isset( $_REQUEST['a'] ) ) {
 							'userId' => LeadsSession::getUserId(),
 							'timestamp' => date( 'Y-m-d H:i:s' ),
 							'note' => trim( $_REQUEST['note'] ),
+							'actionType' => trim( $_REQUEST['actionType'] ),
+							'nextSteps' => trim( $_REQUEST['nextSteps'] ),
+							'followUpDate' => !isset( $followUpDate ) ? null : $followUpDate->format( 'Y-m-d' ),
 						) );
 					}
 				}
@@ -311,8 +333,30 @@ if( isset( $_REQUEST['d'] ) ) {
 					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ? true : false,
 				),
 				array(
+					'id' => 'actionType',
+					'label' => 'Action Type',
+					'type' => 'select',
+					'choices' => array(
+						'phone' => 'Phone',
+						'email' => 'Email',
+						'text' => 'Text Message',
+						'skype' => 'Skype',
+						'inperson' => 'In Person',
+					),
+				),
+				array(
 					'id' => 'note',
 					'label' => 'Initial Note',
+					'type' => 'textarea',
+				),
+				array(
+					'id' => 'followUpDate',
+					'label' => 'Follow Up Date',
+					'type' => 'text',
+				),
+				array(
+					'id' => 'nextSteps',
+					'label' => 'Next Steps',
 					'type' => 'textarea',
 				),
 				array(
@@ -849,7 +893,7 @@ include( INCLUDES . "c_header.php" );
 	});
 
 	$('#newprospect, #editprospect').on('shown.bs.modal', function (e) {
-		$(".modal-body input[name=expectedClose]").datepicker({
+		$(".modal-body input[name=expectedClose], .modal-body input[name=followUpDate]").datepicker({
 			// Consistent format with the HTML5 picker
 			dateFormat: 'yy-mm-dd'
 		});
