@@ -36,6 +36,8 @@ $incomingAdditionalRequirementSettings = array(
 	'phone',
 );
 
+$dowMap = array( 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' );
+
 $crmStatuses = array(
 	'cold' => 'Cold',
 	'prospecting' => 'Prospecting',

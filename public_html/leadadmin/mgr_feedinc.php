@@ -127,14 +127,27 @@ if( isset( $_REQUEST['a'] ) ) {
 				$result['error'] = 'Please enter a numeric value for the choke percent.';
 			}
 
+			if( $c && !empty( $_REQUEST['chokePercent'] ) && ( intval( $_REQUEST['chokePercent'] ) < 0 || intval( $_REQUEST['chokePercent'] ) > 100 ) ) {
+				$c = false;
+				$result['error'] = 'Please enter a value between 0 and 100 for the choke percent.';
+			}
+
 			if( $c && !empty( $_REQUEST['costPerLead'] ) && is_numeric( $_REQUEST['costPerLead'] ) === false ) {
 				$c = false;
 				$result['error'] = 'Please enter a numeric value for the cost per lead.';
 			}
 
-			if( $c && !empty( $_REQUEST['chokePercent'] ) && ( intval( $_REQUEST['chokePercent'] ) < 0 || intval( $_REQUEST['chokePercent'] ) > 100 ) ) {
+			if( $c && !empty( $_REQUEST['notifyThresholdCount'] ) && is_numeric( $_REQUEST['notifyThresholdCount'] ) === false ) {
 				$c = false;
-				$result['error'] = 'Please enter a value between 0 and 100 for the choke percent.';
+				$result['error'] = 'Please enter a numeric value for the notification threshold amount.';
+			}
+
+			if( $c && !empty( $_REQUEST['notifyThresholdTime'] ) ) {
+				$notifyThresholdTime = DateTime::createFromFormat( 'Y-m-d g:iA', ( date( 'Y-m-d' ) . ' ' . $_REQUEST['notifyThresholdTime'] ) );
+				if( empty( $notifyThresholdTime ) ) {
+					$result['error'] = 'Please enter a valid notification threshold time in the format hh:mmAM or hh:mmPM.';
+					$c = false;
+				}
 			}
 
 			$filterUrl = '';
@@ -205,6 +218,9 @@ if( isset( $_REQUEST['a'] ) ) {
 						'custom5Label' => empty( $_REQUEST['custom5Label'] ) ? null : $_REQUEST['custom5Label'],
 						'custom6Label' => empty( $_REQUEST['custom6Label'] ) ? null : $_REQUEST['custom6Label'],
 						'costPerLead' => empty( $_REQUEST['costPerLead'] ) ? 0.00 : floatval( $_REQUEST['costPerLead'] ),
+						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? null : $_REQUEST['notifyThresholdCount'],
+						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
+						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 					) );
 
 					if( null === $idFeedIn ) {
@@ -292,6 +308,44 @@ if( isset( $_REQUEST['a'] ) ) {
 					$result['error'] = 'Please limit custom6 label to 255 characters or less.';
 				}
 
+				if( $c && !empty( $_REQUEST['dailyLimit'] ) && is_numeric( $_REQUEST['dailyLimit'] ) === false ) {
+					$c = false;
+					$result['error'] = 'Please enter a numeric value for the daily limit.';
+				}
+
+				if( $c && !empty( $_REQUEST['dailyLimit'] ) && intval( $_REQUEST['dailyLimit'] ) < 0 ) {
+					$c = false;
+					$result['error'] = 'Please enter a positive number for the daily limit.';
+				}
+
+				if( $c && !empty( $_REQUEST['chokePercent'] ) && is_numeric( $_REQUEST['chokePercent'] ) === false ) {
+					$c = false;
+					$result['error'] = 'Please enter a numeric value for the choke percent.';
+				}
+
+				if( $c && !empty( $_REQUEST['chokePercent'] ) && ( intval( $_REQUEST['chokePercent'] ) < 0 || intval( $_REQUEST['chokePercent'] ) > 100 ) ) {
+					$c = false;
+					$result['error'] = 'Please enter a value between 0 and 100 for the choke percent.';
+				}
+
+				if( $c && !empty( $_REQUEST['costPerLead'] ) && is_numeric( $_REQUEST['costPerLead'] ) === false ) {
+					$c = false;
+					$result['error'] = 'Please enter a numeric value for the cost per lead.';
+				}
+
+				if( $c && !empty( $_REQUEST['notifyThresholdCount'] ) && is_numeric( $_REQUEST['notifyThresholdCount'] ) === false ) {
+					$c = false;
+					$result['error'] = 'Please enter a numeric value for the notification threshold amount.';
+				}
+
+				if( $c && !empty( $_REQUEST['notifyThresholdTime'] ) ) {
+					$notifyThresholdTime = DateTime::createFromFormat( 'Y-m-d g:iA', ( date( 'Y-m-d' ) . ' ' . $_REQUEST['notifyThresholdTime'] ) );
+					if( empty( $notifyThresholdTime ) ) {
+						$result['error'] = 'Please enter a valid notification threshold time in the format hh:mmAM or hh:mmPM.';
+						$c = false;
+					}
+				}
+
 				if( $c ) {
 					// Remove old notifications from the database if we've now disabled them
 					if( empty( $_REQUEST['notifications'] ) ) {
@@ -328,6 +382,9 @@ if( isset( $_REQUEST['a'] ) ) {
 						'custom5Label' => empty( $_REQUEST['custom5Label'] ) ? null : $_REQUEST['custom5Label'],
 						'custom6Label' => empty( $_REQUEST['custom6Label'] ) ? null : $_REQUEST['custom6Label'],
 						'costPerLead' => empty( $_REQUEST['costPerLead'] ) ? 0.00 : floatval( $_REQUEST['costPerLead'] ),
+						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? null : $_REQUEST['notifyThresholdCount'],
+						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
+						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 					) );
 
 					if( null === $status ) {
@@ -445,6 +502,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 			$selectedRequired = explode( ";", $feed->required );
 			$selectedAllowedFields = explode( ";", $feed->allowedFields );
+			$selectedNotifyThresholdDays = !empty( $feed->notifyThresholdDays ) ? explode( ",", $feed->notifyThresholdDays ) : array();
 
 		case 'dialog_newfeed':
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
@@ -481,6 +539,8 @@ if( isset( $_REQUEST['d'] ) ) {
 				'custom5Label',
 				'custom6Label',
 				'costPerLead',
+				'notifyThresholdCount',
+				'notifyThresholdTimeFormatted',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -820,13 +880,24 @@ if( isset( $_REQUEST['d'] ) ) {
 						</td>
 					</tr>
 					<tr>
-						<td>Notifications</p></td>
+						<td>Dormant Notifications</p></td>
 						<td>
 							<p>Should we send dormant URL notifications for URLs in this feed?</p>
 							<p>
 								<input type='radio' name='notifications' id='notifications_yes' value='1' <?php if( '1' == $feed_notifications ) { ?>checked='checked'<?php } ?>/> Enabled
 								<input type='radio' name='notifications' id='notifications_no' value='0' <?php if( $feed_notifications != '1' ) { ?>checked='checked'<?php } ?>/> Disabled
 							</p>
+						</td>
+					</tr>
+					<tr>
+						<td>Threshold Notifications</p></td>
+						<td>
+							<p>Send an email notification if we have not received <input type="text" name="notifyThresholdCount" value="<?php echo htmlentities( $feed_notifyThresholdCount ); ?>"/> leads by <input type="text" name="notifyThresholdTime" value="<?php echo htmlentities( $feed_notifyThresholdTimeFormatted ); ?>"/> on<br/>
+								<?php for( $i = 0; $i <= 6; $i++ ) { ?>
+									<label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox" name="notifyThresholdDays[]" value="<?php echo $i; ?>" <?php if( in_array( $i, $selectedNotifyThresholdDays ) ){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?></label>
+								<?php } ?>
+							</p>
+							<p><strong>To disable notifications from being sent, set the lead count to zero or uncheck all day boxes.</strong></p>
 						</td>
 					</tr>
 					<tr>

@@ -90,6 +90,19 @@ if( isset( $_REQUEST['a'] ) ) {
 				$urlAssign = implode( ';', $temp );
 			}
 
+			if( $c && !empty( $_REQUEST['notifyThresholdCount'] ) && is_numeric( $_REQUEST['notifyThresholdCount'] ) === false ) {
+				$c = false;
+				$result['error'] = 'Please enter a numeric value for the notification threshold amount.';
+			}
+
+			if( $c && !empty( $_REQUEST['notifyThresholdTime'] ) ) {
+				$notifyThresholdTime = DateTime::createFromFormat( 'Y-m-d g:iA', ( date( 'Y-m-d' ) . ' ' . $_REQUEST['notifyThresholdTime'] ) );
+				if( empty( $notifyThresholdTime ) ) {
+					$result['error'] = 'Please enter a valid notification threshold time in the format hh:mmAM or hh:mmPM.';
+					$c = false;
+				}
+			}
+
 			if( $action == 'new' ) {
 
 				if( $c ) {
@@ -131,6 +144,9 @@ if( isset( $_REQUEST['a'] ) ) {
 						'queued' => 0,
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
+						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? null : $_REQUEST['notifyThresholdCount'],
+						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
+						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 					) );
 
 					if( null === $idFeedOut ) {
@@ -204,6 +220,9 @@ if( isset( $_REQUEST['a'] ) ) {
 						'delayDump' => !empty( $_REQUEST['delayDump'] ) ? 1 : 0,
 						'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 						'feedCategory' => empty( $_REQUEST['feedCategory'] ) ? 'email' : $_REQUEST['feedCategory'],
+						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? null : $_REQUEST['notifyThresholdCount'],
+						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
+						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 					);
 
 					// For retired feeds, automatically turn off cron processing and set all populations as disabled
@@ -793,6 +812,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 			$varFields = explode( ";", $feed->varFields );
 			$fieldMap = explode( ";", $feed->fieldMap );
+			$selectedNotifyThresholdDays = !empty( $feed->notifyThresholdDays ) ? explode( ",", $feed->notifyThresholdDays ) : array();
 
 		case 'dialog_newfeed':
 			if( empty( $idFeedOut ) ) {
@@ -830,6 +850,8 @@ if( isset( $_REQUEST['d'] ) ) {
 				'delay',
 				'delayDump',
 				'feedCategory',
+				'notifyThresholdCount',
+				'notifyThresholdTimeFormatted',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -1085,6 +1107,17 @@ if( isset( $_REQUEST['d'] ) ) {
 								<input type='radio' name='delayDump' value='1' <?php if( !empty( $feed_delayDump ) ) { ?>checked='checked'<?php } ?>/> Mass dump all delayed records for the entire day
 							</p>
 
+						</td>
+					</tr>
+					<tr>
+						<td>Threshold Notifications</p></td>
+						<td>
+							<p>Send an email notification if we have not sent <input type="text" name="notifyThresholdCount" value="<?php echo htmlentities( $feed_notifyThresholdCount ); ?>"/> leads by <input type="text" name="notifyThresholdTime" value="<?php echo htmlentities( $feed_notifyThresholdTimeFormatted ); ?>"/> on<br/>
+								<?php for( $i = 0; $i <= 6; $i++ ) { ?>
+									<label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox" name="notifyThresholdDays[]" value="<?php echo $i; ?>" <?php if( in_array( $i, $selectedNotifyThresholdDays ) ){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?></label>
+								<?php } ?>
+							</p>
+							<p><strong>To disable notifications from being sent, set the lead count to zero or uncheck all day boxes.</strong></p>
 						</td>
 					</tr>
 					<tr>

@@ -1701,7 +1701,7 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT f.*,c.name AS companyName FROM feedinc f LEFT JOIN companies c ON c.idCompany = f.idCompany WHERE f.idFeedIn = ?" );
+			$query = $this->db->prepare( "SELECT f.*,c.name AS companyName,DATE_FORMAT(notifyThresholdTime,'%l:%i%p') AS notifyThresholdTimeFormatted FROM feedinc f LEFT JOIN companies c ON c.idCompany = f.idCompany WHERE f.idFeedIn = ?" );
 			$query->execute( array( $idFeedIn ) );
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -1979,7 +1979,7 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT * FROM feedout WHERE idFeedOut = ?" );
+			$query = $this->db->prepare( "SELECT *,DATE_FORMAT(notifyThresholdTime,'%l:%i%p') AS notifyThresholdTimeFormatted FROM feedout WHERE idFeedOut = ?" );
 			$query->execute( array( $idFeedOut ) );
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -4384,6 +4384,63 @@ class Leads
 		}
 
 		return null;
+	}
+
+	public function checkInboundFeedThresholds() {
+
+		try {
+			$sql = <<<'SQL'
+SELECT i.*,c.*,IFNULL(SUM(si.accepted+si.rejected),0) AS leadsPassed,DATE_FORMAT(i.notifyThresholdTime,'%l:%i%p') AS notifyThresholdTimeFormatted
+FROM feedinc AS i
+LEFT JOIN companies c ON c.idCompany = i.idCompany
+LEFT JOIN stats_inbound AS si ON si.idFeedIn = i.idFeedIn AND si.stamp = DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%Y-%m-%d')
+WHERE i.status != 'retired'
+AND i.notifyThresholdCount > 0
+AND i.notifyThresholdCount IS NOT NULL
+AND i.notifyThresholdTime IS NOT NULL
+AND i.notifyThresholdTime <= DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%H:%i')
+AND FIND_IN_SET(DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%w'),i.notifyThresholdDays)
+AND ( i.notifyThresholdLastSent < DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%Y-%m-%d 00:00:00') OR i.notifyThresholdLastSent IS NULL )
+GROUP BY i.idFeedIn
+HAVING IFNULL(SUM(si.accepted+si.rejected),0) < i.notifyThresholdCount;
+SQL;
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE ) );
+			return $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check inbound feed thresholds: ' . $e->getMessage() );
+			throw new Leads_PDOException( 'Unable to check inbound feed thresholds: ', null, $e );
+		}
+	}
+
+	public function checkOutboundFeedThresholds() {
+
+		try {
+			$sql = <<<'SQL'
+SELECT o.*,c.*,IFNULL(SUM(so.accepted+so.rejected),0) AS leadsPassed,DATE_FORMAT(o.notifyThresholdTime,'%l:%i%p') AS notifyThresholdTimeFormatted
+FROM feedout AS o
+LEFT JOIN companies c ON c.idCompany = o.idCompany
+LEFT JOIN stats_outbound AS so ON so.idFeedOut = o.idFeedOut AND so.stamp = DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%Y-%m-%d')
+WHERE o.status != 'retired'
+AND o.cron = '1'
+AND o.notifyThresholdCount > 0
+AND o.notifyThresholdCount IS NOT NULL
+AND o.notifyThresholdTime IS NOT NULL
+AND o.notifyThresholdTime <= DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%H:%i')
+AND FIND_IN_SET(DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%w'),o.notifyThresholdDays)
+AND ( o.notifyThresholdLastSent < DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%Y-%m-%d 00:00:00') OR o.notifyThresholdLastSent IS NULL )
+GROUP BY o.idFeedOut
+HAVING IFNULL(SUM(so.accepted+so.rejected),0) < o.notifyThresholdCount;
+SQL;
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE ) );
+			return $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check outbound feed thresholds: ' . $e->getMessage() );
+			throw new Leads_PDOException( 'Unable to check outbound feed thresholds: ', null, $e );
+		}
 	}
 
 	public function logError( $message, $db = false, $email = true ) {
