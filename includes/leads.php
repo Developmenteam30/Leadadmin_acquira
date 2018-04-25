@@ -2146,7 +2146,7 @@ class Leads
 			$idRecord = $this->insertRow( 'data_inbound', array(
 				'idFeedIn' => $idFeedIn,
 				'listcode' => empty( $fields['listcode'] ) ? null : substr( $fields['listcode'], 0, 20 ),
-				//'leadId' => empty( $fields['leadId'] ) ? null : substr( $fields['leadId'], 0, 255 ),
+				'leadId' => empty( $fields['leadId'] ) ? null : substr( $fields['leadId'], 0, 255 ),
 				'leadstamp' => empty( $fields['stamp'] ) ? null : date( 'Y-m-d H:i:s', strtotime( $fields['stamp'] ) ),
 				'url' => empty( $fields['url'] ) ? null : substr( $this->parseUrl( $fields['url'] ), 0, 255 ),
 				'ip' => empty( $fields['ip'] ) ? null : substr( $fields['ip'], 0, 45 ),
@@ -2165,12 +2165,12 @@ class Leads
 				'country' => empty( $fields['country'] ) ? null : substr( $fields['country'], 0, 75 ),
 				'result' => empty( $error ) ? null : $error,
 				'jobId' => empty( $jobId ) ? null : $jobId,
-				//'custom1' => empty( $fields['custom1'] ) ? null : substr( $fields['custom1'], 0, 255 ),
-				//'custom2' => empty( $fields['custom2'] ) ? null : substr( $fields['custom2'], 0, 255 ),
-				//'custom3' => empty( $fields['custom3'] ) ? null : substr( $fields['custom3'], 0, 255 ),
-				//'custom4' => empty( $fields['custom4'] ) ? null : substr( $fields['custom4'], 0, 255 ),
-				//'custom5' => empty( $fields['custom5'] ) ? null : substr( $fields['custom5'], 0, 255 ),
-				//'custom6' => empty( $fields['custom6'] ) ? null : substr( $fields['custom6'], 0, 255 ),
+				'custom1' => empty( $fields['custom1'] ) ? null : substr( $fields['custom1'], 0, 255 ),
+				'custom2' => empty( $fields['custom2'] ) ? null : substr( $fields['custom2'], 0, 255 ),
+				'custom3' => empty( $fields['custom3'] ) ? null : substr( $fields['custom3'], 0, 255 ),
+				'custom4' => empty( $fields['custom4'] ) ? null : substr( $fields['custom4'], 0, 255 ),
+				'custom5' => empty( $fields['custom5'] ) ? null : substr( $fields['custom5'], 0, 255 ),
+				'custom6' => empty( $fields['custom6'] ) ? null : substr( $fields['custom6'], 0, 255 ),
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
