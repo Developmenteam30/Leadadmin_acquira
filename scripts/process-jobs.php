@@ -39,7 +39,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 		print "Clearing outbound queue for: {$job->destination} {$fields['label']}\n";
 
-		$cnt = $leads->clearOutboundQueue( $job->destination, $fields['label'] );
+		$cnt = $leads->clearOutboundQueueNibble( $job->destination );
 		if( $cnt === null ) {
 			$leads->updateJob( $job->jobId, array(
 				'status' => 'error',

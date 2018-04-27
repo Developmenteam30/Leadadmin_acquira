@@ -3593,6 +3593,39 @@ class Leads
 		return $rows;
 	}
 
+	public function clearOutboundQueueNibble( $idFeedOut ) {
+		$cnt = 0;
+
+		try {
+
+			do {
+				$this->db->beginTransaction();
+
+				$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND processed = 0 LIMIT 1000" );
+				$query->execute( array( $idFeedOut ) );
+				$rowCount = $query->rowCount();
+				$cnt += $rowCount;
+
+				if( $rowCount > 0 ) {
+					$query = $this->db->prepare( "UPDATE feedout SET queued = queued - :rowCount WHERE idFeedOut = :idFeedOut" );
+					$query->bindValue( ':rowCount', $rowCount, \PDO::PARAM_INT );
+					$query->bindValue( ':idFeedOut', $idFeedOut, \PDO::PARAM_INT );
+					$query->execute();
+				}
+
+				$this->db->commit();
+
+				usleep( 50000 );
+
+			} while( $rowCount > 0 );
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to clear outbound queue slowly: ' . $e->getMessage() );
+		}
+
+		return $cnt;
+	}
+
 	public function exportInboundRecords( $idFeedIn, $settings ) {
 
 		$result = array(
