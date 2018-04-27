@@ -103,6 +103,11 @@ if( isset( $_REQUEST['a'] ) ) {
 				}
 			}
 
+			if( !empty( $_REQUEST['revenuePerLead'] ) && is_numeric( $_REQUEST['revenuePerLead'] ) === false ) {
+				$result['error'] = 'Revenue per lead must be a numeric value.';
+				break;
+			}
+
 			if( $action == 'new' ) {
 
 				if( $c ) {
@@ -147,6 +152,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? null : $_REQUEST['notifyThresholdCount'],
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
+						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 					) );
 
 					if( null === $idFeedOut ) {
@@ -223,6 +229,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? null : $_REQUEST['notifyThresholdCount'],
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
+						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 					);
 
 					// For retired feeds, automatically turn off cron processing and set all populations as disabled
@@ -354,11 +361,6 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			if( !empty( $_REQUEST['revenuePerLead'] ) && is_numeric( $_REQUEST['revenuePerLead'] ) === false ) {
-				$result['error'] = 'Revenue per lead must be a numeric value.';
-				break;
-			}
-
 			if( $action == 'new' ) {
 
 				$idAssoc = $leads->addPopulation( array(
@@ -375,7 +377,6 @@ if( isset( $_REQUEST['a'] ) ) {
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
 					'livedata' => !empty( $_REQUEST['livedata'] ) && 'livedata' == $_REQUEST['livedata'] ? 1 : 0,
 					'waterfall' => !empty( $_REQUEST['livedata'] ) && 'waterfall' == $_REQUEST['livedata'] ? 1 : 0,
-					'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 				) );
 
 				if( empty( $idAssoc ) ) {
@@ -404,7 +405,6 @@ if( isset( $_REQUEST['a'] ) ) {
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
 					'livedata' => !empty( $_REQUEST['livedata'] ) && 'livedata' == $_REQUEST['livedata'] ? 1 : 0,
 					'waterfall' => !empty( $_REQUEST['livedata'] ) && 'waterfall' == $_REQUEST['livedata'] ? 1 : 0,
-					'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 				) );
 
 				if( empty( $dbResult ) ) {
@@ -852,6 +852,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'feedCategory',
 				'notifyThresholdCount',
 				'notifyThresholdTimeFormatted',
+				'revenuePerLead',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -1112,12 +1113,20 @@ if( isset( $_REQUEST['d'] ) ) {
 					<tr>
 						<td>Threshold Notifications</p></td>
 						<td>
-							<p>Send an email notification if we have not sent <input type="text" name="notifyThresholdCount" value="<?php echo htmlentities( $feed_notifyThresholdCount ); ?>"/> leads by <input type="text" name="notifyThresholdTime" value="<?php echo htmlentities( $feed_notifyThresholdTimeFormatted ); ?>"/> on<br/>
+							<p>Send an email notification if we have not sent <input type="text" name="notifyThresholdCount" value="<?php echo htmlentities( $feed_notifyThresholdCount ); ?>"/> leads by <input type="text" name="notifyThresholdTime" placeholder="Example: 10:00AM" value="<?php echo htmlentities( $feed_notifyThresholdTimeFormatted ); ?>"/> on<br/>
 								<?php for( $i = 0; $i <= 6; $i++ ) { ?>
 									<label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox" name="notifyThresholdDays[]" value="<?php echo $i; ?>" <?php if( in_array( $i, $selectedNotifyThresholdDays ) ){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?></label>
 								<?php } ?>
 							</p>
 							<p><strong>To disable notifications from being sent, set the lead count to zero or uncheck all day boxes.</strong></p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Revenue Per Lead</p></td>
+						<td>
+							<p>
+								<input type="text" name="revenuePerLead" value="<?php echo htmlentities( $feed_revenuePerLead ); ?>"/>
+							</p>
 						</td>
 					</tr>
 					<tr>
@@ -1532,7 +1541,6 @@ if( isset( $_REQUEST['d'] ) ) {
 				'forceUrl',
 				'livedata',
 				'waterfall',
-				'revenuePerLead',
 			);
 			foreach( $populationProperties as $pP ) {
 				if( isset( $popset ) ) {
@@ -1914,14 +1922,6 @@ if( isset( $_REQUEST['d'] ) ) {
 								<input type='radio' name='livedata' id='livedata_disabled' value='0' <?php if( $popset_livedata != '1' && $popset_waterfall != '1' ) { ?> checked='checked' <?php } ?>/> Disabled (DEFAULT)<br/>
 								<input type='radio' name='livedata' id='livedata_enabled' value='livedata' <?php if( $popset_livedata == '1' ) { ?> checked='checked' <?php } ?>/> Enabled - Standard<br/>
 								<input type='radio' name='livedata' id='livedata_waterfall' value='waterfall' <?php if( $popset_waterfall == '1' ) { ?> checked='checked' <?php } ?>/> Enabled - Waterfall
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Revenue Per Lead</p></td>
-						<td>
-							<p>
-								<input type="text" name="revenuePerLead" value="<?php echo htmlentities( $popset_revenuePerLead ); ?>"/>
 							</p>
 						</td>
 					</tr>
