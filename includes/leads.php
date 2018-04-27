@@ -1798,7 +1798,7 @@ class Leads
 		$results = array();
 
 		try {
-			$sql = "SELECT fp.*, fo.label, fo.dailyLimit, fo.delayDump FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ? ORDER BY fp.revenuePerLead DESC";
+			$sql = "SELECT fp.*, fo.label, fo.dailyLimit, fo.delayDump FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ? ORDER BY fo.revenuePerLead DESC";
 			if( $enabled ) {
 				$sql .= " AND fp.enabled = '1'";
 			}
