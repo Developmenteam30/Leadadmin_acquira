@@ -129,7 +129,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 				if( $c ) { //Add entry to the database.
 
-					$idFeedOut = $leads->addOutboundFeed( array(
+					$fields = array(
 						'label' => $_REQUEST['label'],
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
 						'idCompany' => $_REQUEST['idCompany'],
@@ -153,7 +153,13 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
-					) );
+					);
+
+					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+						$fields['launchDate'] = !empty( $_REQUEST['launchDate'] ) ? $_REQUEST['launchDate'] : null;
+					}
+
+					$idFeedOut = $leads->addOutboundFeed( $fields );
 
 					if( null === $idFeedOut ) {
 						$c = false;
@@ -231,6 +237,10 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 					);
+
+					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+						$fields['launchDate'] = !empty( $_REQUEST['launchDate'] ) ? $_REQUEST['launchDate'] : null;
+					}
 
 					// For retired feeds, automatically turn off cron processing and set all populations as disabled
 					if( 'retired' == $_REQUEST['status'] ) {
@@ -853,6 +863,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'notifyThresholdCount',
 				'notifyThresholdTimeFormatted',
 				'revenuePerLead',
+				'launchDate',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -1130,6 +1141,18 @@ if( isset( $_REQUEST['d'] ) ) {
 						</td>
 					</tr>
 					<tr>
+						<td><p>Launch Date</p></td>
+						<td>
+							<p>
+								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
+									<input type='text' name='launchDate' value='<?php echo htmlentities( $feed_launchDate ); ?>'/>
+								<?php } else { ?>
+									<?php echo htmlentities( $feed_launchDate ); ?>
+								<?php } ?>
+							</p>
+						</td>
+					</tr>
+					<tr>
 						<td><p>Feed Status</p></td>
 						<td>
 							<p>
@@ -1141,6 +1164,12 @@ if( isset( $_REQUEST['d'] ) ) {
 					</tr>
 				</table>
 			</form>
+			<script type="text/javascript">
+				$('input[name=launchDate]').datepicker({
+					// Consistent format with the HTML5 picker
+					dateFormat: 'yy-mm-dd'
+				});
+			</script>
 			<?php
 			break;
 
