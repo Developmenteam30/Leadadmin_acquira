@@ -2367,58 +2367,71 @@ class Leads
 		}
 	}
 
-	public function outboundProcess( $idRecord, $idFeedOut, $idFeedIn, $url, $error = null ) {
+	public function outboundProcess( $row, $feedOut, $error = null ) {
+
+		if( empty( $row ) || empty( $feedOut ) ) {
+			return null;
+		}
+
 		$this->db->beginTransaction();
 
 		try {
 			if( LEGACY_DB ) {
 				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
-				$query->execute( array( $error, $idRecord, $idFeedOut ) );
+				$query->execute( array( $error, $row->idRecord, $feedOut->idFeedOut ) );
 			} else {
 				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, result = ? WHERE idRecord = ? AND idFeedOut = ?' );
-				$query->execute( array( $error, $idRecord, $idFeedOut ) );
+				$query->execute( array( $error, $row->idRecord, $feedOut->idFeedOut ) );
 			}
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to update data_outbound record: ' . $e->getMessage() );
-			return;
-		}
-
-		if( !empty( $idFeedIn ) ) {
-			try {
-				if( empty( $error ) ) {
-					$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
-				} else {
-					$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
-				}
-				$query->execute( array( $idFeedOut, $this->parseUrl( $url ), date( 'Y-m-d' ) ) );
-			} catch( PDOException $e ) {
-				$this->db->rollBack();
-				$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
-				return;
-			}
+			return null;
 		}
 
 		try {
 			if( empty( $error ) ) {
-				$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted) VALUES(?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
+				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
 			} else {
-				$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,rejected) VALUES(?,?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
+				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
 			}
-			$query->execute( array( $idFeedIn, $idFeedOut, $this->parseUrl( $url ), date( 'Y-m-d' ) ) );
+			$query->execute( array( $feedOut->idFeedOut, $this->parseUrl( $row->url ), date( 'Y-m-d' ) ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
-			$this->logError( 'Unable to insert stats_correllated record: ' . $e->getMessage() );
-			return;
+			$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
+			return null;
+		}
+
+		if( !empty( $row->idFeedIn ) ) {
+
+			$feedIn = $this->getInboundFeed( $row->idFeedIn );
+			if( !empty( $feedIn ) ) {
+
+				$costPerLead = !empty( $feedOut->costPerLeadOverride ) ? $feedOut->costPerLeadOverride : ( !empty( $feedIn->costPerLead ) ? $feedIn->costPerLead : 0.00 );
+				$revenuePerLead = !empty( $feedOut->revenuePerLead ) ? $feedOut->revenuePerLead : 0.00;
+
+				try {
+					if( empty( $error ) ) {
+						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, costPerLead = ?, revenuePerLead = ?' );
+					} else {
+						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,rejected,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1, costPerLead = ?, revenuePerLead = ?' );
+					}
+					$query->execute( array( $row->idFeedIn, $feedOut->idFeedOut, $this->parseUrl( $row->url ), date( 'Y-m-d' ), $costPerLead, $revenuePerLead, $costPerLead, $revenuePerLead ) );
+				} catch( PDOException $e ) {
+					$this->db->rollBack();
+					$this->logError( 'Unable to insert stats_correllated record: ' . $e->getMessage() );
+					return null;
+				}
+			}
 		}
 
 		try {
 			$query = $this->db->prepare( "UPDATE feedout SET queued = queued - 1 WHERE idFeedOut = ?" );
-			$query->execute( array( $idFeedOut ) );
+			$query->execute( array( $feedOut->idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to subtract from queue count: ' . $e->getMessage() );
-			return $status;
+			return null;
 		}
 
 		// Only archive successful records. Errors will get deleted after a few days.
@@ -2429,19 +2442,21 @@ class Leads
 				$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
 
 				$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
-				$query->execute( array( $idRecord, $idFeedOut ) );
+				$query->execute( array( $row->idRecord, $feedOut->idFeedOut ) );
 				$rows = $query->rowCount();
 
 				$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
-				$query->execute( array( $idRecord, $idFeedOut ) );
+				$query->execute( array( $row->idRecord, $feedOut->idFeedOut ) );
 			} catch( PDOException $e ) {
 				$this->db->rollBack();
 				$this->logError( 'Unable to archive record: ' . $e->getMessage() );
-				return $status;
+				return null;
 			}
 		}
 
 		$this->db->commit();
+
+		return true;
 	}
 
 	public function getUrlMappings() {
@@ -3893,14 +3908,14 @@ class Leads
 
 	public function exportOutboundQueue( $idFeedOut ) {
 
-		$feed = $this->getOutboundFeed( $idFeedOut );
-		if( !$feed ) {
+		$feedOut = $this->getOutboundFeed( $idFeedOut );
+		if( !$feedOut ) {
 			return;
 		}
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feed->label . "_" . $jobId . ".csv";
+		$fileLink = 'exports/' . $feedOut->label . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -3936,33 +3951,33 @@ class Leads
 
 			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ?" );
 			$query->execute( array( $idFeedOut ) );
-			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			while( $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
 				fputcsv( $file, array(
-					$row['url'],
-					$row['ip'],
-					$row['leadstamp'],
-					$row['fname'],
-					$row['lname'],
-					$row['addr'],
-					$row['addr2'],
-					$row['city'],
-					$row['state'],
-					$row['zip'],
-					$row['country'],
-					$row['dob'],
-					$row['gender'],
-					$row['landline'],
-					$row['cellphone'],
-					$row['leadId'],
-					$row['custom1'],
-					$row['custom2'],
-					$row['custom3'],
-					$row['custom4'],
-					$row['custom5'],
-					$row['custom6'],
+					$row->url,
+					$row->ip,
+					$row->leadstamp,
+					$row->fname,
+					$row->lname,
+					$row->addr,
+					$row->addr2,
+					$row->city,
+					$row->state,
+					$row->zip,
+					$row->country,
+					$row->dob,
+					$row->gender,
+					$row->landline,
+					$row->cellphone,
+					$row->leadId,
+					$row->custom1,
+					$row->custom2,
+					$row->custom3,
+					$row->custom4,
+					$row->custom5,
+					$row->custom6,
 				) );
 
-				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['url'], null );
+				$this->outboundProcess( $row, $feedOut, null );
 
 			}
 
@@ -4142,14 +4157,14 @@ class Leads
 
 	public function exportRejected( $idFeedOut ) {
 
-		$feed = $this->getOutboundFeed( $idFeedOut );
-		if( !$feed ) {
+		$feedOut = $this->getOutboundFeed( $idFeedOut );
+		if( !$feedOut ) {
 			return;
 		}
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feed->label . "_" . $jobId . ".csv";
+		$fileLink = 'exports/' . $feedOut->label . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -4185,33 +4200,34 @@ class Leads
 
 			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE processed = 1 AND o.idFeedOut = ? AND o.result IS NOT NULL" );
 			$query->execute();
-			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+			while( $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
 				fputcsv( $file, array(
-					$row['url'],
-					$row['ip'],
-					$row['leadstamp'],
-					$row['fname'],
-					$row['lname'],
-					$row['addr'],
-					$row['addr2'],
-					$row['city'],
-					$row['state'],
-					$row['zip'],
-					$row['country'],
-					$row['dob'],
-					$row['gender'],
-					$row['landline'],
-					$row['cellphone'],
-					$row['leadId'],
-					$row['custom1'],
-					$row['custom2'],
-					$row['custom3'],
-					$row['custom4'],
-					$row['custom5'],
-					$row['custom6'],
+					$row->url,
+					$row->ip,
+					$row->leadstamp,
+					$row->fname,
+					$row->lname,
+					$row->addr,
+					$row->addr2,
+					$row->city,
+					$row->state,
+					$row->zip,
+					$row->country,
+					$row->dob,
+					$row->gender,
+					$row->landline,
+					$row->cellphone,
+					$row->leadId,
+					$row->custom1,
+					$row->custom2,
+					$row->custom3,
+					$row->custom4,
+					$row->custom5,
+					$row->custom6,
 				) );
 
-				$this->outboundProcess( $row['idRecord'], $idFeedOut, $row['url'], null );
+
+				$this->outboundProcess( $row, $feedOut, null );
 				$q_query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
 				$q_query->execute( array( $idFeedOut ) );
 
