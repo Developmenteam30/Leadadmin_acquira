@@ -291,6 +291,14 @@ div.headerRow.client {
 	background-color:#ffd4aa;
 }
 
+.errors {
+	color: #ff0000;
+}
+
+#expectationsTable .error {
+	background: #ff0000;
+}
+
 .rejectionsTable .error {
 	border: 1px solid #909090;
 }
