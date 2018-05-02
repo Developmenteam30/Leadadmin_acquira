@@ -299,6 +299,10 @@ div.headerRow.client {
 	background: #ff0000;
 }
 
+.dashboard-forecasts td.text-right {
+	width: 11.1%;
+}
+
 .rejectionsTable .error {
 	border: 1px solid #909090;
 }

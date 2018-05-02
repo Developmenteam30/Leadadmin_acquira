@@ -411,6 +411,105 @@ class Leads
 		return $results;
 	}
 
+	public function getForecasts( $startDate, $endDate ) {
+		$results = null;
+		$params = array();
+
+		try {
+
+			$sql = "SELECT idUser,fullName,SUM(existingRevenueMTD) AS existingRevenueMTD,SUM(newRevenueMTD) AS newRevenueMTD,SUM(accuralCostMTD) AS accuralCostMTD ";
+			$sql .= "FROM ( ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,0 AS existingRevenueMTD,SUM(sc.revenuePerLead*sc.accepted*0.5) AS newRevenueMTD,SUM(sc.costPerLead*sc.accepted*0.5) AS accuralCostMTD ";
+			$sql .= "FROM stats_correlated AS sc ";
+			$sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+			$sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
+			$sql .= "LEFT JOIN users u ON u.idUser = c.salesperson ";
+			$sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND fo.launchDate >= CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$sql .= "AND c.salesperson IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND c.salesperson = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,0 AS existingRevenueMTD,SUM(sc.revenuePerLead*sc.accepted*0.5) AS newRevenueMTD,SUM(sc.costPerLead*sc.accepted*0.5) AS accuralCostMTD ";
+			$sql .= "FROM stats_correlated AS sc ";
+			$sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+			$sql .= "JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn ";
+			$sql .= "LEFT JOIN companies c ON c.idCompany = fi.idCompany ";
+			$sql .= "LEFT JOIN users u ON u.idUser = c.salesperson ";
+			$sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND fo.launchDate >= CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$sql .= "AND c.salesperson IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND c.salesperson = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(sc.revenuePerLead*sc.accepted*0.5) AS existingRevenueMTD,0 AS newRevenueMTD,SUM(sc.costPerLead*sc.accepted*0.5) AS accuralCostMTD ";
+			$sql .= "FROM stats_correlated AS sc ";
+			$sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+			$sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
+			$sql .= "LEFT JOIN users u ON u.idUser = c.salesperson ";
+			$sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND ( fo.launchDate IS NULL OR fo.launchDate < CAST(? AS DATE) ) ";
+			$params[] = $startDate;
+			$sql .= "AND c.salesperson IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND c.salesperson = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(sc.revenuePerLead*sc.accepted*0.5) AS existingRevenueMTD,0 AS newRevenueMTD,SUM(sc.costPerLead*sc.accepted*0.5) AS accuralCostMTD ";
+			$sql .= "FROM stats_correlated AS sc ";
+			$sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+			$sql .= "JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn ";
+			$sql .= "LEFT JOIN companies c ON c.idCompany = fi.idCompany ";
+			$sql .= "LEFT JOIN users u ON u.idUser = c.salesperson ";
+			$sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND ( fo.launchDate IS NULL OR fo.launchDate < CAST(? AS DATE) ) ";
+			$params[] = $startDate;
+			$sql .= "AND c.salesperson IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND c.salesperson = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			$sql .= ") AS t1 GROUP BY idUser";
+
+			//echo $sql;
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			$results = $query->fetchAll( \PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get forecasts: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function checkCompanyName( $name, $idCompany = null ) {
 		$result = false;
 
@@ -3904,6 +4003,31 @@ class Leads
 		}
 
 		return null;
+	}
+
+	public function fixStatsCorrelated() {
+		$queryIn = $this->db->prepare( "UPDATE stats_correlated SET costPerLead = ? WHERE idFeedIn = ?" );
+		$queryOut = $this->db->prepare( "UPDATE stats_correlated SET revenuePerLead = ? WHERE idFeedOut = ?" );
+		$queryOutCpl = $this->db->prepare( "UPDATE stats_correlated SET costPerLead = ? WHERE idFeedOut = ?" );
+
+		$query = $this->db->prepare( "SELECT idFeedIn,costPerLead FROM feedinc WHERE costPerLead > 0" );
+		$query->execute();
+		while( $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
+			$queryIn->execute( array( $row->costPerLead, $row->idFeedIn ) );
+		}
+
+		$query = $this->db->prepare( "SELECT idFeedOut,revenuePerLead FROM feedout WHERE revenuePerLead > 0" );
+		$query->execute();
+		while( $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
+			$queryOut->execute( array( $row->revenuePerLead, $row->idFeedOut ) );
+		}
+
+		$query = $this->db->prepare( "SELECT idFeedOut,costPerLeadOverride FROM feedout WHERE costPerLeadOverride IS NOT NULL" );
+		$query->execute();
+		while( $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
+			$queryOutCpl->execute( array( $row->costPerLeadOverride, $row->idFeedOut ) );
+		}
+
 	}
 
 	public function exportOutboundQueue( $idFeedOut ) {
