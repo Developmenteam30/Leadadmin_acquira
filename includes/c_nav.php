@@ -23,6 +23,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 			array( 'name' => 'Advertiser', 'url' => '/leadadmin/ledger.php?type=1', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'Commissions Report', 'url' => '/leadadmin/commissions.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+			array( 'name' => '+Revenue Expectations', 'url' => '/leadadmin/expectations.php', 'level' => LEADS_SESSION_LEVEL_MANAGER ),
 			array( 'name' => '*Financial Reports', 'url' => '/leadadmin/financial.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => '*Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),

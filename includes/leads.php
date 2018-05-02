@@ -385,6 +385,32 @@ class Leads
 		return null;
 	}
 
+	public function setExpectationValues( $userId, $month, $existingBusinessAmount, $newBusinessAmount ) {
+
+		try {
+			$query = $this->db->prepare( "REPLACE INTO forecast_expectations( userId, expectationMonth, existingBusinessAmount, newBusinessAmount ) VALUES( ?, ?, ?, ? )" );
+			$query->execute( array( $userId, $month . '01', $existingBusinessAmount, $newBusinessAmount ) );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to update expectation value: ' . $e->getMessage() );
+			return;
+		}
+
+	}
+
+	public function getExpectationValues( $userId, $month ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT existingBusinessAmount,newBusinessAmount FROM forecast_expectations WHERE userId = ? AND expectationMonth = ?" );
+			$query->execute( array( $userId, $month . '01' ) );
+			$results = $query->fetch( \PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get expectation value: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function checkCompanyName( $name, $idCompany = null ) {
 		$result = false;
 
