@@ -108,6 +108,11 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['costPerLeadOverride'] ) && is_numeric( $_REQUEST['costPerLeadOverride'] ) === false ) {
+				$result['error'] = 'Cost per lead override must be blank or a numeric value.';
+				break;
+			}
+
 			if( $action == 'new' ) {
 
 				if( $c ) {
@@ -153,6 +158,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
+						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -236,6 +242,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
+						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -715,8 +722,8 @@ if( isset( $_REQUEST['d'] ) ) {
 				}
 			}
 
-			$feed = $leads->getOutboundFeed( $idFeedOut );
-			if( empty( $feed ) ) {
+			$feedOut = $leads->getOutboundFeed( $idFeedOut );
+			if( empty( $feedOut ) ) {
 				print '<p>Sorry, the feed you specified does not exist.</p>';
 				break;
 			}
@@ -750,9 +757,9 @@ if( isset( $_REQUEST['d'] ) ) {
 				'custom6' => 'custom6',
 			);
 
-			print "<p><strong>HTTP Method:</strong> " . $feed->feedType . "</p>";
+			print "<p><strong>HTTP Method:</strong> " . $feedOut->feedType . "</p>";
 
-			$response = ProcessLeads::pushOutboundData( $feed, $leaddata );
+			$response = ProcessLeads::pushOutboundData( $feedOut, $leaddata );
 
 			// Manually increment the queue counter because the pushOutboundData function will decrement the queue, resulting in a mismatch
 			$leads->incrementOutboundQueue( $idFeedOut );
@@ -863,6 +870,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'notifyThresholdCount',
 				'notifyThresholdTimeFormatted',
 				'revenuePerLead',
+				'costPerLeadOverride',
 				'launchDate',
 			);
 			foreach( $feedProps as $feedProp ) {
@@ -1133,10 +1141,11 @@ if( isset( $_REQUEST['d'] ) ) {
 						</td>
 					</tr>
 					<tr>
-						<td><p>Revenue Per Lead</p></td>
+						<td><p>Revenue and Cost Per Lead</p></td>
 						<td>
 							<p>
-								<input type="text" name="revenuePerLead" value="<?php echo htmlentities( $feed_revenuePerLead ); ?>"/>
+								RPL: <input type="text" name="revenuePerLead" value="<?php echo htmlentities( $feed_revenuePerLead ); ?>"/>  CPL Override: <input type="text" name="costPerLeadOverride" value="<?php echo htmlentities( $feed_costPerLeadOverride ); ?>"/><br/>
+								If a value is set for CPL Override (including a 0.00 amount), this will override the CPL set on the incoming feed. To use the default CPL from the incoming feed, leave this field completely blank.
 							</p>
 						</td>
 					</tr>
