@@ -1,6 +1,6 @@
 <?php
 
-include("../../includes/c_config.php");
+include( "../../includes/c_config.php" );
 
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
@@ -13,14 +13,14 @@ $status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
 
 require_once( INCLUDES . 'display.php' );
 
-if(isset($_REQUEST['a'])){
+if( isset( $_REQUEST['a'] ) ) {
 	Header( 'Content-Type: application/json' );
 
 	$result = array(
 		'status' => 0,
 		'error' => 'Action does not exist.',
 	);
-	switch($_REQUEST['a']){
+	switch( $_REQUEST['a'] ) {
 		case "addNewCompany":
 			$c = true;
 			$result['error'] = 'Failed when trying to add a new company';
@@ -30,7 +30,7 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
-			if($c){
+			if( $c ) {
 				if( $leads->checkCompanyName( trim( $_REQUEST['name'] ) ) ) {
 					$c = false;
 					$result['error'] = 'That company name already exists in the database.';
@@ -57,7 +57,7 @@ if(isset($_REQUEST['a'])){
 				$result['error'] = 'Please enter a valid email address for the Technical Contact.';
 			}
 
-			if($c){
+			if( $c ) {
 				$isPublisher = false;
 				$isAdvertiser = false;
 				if( !empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
@@ -92,6 +92,8 @@ if(isset($_REQUEST['a'])){
 					'tech_phone' => empty( $_REQUEST['tech_phone'] ) ? null : trim( $_REQUEST['tech_phone'] ),
 					'tech_email' => empty( $_REQUEST['tech_email'] ) ? null : trim( $_REQUEST['tech_email'] ),
 					'accountManager' => empty( $_REQUEST['accountManager'] ) ? null : $_REQUEST['accountManager'],
+					'accountOpener' => empty( $_REQUEST['accountOpener'] ) ? null : $_REQUEST['accountOpener'],
+					'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 					'isPublisher' => $isPublisher ? 1 : 0,
 					'isAdvertiser' => $isAdvertiser ? 1 : 0,
 				) );
@@ -115,11 +117,11 @@ if(isset($_REQUEST['a'])){
 				}
 			}
 
-			if($c){
+			if( $c ) {
 				$result['status'] = 1;
 				$result['error'] = 'Successfully added new company.';
 			}
-		break;
+			break;
 
 		case "alterCompany":
 			$c = true;
@@ -130,7 +132,7 @@ if(isset($_REQUEST['a'])){
 				$c = false;
 			}
 
-			if($c){
+			if( $c ) {
 				if( $leads->checkCompanyName( trim( $_REQUEST['name'] ), $_REQUEST['idCompany'] ) ) {
 					$c = false;
 					$result['error'] = 'That company name already exists in the database.';
@@ -162,7 +164,7 @@ if(isset($_REQUEST['a'])){
 				$result['error'] = 'Please enter a valid email address for the Technical Contact.';
 			}
 
-			if($c){
+			if( $c ) {
 				$isPublisher = false;
 				$isAdvertiser = false;
 				if( !empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
@@ -197,12 +199,14 @@ if(isset($_REQUEST['a'])){
 					'tech_phone' => empty( $_REQUEST['tech_phone'] ) ? null : trim( $_REQUEST['tech_phone'] ),
 					'tech_email' => empty( $_REQUEST['tech_email'] ) ? null : trim( $_REQUEST['tech_email'] ),
 					'accountManager' => empty( $_REQUEST['accountManager'] ) ? null : $_REQUEST['accountManager'],
+					'accountOpener' => empty( $_REQUEST['accountOpener'] ) ? null : $_REQUEST['accountOpener'],
+					'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 					'status' => empty( $_REQUEST['status'] ) ? 'active' : $_REQUEST['status'],
 					'isPublisher' => $isPublisher ? 1 : 0,
 					'isAdvertiser' => $isAdvertiser ? 1 : 0,
 				) );
 
-				if($alterCompanyResult === false){
+				if( $alterCompanyResult === false ) {
 					$c = false;
 					$result['error'] = 'Database failure, could not alter company.';
 				} else {
@@ -223,25 +227,25 @@ if(isset($_REQUEST['a'])){
 
 			}
 
-			if($c){
+			if( $c ) {
 				$result['status'] = 1;
 				$result['error'] = 'Successfully altered existing company.';
 			}
-		break;
+			break;
 	}
-	echo json_encode($result);
+	echo json_encode( $result );
 	exit;
 }
 
-if(isset($_REQUEST['d'])){
-	switch($_REQUEST['d']){
+if( isset( $_REQUEST['d'] ) ) {
+	switch( $_REQUEST['d'] ) {
 		case 'errorCount':
 			Display::errorCount();
-		break;
+			break;
 
 		case 'errorList':
 			Display::errorList();
-		break;
+			break;
 
 		case "dialog_newcompany":
 
@@ -360,6 +364,20 @@ if(isset($_REQUEST['d'])){
 					'label' => 'Account Manager',
 					'type' => 'select',
 					'placeholder' => 'Select an account manager',
+					'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+				),
+				array(
+					'id' => 'accountOpener',
+					'label' => 'Account Opener',
+					'type' => 'select',
+					'placeholder' => 'Select an account opener',
+					'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+				),
+				array(
+					'id' => 'salesperson',
+					'label' => 'Sales Person',
+					'type' => 'select',
+					'placeholder' => 'Select a sales person',
 					'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
 				),
 				array(
@@ -492,42 +510,42 @@ if(isset($_REQUEST['d'])){
 
 			Display::displayForm( 'new_company', $fields );
 
-?>
-<script type="text/javascript">
-$('input[name="returns_copy"]').click(function(event) {
-	$('#returns_name').val( $('#main_name').val() );
-	$('#returns_phone').val( $('#main_phone').val() );
-	$('#returns_email').val( $('#main_email').val() );
-});
-$('input[name="acct_copy"]').click(function(event) {
-	$('#acct_name').val( $('#main_name').val() );
-	$('#acct_phone').val( $('#main_phone').val() );
-	$('#acct_email').val( $('#main_email').val() );
-});
-$('input[name="tech_copy"]').click(function(event) {
-	$('#tech_name').val( $('#main_name').val() );
-	$('#tech_phone').val( $('#main_phone').val() );
-	$('#tech_email').val( $('#main_email').val() );
-});
-$('#country').on('change',function(event) {
-	var country = $(this).val();
-	if(country != '236') {
-		$('#state').replaceWith('<input class="form-control" id="state" name="state" type="text" value="" />');
-	}
-});
-</script>
-<?php
+			?>
+			<script type="text/javascript">
+				$('input[name="returns_copy"]').click(function (event) {
+					$('#returns_name').val($('#main_name').val());
+					$('#returns_phone').val($('#main_phone').val());
+					$('#returns_email').val($('#main_email').val());
+				});
+				$('input[name="acct_copy"]').click(function (event) {
+					$('#acct_name').val($('#main_name').val());
+					$('#acct_phone').val($('#main_phone').val());
+					$('#acct_email').val($('#main_email').val());
+				});
+				$('input[name="tech_copy"]').click(function (event) {
+					$('#tech_name').val($('#main_name').val());
+					$('#tech_phone').val($('#main_phone').val());
+					$('#tech_email').val($('#main_email').val());
+				});
+				$('#country').on('change', function (event) {
+					var country = $(this).val();
+					if (country != '236') {
+						$('#state').replaceWith('<input class="form-control" id="state" name="state" type="text" value="" />');
+					}
+				});
+			</script>
+			<?php
 
-		break;
+			break;
 
 		case "dialog_editcompany":
 			$companyId = !empty( $_REQUEST['companyId'] ) ? $_REQUEST['companyId'] : '';
-			$company = $leads->getCompany($companyId);
+			$company = $leads->getCompany( $companyId );
 
 			if( empty( $company ) ) {
-?>
-<p>There is no company that exists by that ID.</p>
-<?php
+				?>
+				<p>There is no company that exists by that ID.</p>
+				<?php
 			} else {
 
 				$verticals = array();
@@ -549,381 +567,413 @@ $('#country').on('change',function(event) {
 					$set_verticals[$vertical->verticalId] = true;
 				}
 
-			$fields = array(
-				array(
-					'id' => 'name',
-					'label' => 'Company Name',
-					'type' => 'text',
-					'required' => true,
-					'value' => $company->name,
-				),
-				array(
-					'id' => 'status',
-					'label' => 'Status',
-					'type' => 'select',
-					'choices' => array(
-						'active' => 'Active',
-						'hidden' => 'Hidden',
-						'retired' => 'Retired',
+				$fields = array(
+					array(
+						'id' => 'name',
+						'label' => 'Company Name',
+						'type' => 'text',
+						'required' => true,
+						'value' => $company->name,
 					),
-					'required' => true,
-					'value' => $company->status,
-				),
-				array(
-					'id' => 'country',
-					'label' => 'Country',
-					'type' => 'select',
-					'choices' => $leads->getCountries(),
-					'value' => $company->country,
-					'placeholder' => 'Select a country',
-				),
-				array(
-					'id' => 'address',
-					'label' => 'Address',
-					'type' => 'text',
-					'value' => $company->address,
-				),
-				array(
-					'id' => 'city',
-					'label' => 'City',
-					'type' => 'text',
-					'value' => $company->city,
-				),
-				array(
-					'id' => 'state',
-					'label' => 'State/Province',
-					'type' => $company->country == '236' ? 'select' : 'text',
-					'choices' => array(
-						'AL' => 'Alabama',
-						'AK' => 'Alaska',
-						'AZ' => 'Arizona',
-						'AR' => 'Arkansas',
-						'CA' => 'California',
-						'CO' => 'Colorado',
-						'CT' => 'Connecticut',
-						'DE' => 'Delaware',
-						'DC' => 'District of Columbia',
-						'FL' => 'Florida',
-						'GA' => 'Georgia',
-						'HI' => 'Hawaii',
-						'ID' => 'Idaho',
-						'IL' => 'Illinois',
-						'IN' => 'Indiana',
-						'IA' => 'Iowa',
-						'KS' => 'Kansas',
-						'KY' => 'Kentucky',
-						'LA' => 'Louisiana',
-						'ME' => 'Maine',
-						'MD' => 'Maryland',
-						'MA' => 'Massachusetts',
-						'MI' => 'Michigan',
-						'MN' => 'Minnesota',
-						'MS' => 'Mississippi',
-						'MO' => 'Missouri',
-						'MT' => 'Montana',
-						'NE' => 'Nebraska',
-						'NV' => 'Nevada',
-						'NH' => 'New Hampshire',
-						'NJ' => 'New Jersey',
-						'NM' => 'New Mexico',
-						'NY' => 'New York',
-						'NC' => 'North Carolina',
-						'ND' => 'North Dakota',
-						'OH' => 'Ohio',
-						'OK' => 'Oklahoma',
-						'OR' => 'Oregon',
-						'PA' => 'Pennsylvania',
-						'RI' => 'Rhode Island',
-						'SC' => 'South Carolina',
-						'SD' => 'South Dakota',
-						'TN' => 'Tennessee',
-						'TX' => 'Texas',
-						'UT' => 'Utah',
-						'VT' => 'Vermont',
-						'VA' => 'Virginia',
-						'WA' => 'Washington',
-						'WV' => 'West Virginia',
-						'WI' => 'Wisconsin',
-						'WY' => 'Wyoming',
+					array(
+						'id' => 'status',
+						'label' => 'Status',
+						'type' => 'select',
+						'choices' => array(
+							'active' => 'Active',
+							'hidden' => 'Hidden',
+							'retired' => 'Retired',
+						),
+						'required' => true,
+						'value' => $company->status,
 					),
-					'value' => $company->state,
-				),
-				array(
-					'id' => 'zipcode',
-					'label' => 'Zip/Postal Code',
-					'type' => 'text',
-					'value' => $company->zipcode,
-				),
-				array(
-					'id' => 'url',
-					'label' => 'Web Site',
-					'type' => 'url',
-					'value' => $company->url,
-				),
-				array(
-					'id' => 'companyType',
-					'label' => 'Company Type',
-					'type' => 'checkbox',
-					'choices' => array(
-						'isPublisher' => 'Publisher / Affiliate',
-						'isAdvertiser' => 'Advertister',
+					array(
+						'id' => 'country',
+						'label' => 'Country',
+						'type' => 'select',
+						'choices' => $leads->getCountries(),
+						'value' => $company->country,
+						'placeholder' => 'Select a country',
 					),
-					'choice_append' => '<br/>',
-					'value' => array(
-						'isPublisher' => !empty( $company->isPublisher ) ? true : false,
-						'isAdvertiser' => !empty( $company->isAdvertiser ) ? true : false,
+					array(
+						'id' => 'address',
+						'label' => 'Address',
+						'type' => 'text',
+						'value' => $company->address,
 					),
-				),
-				array(
-					'id' => 'accountManager',
-					'label' => 'Account Manager',
-					'type' => 'select',
-					'placeholder' => 'Select an account manager',
-					'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
-					'value' => $company->accountManager,
-				),
-				array(
-					'id' => 'note',
-					'label' => 'Notes',
-					'type' => 'textarea',
-					'value' => $company->note,
-				),
-				array(
-					'id' => 'divisions',
-					'label' => 'Divisions',
-					'type' => 'checkbox',
-					'choices' => $divisions,
-					'choice_append' => '<br/>',
-					'value' => $set_divisions,
-				),
-				array(
-					'id' => 'verticals',
-					'label' => 'Verticals',
-					'type' => 'select',
-					'multiple' => true,
-					'placeholder' => false,
-					'choices' => $verticals,
-					'choice_append' => '<br/>',
-					'value' => $set_verticals,
-				),
-				array(
-					'type' => '_header',
-					'label' => 'Main Contact',
-				),
-				array(
-					'id' => 'main_name',
-					'label' => 'Name',
-					'type' => 'text',
-					'value' => $company->main_name,
-				),
-				array(
-					'id' => 'main_phone',
-					'label' => 'Phone Number',
-					'type' => 'tel',
-					'value' => $company->main_phone,
-				),
-				array(
-					'id' => 'main_email',
-					'label' => 'Email Address',
-					'type' => 'email',
-					'value' => $company->main_email,
-				),
-				array(
-					'type' => '_header',
-					'label' => 'Returns Contact',
-				),
-				array(
-					'id' => 'returns_copy',
-					'label' => '',
-					'type' => 'checkbox',
-					'choices' => array(
-						'1' => 'Copy info from Main Contact',
+					array(
+						'id' => 'city',
+						'label' => 'City',
+						'type' => 'text',
+						'value' => $company->city,
 					),
-				),
-				array(
-					'id' => 'returns_name',
-					'label' => 'Name',
-					'type' => 'text',
-					'value' => $company->returns_name,
-				),
-				array(
-					'id' => 'returns_phone',
-					'label' => 'Phone Number',
-					'type' => 'tel',
-					'value' => $company->returns_phone,
-				),
-				array(
-					'id' => 'returns_email',
-					'label' => 'Email Address',
-					'type' => 'email',
-					'value' => $company->returns_email,
-				),
-				array(
-					'type' => '_header',
-					'label' => 'Accounting Contact',
-				),
-				array(
-					'id' => 'acct_copy',
-					'label' => '',
-					'type' => 'checkbox',
-					'choices' => array(
-						'1' => 'Copy info from Main Contact',
+					array(
+						'id' => 'state',
+						'label' => 'State/Province',
+						'type' => $company->country == '236' ? 'select' : 'text',
+						'choices' => array(
+							'AL' => 'Alabama',
+							'AK' => 'Alaska',
+							'AZ' => 'Arizona',
+							'AR' => 'Arkansas',
+							'CA' => 'California',
+							'CO' => 'Colorado',
+							'CT' => 'Connecticut',
+							'DE' => 'Delaware',
+							'DC' => 'District of Columbia',
+							'FL' => 'Florida',
+							'GA' => 'Georgia',
+							'HI' => 'Hawaii',
+							'ID' => 'Idaho',
+							'IL' => 'Illinois',
+							'IN' => 'Indiana',
+							'IA' => 'Iowa',
+							'KS' => 'Kansas',
+							'KY' => 'Kentucky',
+							'LA' => 'Louisiana',
+							'ME' => 'Maine',
+							'MD' => 'Maryland',
+							'MA' => 'Massachusetts',
+							'MI' => 'Michigan',
+							'MN' => 'Minnesota',
+							'MS' => 'Mississippi',
+							'MO' => 'Missouri',
+							'MT' => 'Montana',
+							'NE' => 'Nebraska',
+							'NV' => 'Nevada',
+							'NH' => 'New Hampshire',
+							'NJ' => 'New Jersey',
+							'NM' => 'New Mexico',
+							'NY' => 'New York',
+							'NC' => 'North Carolina',
+							'ND' => 'North Dakota',
+							'OH' => 'Ohio',
+							'OK' => 'Oklahoma',
+							'OR' => 'Oregon',
+							'PA' => 'Pennsylvania',
+							'RI' => 'Rhode Island',
+							'SC' => 'South Carolina',
+							'SD' => 'South Dakota',
+							'TN' => 'Tennessee',
+							'TX' => 'Texas',
+							'UT' => 'Utah',
+							'VT' => 'Vermont',
+							'VA' => 'Virginia',
+							'WA' => 'Washington',
+							'WV' => 'West Virginia',
+							'WI' => 'Wisconsin',
+							'WY' => 'Wyoming',
+						),
+						'value' => $company->state,
 					),
-				),
-				array(
-					'id' => 'acct_name',
-					'label' => 'Name',
-					'type' => 'text',
-					'value' => $company->acct_name,
-				),
-				array(
-					'id' => 'acct_phone',
-					'label' => 'Phone Number',
-					'type' => 'tel',
-					'value' => $company->acct_phone,
-				),
-				array(
-					'id' => 'acct_email',
-					'label' => 'Email Address',
-					'type' => 'email',
-					'value' => $company->acct_email,
-				),
-				array(
-					'type' => '_header',
-					'label' => 'Technical Contact',
-				),
-				array(
-					'id' => 'tech_copy',
-					'label' => '',
-					'type' => 'checkbox',
-					'choices' => array(
-						'1' => 'Copy info from Main Contact',
+					array(
+						'id' => 'zipcode',
+						'label' => 'Zip/Postal Code',
+						'type' => 'text',
+						'value' => $company->zipcode,
 					),
-				),
-				array(
-					'id' => 'tech_name',
-					'label' => 'Name',
-					'type' => 'text',
-					'value' => $company->tech_name,
-				),
-				array(
-					'id' => 'tech_phone',
-					'label' => 'Phone Number',
-					'type' => 'tel',
-					'value' => $company->tech_phone,
-				),
-				array(
-					'id' => 'tech_email',
-					'label' => 'Email Address',
-					'type' => 'email',
-					'value' => $company->tech_email,
-				),
-				array(
-					'id' => 'idCompany',
-					'type' => 'hidden',
-					'value' => $company->idCompany,
-				),
-				array(
-					'id' => 'a',
-					'type' => 'hidden',
-					'value' => 'alterCompany',
-				),
-			);
+					array(
+						'id' => 'url',
+						'label' => 'Web Site',
+						'type' => 'url',
+						'value' => $company->url,
+					),
+					array(
+						'id' => 'companyType',
+						'label' => 'Company Type',
+						'type' => 'checkbox',
+						'choices' => array(
+							'isPublisher' => 'Publisher / Affiliate',
+							'isAdvertiser' => 'Advertister',
+						),
+						'choice_append' => '<br/>',
+						'value' => array(
+							'isPublisher' => !empty( $company->isPublisher ) ? true : false,
+							'isAdvertiser' => !empty( $company->isAdvertiser ) ? true : false,
+						),
+					),
+					array(
+						'id' => 'accountManager',
+						'label' => 'Account Manager',
+						'type' => 'select',
+						'placeholder' => 'Select an account manager',
+						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+						'value' => $company->accountManager,
+					),
+					array(
+						'id' => 'accountOpener',
+						'label' => 'Account Opener',
+						'type' => 'select',
+						'placeholder' => 'Select an account opener',
+						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+						'value' => $company->accountOpener,
+					),
+					array(
+						'id' => 'salesperson',
+						'label' => 'Sales Person',
+						'type' => 'select',
+						'placeholder' => 'Select a sales person',
+						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+						'value' => $company->salesperson,
+					),
+					array(
+						'id' => 'note',
+						'label' => 'Notes',
+						'type' => 'textarea',
+						'value' => $company->note,
+					),
+					array(
+						'id' => 'divisions',
+						'label' => 'Divisions',
+						'type' => 'checkbox',
+						'choices' => $divisions,
+						'choice_append' => '<br/>',
+						'value' => $set_divisions,
+					),
+					array(
+						'id' => 'verticals',
+						'label' => 'Verticals',
+						'type' => 'select',
+						'multiple' => true,
+						'placeholder' => false,
+						'choices' => $verticals,
+						'choice_append' => '<br/>',
+						'value' => $set_verticals,
+					),
+					array(
+						'type' => '_header',
+						'label' => 'Main Contact',
+					),
+					array(
+						'id' => 'main_name',
+						'label' => 'Name',
+						'type' => 'text',
+						'value' => $company->main_name,
+					),
+					array(
+						'id' => 'main_phone',
+						'label' => 'Phone Number',
+						'type' => 'tel',
+						'value' => $company->main_phone,
+					),
+					array(
+						'id' => 'main_email',
+						'label' => 'Email Address',
+						'type' => 'email',
+						'value' => $company->main_email,
+					),
+					array(
+						'type' => '_header',
+						'label' => 'Returns Contact',
+					),
+					array(
+						'id' => 'returns_copy',
+						'label' => '',
+						'type' => 'checkbox',
+						'choices' => array(
+							'1' => 'Copy info from Main Contact',
+						),
+					),
+					array(
+						'id' => 'returns_name',
+						'label' => 'Name',
+						'type' => 'text',
+						'value' => $company->returns_name,
+					),
+					array(
+						'id' => 'returns_phone',
+						'label' => 'Phone Number',
+						'type' => 'tel',
+						'value' => $company->returns_phone,
+					),
+					array(
+						'id' => 'returns_email',
+						'label' => 'Email Address',
+						'type' => 'email',
+						'value' => $company->returns_email,
+					),
+					array(
+						'type' => '_header',
+						'label' => 'Accounting Contact',
+					),
+					array(
+						'id' => 'acct_copy',
+						'label' => '',
+						'type' => 'checkbox',
+						'choices' => array(
+							'1' => 'Copy info from Main Contact',
+						),
+					),
+					array(
+						'id' => 'acct_name',
+						'label' => 'Name',
+						'type' => 'text',
+						'value' => $company->acct_name,
+					),
+					array(
+						'id' => 'acct_phone',
+						'label' => 'Phone Number',
+						'type' => 'tel',
+						'value' => $company->acct_phone,
+					),
+					array(
+						'id' => 'acct_email',
+						'label' => 'Email Address',
+						'type' => 'email',
+						'value' => $company->acct_email,
+					),
+					array(
+						'type' => '_header',
+						'label' => 'Technical Contact',
+					),
+					array(
+						'id' => 'tech_copy',
+						'label' => '',
+						'type' => 'checkbox',
+						'choices' => array(
+							'1' => 'Copy info from Main Contact',
+						),
+					),
+					array(
+						'id' => 'tech_name',
+						'label' => 'Name',
+						'type' => 'text',
+						'value' => $company->tech_name,
+					),
+					array(
+						'id' => 'tech_phone',
+						'label' => 'Phone Number',
+						'type' => 'tel',
+						'value' => $company->tech_phone,
+					),
+					array(
+						'id' => 'tech_email',
+						'label' => 'Email Address',
+						'type' => 'email',
+						'value' => $company->tech_email,
+					),
+					array(
+						'id' => 'idCompany',
+						'type' => 'hidden',
+						'value' => $company->idCompany,
+					),
+					array(
+						'id' => 'a',
+						'type' => 'hidden',
+						'value' => 'alterCompany',
+					),
+				);
 
-			Display::displayForm( 'edit_company', $fields );
+				Display::displayForm( 'edit_company', $fields );
 
-?>
-<script type="text/javascript">
-$('input[name="returns_copy"]').click(function(event) {
-	$('#returns_name').val( $('#main_name').val() );
-	$('#returns_phone').val( $('#main_phone').val() );
-	$('#returns_email').val( $('#main_email').val() );
-});
-$('input[name="acct_copy"]').click(function(event) {
-	$('#acct_name').val( $('#main_name').val() );
-	$('#acct_phone').val( $('#main_phone').val() );
-	$('#acct_email').val( $('#main_email').val() );
-});
-$('input[name="tech_copy"]').click(function(event) {
-	$('#tech_name').val( $('#main_name').val() );
-	$('#tech_phone').val( $('#main_phone').val() );
-	$('#tech_email').val( $('#main_email').val() );
-});
-$('#country').on('change',function(event) {
-	var country = $(this).val();
-	if(country != '236') {
-		$('#state').replaceWith('<input class="form-control" id="state" name="state" type="text" value="" />');
-	}
-});
-</script>
-<?php
+				?>
+				<script type="text/javascript">
+					$('input[name="returns_copy"]').click(function (event) {
+						$('#returns_name').val($('#main_name').val());
+						$('#returns_phone').val($('#main_phone').val());
+						$('#returns_email').val($('#main_email').val());
+					});
+					$('input[name="acct_copy"]').click(function (event) {
+						$('#acct_name').val($('#main_name').val());
+						$('#acct_phone').val($('#main_phone').val());
+						$('#acct_email').val($('#main_email').val());
+					});
+					$('input[name="tech_copy"]').click(function (event) {
+						$('#tech_name').val($('#main_name').val());
+						$('#tech_phone').val($('#main_phone').val());
+						$('#tech_email').val($('#main_email').val());
+					});
+					$('#country').on('change', function (event) {
+						var country = $(this).val();
+						if (country != '236') {
+							$('#state').replaceWith('<input class="form-control" id="state" name="state" type="text" value="" />');
+						}
+					});
+				</script>
+				<?php
 
 			}
-		break;
+			break;
 	}
 	exit;
 }
 
 $title = 'Company Manager';
-include(INCLUDES."c_header.php");
+include( INCLUDES . "c_header.php" );
 ?>
 <body>
 
-<?php include(INCLUDES.'c_nav.php'); ?>
+<?php include( INCLUDES . 'c_nav.php' ); ?>
 
 <div class="container-fluid">
 
-<h2>Companies</h2>
+	<h2>Companies</h2>
 
-<form class="pull-right" id="status-select" method="get">
-<select id="status" name="status">
-	<option value="active"<?php if( 'active' === $status ) { print ' selected="selected"'; } ?>>Show active companies</option>
-	<option value="hidden"<?php if( 'hidden' === $status ) { print ' selected="selected"'; } ?>>Show hidden companies</option>
-	<option value="retired"<?php if( 'retired' === $status ) { print ' selected="selected"'; } ?>>Show retired companies</option>
-	<option value=""<?php if( null === $status ) { print ' selected="selected"'; } ?>>Show all companies</option>
-</select>
-</form>
+	<form class="pull-right" id="status-select" method="get">
+		<select id="status" name="status">
+			<option value="active"<?php if( 'active' === $status ) {
+				print ' selected="selected"';
+			} ?>>Show active companies
+			</option>
+			<option value="hidden"<?php if( 'hidden' === $status ) {
+				print ' selected="selected"';
+			} ?>>Show hidden companies
+			</option>
+			<option value="retired"<?php if( 'retired' === $status ) {
+				print ' selected="selected"';
+			} ?>>Show retired companies
+			</option>
+			<option value=""<?php if( null === $status ) {
+				print ' selected="selected"';
+			} ?>>Show all companies
+			</option>
+		</select>
+	</form>
 
-<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newcompany">Add a new company</button></p>
+	<p>
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newcompany">Add a new company</button>
+	</p>
 
-<?php
+	<?php
 	$companies = $leads->getCompanies( $status );
 	if( empty( $companies ) ) {
 
 		print '<p>No companies exist in the database.</p>';
 
 	} else {
-?>
+		?>
 
-<table class="table table-bordered table-condensed table-striped">
-	<thead>
-		<tr class="bgGray header">
-			<th>ID</th>
-			<th>Company Name</th>
-			<th class="hidden-xs">Notes</th>
-			<th>Options</th>
-		</tr>
-	</thead>
-	<tbody>
-<?php
-		foreach($companies as $company){
-?>
-		<tr>
-			<td><?php echo $company->idCompany; ?></td>
-			<td><?php echo htmlentities( $company->name ); ?></td>
-			<td class="hidden-xs"><?php echo htmlentities( $company->note ); ?></td>
-			<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editcompany" data-company-id="<?php echo $company->idCompany; ?>">Edit</button></td>
-		</tr>
-<?php
-		}
-?>
-	</tbody>
-</table>
+		<table class="table table-bordered table-condensed table-striped">
+			<thead>
+			<tr class="bgGray header">
+				<th>ID</th>
+				<th>Company Name</th>
+				<th class="hidden-xs">Notes</th>
+				<th>Options</th>
+			</tr>
+			</thead>
+			<tbody>
+			<?php
+			foreach( $companies as $company ) {
+				?>
+				<tr>
+					<td><?php echo $company->idCompany; ?></td>
+					<td><?php echo htmlentities( $company->name ); ?></td>
+					<td class="hidden-xs"><?php echo htmlentities( $company->note ); ?></td>
+					<td class="text-center">
+						<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editcompany" data-company-id="<?php echo $company->idCompany; ?>">Edit</button>
+					</td>
+				</tr>
+				<?php
+			}
+			?>
+			</tbody>
+		</table>
 
-<?php
+		<?php
 	}
 
-?>
+	?>
 </div>
 
 <div class="modal fade" id="newcompany" tabindex="-1" role="dialog" aria-labelledby="newcompany_title">
@@ -960,82 +1010,82 @@ include(INCLUDES."c_header.php");
 </div>
 
 <script type="text/javascript">
-$('#modal-save-newcompany').click( function(event) {
-	event.preventDefault();
+	$('#modal-save-newcompany').click(function (event) {
+		event.preventDefault();
 
-	var response = $.ajax({
-		url: "companies.php",
-		type: "POST",
-		async: true,
-		data: $("#new_company").serialize()
-	}).done(function(result){
-		if(result.status == 1){
-			window.location.reload(true);
-		} else {
-			alert(result.error);
-		}
+		var response = $.ajax({
+			url: "companies.php",
+			type: "POST",
+			async: true,
+			data: $("#new_company").serialize()
+		}).done(function (result) {
+			if (result.status == 1) {
+				window.location.reload(true);
+			} else {
+				alert(result.error);
+			}
+		});
 	});
-});
 
-$('#newcompany').on('show.bs.modal', function(e) {
-	var modal = $(this);
+	$('#newcompany').on('show.bs.modal', function (e) {
+		var modal = $(this);
 
-	$.ajax({
-		cache: false,
-		type: 'POST',
-		url: 'companies.php',
-		data: {
-			'd': 'dialog_newcompany'
-		},
-		success: function(data) {
-			modal.find('.modal-body').html(data);
-		}
+		$.ajax({
+			cache: false,
+			type: 'POST',
+			url: 'companies.php',
+			data: {
+				'd': 'dialog_newcompany'
+			},
+			success: function (data) {
+				modal.find('.modal-body').html(data);
+			}
+		});
 	});
-});
 
-$('#modal-save-editcompany').click(function(event) {
-	event.preventDefault();
+	$('#modal-save-editcompany').click(function (event) {
+		event.preventDefault();
 
-	var response = $.ajax({
-		url: "companies.php",
-		type: "POST",
-		async: true,
-		data: $("#edit_company").serialize()
-	}).done(function(result){
-		if(result.status == 1){
-			window.location.reload(true);
-		} else {
-			alert(result.error);
-		}
+		var response = $.ajax({
+			url: "companies.php",
+			type: "POST",
+			async: true,
+			data: $("#edit_company").serialize()
+		}).done(function (result) {
+			if (result.status == 1) {
+				window.location.reload(true);
+			} else {
+				alert(result.error);
+			}
+		});
 	});
-});
 
-$('#editcompany').on('show.bs.modal', function(e) {
-	var modal = $(this);
-	var companyId = $(e.relatedTarget).data('company-id');
+	$('#editcompany').on('show.bs.modal', function (e) {
+		var modal = $(this);
+		var companyId = $(e.relatedTarget).data('company-id');
 
-	$.ajax({
-		cache: false,
-		type: 'POST',
-		url: 'companies.php',
-		data: {
-			'd': 'dialog_editcompany',
-			'companyId': companyId
-		},
-		success: function(data) {
-			modal.find('.modal-body').html(data);
-		}
+		$.ajax({
+			cache: false,
+			type: 'POST',
+			url: 'companies.php',
+			data: {
+				'd': 'dialog_editcompany',
+				'companyId': companyId
+			},
+			success: function (data) {
+				modal.find('.modal-body').html(data);
+			}
+		});
 	});
-});
 
-$('#newcompany, #editcompany').on('hide.bs.modal', function(e) {
-	$(this).find('.modal-body').html('');
-});
+	$('#newcompany, #editcompany').on('hide.bs.modal', function (e) {
+		$(this).find('.modal-body').html('');
+	});
 
-$('#status-select select').change(function(e) {
-	e.preventDefault();
-	$('#status-select').submit();
-});
+	$('#status-select select').change(function (e) {
+		e.preventDefault();
+		$('#status-select').submit();
+	});
 </script>
 
 </body>
