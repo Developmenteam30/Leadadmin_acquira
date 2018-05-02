@@ -2341,7 +2341,7 @@ class Leads
 		}
 	}
 
-	public function outboundProcess( $idRecord, $idFeedOut, $url, $error = null ) {
+	public function outboundProcess( $idRecord, $idFeedOut, $idFeedIn, $url, $error = null ) {
 		$this->db->beginTransaction();
 
 		try {
@@ -2358,16 +2358,31 @@ class Leads
 			return;
 		}
 
+		if( !empty( $idFeedIn ) ) {
+			try {
+				if( empty( $error ) ) {
+					$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
+				} else {
+					$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
+				}
+				$query->execute( array( $idFeedOut, $this->parseUrl( $url ), date( 'Y-m-d' ) ) );
+			} catch( PDOException $e ) {
+				$this->db->rollBack();
+				$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
+				return;
+			}
+		}
+
 		try {
 			if( empty( $error ) ) {
-				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
+				$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted) VALUES(?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
 			} else {
-				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
+				$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,rejected) VALUES(?,?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
 			}
-			$query->execute( array( $idFeedOut, $this->parseUrl( $url ), date( 'Y-m-d' ) ) );
+			$query->execute( array( $idFeedIn, $idFeedOut, $this->parseUrl( $url ), date( 'Y-m-d' ) ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
-			$this->logError( 'Unable to insert stats_outbound record: ' . $e->getMessage() );
+			$this->logError( 'Unable to insert stats_correllated record: ' . $e->getMessage() );
 			return;
 		}
 
