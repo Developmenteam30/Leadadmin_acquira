@@ -287,8 +287,8 @@ class Leads
 
 		try {
 			if( $forceAll || LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
-				$query = $this->db->prepare( "SELECT idUser,fullName FROM users WHERE level = ? ORDER BY username" );
-				$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
+				$query = $this->db->prepare( "SELECT idUser,fullName FROM users WHERE level >= ? AND level < ? ORDER BY username" );
+				$query->execute( array( LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_ADMIN ) );
 			} else {
 				$query = $this->db->prepare( "SELECT idUser,fullName FROM users WHERE idUser = ?" );
 				$query->execute( array( LeadsSession::getUserId() ) );
