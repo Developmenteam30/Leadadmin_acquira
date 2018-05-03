@@ -218,7 +218,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'custom5Label' => empty( $_REQUEST['custom5Label'] ) ? null : $_REQUEST['custom5Label'],
 						'custom6Label' => empty( $_REQUEST['custom6Label'] ) ? null : $_REQUEST['custom6Label'],
 						'costPerLead' => empty( $_REQUEST['costPerLead'] ) ? 0.00 : floatval( $_REQUEST['costPerLead'] ),
-						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? null : $_REQUEST['notifyThresholdCount'],
+						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? 0 : $_REQUEST['notifyThresholdCount'],
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 					) );
@@ -382,7 +382,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'custom5Label' => empty( $_REQUEST['custom5Label'] ) ? null : $_REQUEST['custom5Label'],
 						'custom6Label' => empty( $_REQUEST['custom6Label'] ) ? null : $_REQUEST['custom6Label'],
 						'costPerLead' => empty( $_REQUEST['costPerLead'] ) ? 0.00 : floatval( $_REQUEST['costPerLead'] ),
-						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? null : $_REQUEST['notifyThresholdCount'],
+						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? 0 : $_REQUEST['notifyThresholdCount'],
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 					) );
