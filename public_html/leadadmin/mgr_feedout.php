@@ -762,7 +762,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			$response = ProcessLeads::pushOutboundData( $feedOut, $leaddata );
 
 			// Manually increment the queue counter because the pushOutboundData function will decrement the queue, resulting in a mismatch
-			$leads->incrementOutboundQueue( $idFeedOut );
+			//$leads->incrementOutboundQueue( $idFeedOut );
 
 			print "<strong>Query String:</strong> " . htmlspecialchars( $response['querystring'] ) . "</p>";
 
