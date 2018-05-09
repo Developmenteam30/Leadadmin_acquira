@@ -30,7 +30,23 @@ $recordFields = array(
 	'custom6',
 );
 $additionalMapFields = array(
-	'urlAssign', 'dobUS', 'stampUS', 'stampUS_dateOnly', 'stampUSAMPM', 'stampUS+AMPM', 'stamp_YYYYmmdd', 'stamp_YYYY-mm-dd', 'stampUS_slashes',
+	'urlAssign',
+	'dobUS',
+	'stampUS',
+	'stampUS_dateOnly',
+	'stampUSAMPM',
+	'stampUS+AMPM',
+	'stamp_YYYYmmdd',
+	'stamp_YYYY-mm-dd',
+	'stampUS_slashes',
+	'landline_areacode',
+	'landline_NXX',
+	'landline_XXXX',
+	'landline_NXX+XXXX',
+	'cellphone_areacode',
+	'cellphone_NXX',
+	'cellphone_XXXX',
+	'cellphone_NXX+XXXX',
 );
 $incomingAdditionalRequirementSettings = array(
 	'phone',

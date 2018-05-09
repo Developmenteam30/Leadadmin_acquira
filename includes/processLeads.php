@@ -373,6 +373,38 @@ class ProcessLeads
 						ProcessLeads::assignValue( $varFields[$count], date( "m/d/Y H:i:s", strtotime( $row->stamp ) ), $requestdata );
 						break;
 
+					case 'landline_areacode':
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 0, 3 ) : '', $requestdata );
+						break;
+
+					case 'landline_NXX':
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 3, 3 ) : '', $requestdata );
+						break;
+
+					case 'landline_XXXX':
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 6, 4 ) : '', $requestdata );
+						break;
+
+					case 'landline_NXX+XXXX':
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 3, 7 ) : '', $requestdata );
+						break;
+
+					case 'cellphone_areacode':
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 0, 3 ) : '', $requestdata );
+						break;
+
+					case 'cellphone_NXX':
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 3, 3 ) : '', $requestdata );
+						break;
+
+					case 'cellphone_XXXX':
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 6, 4 ) : '', $requestdata );
+						break;
+
+					case 'cellphone_NXX+XXXX':
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 3, 7 ) : '', $requestdata );
+						break;
+
 					default:
 						ProcessLeads::assignValue( $varFields[$count], $row->{$fieldMap[$count]}, $requestdata );
 						break;
