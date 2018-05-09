@@ -764,9 +764,11 @@ if( isset( $_REQUEST['d'] ) ) {
 			// Manually increment the queue counter because the pushOutboundData function will decrement the queue, resulting in a mismatch
 			//$leads->incrementOutboundQueue( $idFeedOut );
 
-			print "<strong>Query String:</strong> " . htmlspecialchars( $response['querystring'] ) . "</p>";
+			print "<p><strong>Query String:</strong> " . nl2br( htmlspecialchars( $response['querystring'], ENT_QUOTES | ENT_HTML5 ) ) . "</p>";
 
-			print "<strong>Response:</strong> " . htmlspecialchars( stripslashes( $response['text'] ) ) . "</p>";
+			print "<p><strong>Status:</strong> " . ( true === $response['status'] ? '<span class="success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>' ) . "</p>";
+
+			print "<p><strong>Response:</strong> " . htmlspecialchars( $response['text'], ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE ) . "</p>";
 
 			$leads->auditLog( 'FEEDOUT:TEST-RECORD', $idFeedOut );
 
@@ -1646,7 +1648,7 @@ if( isset( $_REQUEST['d'] ) ) {
 										if( $lastCompany !== $fI->name ) {
 											$lastCompany = $fI->name;
 											printf( '<optgroup label="%s">' . PHP_EOL,
-												htmlentities( $fI->name, ENT_QUOTEs | ENT_HTML5 )
+												htmlentities( $fI->name, ENT_QUOTES | ENT_HTML5 )
 											);
 										}
 										?>

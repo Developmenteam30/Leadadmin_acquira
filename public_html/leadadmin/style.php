@@ -194,6 +194,10 @@ table tr.bg-gray {
 	color: #fff;
 }
 
+.modal-body {
+	word-wrap: break-word;
+}
+
 .btn-primary {
 	background: #429038;
 }
@@ -293,6 +297,10 @@ div.headerRow.client {
 
 .errors {
 	color: #ff0000;
+}
+
+.success {
+	color: #33cc33;
 }
 
 #expectationsTable .error {
