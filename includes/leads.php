@@ -4030,6 +4030,45 @@ class Leads
 
 	}
 
+	public function backfillStatsCorrelated() {
+
+		$idRecord = 821615749;
+		$rowCount = 0;
+
+		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, costPerLead = ?, revenuePerLead = ?' );
+
+		$sqlSelect = "SELECT a.idRecord,a.idFeedIn,a.idFeedOut,DATE_FORMAT(CONVERT_TZ(a.`timestamp`,?,?),'%Y-%m-%d') AS `timestamp`,di.url,fi.costPerLead,fo.revenuePerLead,fo.costPerLeadOverride ";
+		$sqlSelect .= "FROM archive.data_outbound_201804 AS a ";
+		$sqlSelect .= "LEFT JOIN dnrdmktg.data_inbound AS di ON di.idRecord = a.idRecord ";
+		$sqlSelect .= "LEFT JOIN dnrdmktg.feedinc fi ON fi.idFeedIn = a.idFeedIn ";
+		$sqlSelect .= "LEFT JOIN dnrdmktg.feedout fo ON fo.idFeedOut = a.idFeedOut ";
+		$sqlSelect .= "WHERE a.idRecord > ? ";
+		$sqlSelect .= "ORDER BY a.idRecord LIMIT 1000";
+		$query = $this->db->prepare( $sqlSelect );
+		do {
+			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, $idRecord ) );
+			$rowCount = $query->rowCount();
+			while( $rowCount > 0 && $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
+
+				$costPerLead = !empty( $row->costPerLeadOverride ) ? $row->costPerLeadOverride : ( !empty( $row->costPerLead ) ? $row->costPerLead : 0.00 );
+				$revenuePerLead = !empty( $row->revenuePerLead ) ? $row->revenuePerLead : 0.00;
+
+				try {
+					$statsQuery->execute( array( $row->idFeedIn, $row->idFeedOut, $this->parseUrl( $row->url ), $row->timestamp, $costPerLead, $revenuePerLead, $costPerLead, $revenuePerLead ) );
+				} catch( PDOException $e ) {
+					$this->db->rollBack();
+					$this->logError( 'Unable to insert stats_correllated backfill record: ' . $e->getMessage() );
+					return null;
+				}
+
+				$idRecord = $row->idRecord;
+			}
+
+			print date( 'c' ) . " Last record processed: {$idRecord}\n";
+			usleep( 2000 );
+		} while( $rowCount > 0 );
+	}
+
 	public function exportOutboundQueue( $idFeedOut ) {
 
 		$feedOut = $this->getOutboundFeed( $idFeedOut );
