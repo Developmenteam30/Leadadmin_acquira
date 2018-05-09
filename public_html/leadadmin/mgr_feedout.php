@@ -378,6 +378,16 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['waterfallPriority'] ) && is_numeric( $_REQUEST['waterfallPriority'] ) === false ) {
+				$result['error'] = 'Please enter a numeric value for the waterfall priority.';
+				break;
+			}
+
+			if( !empty( $_REQUEST['waterfallPriority'] ) && intval( $_REQUEST['waterfallPriority'] ) > 65535 ) {
+				$result['error'] = 'Please enter a value of 65,535 or less for the waterfall priority.';
+				break;
+			}
+
 			if( $action == 'new' ) {
 
 				$idAssoc = $leads->addPopulation( array(
@@ -394,6 +404,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
 					'livedata' => !empty( $_REQUEST['livedata'] ) && 'livedata' == $_REQUEST['livedata'] ? 1 : 0,
 					'waterfall' => !empty( $_REQUEST['livedata'] ) && 'waterfall' == $_REQUEST['livedata'] ? 1 : 0,
+					'waterfallPriority' => !empty( $_REQUEST['waterfallPriority'] ) ? $_REQUEST['waterfallPriority'] : 0,
 				) );
 
 				if( empty( $idAssoc ) ) {
@@ -422,6 +433,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
 					'livedata' => !empty( $_REQUEST['livedata'] ) && 'livedata' == $_REQUEST['livedata'] ? 1 : 0,
 					'waterfall' => !empty( $_REQUEST['livedata'] ) && 'waterfall' == $_REQUEST['livedata'] ? 1 : 0,
+					'waterfallPriority' => !empty( $_REQUEST['waterfallPriority'] ) ? $_REQUEST['waterfallPriority'] : 0,
 				) );
 
 				if( empty( $dbResult ) ) {
@@ -1581,6 +1593,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'forceUrl',
 				'livedata',
 				'waterfall',
+				'waterfallPriority',
 			);
 			foreach( $populationProperties as $pP ) {
 				if( isset( $popset ) ) {
@@ -1962,6 +1975,15 @@ if( isset( $_REQUEST['d'] ) ) {
 								<input type='radio' name='livedata' id='livedata_disabled' value='0' <?php if( $popset_livedata != '1' && $popset_waterfall != '1' ) { ?> checked='checked' <?php } ?>/> Disabled (DEFAULT)<br/>
 								<input type='radio' name='livedata' id='livedata_enabled' value='livedata' <?php if( $popset_livedata == '1' ) { ?> checked='checked' <?php } ?>/> Enabled - Standard<br/>
 								<input type='radio' name='livedata' id='livedata_waterfall' value='waterfall' <?php if( $popset_waterfall == '1' ) { ?> checked='checked' <?php } ?>/> Enabled - Waterfall
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Waterfall Priority</p></td>
+						<td>
+							<p>
+								<input type="text" name="waterfallPriority" value="<?php echo htmlentities( $popset_waterfallPriority ); ?>"/><br/>
+								Only applies if the Live Data Feed setting above is set to "Waterfall". Use any number from 0 to 65,535. A higher number means higher priority in the waterfall.
 							</p>
 						</td>
 					</tr>
