@@ -171,7 +171,7 @@ class ProcessLeads
 				// Ensure we haven't reached our daily limit of records
 				if( !is_null( $feed->dailyLimit ) && intval( $feed->dailyLimit ) > 0 ) {
 					$cnt = $leads->getOutboundDailyCount( $feed->idFeedOut );
-					if( $cnt && $cnt > $feed->dailyLimit ) {
+					if( $cnt && $cnt >= $feed->dailyLimit ) {
 						$leads->logError( 'Feed ' . $feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
 						continue;
 					}
