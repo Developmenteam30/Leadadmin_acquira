@@ -1,6 +1,6 @@
 <?php
 
-include( "../../includes/c_config.php" );
+include( "../../../includes/c_config.php" );
 
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_MANAGER );
@@ -53,17 +53,11 @@ $title = 'Revenue Expectations';
 include( INCLUDES . "c_header.php" );
 ?>
 <body>
-<script type="text/javascript">
-	$(document).ready(function () {
-		display('dialog_revenue_listowners');
-	});
-</script>
-
 <?php include( INCLUDES . 'c_nav.php' ); ?>
 
 <div class="container-fluid">
 
-	<h2>Revenue Expectations</h2>
+	<h2>Forecasting: Revenue Expectations</h2>
 
 	<?php
 
@@ -129,7 +123,7 @@ include( INCLUDES . "c_header.php" );
 						htmlentities( $expectationMonth ),
 						htmlentities( isset( $_POST['existingBusinessAmount_' . $key . '_' . $expectationMonth] ) ? $_POST['existingBusinessAmount_' . $key . '_' . $expectationMonth] : ( $expectationValues->existingBusinessAmount ?? 0 ) ) );
 					printf( '<td class="text-center">%s</td>' . PHP_EOL,
-						htmlentities( isset( $expectationValues->existingBusinessAmount ) ? round( $expectationValues->existingBusinessAmount * .2, 0) : 0 ) );
+						htmlentities( isset( $expectationValues->existingBusinessAmount ) ? round( $expectationValues->existingBusinessAmount * .2, 0 ) : 0 ) );
 					/*
 										printf( '<td class="text-center%s"><input class="text-right" type="text" name="newBusinessAmount_%s_%s" value="%s" /></td>' . PHP_EOL,
 											isset( $errors['newBusinessAmount_' . $key . '_' . $expectationMonth] ) ? ' error' : '',

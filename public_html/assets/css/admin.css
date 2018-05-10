@@ -344,6 +344,7 @@ div.headerRow.client {
 	color: #33cc33;
 }
 
+#weightsTable .error,
 #expectationsTable .error {
 	background: #ff0000;
 }
@@ -403,6 +404,20 @@ div.logoContainer {
 
 .dashboard-outgoing-col-small {
 	width: 15%;
+}
+
+.weights-calendar {
+	width: 100%;
+}
+
+.weights-calendar th,
+.weights-calendar td {
+	padding: 1em;
+	text-align: center;
+}
+
+.weights-calendar input[type="text"] {
+	text-align: center;
 }
 
 @media (min-width: 768px) {
