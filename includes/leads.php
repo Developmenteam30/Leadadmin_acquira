@@ -1923,10 +1923,15 @@ class Leads
 		$results = array();
 
 		try {
-			$sql = "SELECT fp.*, fo.label, fo.dailyLimit, fo.delayDump FROM feedPopulation fp LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut WHERE fp.idFeedIn = ? ORDER BY fp.waterfallPriority DESC";
+			$sql = "SELECT fp.*, fo.label, fo.dailyLimit, fo.delayDump, fo.revenuePerLead, fo.costPerLeadOverride, fo.cron, c.name ";
+			$sql .= "FROM feedPopulation fp ";
+			$sql .= "LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut ";
+			$sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
+			$sql .= "WHERE fp.idFeedIn = ? ";
 			if( $enabled ) {
-				$sql .= " AND fp.enabled = '1'";
+				$sql .= " AND fp.enabled = '1' ";
 			}
+			$sql .= "ORDER BY fp.waterfallPriority DESC";
 			$query = $this->db->prepare( $sql );
 			$query->execute( array( $idFeedIn ) );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );

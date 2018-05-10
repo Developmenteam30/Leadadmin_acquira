@@ -12,7 +12,8 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		array( 'name' => 'Suppressions', 'url' => '/leadadmin/mgr_suppress.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Jobs', 'url' => '/leadadmin/mgr_job.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Reports', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
-			array( 'name' => 'Mapping Report', 'url' => '/leadadmin/reports-mapping.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+			array( 'name' => 'URL Mapping Report', 'url' => '/leadadmin/reports-mapping.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+			array( 'name' => 'Feed Mapping Report', 'url' => '/leadadmin/feed-map.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => '*List Owner - Email', 'url' => '/leadadmin/list-owner.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 			array( 'name' => 'Phone Leads Report', 'url' => '/leadadmin/phone-leads-report.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
