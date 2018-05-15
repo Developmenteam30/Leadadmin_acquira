@@ -90,17 +90,21 @@ include( INCLUDES . "c_header.php" );
 						continue;
 					}
 					if( !$shownPopulation ) {
-						printf( "<p>%s - %s (%s)</p>",
+						printf( "<p>%s - %s (%s: %s)%s%s</p>",
 							htmlentities( $incomingFeed->name ),
 							$incomingFeed->idFeedIn,
-							htmlentities( $incomingFeed->label )
+							htmlentities( $incomingFeed->label ),
+							htmlentities( $incomingFeed->description ),
+							( !empty( $incomingFeed->dailyLimit ) ? ' [<span style="color:orange;font-weight:bold;">Limit: ' . $incomingFeed->dailyLimit . '</span>]' : '' ),
+							( !empty( $incomingFeed->chokePercent ) ? ' [<span style="color:red;font-weight:bold;">Choke: ' . $incomingFeed->chokePercent . '%</span>]' : '' )
 						);
 						$shownPopulation = true;
 					}
-					printf( "<p style=\"margin-left:40px;\">%s - %s (%s) CPL: $%s RPL: $%s%s%s%s</p>" . PHP_EOL,
+					printf( "<p style=\"margin-left:40px;\">%s - %s (%s: %s) CPL: $%s RPL: $%s%s%s%s</p>" . PHP_EOL,
 						htmlentities( $population->name ),
 						$population->idFeedOut,
 						htmlentities( $population->label ),
+						htmlentities( $population->description ),
 						$population->costPerLeadOverride !== null ? ( '<span style="color:red;">' . number_format( $population->costPerLeadOverride, 2 ) . '</span>*' ) : number_format( $incomingFeed->costPerLead, 2 ),
 						number_format( $population->revenuePerLead, 2 ),
 						$population->queueType == 'livedata' ? ' [<span style="color:blue;font-weight:bold">LIVEDATA</span>]' :
