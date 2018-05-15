@@ -1545,7 +1545,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			<?php
 			break;
 		case 'urlassignment':
-			$e = $_REQUEST['e'];
+			$e = $_REQUEST['e'] ?? '';
 			?>
 			<div>
 				<input type='text' name='urlassignments_url[]' value='' placeholder='URL'/> = <input type='text' name='urlassignments_id[]' value='' placeholder='Unique ID'/>
@@ -1811,7 +1811,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								<p>The following email domains:</p>
 								<p>
 									<a href='#' class='nonLink'
-									   onclick='element("filterEmail_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Email"});'
+									   onclick='element("filterEmail_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Email"});'
 									>Add New Email Domain to <span id='filterEmail_descriptor'></span></a>
 								</p>
 								<div id='filterEmail_container'>
@@ -1882,7 +1882,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								<p>The following email domains:</p>
 								<p>
 									<a href='#' class='nonLink'
-									   onclick='element("filterListcode_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Listcode"});'
+									   onclick='element("filterListcode_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Listcode"});'
 									>Add New Listcode to <span id='filterListcode_descriptor'></span></a>
 								</p>
 								<div id='filterListcode_container'>
@@ -1942,7 +1942,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								<div>
 									<p>Force Populating URLs to: </p>
 									<p>
-										<a href='#' class='nonLink' onclick='element("filterUrlList_container", "element_forceUrl", { "e": "<?php echo $e; ?>"});'
+										<a href='#' class='nonLink' onclick='element("filterUrlList_container", "element_forceUrl", { "e": "<?php echo $e ?? ''; ?>"});'
 										>Add URL To Force</a>
 									</p>
 									<div id='filterUrlList_container'>
@@ -2023,7 +2023,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			$t = $_REQUEST['options']['type'];
 			?>
 			<textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi'></textarea>
-			<input type='button' value='Add Multiple Urls' onclick="splitMultiFilter('<?php echo $e; ?>', '<?php echo $t; ?>');"/>
+			<input type='button' value='Add Multiple Urls' onclick="splitMultiFilter('<?php echo $e ?? ''; ?>', '<?php echo $t; ?>');"/>
 			<?php
 			break;
 

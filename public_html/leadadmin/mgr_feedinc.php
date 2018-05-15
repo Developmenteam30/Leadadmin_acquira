@@ -756,12 +756,12 @@ if( isset( $_REQUEST['d'] ) ) {
 								<p>The following urls:</p>
 								<p>
 									<a href='#' class='nonLink'
-									   onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Url" });'
+									   onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Url" });'
 									>Add New URL to <span id='filterUrl_descriptor'></span></a>
 									| <a href='#' class='nonLink'
 									     onclick='element("filterUrl_multipleInsert"<?php
 									     ?>, "element_multifilter"<?php
-									     ?>, { "e": "<?php echo $e; ?>"<?php
+									     ?>, { "e": "<?php echo $e ?? ''; ?>"<?php
 									     ?>, "type": "Url" });'
 									>Add Multiple</a>
 								</p>
@@ -820,12 +820,12 @@ if( isset( $_REQUEST['d'] ) ) {
 								<p>The following urls:</p>
 								<p>
 									<a href='#' class='nonLink'
-									   onclick='element("filterSiftLogic_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "SiftLogic" });'
+									   onclick='element("filterSiftLogic_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "SiftLogic" });'
 									>Add New URL to filter</a>
 									| <a href='#' class='nonLink'
 									     onclick='element("filterSiftLogic_multipleInsert"<?php
 									     ?>, "element_multifilter"<?php
-									     ?>, { "e": "<?php echo $e; ?>"<?php
+									     ?>, { "e": "<?php echo $e ?? ''; ?>"<?php
 									     ?>, "type": "SiftLogic" });'
 									>Add Multiple</a>
 								</p>
@@ -1352,7 +1352,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					<p>Individual URL Listcode</p>
 					<div>
 						<input type='text'
-						       name='<?php echo $e; ?>popset_filterUrl[]'
+						       name='<?php echo $e ?? ''; ?>popset_filterUrl[]'
 						       value='<?php echo $filterUrl; ?>'
 						/>
 						<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
@@ -1377,8 +1377,8 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 			break;
 		case 'element_filter':
-			$e = $_REQUEST['options']['e'];
-			$t = $_REQUEST['options']['type'];
+			$e = $_REQUEST['options']['e'] ?? '';
+			$t = $_REQUEST['options']['type'] ?? '';
 			?>
 			<div>
 				<input type='text'
@@ -1392,8 +1392,8 @@ if( isset( $_REQUEST['d'] ) ) {
 			<?php
 			break;
 		case 'element_multifilter':
-			$e = $_REQUEST['options']['e'];
-			$t = $_REQUEST['options']['type'];
+			$e = $_REQUEST['options']['e'] ?? '';
+			$t = $_REQUEST['options']['type'] ?? '';
 			?>
 			<textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi'></textarea>
 			<?php
