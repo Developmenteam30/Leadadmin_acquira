@@ -198,7 +198,7 @@ class ProcessLeads
 					}
 				}
 
-				if( empty( $idFeedOut ) && !empty( $feed->waterfall ) ) {
+				if( empty( $idFeedOut ) && $feed->queueType == 'waterfall' ) {
 
 					$waterfall['enabled'] = true;
 
@@ -228,11 +228,10 @@ class ProcessLeads
 
 				} else {
 
-					$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ( ( empty( $idFeedOut ) && !empty( $feed->livedata ) ) ? -1 : 0 ), $urlRewritten );
+					$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ( ( empty( $idFeedOut ) && $feed->queueType == 'livedata' ) ? -1 : 0 ), $urlRewritten );
 
-					// If this is a "livedata" population, immediately try to send the record through to the receiving feed
-					if( empty( $idFeedOut ) && !empty( $feed->livedata ) ) {
-
+					if( empty( $idFeedOut ) && $feed->queueType == 'livedata' ) {
+						// If this is a "livedata" population, immediately try to send the record through to the receiving feed
 						$record = $leads->getOutboundRecord( $inboundId, $feed->idFeedOut, -1 );
 						if( !empty( $record ) ) {
 							$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
@@ -247,6 +246,9 @@ class ProcessLeads
 								$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $data['url'], date( 'Y-m-d' ), $reason );
 							}
 						}
+					} else if( empty( $idFeedOut ) && $feed->queueType == 'waterfallLimit' ) {
+						// If this is a "waterfallLimit" population, then bail out after sending the record. The limit statement above automatically skips and feeds over the limit.
+						return $reason;
 					}
 
 				}

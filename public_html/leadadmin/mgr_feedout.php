@@ -402,8 +402,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'filterListcode' => !empty( $filterListcode ) ? $filterListcode : null,
 					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
-					'livedata' => !empty( $_REQUEST['livedata'] ) && 'livedata' == $_REQUEST['livedata'] ? 1 : 0,
-					'waterfall' => !empty( $_REQUEST['livedata'] ) && 'waterfall' == $_REQUEST['livedata'] ? 1 : 0,
+					'queueType' => !empty( $_REQUEST['queueType'] ) ? $_REQUEST['queueType'] : 'queue',
 					'waterfallPriority' => !empty( $_REQUEST['waterfallPriority'] ) ? $_REQUEST['waterfallPriority'] : 0,
 				) );
 
@@ -431,8 +430,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'filterListcode' => !empty( $filterListcode ) ? $filterListcode : null,
 					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
-					'livedata' => !empty( $_REQUEST['livedata'] ) && 'livedata' == $_REQUEST['livedata'] ? 1 : 0,
-					'waterfall' => !empty( $_REQUEST['livedata'] ) && 'waterfall' == $_REQUEST['livedata'] ? 1 : 0,
+					'queueType' => !empty( $_REQUEST['queueType'] ) ? $_REQUEST['queueType'] : 'queue',
 					'waterfallPriority' => !empty( $_REQUEST['waterfallPriority'] ) ? $_REQUEST['waterfallPriority'] : 0,
 				) );
 
@@ -1591,8 +1589,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'filterTypeEmail',
 				'filterTypeListcode',
 				'forceUrl',
-				'livedata',
-				'waterfall',
+				'queueType',
 				'waterfallPriority',
 			);
 			foreach( $populationProperties as $pP ) {
@@ -1628,7 +1625,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			$feed = $leads->getOutboundFeed( $popset_idFeedOut );
 
 			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-				$incomingFeeds = $leads->getInboundFeeds( null, 'active' );
+				$incomingFeeds = $leads->getInboundFeeds( null, 'active', null, $popset_idFeedIn );
 			} else {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
@@ -1966,15 +1963,16 @@ if( isset( $_REQUEST['d'] ) ) {
 						</td>
 					</tr>
 					<tr>
-						<td><p>Live data feed</p></td>
+						<td><p>Queue Type</p></td>
 						<td>
 							<p>
 								Incoming records will be sent to this provider in REAL TIME as they come in. Do not use this option unless authorized. Most feeds have this option disabled.
 							</p>
 							<p>
-								<input type='radio' name='livedata' id='livedata_disabled' value='0' <?php if( $popset_livedata != '1' && $popset_waterfall != '1' ) { ?> checked='checked' <?php } ?>/> Disabled (DEFAULT)<br/>
-								<input type='radio' name='livedata' id='livedata_enabled' value='livedata' <?php if( $popset_livedata == '1' ) { ?> checked='checked' <?php } ?>/> Enabled - Standard<br/>
-								<input type='radio' name='livedata' id='livedata_waterfall' value='waterfall' <?php if( $popset_waterfall == '1' ) { ?> checked='checked' <?php } ?>/> Enabled - Waterfall
+								<input type="radio" name="queueType" id="queueType_queue" value="queue" <?php if( empty( $popset_queueType ) || $popset_queueType == 'queue' ) { ?> checked="checked" <?php } ?>/> Standard Queue (DEFAULT)<br/>
+								<input type="radio" name="queueType" id="queueType_livedata" value="livedata" <?php if( $popset_queueType == 'livedata' ) { ?> checked="checked" <?php } ?>/> Live Data (leads sent in real-time)<br/>
+								<input type="radio" name="queueType" id="queueType_waterfall" value="waterfall" <?php if( $popset_queueType == 'waterfall' ) { ?> checked="checked" <?php } ?>/> Waterfall Standard (attempt each vendor in descending priority order; stop after the first accepted response)<br/>
+								<input type="radio" name="queueType" id="queueType_waterfallLimit" value="waterfallLimit" <?php if( $popset_queueType == 'waterfallLimit' ) { ?> checked="checked" <?php } ?>/> Waterfall Limit (attempt vendors in priority order; only skip to the next after the feed limits are hit)
 							</p>
 						</td>
 					</tr>
@@ -1983,7 +1981,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						<td>
 							<p>
 								<input type="text" name="waterfallPriority" value="<?php echo htmlentities( $popset_waterfallPriority ); ?>"/><br/>
-								Only applies if the Live Data Feed setting above is set to "Waterfall". Use any number from 0 to 65,535. A higher number means higher priority in the waterfall.
+								Only applies if the Queue Type setting above is set to "Waterfall" or "Waterfall Limit". Use any number from 0 to 65,535. A higher number means higher priority in the waterfall.
 							</p>
 						</td>
 					</tr>
