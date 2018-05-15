@@ -1937,7 +1937,8 @@ class Leads
 			if( $enabled ) {
 				$sql .= " AND fp.enabled = '1' ";
 			}
-			$sql .= "ORDER BY fp.waterfallPriority DESC";
+			$sql .= "ORDER BY fp.waterfallPriority DESC,FIELD(fp.queueType,'livedata','waterfallLimitLive','waterfall','waterfallLimit','queue')";
+//			$sql .= "ORDER BY fp.waterfallPriority DESC";
 			$query = $this->db->prepare( $sql );
 			$query->execute( array( $idFeedIn ) );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
