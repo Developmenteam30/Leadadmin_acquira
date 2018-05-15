@@ -93,7 +93,7 @@ if(empty($id) || empty($type)) {
 	<tbody>
 <?php		foreach($records as $record) {  ?>
 	<tr>
-		<td><?php echo htmlspecialchars($record['timestamp']); ?></td>
+		<td><?php echo htmlspecialchars($record['timestampConverted']); ?></td>
 		<td class="error" colspan="9"><?php echo htmlspecialchars($record['result']); ?></td>
 		<td><?php echo htmlspecialchars($record['url']); ?></td>
 		<td><?php echo htmlspecialchars($record['email']); ?></td>

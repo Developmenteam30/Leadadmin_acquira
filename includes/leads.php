@@ -3003,8 +3003,8 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT timestamp,result,leadstamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL ORDER BY timestamp DESC LIMIT " . intval( $offset ) . ",100" );
-			$query->execute( array( $idFeedIn ) );
+			$query = $this->db->prepare( "SELECT CONVERT_TZ(timestamp,?,?) AS timestampConverted,result,leadstamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL ORDER BY timestamp DESC LIMIT " . intval( $offset ) . ",100" );
+			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedIn ) );
 			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound rejections: ' . $e->getMessage() );
@@ -3158,8 +3158,8 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT o.timestamp,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idFeedOut = ? AND o.processed = 1 AND o.result IS NOT NULL ORDER BY o.idRecord DESC LIMIT " . intval( $offset ) . ",100" );
-			$query->execute( array( $idFeedOut ) );
+			$query = $this->db->prepare( "SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idFeedOut = ? AND o.processed = 1 AND o.result IS NOT NULL ORDER BY o.idRecord DESC LIMIT " . intval( $offset ) . ",100" );
+			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut ) );
 			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get inbound rejections: ' . $e->getMessage() );
