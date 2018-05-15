@@ -1851,7 +1851,7 @@ class Leads
 		return $results;
 	}
 
-	public function getInboundFeeds( $idCompany = null, $status = null, $feedCategory = null ) {
+	public function getInboundFeeds( $idCompany = null, $status = null, $feedCategory = null, $idFeedIn = null ) {
 		$results = array();
 		$params = array();
 
@@ -1865,8 +1865,14 @@ class Leads
 			$params[] = $idCompany;
 		}
 		if( !empty( $status ) ) {
-			$sql .= "AND f.status = ? ";
-			$params[] = $status;
+			if( !empty( $idFeedIn ) ) {
+				$sql .= "AND ( f.status = ? OR f.idFeedIn = ? ) ";
+				$params[] = $status;
+				$params[] = $idFeedIn;
+			} else {
+				$sql .= "AND f.status = ? ";
+				$params[] = $status;
+			}
 		}
 		if( !empty( $feedCategory ) ) {
 			$sql .= "AND ( f.feedCategory = 'both' OR f.feedCategory = ? ) ";
