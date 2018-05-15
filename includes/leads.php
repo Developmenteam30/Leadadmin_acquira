@@ -4043,18 +4043,18 @@ class Leads
 
 	public function backfillStatsCorrelated() {
 
-		$idRecord = 821615749;
+		$idRecord = 0;
 		$rowCount = 0;
 
 		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, costPerLead = ?, revenuePerLead = ?' );
 
 		$sqlSelect = "SELECT a.idRecord,a.idFeedIn,a.idFeedOut,DATE_FORMAT(CONVERT_TZ(a.`timestamp`,?,?),'%Y-%m-%d') AS `timestamp`,di.url,fi.costPerLead,fo.revenuePerLead,fo.costPerLeadOverride ";
-		$sqlSelect .= "FROM archive.data_outbound_201804 AS a ";
+		$sqlSelect .= "FROM archive.data_outbound_201803 AS a ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.data_inbound AS di ON di.idRecord = a.idRecord ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.feedinc fi ON fi.idFeedIn = a.idFeedIn ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.feedout fo ON fo.idFeedOut = a.idFeedOut ";
 		$sqlSelect .= "WHERE a.idRecord > ? ";
-		$sqlSelect .= "ORDER BY a.idRecord LIMIT 1000";
+		$sqlSelect .= "ORDER BY a.idRecord LIMIT 10000";
 		$query = $this->db->prepare( $sqlSelect );
 		do {
 			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, $idRecord ) );
