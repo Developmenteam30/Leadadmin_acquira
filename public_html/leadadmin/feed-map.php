@@ -10,6 +10,9 @@ $leads = Leads::getInstance();
 
 require_once( INCLUDES . 'display.php' );
 
+$feedCategory = !empty( $_REQUEST['feedCategory'] ) ? $_REQUEST['feedCategory'] : null;
+$status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : null;
+
 if( isset( $_REQUEST['d'] ) ) {
 	switch( $_REQUEST['d'] ) {
 		case 'errorCount':
@@ -34,16 +37,56 @@ include( INCLUDES . "c_header.php" );
 
 	<h2>Feed Mapping Report</h2>
 
+	<form class="pull-right" id="feedCategory-select" method="get">
+		<select id="feedCategory" name="feedCategory">
+			<option value="phone"<?php if( 'phone' === $feedCategory ) {
+				print ' selected="selected"';
+			} ?>>Show phone category
+			</option>
+			<option value="email"<?php if( 'email' === $feedCategory ) {
+				print ' selected="selected"';
+			} ?>>Show email category
+			</option>
+			<option value="ppc"<?php if( 'ppc' === $feedCategory ) {
+				print ' selected="selected"';
+			} ?>>Show PPC category
+			</option>
+			<option value=""<?php if( null === $feedCategory ) {
+				print ' selected="selected"';
+			} ?>>Show all categories
+			</option>
+		</select>
+		<select id="status" name="status">
+			<option value="active"<?php if( 'active' === $status ) {
+				print ' selected="selected"';
+			} ?>>Show active feeds
+			</option>
+			<option value="hidden"<?php if( 'hidden' === $status ) {
+				print ' selected="selected"';
+			} ?>>Show hidden feeds
+			</option>
+			<option value="retired"<?php if( 'retired' === $status ) {
+				print ' selected="selected"';
+			} ?>>Show retired feeds
+			</option>
+			<option value=""<?php if( null === $status ) {
+				print ' selected="selected"';
+			} ?>>Show all feeds
+			</option>
+		</select>
+	</form>
+
+
 	<?php
 
-	$incomingFeeds = $leads->getInboundFeeds();
+	$incomingFeeds = $leads->getInboundFeeds( null, $status, $feedCategory );
 	if( $incomingFeeds ) {
 		foreach( $incomingFeeds as $incomingFeed ) {
 			$shownPopulation = false;
 			$populations = $leads->getInboundPopulationSettings( $incomingFeed->idFeedIn );
 			if( $populations ) {
 				foreach( $populations as $population ) {
-					if( empty( $population->cron )) {
+					if( empty( $population->cron ) ) {
 						continue;
 					}
 					if( !$shownPopulation ) {
@@ -60,7 +103,10 @@ include( INCLUDES . "c_header.php" );
 						htmlentities( $population->label ),
 						$population->costPerLeadOverride !== null ? ( '<span style="color:red;">' . number_format( $population->costPerLeadOverride, 2 ) . '</span>*' ) : number_format( $incomingFeed->costPerLead, 2 ),
 						number_format( $population->revenuePerLead, 2 ),
-						!empty( $population->livedata ) ? ' [<span style="color:blue;font-weight:bold">LIVEDATA</span>]' : ( !empty( $population->waterfall ) ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL - Priority: ' . $population->waterfallPriority . '</span>]' ) : '' )
+						$population->queueType == 'livedata' ? ' [<span style="color:blue;font-weight:bold">LIVEDATA</span>]' :
+							( $population->queueType == 'waterfall' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL STD - Priority: ' . $population->waterfallPriority . '</span>]' ) :
+								( $population->queueType == 'waterfallLimit' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL LIMIT - Priority: ' . $population->waterfallPriority . ', Limit: ' . ( !empty( $population->dailyLimit ) ? $population->dailyLimit : 'None' ) . '</span>]' ) :
+									'' ) )
 					);
 				}
 			}
@@ -75,6 +121,13 @@ include( INCLUDES . "c_header.php" );
 	?>
 
 </div>
+
+<script type="text/javascript">
+	$('#feedCategory-select select').change(function (e) {
+		e.preventDefault();
+		$('#feedCategory-select').submit();
+	});
+</script>
 
 </body>
 </html>
