@@ -97,7 +97,7 @@ include( INCLUDES . "c_header.php" );
 						);
 						$shownPopulation = true;
 					}
-					printf( "<p style=\"margin-left:40px;\">%s - %s (%s) CPL: $%s RPL: $%s%s</p>" . PHP_EOL,
+					printf( "<p style=\"margin-left:40px;\">%s - %s (%s) CPL: $%s RPL: $%s%s%s%s</p>" . PHP_EOL,
 						htmlentities( $population->name ),
 						$population->idFeedOut,
 						htmlentities( $population->label ),
@@ -105,8 +105,11 @@ include( INCLUDES . "c_header.php" );
 						number_format( $population->revenuePerLead, 2 ),
 						$population->queueType == 'livedata' ? ' [<span style="color:blue;font-weight:bold">LIVEDATA</span>]' :
 							( $population->queueType == 'waterfall' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL STD - Priority: ' . $population->waterfallPriority . '</span>]' ) :
-								( $population->queueType == 'waterfallLimit' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL LIMIT - Priority: ' . $population->waterfallPriority . ', Limit: ' . ( !empty( $population->dailyLimit ) ? $population->dailyLimit : 'None' ) . '</span>]' ) :
-									'' ) )
+								( $population->queueType == 'waterfallLimit' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL LIMIT - Priority: ' . $population->waterfallPriority . '</span>]' ) :
+									( $population->queueType == 'waterfallLimitLive' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL LIMIT LIVE - Priority: ' . $population->waterfallPriority . '</span>]' ) :
+										'' ) ) ),
+						( !empty( $population->dailyLimit ) ? ' [<span style="color:orange;font-weight:bold;">Limit: ' . $population->dailyLimit . '</span>]' : '' ),
+						( !empty( $population->delay ) ? ' [<span style="color:green;font-weight:bold;">Delay: ' . ( ( $population->delay % ( 60 * 24 ) ) == 0 ? ( $population->delay / ( 60 * 24 ) . ' Days' ) : ( $population->delay . ' Minutes' ) ) . '</span>]' : '' )
 					);
 				}
 			}
