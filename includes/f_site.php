@@ -39,6 +39,7 @@ $additionalMapFields = array(
 	'stamp_YYYYmmdd',
 	'stamp_YYYY-mm-dd',
 	'stampUS_slashes',
+	'stamp_ISO8601',
 	'landline_areacode',
 	'landline_NXX',
 	'landline_XXXX',
@@ -47,6 +48,7 @@ $additionalMapFields = array(
 	'cellphone_NXX',
 	'cellphone_XXXX',
 	'cellphone_NXX+XXXX',
+	'recordId',
 );
 $incomingAdditionalRequirementSettings = array(
 	'phone',

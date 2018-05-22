@@ -914,6 +914,10 @@ if( isset( $_REQUEST['d'] ) ) {
 				}
 			}
 
+			if( !isset( $selectedNotifyThresholdDays )) {
+				$selectedNotifyThresholdDays = array();
+			}
+
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 				$companies = array( $leads->getCompany( $feed_idCompany ) );
 			} else {
@@ -990,6 +994,7 @@ if( isset( $_REQUEST['d'] ) ) {
 									<option value='curlPOST' <?php if( $feed_feedType == 'curlPOST' ){ ?>selected='selected'<?php } ?>>HTTP POST</option>
 									<option value='JSON' <?php if( $feed_feedType == 'JSON' ){ ?>selected='selected'<?php } ?>>JSON</option>
 									<option value='csvString' <?php if( $feed_feedType == 'csvString' ){ ?>selected='selected'<?php } ?>>CSV string</option>
+									<option value='soapPOST' <?php if( $feed_feedType == 'soapPOST' ){ ?>selected='selected'<?php } ?>>SOAP POST</option>
 								</select>
 							</p>
 						</td>

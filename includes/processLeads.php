@@ -63,6 +63,49 @@ class ProcessLeads
 		return $valueAcceptable;
 	}
 
+	public static function getXml813( $requestdata ) {
+
+		return '<?xml version="1.0" encoding="utf-8"?>
+<AgentCubedAPI xmlns="http://dataexchange.agentcubed.com">
+    <LoginCredentials>
+        <ErrorNotificationEmail>chris@qatalystmedia.com</ErrorNotificationEmail>
+        <Username>' . htmlspecialchars( $requestdata['Username'] ?? '', ENT_XML1, 'UTF-8' ) . '</Username>
+        <Password>' . htmlspecialchars( 'healthinsuranceinnovations=#1!', ENT_XML1, 'UTF-8' ) . '</Password>
+        <Group_WebLead_ID>' . htmlspecialchars( $requestdata['Group_WebLead_ID'] ?? '', ENT_XML1, 'UTF-8' ) . '</Group_WebLead_ID>
+        <LeadSourceKey>' . htmlspecialchars( $requestdata['LeadSourceKey'] ?? '', ENT_XML1, 'UTF-8' ) . '</LeadSourceKey>
+    </LoginCredentials>
+    <Leads>
+        <Lead>
+            <LeadInformation>
+               <LeadGeneratedDateTime>' . htmlspecialchars( $requestdata['LeadGeneratedDateTime'] ?? '', ENT_XML1, 'UTF-8' ) . '</LeadGeneratedDateTime>
+            </LeadInformation>
+            <LeadIndividuals>
+                <Individual IndividualID="0">
+                    <DOB>' . htmlspecialchars( $requestdata['DOB'] ?? '', ENT_XML1, 'UTF-8' ) . '</DOB>
+                    <LastName>' . htmlspecialchars( $requestdata['LastName'] ?? '', ENT_XML1, 'UTF-8' ) . '</LastName>
+                    <FirstName>' . htmlspecialchars( $requestdata['FirstName'] ?? '', ENT_XML1, 'UTF-8' ) . '</FirstName>
+                    <Email>' . htmlspecialchars( $requestdata['Email'] ?? '', ENT_XML1, 'UTF-8' ) . '</Email>
+                    <RelationType>Applicant</RelationType>
+                </Individual>
+            </LeadIndividuals>
+            <LeadOpportunities>
+                <Opportunity>
+                    <InsuranceType>' . htmlspecialchars( $requestdata['InsuranceType'] ?? '', ENT_XML1, 'UTF-8' ) . '</InsuranceType>
+				</Opportunity>
+			</LeadOpportunities>
+            <LeadContactDetails>
+                <SecondaryPhone>' . htmlspecialchars( $requestdata['PrimaryPhone'] ?? '', ENT_XML1, 'UTF-8' ) . '</SecondaryPhone>
+                <PrimaryPhone>' . htmlspecialchars( $requestdata['SecondaryPhone'] ?? '', ENT_XML1, 'UTF-8' ) . '</PrimaryPhone>
+                <Address>
+                    <ZipCode>' . htmlspecialchars( $requestdata['ZipCode'] ?? '', ENT_XML1, 'UTF-8' ) . '</ZipCode>
+                    <Address1>' . htmlspecialchars( $requestdata['Address'] ?? '', ENT_XML1, 'UTF-8' ) . '</Address1>
+                </Address>
+            </LeadContactDetails>
+        </Lead>
+    </Leads>
+</AgentCubedAPI>';
+	}
+
 	function curlLead( $requestdata, $url, $post, $verifypeer = false, $returntransfer = true, $header = false, $httpheader = null, $followlocation = false ) {
 
 		$ch = curl_init();
@@ -92,10 +135,11 @@ class ProcessLeads
 		return $response;
 	}
 
-	public static function pushIncomingData( $feedParams, $data, $inboundId, $idFeedOut = null ) {
+	public static function pushIncomingData( $feedParams, $data, $idRecord, $idFeedOut = null ) {
 
 		$leads = Leads::getInstance();
 		$reason = null;
+		$debug = false;
 
 		if( !empty( $data['url'] ) && !empty( $feedParams->notifications ) ) {
 
@@ -128,11 +172,12 @@ class ProcessLeads
 
 		}
 
-		$waterfall = array(
+		$liveData = array(
 			'enabled' => false,
-			'success' => false,
+			'accepted' => false,
+			'anyProcessed' => false,
 			'reason' => null,
-			'inboundId' => null,
+			'idRecord' => null,
 			'idFeedIn' => null,
 			'url' => null,
 		);
@@ -150,21 +195,37 @@ class ProcessLeads
 					continue;
 				}
 
+				if( $debug ) {
+					print "<p>{$idRecord} {$feedParams->idFeedIn} => {$feed->idFeedOut} {$feed->queueType}: ";
+				}
+
 				// Ensure we don't re-import records sent within the last 6 months
-				if( !empty( $idFeedOut ) && $leads->checkOutboundRecordExists( $inboundId, $feedParams->idFeedIn, $feed->idFeedOut ) ) {
+				if( !empty( $idFeedOut ) && $leads->checkOutboundRecordExists( $idRecord, $feedParams->idFeedIn, $feed->idFeedOut ) ) {
+					if( $debug ) {
+						print "Skipping because already sent within the last 6 months</p>";
+					}
 					continue;
 				}
 
 				// Ensure the record passes the population parameter filters for this feed
 				if( !is_null( $feed->filterTypeUrl ) && !ProcessLeads::filterValue( $feed->filterTypeUrl, $data['url'], $feed->filterUrl ) ) {
+					if( $debug ) {
+						print "Skipping because does not pass population parameter URL filter</p>";
+					}
 					continue;
 				}
 
 				if( !is_null( $feed->filterTypeEmail ) && !ProcessLeads::filterValue( $feed->filterTypeEmail, $data['email'], $feed->filterEmail ) ) {
+					if( $debug ) {
+						print "Skipping because does not pass population parameter email filter</p>";
+					}
 					continue;
 				}
 
 				if( !is_null( $feed->filterTypeListcode ) && !ProcessLeads::filterValue( $feed->filterTypeListcode, $data['listcode'], $feed->filterListcode ) ) {
+					if( $debug ) {
+						print "Skipping because does not pass population parameter listcode filter</p>";
+					}
 					continue;
 				}
 
@@ -173,6 +234,9 @@ class ProcessLeads
 					$cnt = $leads->getOutboundDailyCount( $feed->idFeedOut );
 					if( $cnt && $cnt >= $feed->dailyLimit ) {
 						$leads->logError( 'Feed ' . $feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
+						if( $debug ) {
+							print "Skipping because we've hit our feed limit of {$feed->dailyLimit}</p>";
+						}
 						continue;
 					}
 				}
@@ -198,69 +262,68 @@ class ProcessLeads
 					}
 				}
 
-				if( empty( $idFeedOut ) && $feed->queueType == 'waterfall' ) {
+				if( empty( $idFeedOut ) && ( 'livedata' == $feed->queueType || 'waterfall' == $feed->queueType || 'waterfallLimitLive' == $feed->queueType ) ) {
 
-					$waterfall['enabled'] = true;
+					$liveData['enabled'] = true;
 
-					// If we already had a successful waterfall submission, skip the rest of the waterfall candidates.
-					if( $waterfall['success'] ) {
+					// If we already had an accepted waterfall submission, skip the rest of the waterfall candidates.
+					if( 'waterfall' == $feed->queueType && $liveData['accepted'] ) {
+						if( $debug ) {
+							print "Skipping because of previously accepted waterfall</p>";
+						}
 						continue;
 					}
 
-					$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], -1, $urlRewritten );
-					$record = $leads->getOutboundRecord( $inboundId, $feed->idFeedOut, -1 );
+					// If we already processed any "waterfallLimitLive" submission, skip the rest of the waterfallLimitLive candidates.
+					if( 'waterfallLimitLive' == $feed->queueType && $liveData['anyProcessed'] ) {
+						if( $debug ) {
+							print "Skipping because of previously anyProcessed waterfall</p>";
+						}
+						continue;
+					}
+				}
+
+				$leads->outboundAdd( $idRecord, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ( ( empty( $idFeedOut ) && ( 'livedata' == $feed->queueType || 'waterfall' == $feed->queueType || 'waterfallLimitLive' == $feed->queueType ) ) ? -1 : 0 ), $urlRewritten );
+
+				// If this is one of the "livedata" populations, immediately try to send the record through to the receiving feed.
+				if( empty( $idFeedOut ) && ( 'livedata' == $feed->queueType || 'waterfall' == $feed->queueType || 'waterfallLimitLive' == $feed->queueType ) ) {
+					$record = $leads->getOutboundRecord( $idRecord, $feed->idFeedOut, -1 );
 					if( !empty( $record ) ) {
 						$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
 						$status = ProcessLeads::pushOutboundData( $feedOut, $record );
-						if( ( isset( $status['status'] ) && $status['status'] === true ) ) {
-							$waterfall['success'] = true;
-						} else {
-							$waterfall['reason'] = sprintf( 'Third-party rejection [Reason: %s] [Code: %s%s]',
+						if( ( isset( $status['status'] ) && $status['status'] != true ) || ( !empty( $feedParams->chokePercent ) && random_int( 1, 100 ) <= $feedParams->chokePercent ) ) {
+
+							$liveData['reason'] = sprintf( 'Third-party rejection [Reason: %s] [Code: %s%s]',
 								( isset( $status['status'] ) && $status['status'] != true && !empty( $status['text'] ) ) ? $status['text'] : 'Record failure',
 								$feed->idFeedOut,
 								( isset( $status['status'] ) && $status['status'] != true ) ? '0' : '1'
 							);
-							$waterfall['inboundId'] = $inboundId;
-							$waterfall['idFeedIn'] = $feedParams->idFeedIn;
-							$waterfall['url'] = $data['url'];
-						}
-					}
+							$liveData['idRecord'] = $idRecord;
+							$liveData['idFeedIn'] = $feedParams->idFeedIn;
+							$liveData['url'] = $data['url'];
+							$liveData['anyProcessed'] = true;
 
-				} else {
-
-					$leads->outboundAdd( $inboundId, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ( ( empty( $idFeedOut ) && ( $feed->queueType == 'livedata' || $feed->queueType == 'waterfallLimitLive' ) ) ? -1 : 0 ), $urlRewritten );
-
-					if( empty( $idFeedOut ) && ( $feed->queueType == 'livedata' || $feed->queueType == 'waterfallLimitLive' ) ) {
-						// If this is a "livedata" population, immediately try to send the record through to the receiving feed
-						$record = $leads->getOutboundRecord( $inboundId, $feed->idFeedOut, -1 );
-						if( !empty( $record ) ) {
-							$feedOut = $leads->getOutboundFeed( $feed->idFeedOut );
-							$status = ProcessLeads::pushOutboundData( $feedOut, $record );
-							if( ( isset( $status['status'] ) && $status['status'] != true ) || ( !empty( $feedParams->chokePercent ) && random_int( 1, 100 ) <= $feedParams->chokePercent ) ) {
-
-								$reason = sprintf( 'Third-party rejection [Reason: %s] [Code: %s%s]',
-									( isset( $status['status'] ) && $status['status'] != true && !empty( $status['text'] ) ) ? $status['text'] : 'Record failure',
-									$feed->idFeedOut,
-									( isset( $status['status'] ) && $status['status'] != true ) ? '0' : '1'
-								);
-								$leads->inboundProcess( $inboundId, $feedParams->idFeedIn, $data['url'], date( 'Y-m-d' ), $reason );
+							if( $debug ) {
+								print "Live record failed with: {$liveData['reason']}</p>";
 							}
+
+						} else {
+							if( $debug ) {
+								print "Live record succeeded</p>";
+							}
+
+							$liveData['accepted'] = true;
+							$liveData['anyProcessed'] = true;
 						}
 					}
-
-					if( empty( $idFeedOut ) && ( $feed->queueType == 'waterfallLimit' || $feed->queueType == 'waterfallLimitLive' )  ) {
-						// If this is a "waterfallLimit" population, then bail out after sending the record. The earlier logic automatically skips any feeds over the limit.
-						return $reason;
-					}
-
 				}
 			} // foreach $feedsOut
 		}
 
-		// If there was at least one waterfall enabled and we went through all candidates without a successful response, send the last error message to the incoming feed.
-		if( $waterfall['enabled'] && !$waterfall['success'] ) {
-			$leads->inboundProcess( $waterfall['inboundId'], $waterfall['idFeedIn'], $waterfall['url'], date( 'Y-m-d' ), $waterfall['reason'] );
-			$reason = $waterfall['reason'];
+		// If there was at least one live feed enabled and we went through all live feed candidates without an accepted response, send the last error message to the incoming feed.
+		if( $liveData['enabled'] && !$liveData['accepted'] && !empty( $liveData['idRecord'] ) ) {
+			$leads->inboundProcess( $liveData['idRecord'], $liveData['idFeedIn'], $liveData['url'], date( 'Y-m-d' ), $liveData['reason'] );
+			$reason = $liveData['reason'];
 		}
 
 		return $reason;
@@ -345,6 +408,10 @@ class ProcessLeads
 						ProcessLeads::assignValue( $varFields[$count], $urlassignment, $requestdata );
 						break;
 
+					case 'recordId':
+						ProcessLeads::assignValue( $varFields[$count], $row->idRecord ?? '', $requestdata );
+						break;
+
 					case 'dobUS':
 						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y", strtotime( $row->dob ) ), $requestdata );
 						break;
@@ -375,6 +442,10 @@ class ProcessLeads
 
 					case 'stampUS_slashes':
 						ProcessLeads::assignValue( $varFields[$count], date( "m/d/Y H:i:s", strtotime( $row->stamp ) ), $requestdata );
+						break;
+
+					case 'stamp_ISO8601':
+						ProcessLeads::assignValue( $varFields[$count], date( 'c', strtotime( $row->stamp ) ), $requestdata );
 						break;
 
 					case 'landline_areacode':
@@ -480,6 +551,19 @@ class ProcessLeads
 				false,
 				array( 'Content-Type: application/json' )
 			);
+
+		} else if( 'soapPOST' == $feedOut->feedType ) { // Method is JSON
+
+			if( $debug ) {
+				echo "\tPosting SOAP data.\n";
+			}
+
+			$xml = ProcessLeads::getXml813( $requestdata );
+			$geturl = $feedOut->postUrl . ' SOAP BODY: ' . $xml;
+
+			$client = new SoapClient( $feedOut->postUrl, array( 'trace' => true ) );
+			$response = $client->AddLeadsUsingXMLString( array( 'xmlstring' => $xml ) );
+			$result['text'] = $client->__getLastResponse();
 
 		} else { // Method is post
 

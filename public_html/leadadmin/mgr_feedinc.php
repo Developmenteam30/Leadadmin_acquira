@@ -585,6 +585,10 @@ if( isset( $_REQUEST['d'] ) ) {
 			if( !isset( $selectedAllowedFields ) ) {
 				$selectedAllowedFields = $recordFields;
 			}
+			if( !isset( $selectedNotifyThresholdDays )) {
+				$selectedNotifyThresholdDays = array();
+			}
+
 			$companies = $leads->getCompanies( 'active' );
 			?>
 
