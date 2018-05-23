@@ -677,7 +677,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					<tr>
 						<td>Custom Fields</p></td>
 						<td>
-							<p>Use this section to store notes about what each custom field is being used for.</p>
+							<p>Use this section to store notes about what each custom field is being used for. <strong>These notes will be shown to the vendor in the API posting specs, so don't include anything proprietary.</strong></p>
 							custom1 = <input class="input-long" type="text" name="custom1Label" value="<?php echo htmlentities( $feed_custom1Label ); ?>"/><br/>
 							custom2 = <input class="input-long" type="text" name="custom2Label" value="<?php echo htmlentities( $feed_custom2Label ); ?>"/><br/>
 							custom3 = <input class="input-long" type="text" name="custom3Label" value="<?php echo htmlentities( $feed_custom3Label ); ?>"/><br/>

@@ -1,6 +1,6 @@
 <?php
 
-include("../../includes/c_config.php");
+include( "../../includes/c_config.php" );
 
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
@@ -8,7 +8,7 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
 require_once( INCLUDES . 'leads.php' );
 
 if( empty( $_REQUEST['idFeedIn'] ) ) {
-	die('ERROR: Please specify a feed id.');
+	die( 'ERROR: Please specify a feed id.' );
 }
 
 $leads = Leads::getInstance();
@@ -16,7 +16,7 @@ $leads = Leads::getInstance();
 if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 	$idCompany = LeadsSession::getCompanyId();
 	if( empty( $idCompany ) ) {
-    	$idCompany = -9999;
+		$idCompany = -9999;
 	}
 	if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
 		die( 'Sorry, you do not have access to view this feed' );
@@ -25,7 +25,7 @@ if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 
 $feed = $leads->getInboundFeed( $_REQUEST['idFeedIn'] );
 if( empty( $feed ) ) {
-	die('ERROR: Feed not found.');
+	die( 'ERROR: Feed not found.' );
 }
 
 $company = $leads->getCompany( $feed->idCompany );
@@ -50,12 +50,12 @@ $fields = array(
 	'gender' => array( 'type' => 'char(1)', 'format' => 'M, F', 'notes' => 'Gender' ),
 	'landline' => array( 'type' => 'varchar(20)', 'format' => '##########', 'notes' => 'Default phone' ),
 	'cellphone' => array( 'type' => 'varchar(20)', 'format' => '##########', 'notes' => 'Alternate phone' ),
-	'custom1' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 1' ),
-	'custom2' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 2' ),
-	'custom3' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 3' ),
-	'custom4' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 4' ),
-	'custom5' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 5' ),
-	'custom6' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 6' ),
+	'custom1' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 1' . ( !empty( $feed->custom1Label ) ? ': ' . $feed->custom1Label : '' ) ),
+	'custom2' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 2' . ( !empty( $feed->custom2Label ) ? ': ' . $feed->custom2Label : '' ) ),
+	'custom3' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 3' . ( !empty( $feed->custom3Label ) ? ': ' . $feed->custom3Label : '' ) ),
+	'custom4' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 4' . ( !empty( $feed->custom4Label ) ? ': ' . $feed->custom4Label : '' ) ),
+	'custom5' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 5' . ( !empty( $feed->custom5Label ) ? ': ' . $feed->custom5Label : '' ) ),
+	'custom6' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 6' . ( !empty( $feed->custom6Label ) ? ': ' . $feed->custom6Label : '' ) ),
 );
 
 $requiredArray = explode( ';', 'pswd;' . $feed->required );
@@ -66,28 +66,28 @@ $allowedArray = explode( ';', 'pswd;' . $feed->allowedFields );
 <html lang="en-US" prefix="og: http://ogp.me/ns#">
 
 <head>
-<meta charset="UTF-8" />
-<title>API Specifications - <?php echo $company->name; ?></title>
-<style type="text/css">
-body {
-	font-family: Verdana, sans-serif;
-}
+	<meta charset="UTF-8"/>
+	<title>API Specifications - <?php echo $company->name; ?></title>
+	<style type="text/css">
+		body {
+			font-family: Verdana, sans-serif;
+		}
 
-table {
-	border-collapse:collapse;
-	page-break-after: always;
-}
+		table {
+			border-collapse: collapse;
+			page-break-after: always;
+		}
 
-table td {
-	border: 1px solid #000;
-	padding: 5px;
-}
+		table td {
+			border: 1px solid #000;
+			padding: 5px;
+		}
 
-thead td {
-	font-weight: bold;
-	text-align: center;
-}
-</style>
+		thead td {
+			font-weight: bold;
+			text-align: center;
+		}
+	</style>
 </head>
 
 <body>
@@ -98,7 +98,7 @@ thead td {
 
 <h3>Company: <?php echo $company->name; ?> (Feed: <?php echo $feed->idFeedIn ?>)</h3>
 
-<p>The lead submission system works on a key-value pair submission via HTTP POST or HTTP GET. An XML response is produced after an attempt to post a lead to the system.  All submissions must use SSL over HTTPS.</p>
+<p>The lead submission system works on a key-value pair submission via HTTP POST or HTTP GET. An XML response is produced after an attempt to post a lead to the system. All submissions must use SSL over HTTPS.</p>
 
 <h4>API Field Definitions</h4>
 
@@ -115,19 +115,19 @@ thead td {
 	</tr>
 	</thead>
 	<tbody>
-<?php
+	<?php
 	foreach( $allowedArray as $allowed ) {
-?>
-	<tr>
-		<td><?php echo $allowed; ?></td>
-		<td><?php echo $fields[$allowed]['type']; ?></td>
-		<td><?php echo in_array( $allowed, $requiredArray ) ? 'Yes' : 'No'; ?></td>
-		<td><?php echo $fields[$allowed]['format']; ?></td>
-		<td><?php echo $fields[$allowed]['notes']; ?></td>
-	</tr>
-<?php
+		?>
+		<tr>
+			<td><?php echo $allowed; ?></td>
+			<td><?php echo $fields[$allowed]['type']; ?></td>
+			<td><?php echo in_array( $allowed, $requiredArray ) ? 'Yes' : 'No'; ?></td>
+			<td><?php echo $fields[$allowed]['format']; ?></td>
+			<td><?php echo $fields[$allowed]['notes']; ?></td>
+		</tr>
+		<?php
 	}
-?>
+	?>
 	</tbody>
 </table>
 
@@ -136,24 +136,24 @@ thead td {
 <h5>Valid Response Examples</h5>
 
 <p>&lt;?xml version="1.0" encoding="UTF-8"?&gt;<br/>
-&lt;response&gt;<br/>
-&lt;success&gt;true&lt;/success&gt;<br/>
-&lt;reason&gt;Successfully inserted new record.&lt;/reason&gt;<br/>
-&lt;/response&gt;</p>
+	&lt;response&gt;<br/>
+	&lt;success&gt;true&lt;/success&gt;<br/>
+	&lt;reason&gt;Successfully inserted new record.&lt;/reason&gt;<br/>
+	&lt;/response&gt;</p>
 
 <h5>Invalid Response Examples</h5>
 
 <p>&lt;?xml version="1.0" encoding="UTF-8"?&gt;<br/>
-&lt;response&gt;<br/>
-&lt;success&gt;false&lt;/success&gt;<br/>
-&lt;reason&gt;Unauthorized access.&lt;/reason&gt;<br/>
-&lt;/response&gt;</p>
+	&lt;response&gt;<br/>
+	&lt;success&gt;false&lt;/success&gt;<br/>
+	&lt;reason&gt;Unauthorized access.&lt;/reason&gt;<br/>
+	&lt;/response&gt;</p>
 
 <p>&lt;?xml version="1.0" encoding="UTF-8"?&gt;<br/>
-&lt;response&gt;<br/>
-&lt;success&gt;false&lt;/success&gt;<br/>
-&lt;reason&gt;Email is a required field, and may not be empty.&lt;/reason&gt;<br/>
-&lt;/response&gt;</p>
+	&lt;response&gt;<br/>
+	&lt;success&gt;false&lt;/success&gt;<br/>
+	&lt;reason&gt;Email is a required field, and may not be empty.&lt;/reason&gt;<br/>
+	&lt;/response&gt;</p>
 
 </body>
 </html>
