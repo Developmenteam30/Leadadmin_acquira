@@ -94,8 +94,7 @@ class ProcessLeads
 				</Opportunity>
 			</LeadOpportunities>
             <LeadContactDetails>
-                <SecondaryPhone>' . htmlspecialchars( $requestdata['PrimaryPhone'] ?? '', ENT_XML1, 'UTF-8' ) . '</SecondaryPhone>
-                <PrimaryPhone>' . htmlspecialchars( $requestdata['SecondaryPhone'] ?? '', ENT_XML1, 'UTF-8' ) . '</PrimaryPhone>
+                <PrimaryPhone>' . htmlspecialchars( $requestdata['PrimaryPhone'] ?? '', ENT_XML1, 'UTF-8' ) . '</PrimaryPhone>
                 <Address>
                     <ZipCode>' . htmlspecialchars( $requestdata['ZipCode'] ?? '', ENT_XML1, 'UTF-8' ) . '</ZipCode>
                     <Address1>' . htmlspecialchars( $requestdata['Address'] ?? '', ENT_XML1, 'UTF-8' ) . '</Address1>
