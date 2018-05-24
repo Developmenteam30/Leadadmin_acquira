@@ -1,5 +1,5 @@
 <?php
-require_once("../../includes/c_config.php");
+require_once( "../../includes/c_config.php" );
 require_once( INCLUDES . 'leads.php' );
 require_once( INCLUDES . 'Array2XML.php' );
 require_once( INCLUDES . 'processLeads.php' );
@@ -14,43 +14,51 @@ $leads = Leads::getInstance();
 
 $statsDay = date( 'Y-m-d' );
 
-Header('Content-Type: text/xml');
+Header( 'Content-Type: text/xml' );
 
 $result = array(
 	'success' => 'false',
-	'reason' => 'Unknown error.'
+	'reason' => 'Unknown error.',
 );
 
-$feedLabel = getenv('FEED_LABEL');
-if( empty( $feedLabel ) ) {
-	$result['reason'] = "Feed label is not set.";
+$idFeedIn = getenv( 'FEED_LABEL' );
+if( empty( $idFeedIn ) ) {
+	http_response_code( 400 );
+	$result['reason'] = "Feed id is not set.";
 	showResultAndDie( $result );
 }
 
-$pattern = '/^[a-z][a-z0-9_]*$/';
-if( !preg_match( $pattern, $feedLabel ) ) {
-	$result['reason'] = "Feed label contains invalid characters";
+if( preg_match( '/^[0-9]+$/', $idFeedIn ) ) { // New style uses immutable idFeedIn
+	$feedParams = $leads->getInboundFeed( $idFeedIn );
+} else if( preg_match( '/^[a-z][a-z0-9_]*$/', $idFeedIn ) ) { // Old style uses feedLabel
+	$feedParams = $leads->getInboundFeedLabel( $idFeedIn );
+} else {
+	http_response_code( 400 );
+	$result['reason'] = "Feed id contains invalid characters";
 	showResultAndDie( $result );
 }
 
-$feedParams = $leads->getInboundFeedLabel( $feedLabel );
 if( $feedParams === null ) {
+	http_response_code( 500 );
 	$result['reason'] = 'Database failure, please try again later.';
 	showResultAndDie( $result );
 } else if( false === $feedParams ) {
-	$result['reason'] = 'Invalid feed label';
+	http_response_code( 403 );
+	$result['reason'] = 'Invalid feed id';
 	showResultAndDie( $result );
 }
 
 if( empty( $_REQUEST['pswd'] ) || $_REQUEST['pswd'] != $feedParams->password ) {
+	http_response_code( 403 );
 	$result['reason'] = 'Unauthorized access.';
-	$leads->logError( 'Feed '. $feedLabel . ' Unauthorized user at '.$_SERVER["REMOTE_ADDR"], true, false );
+	$leads->logError( 'Feed ' . $feedParams->label . ' Unauthorized user at ' . $_SERVER["REMOTE_ADDR"], true, false );
 	$_REQUEST['url'] = $_REQUEST['url'] ?? ''; // Ensure a value for the URL is set
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null );
 	showResultAndDie( $result );
 }
 
 if( 'retired' == $feedParams->status ) {
+	http_response_code( 403 );
 	$result['reason'] = 'This feed has been disabled.';
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null );
 	showResultAndDie( $result );
