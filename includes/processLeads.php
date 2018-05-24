@@ -342,6 +342,7 @@ class ProcessLeads
 		$staticFields = explode( ";", $feedOut->staticFields );
 		$varFields = explode( ";", $feedOut->varFields );
 		$fieldMap = explode( ";", $feedOut->fieldMap );
+		$valueMap = !empty( $feedOut->valueMap ) ? json_decode( $feedOut->valueMap, true ) : array();
 
 		// Override the outbound URL
 		if( !empty( $row->urlRewrite ) ) {
@@ -351,6 +352,15 @@ class ProcessLeads
 		// Check for legacy stamp field
 		if( empty( $row->stamp ) ) {
 			$row->stamp = $row->leadstamp;
+		}
+
+		// Perform any value translations on the data
+		if( !empty( $valueMap ) && is_array( $valueMap ) ) {
+			foreach( $valueMap as $vm ) {
+				if( isset( $vm['field'], $vm['oldValue'], $vm['newValue'], $row->{$vm['field']} ) && $row->{$vm['field']} == $vm['oldValue'] ) {
+					$row->{$vm['field']} = $vm['newValue'];
+				}
+			}
 		}
 
 		// Check global and local suppression lists for email feeds

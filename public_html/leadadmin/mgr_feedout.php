@@ -75,6 +75,17 @@ if( isset( $_REQUEST['a'] ) ) {
 				$fieldMap = implode( ';', $_REQUEST['fieldMap'] );
 			}
 
+			$valueMap = array();
+			if( !empty( $_REQUEST['valueMap']['field'] ) && is_array( $_REQUEST['valueMap']['field'] ) ) {
+				foreach( $_REQUEST['valueMap']['field'] as $key => $val ) {
+					$valueMap[] = array(
+						'field' => trim( $val ),
+						'oldValue' => trim( $_REQUEST['valueMap']['oldValue'][$key] ?? '' ),
+						'newValue' => trim( $_REQUEST['valueMap']['newValue'][$key] ?? '' ),
+					);
+				}
+			}
+
 			$urlAssign = '';
 			if( !empty( $_REQUEST['urlassignments_url'] ) && is_array( $_REQUEST['urlassignments_url'] ) ) {
 				$_REQUEST['urlassignments_url'] = array_map( 'trim', $_REQUEST['urlassignments_url'] );
@@ -143,6 +154,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'staticFields' => empty( $staticFields ) ? null : $staticFields,
 						'varFields' => empty( $varFields ) ? null : $varFields,
 						'fieldMap' => empty( $fieldMap ) ? null : $fieldMap,
+						'valueMap' => empty( $valueMap ) ? null : json_encode( $valueMap ),
 						'cron' => 1,
 						'cronTiming' => 1,
 						'successString' => empty( $_REQUEST['successString'] ) ? null : $_REQUEST['successString'],
@@ -231,6 +243,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'staticFields' => empty( $staticFields ) ? null : $staticFields,
 						'varFields' => empty( $varFields ) ? null : $varFields,
 						'fieldMap' => empty( $fieldMap ) ? null : $fieldMap,
+						'valueMap' => empty( $valueMap ) ? null : json_encode( $valueMap ),
 						'successString' => empty( $_REQUEST['successString'] ) ? null : $_REQUEST['successString'],
 						'urlassignments' => empty( $urlAssign ) ? null : $urlAssign,
 						'dailyLimit' => empty( $_REQUEST['dailyLimit'] ) ? null : $_REQUEST['dailyLimit'],
@@ -746,7 +759,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'ip' => '1.2.3.4',
 				'email' => 'johndoe@somewhere.com',
 				'fname' => 'John',
-				'lname' => 'Doe',
+				'lname' => 'Adams',
 				'addr' => '123 Main St',
 				'addr2' => '',
 				'city' => 'New York',
@@ -759,10 +772,10 @@ if( isset( $_REQUEST['d'] ) ) {
 				'country' => 'US',
 				'listcode' => '',
 				'leadId' => '12345',
-				'custom1' => 'custom1',
-				'custom2' => 'custom2',
-				'custom3' => 'custom3',
-				'custom4' => 'custom4',
+				'custom1' => 'hsdiploma',
+				'custom2' => '99',
+				'custom3' => '97',
+				'custom4' => '1998',
 				'custom5' => 'custom5',
 				'custom6' => 'custom6',
 			);
@@ -841,6 +854,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 			$varFields = explode( ";", $feed->varFields );
 			$fieldMap = explode( ";", $feed->fieldMap );
+			$valueMap = !empty( $feed->valueMap ) ? json_decode( $feed->valueMap, true ) : array();
 			$selectedNotifyThresholdDays = !empty( $feed->notifyThresholdDays ) ? explode( ",", $feed->notifyThresholdDays ) : array();
 
 		case 'dialog_newfeed':
@@ -864,8 +878,14 @@ if( isset( $_REQUEST['d'] ) ) {
 					}
 					$varFields = explode( ";", $feed->varFields );
 					$fieldMap = explode( ";", $feed->fieldMap );
+					$valueMap = !empty( $feed->valueMap ) ? json_decode( $feed->valueMap, true ) : array();
 				}
 			}
+
+			if( !isset( $valueMap ) ) {
+				$valueMap = array();
+			}
+
 			$feedProps = array(
 				'idFeedOut',
 				'label',
@@ -896,7 +916,10 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 
 			$explodableProperties = array(
-				'staticFields', 'varFields', 'fieldMap', 'urlassignments',
+				'staticFields',
+				'varFields',
+				'fieldMap',
+				'urlassignments',
 			);
 			foreach( $explodableProperties as $eP ) {
 				if( !isset( $_REQUEST[$eP] ) ) {
@@ -914,7 +937,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				}
 			}
 
-			if( !isset( $selectedNotifyThresholdDays )) {
+			if( !isset( $selectedNotifyThresholdDays ) ) {
 				$selectedNotifyThresholdDays = array();
 			}
 
@@ -1050,34 +1073,62 @@ if( isset( $_REQUEST['d'] ) ) {
 							</p>
 							<div>
 								<div id='varFields_container'>
-									<?php $sFCount = 0;
-									foreach( $feed_varFields as $vF ) { ?>
+									<?php
+									$sFCount = 0;
+									foreach( $feed_varFields as $vF ) {
+										?>
 										<div>
-											API Field: <input type='text'
-											                  name='varFields[]'
-											                  value='<?php echo $vF; ?>'
-											/> Mapped To: <select
-													name='fieldMap[]'
-											>
+											API Field: <input type='text' name='varFields[]' value='<?php echo $vF; ?>'/>
+											Mapped To: <select name='fieldMap[]'>
 												<?php foreach( $recordFields as $rF ) { ?>
-													<option value='<?php echo $rF; ?>'
-														<?php if( $feed_fieldMap[$sFCount] == $rF ) {
-															echo "selected='selected'";
-														} ?>
-													><?php echo $rF; ?></option>
+													<option value='<?php echo htmlentities( $rF, ENT_QUOTES ); ?>' <?php if( $feed_fieldMap[$sFCount] == $rF ) {
+														echo "selected='selected'";
+													} ?>><?php echo htmlentities( $rF ); ?></option>
 												<?php } ?>
 												<?php foreach( $additionalMapFields as $aF ) { ?>
-													<option value='<?php echo $aF; ?>'
-														<?php if( $feed_fieldMap[$sFCount] == $aF ) {
-															echo "selected='selected'";
-														} ?>
-													><?php echo $aF; ?></option>
+													<option value='<?php echo htmlentities( $aF, ENT_QUOTES ); ?>' <?php if( $feed_fieldMap[$sFCount] == $aF ) {
+														echo "selected='selected'";
+													} ?>><?php echo htmlentities( $aF ); ?></option>
 												<?php } ?>
 											</select>
 											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
 										</div>
-										<?php $sFCount++;
-									} ?>
+										<?php
+										$sFCount++;
+									}
+									?>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Field Value Translation</p></td>
+						<td>
+							<p>Send a different field value to the outgoing feed than was received on the inbound feed.
+							</p>
+							<p>
+								<a href='#' class='nonLink' onclick='element("varValues_container", "varValue", {});'>Add New Value Translation</a>
+							</p>
+							<div>
+								<div id='varValues_container'>
+									<?php
+									foreach( $valueMap as $vF ) {
+										?>
+										<div>
+											Field: <select name='valueMap[field][]'>
+												<?php foreach( $recordFields as $rF ) { ?>
+													<option value='<?php echo htmlentities( $rF, ENT_QUOTES ); ?>' <?php if( isset( $vF['field'] ) && $vF['field'] == $rF ) {
+														echo "selected='selected'";
+													} ?>><?php echo htmlentities( $rF ); ?></option>
+												<?php } ?>
+											</select>
+											Incoming Value: <input type='text' name='valueMap[oldValue][]' value='<?php echo htmlentities( $vF['oldValue'] ?? '' ); ?>'/>
+											Outgoing Value: <input type='text' name='valueMap[newValue][]' value='<?php echo htmlentities( $vF['newValue'] ?? '' ); ?>'/>
+											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+										</div>
+										<?php
+									}
+									?>
 								</div>
 							</div>
 						</td>
@@ -1161,7 +1212,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						<td><p>Revenue and Cost Per Lead</p></td>
 						<td>
 							<p>
-								RPL: <input type="text" name="revenuePerLead" value="<?php echo htmlentities( $feed_revenuePerLead ); ?>"/>  CPL Override: <input type="text" name="costPerLeadOverride" value="<?php echo htmlentities( $feed_costPerLeadOverride ); ?>"/><br/>
+								RPL: <input type="text" name="revenuePerLead" value="<?php echo htmlentities( $feed_revenuePerLead ); ?>"/> CPL Override: <input type="text" name="costPerLeadOverride" value="<?php echo htmlentities( $feed_costPerLeadOverride ); ?>"/><br/>
 								If a value is set for CPL Override (including a 0.00 amount), this will override the CPL set on the incoming feed. To use the default CPL from the incoming feed, leave this field completely blank.
 							</p>
 						</td>
@@ -1562,12 +1613,27 @@ if( isset( $_REQUEST['d'] ) ) {
 			<div>
 				API Field: <input type='text' name='varFields[]' value=''/> Mapped To: <select name='fieldMap[]'>
 					<?php foreach( $recordFields as $rF ) { ?>
-						<option value='<?php echo $rF; ?>'><?php echo $rF; ?></option>
+						<option value='<?php echo htmlentities( $rF, ENT_QUOTES ); ?>'><?php echo htmlentities( $rF ); ?></option>
 					<?php } ?>
 					<?php foreach( $additionalMapFields as $aF ) { ?>
-						<option value='<?php echo $aF; ?>'><?php echo $aF; ?></option>
+						<option value='<?php echo htmlentities( $aF, ENT_QUOTES ); ?>'><?php echo htmlentities( $aF ); ?></option>
 					<?php } ?>
 				</select>
+				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+			</div>
+			<?php
+			break;
+		case 'varValue':
+			$e = $_REQUEST['e'] ?? '';
+			?>
+			<div>
+				Field: <select name='valueMap[field][]'>
+					<?php foreach( $recordFields as $rF ) { ?>
+						<option value='<?php echo htmlentities( $rF, ENT_QUOTES ); ?>'><?php echo htmlentities( $rF ); ?></option>
+					<?php } ?>
+				</select>
+				Incoming Value: <input type='text' name='valueMap[oldValue][]' value=''/>
+				Outgoing Value: <input type='text' name='valueMap[newValue][]' value=''/>
 				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
 			</div>
 			<?php
