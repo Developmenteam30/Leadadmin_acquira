@@ -178,9 +178,9 @@ if( 'clear-outbound-queue' === $job->type ) {
 
 			$leads->updateJob( $job->jobId, array(
 				'status' => 'error',
-				'message' => 'Database error while exporting records',
+				'message' => $result['reason'],
 			) );
-			$status = 'Database error while exporting records';
+			$status = $result['reason'];
 
 		} else {
 
