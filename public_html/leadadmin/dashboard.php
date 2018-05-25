@@ -248,41 +248,55 @@ include( INCLUDES . "c_header.php" );
 		<p><input type="text" name="statsStart" value="<?php echo htmlentities( $statsStart->format( 'Y-m-d' ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( $statsEnd->format( 'Y-m-d' ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
 	</form>
 
-	<table class="table table-bordered table-condensed table-striped-custom table-small-font dashboard-forecasts">
-		<thead>
-		<tr>
-			<th>&nbsp;</th>
-			<th colspan="5">Existing Business</th>
-			<th colspan="2">New Business</th>
-			<th>&nbsp;</th>
-		</tr>
-		<tr>
-			<th>Employee</th>
-			<th>Prev Day</th>
-			<th>Today</th>
-			<th>Accrual MTD</th>
-			<th>Expectation</th>
-			<th>Projected MTD</th>
-			<th>Expectation</th>
-			<th>Accrual MTD</th>
-			<th>GP</th>
-		</tr>
-		</thead>
-		<tbody>
-		<?php
-		$diffRange = intval( $statsStartFOM->diff( $statsEnd )->format( "%a" ) );
-		$diffTotal = intval( $statsStartFOM->diff( $statsEndEOM )->format( "%a" ) ) + 1;
-		$forecastsToday = $leads->getForecasts( $today->format( 'Y-m-d' ), $today->format( 'Y-m-d' ) );
-		$forecastsYesterday = $leads->getForecasts( $yesterday->format( 'Y-m-d' ), $yesterday->format( 'Y-m-d' ) );
-		$forecastsMTD = $leads->getForecasts( $statsStartFOM->format( 'Y-m-d' ), $statsEndEOM->format( 'Y-m-d' ) );
-		try {
-			$statsEndEOM->sub( new \DateInterval( 'P1D' ) );
-		} catch( \Exception $e ) {
-			// Do nothing
-		}
-		$forecastsProjected = $leads->getForecasts( $today->format( 'Y-m-01' ), $yesterday->format( 'Y-m-d' ) );
-		$users = $leads->getStaffUsers();
-		if( !empty( $users ) && is_array( $users ) ) {
+	<?php
+	$users = $leads->getStaffUsers();
+	if( !empty( $users ) && is_array( $users ) ) {
+		$totals = array(
+			'prevDay' => 0,
+			'today' => 0,
+			'existingAccrual' => 0,
+			'existingExpectation' => 0,
+			'existingProjected' => 0,
+			'newExpectation' => 0,
+			'newAaccural' => 0,
+			'grossProfit' => 0,
+		);
+
+		?>
+
+		<table class="table table-bordered table-condensed table-striped-custom table-small-font dashboard-forecasts">
+			<thead>
+			<tr>
+				<th>&nbsp;</th>
+				<th colspan="5">Total Business</th>
+				<th colspan="2">New Business</th>
+				<th>&nbsp;</th>
+			</tr>
+			<tr>
+				<th>Employee</th>
+				<th>Prev Day</th>
+				<th>Today</th>
+				<th>Accrual MTD</th>
+				<th>Expectation</th>
+				<th>Projected MTD</th>
+				<th>Accrual MTD</th>
+				<th>Expectation</th>
+				<th>GP</th>
+			</tr>
+			</thead>
+			<tbody>
+			<?php
+			$diffRange = intval( $statsStartFOM->diff( $statsEnd )->format( "%a" ) );
+			$diffTotal = intval( $statsStartFOM->diff( $statsEndEOM )->format( "%a" ) ) + 1;
+			$forecastsToday = $leads->getForecasts( $today->format( 'Y-m-d' ), $today->format( 'Y-m-d' ) );
+			$forecastsYesterday = $leads->getForecasts( $yesterday->format( 'Y-m-d' ), $yesterday->format( 'Y-m-d' ) );
+			$forecastsMTD = $leads->getForecasts( $statsStartFOM->format( 'Y-m-d' ), $statsEndEOM->format( 'Y-m-d' ) );
+			try {
+				$statsEndEOM->sub( new \DateInterval( 'P1D' ) );
+			} catch( \Exception $e ) {
+				// Do nothing
+			}
+			$forecastsProjected = $leads->getForecasts( $today->format( 'Y-m-01' ), $yesterday->format( 'Y-m-d' ) );
 			foreach( $users as $userId => $fullName ) {
 				$amountToday = $amountYesterday = $existingRevenueMTD = $newRevenueMTD = $accuralCostMTD = $projectedRevenueMTD = 0;
 				if( !empty( $forecastsToday ) && is_array( $forecastsToday ) ) {
@@ -317,27 +331,57 @@ include( INCLUDES . "c_header.php" );
 				}
 
 				$expectationValues = $leads->getExpectationValues( $userId, $statsStartFOM->format( 'Y-m-' ) );
+
+				$totals['prevDay'] += round( $amountYesterday );
+				$totals['today'] += round( $amountToday );
+				$totals['existingAccrual'] += round( $existingRevenueMTD + $newRevenueMTD );
+				$totals['existingExpectation'] += round( $expectationValues->existingBusinessAmount );
+				$totals['existingProjected'] += round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange );
+				$totals['newExpectation'] += round( $newRevenueMTD );
+				$totals['newAaccural'] += round( $expectationValues->newBusinessAmount );
+				$totals['grossProfit'] += round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD );
+
 				?>
 				<tr>
 					<td><?php echo htmlentities( $fullName ); ?></td>
-					<td class="text-right">$<?php echo number_format( $amountYesterday, 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $amountToday, 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $existingRevenueMTD, 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $expectationValues->existingBusinessAmount ?? 0, 0 ); ?></td>
-					<td class="text-right<?php echo $expectationValues->existingBusinessAmount > ( $projectedRevenueMTD * $diffTotal ) / $diffRange ? ' bg-danger' : ''; ?>">$<?php echo number_format( ( $projectedRevenueMTD * $diffTotal ) / $diffRange, 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $expectationValues->newBusinessAmount, 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $newRevenueMTD, 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD, 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( round( $amountYesterday ), 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( round( $amountToday ), 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( round( $existingRevenueMTD + $newRevenueMTD ), 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( round( $expectationValues->existingBusinessAmount ?? 0 ), 0 ); ?></td>
+					<td class="text-right<?php echo $expectationValues->existingBusinessAmount > ( $projectedRevenueMTD * $diffTotal ) / $diffRange ? ' bg-danger' : ''; ?>">$<?php echo number_format( round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange ), 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( round( $newRevenueMTD ), 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( round( $expectationValues->newBusinessAmount ), 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD ), 0 ); ?></td>
 				</tr>
 				<?php
 			}
-		}
-		?>
 
-		</tbody>
-	</table>
+			if( sizeOf( $users ) > 1 ) {
+			?>
+			<tfoot>
+			<tr>
+				<td>TOTAL</td>
+				<td class="text-right">$<?php echo number_format( $totals['prevDay'], 0 ); ?></td>
+				<td class="text-right">$<?php echo number_format( $totals['today'], 0 ); ?></td>
+				<td class="text-right">$<?php echo number_format( $totals['existingAccrual'], 0 ); ?></td>
+				<td class="text-right">$<?php echo number_format( $totals['existingExpectation'], 0 ); ?></td>
+				<td class="text-right">$<?php echo number_format( $totals['existingProjected'], 0 ); ?></td>
+				<td class="text-right">$<?php echo number_format( $totals['newExpectation'], 0 ); ?></td>
+				<td class="text-right">$<?php echo number_format( $totals['newAaccural'], 0 ); ?></td>
+				<td class="text-right">$<?php echo number_format( $totals['grossProfit'], 0 ); ?></td>
+			</tr>
+			</tfoot>
 
-	<?php
+			<?php
+			}
+			?>
+
+			</tbody>
+		</table>
+
+		<?php
+	}
+
 	$feedCategories = array(
 		'phone' => 'Phone',
 		'email' => 'Email',
