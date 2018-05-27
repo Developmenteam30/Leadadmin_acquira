@@ -435,6 +435,10 @@ if( 'clear-outbound-queue' === $job->type ) {
 				if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $row, $row['idRecord'], $job->destination ) ) === null ) {
 					echo "\tSUCCESS\n";
 					$cnt++;
+
+					$leads->updateJob( $job->jobId, array(
+						'records' => $cnt,
+					) );
 				} else {
 					echo "\t{$pushError}\n";
 				}
