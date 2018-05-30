@@ -585,7 +585,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			if( !isset( $selectedAllowedFields ) ) {
 				$selectedAllowedFields = $recordFields;
 			}
-			if( !isset( $selectedNotifyThresholdDays )) {
+			if( !isset( $selectedNotifyThresholdDays ) ) {
 				$selectedNotifyThresholdDays = array();
 			}
 
@@ -645,6 +645,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					<tr>
 						<td><p>Feed Category</p></td>
 						<td>
+							<p>Determines which section this feed shows up under on the dashboard.</p>
 							<p>
 								<input type="radio" name="feedCategory" value="email"<?php if( empty( $feed_feedCategory ) || 'email' == $feed_feedCategory ) {
 									print ' checked="checked"';
@@ -655,9 +656,6 @@ if( isset( $_REQUEST['d'] ) ) {
 								<input type="radio" name="feedCategory" value="ppc"<?php if( 'ppc' == $feed_feedCategory ) {
 									print ' checked="checked"';
 								} ?> /> PPC<br/>
-								<input type="radio" name="feedCategory" value="both"<?php if( 'both' == $feed_feedCategory ) {
-									print ' checked="checked"';
-								} ?> /> All
 							</p>
 						</td>
 					</tr>
