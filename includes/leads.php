@@ -566,8 +566,8 @@ class Leads
 		try {
 			$query = $this->db->prepare( "DELETE FROM ledger WHERE ledgerId = ?" );
 			$query->execute( array( $ledgerId ) );
-		} catch( Leads_PDOException $e ) {
-			$this->logError( 'Unable to delete ledger entry: ' . $pdoException->getMessage() );
+		} catch( \Exception $e ) {
+			$this->logError( 'Unable to delete ledger entry: ' . $e->getMessage() );
 			return null;
 		}
 
@@ -579,8 +579,8 @@ class Leads
 		try {
 			$query = $this->db->prepare( "DELETE FROM ledger_offline WHERE ledgerId = ?" );
 			$query->execute( array( $ledgerId ) );
-		} catch( Leads_PDOException $e ) {
-			$this->logError( 'Unable to delete offline ledger entry: ' . $pdoException->getMessage() );
+		} catch( \Exception $e ) {
+			$this->logError( 'Unable to delete offline ledger entry: ' . $e->getMessage() );
 			return null;
 		}
 
@@ -592,8 +592,8 @@ class Leads
 		try {
 			$query = $this->db->prepare( "DELETE FROM ledger_phones WHERE ledgerId = ?" );
 			$query->execute( array( $ledgerId ) );
-		} catch( Leads_PDOException $e ) {
-			$this->logError( 'Unable to delete phones ledger entry: ' . $pdoException->getMessage() );
+		} catch( \Exception $e ) {
+			$this->logError( 'Unable to delete phones ledger entry: ' . $e->getMessage() );
 			return null;
 		}
 
@@ -4050,7 +4050,7 @@ class Leads
 		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, costPerLead = ?, revenuePerLead = ?' );
 
 		$sqlSelect = "SELECT a.idRecord,a.idFeedIn,a.idFeedOut,DATE_FORMAT(CONVERT_TZ(a.`timestamp`,?,?),'%Y-%m-%d') AS `timestamp`,di.url,fi.costPerLead,fo.revenuePerLead,fo.costPerLeadOverride ";
-		$sqlSelect .= "FROM archive.data_outbound_201803 AS a ";
+		$sqlSelect .= "FROM archive.data_outbound_201801 AS a ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.data_inbound AS di ON di.idRecord = a.idRecord ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.feedinc fi ON fi.idFeedIn = a.idFeedIn ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.feedout fo ON fo.idFeedOut = a.idFeedOut ";
@@ -4753,6 +4753,18 @@ SQL;
 			$header .= "Return-Path: <" . $from . ">\n";
 			$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 		}
+	}
+
+	public function clearAllSessions() {
+		try {
+			$query = $this->db->prepare( "TRUNCATE php_sessions" );
+			$query->execute();
+		} catch( \PDOException $e ) {
+			$this->logError( 'Unable to truncate sessions: ' . $e->getMessage() );
+			return null;
+		}
+
+		return true;
 	}
 
 	public function getErrorCount() {
