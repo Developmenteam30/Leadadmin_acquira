@@ -8,7 +8,7 @@ if( extension_loaded( 'newrelic' ) ) {
 	newrelic_ignore_transaction();
 }
 
-require_once("../includes/c_config.php");
+require_once( "../includes/c_config.php" );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
@@ -17,6 +17,10 @@ $maxThreads = 20;
 
 function countProcesses( $idFeedOut ) {
 
+	exec( sprintf( "ps auxwww|grep '[p]ushLeads.php %d$'", intval( $idFeedOut ) ), $output );
+	return !empty( $output ) && is_array( $output ) ? sizeOf( $output ) : 0;
+
+	/*
 	$count = 0;
 	$files = scandir( '/tmp' );
 	foreach( $files as $file ) {
@@ -32,6 +36,7 @@ function countProcesses( $idFeedOut ) {
 	}
 
 	return $count;
+	*/
 }
 
 while( true ) {
@@ -62,19 +67,15 @@ while( true ) {
 		while( $cnt < $threads ) {
 			print "\tSpawning new\n";
 
-			//$pid = pcntl_fork();
-			//if( $pid === 0 ) {
-				exec( sprintf( 'php -f pushLeads.php %s>/dev/null 2>&1 &',
-						escapeshellarg( $feed->idFeedOut ) 
-					)
-				);
-			//	exit();
-			//}
-			usleep(500000);
+			exec( sprintf( 'php -f pushLeads.php %s>/dev/null 2>&1 &',
+					escapeshellarg( $feed->idFeedOut )
+				)
+			);
+			usleep( 500000 );
 
 			$cnt++;
 		}
 	}
 
-	sleep(30);
+	sleep( 30 );
 }
