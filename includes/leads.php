@@ -2266,7 +2266,7 @@ class Leads
 		$results = array( 'accepted' => 0, 'rejected' => 0 );
 
 		try {
-			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_outbound WHERE stamp >= ? AND stamp <= ? AND idFeedOut = ?" );
+			$query = $this->db->prepare( "SELECT IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected,IFNULL(SUM(billable),0) billable FROM stats_outbound WHERE stamp >= ? AND stamp <= ? AND idFeedOut = ?" );
 			$query->execute( array( $stampStart, $stampEnd, $idFeedOut ) );
 			$results = $query->fetch();
 		} catch( PDOException $e ) {
@@ -2502,7 +2502,7 @@ class Leads
 
 		try {
 			if( empty( $error ) ) {
-				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1' );
+				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted,billable) VALUES(?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1' );
 			} else {
 				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
 			}
@@ -2523,9 +2523,9 @@ class Leads
 
 				try {
 					if( empty( $error ) ) {
-						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
+						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,accepted,billable) VALUES(?,?,?,?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
 					} else {
-						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,rejected,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1, costPerLead = ?, revenuePerLead = ?' );
+						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,rejected) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1, costPerLead = ?, revenuePerLead = ?' );
 					}
 					$query->execute( array( $row->idFeedIn, $feedOut->idFeedOut, $this->parseUrl( $row->url ), date( 'Y-m-d' ), $costPerLead, $revenuePerLead, $costPerLead, $revenuePerLead ) );
 				} catch( PDOException $e ) {
@@ -2563,6 +2563,54 @@ class Leads
 				$this->logError( 'Unable to archive record: ' . $e->getMessage() );
 				return null;
 			}
+		}
+
+		$this->db->commit();
+
+		return true;
+	}
+
+	public function toggleBillable( $row, $billable ) {
+
+		if( empty( $row ) ) {
+			return null;
+		}
+
+		$this->db->beginTransaction();
+
+		try {
+			$query = $this->db->prepare( 'UPDATE archive.data_outbound_201805 SET isBillable = ? WHERE idRecord = ? AND idFeedOut = ?' );
+			$query->execute( array( !empty( $billable ) ? 1 : 0, $row->idRecord, $row->idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to toggle billable on data_outbound record: ' . $e->getMessage() );
+			return null;
+		}
+
+		try {
+			if( empty( $billable ) ) {
+				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,billable) VALUES(?,?,?,0) ON DUPLICATE KEY UPDATE billable = billable - 1' );
+			} else {
+				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,billable) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE billable = billable + 1' );
+			}
+			$query->execute( array( $row->idFeedOut, $this->parseUrl( $row->url ), date( 'Y-m-d', strtotime( $row->timestampConverted ) ) ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to toggle billable on stats_outbound record: ' . $e->getMessage() );
+			return null;
+		}
+
+		try {
+			if( empty( $billable ) ) {
+				$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedOut,url,stamp,billable) VALUES(?,?,?,0) ON DUPLICATE KEY UPDATE billable = billable - 1' );
+			} else {
+				$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedOut,url,stamp,billable) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE billable = billable + 1' );
+			}
+			$query->execute( array( $row->idFeedOut, $this->parseUrl( $row->url ), date( 'Y-m-d', strtotime( $row->timestampConverted ) ) ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to toggle billable on stats_correlated record: ' . $e->getMessage() );
+			return null;
 		}
 
 		$this->db->commit();
@@ -3533,6 +3581,31 @@ class Leads
 		return $results;
 	}
 
+	public function archivedOutboundRecordsSearch( $idFeedOut, $dateStart, $dateEnd ) {
+		$results = array();
+
+		try {
+			$sql = "SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,o.idFeedOut,o.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip ";
+			$sql .= "FROM archive.data_outbound_201805 o "; // TODO: Fix me
+			$sql .= "INNER JOIN data_inbound i ON i.idRecord = o.idRecord ";
+			$sql .= "WHERE o.idFeedOut = ? ";
+			$sql .= "AND o.processed = 1 ";
+			$sql .= "AND o.result IS NULL ";
+			$sql .= "AND o.timestamp >= CONVERT_TZ(?,?,?) ";
+			$sql .= "AND o.timestamp <= CONVERT_TZ(?,?,?) ";
+			$sql .= "ORDER BY o.timestamp ";
+			//$sql .= "LIMIT " . intval( $offset ) . ",100";
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut, $dateStart, LOCAL_TIMEZONE, DB_TIMEZONE, $dateEnd, LOCAL_TIMEZONE, DB_TIMEZONE ) );
+			$results = $query->fetchAll( \PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get archived outbound records search results: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function globalEmailSearch( $email ) {
 		$results = null;
 
@@ -4047,7 +4120,7 @@ class Leads
 		$idRecord = 0;
 		$rowCount = 0;
 
-		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
+		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,accepted,billable) VALUES(?,?,?,?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
 
 		$sqlSelect = "SELECT a.idRecord,a.idFeedIn,a.idFeedOut,DATE_FORMAT(CONVERT_TZ(a.`timestamp`,?,?),'%Y-%m-%d') AS `timestamp`,di.url,fi.costPerLead,fo.revenuePerLead,fo.costPerLeadOverride ";
 		$sqlSelect .= "FROM archive.data_outbound_201801 AS a ";
@@ -4607,13 +4680,13 @@ class Leads
 		$this->db->beginTransaction();
 
 		try {
-			$query = $this->db->prepare( "SELECT SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp >= ? AND o.timestamp <= ? AND i.url = ?" );
+			$query = $this->db->prepare( "SELECT SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected,SUM(o.isBillable) AS billable FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp >= ? AND o.timestamp <= ? AND i.url = ?" );
 			$query->execute( array( $idFeedOut, $date . ' 00:00:00', $date . ' 23:59:59', $url ) );
 			$records = $query->fetchAll();
 
 			foreach( $records as $record ) {
-				$query = $this->db->prepare( "REPLACE INTO stats_outbound(idFeedOut,url,stamp,accepted,rejected) VALUES(?,?,?,?,?)" );
-				$query->execute( array( $idFeedOut, $url, $date, $record['accepted'], $record['rejected'] ) );
+				$query = $this->db->prepare( "REPLACE INTO stats_outbound(idFeedOut,url,stamp,accepted,rejected,billable) VALUES(?,?,?,?,?,?)" );
+				$query->execute( array( $idFeedOut, $url, $date, $record['accepted'], $record['rejected'], $record['billable'] ) );
 			}
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
