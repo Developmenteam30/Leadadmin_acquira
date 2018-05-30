@@ -383,6 +383,7 @@ include( INCLUDES . "c_header.php" );
 	}
 
 	$feedCategories = array(
+		'ppc' => 'PPC',
 		'phone' => 'Phone',
 		'email' => 'Email',
 	);

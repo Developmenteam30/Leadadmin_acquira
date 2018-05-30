@@ -652,9 +652,12 @@ if( isset( $_REQUEST['d'] ) ) {
 								<input type="radio" name="feedCategory" value="phone"<?php if( 'phone' == $feed_feedCategory ) {
 									print ' checked="checked"';
 								} ?> /> Phone<br/>
+								<input type="radio" name="feedCategory" value="ppc"<?php if( 'ppc' == $feed_feedCategory ) {
+									print ' checked="checked"';
+								} ?> /> PPC<br/>
 								<input type="radio" name="feedCategory" value="both"<?php if( 'both' == $feed_feedCategory ) {
 									print ' checked="checked"';
-								} ?> /> Both
+								} ?> /> All
 							</p>
 						</td>
 					</tr>
