@@ -2502,7 +2502,7 @@ class Leads
 
 		try {
 			if( empty( $error ) ) {
-				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1' );
+				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1' );
 			} else {
 				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
 			}
@@ -2523,7 +2523,7 @@ class Leads
 
 				try {
 					if( empty( $error ) ) {
-						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, costPerLead = ?, revenuePerLead = ?' );
+						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
 					} else {
 						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,rejected,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1, costPerLead = ?, revenuePerLead = ?' );
 					}
@@ -4047,7 +4047,7 @@ class Leads
 		$idRecord = 0;
 		$rowCount = 0;
 
-		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, costPerLead = ?, revenuePerLead = ?' );
+		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,accepted,costPerLead,revenuePerLead) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
 
 		$sqlSelect = "SELECT a.idRecord,a.idFeedIn,a.idFeedOut,DATE_FORMAT(CONVERT_TZ(a.`timestamp`,?,?),'%Y-%m-%d') AS `timestamp`,di.url,fi.costPerLead,fo.revenuePerLead,fo.costPerLeadOverride ";
 		$sqlSelect .= "FROM archive.data_outbound_201801 AS a ";
