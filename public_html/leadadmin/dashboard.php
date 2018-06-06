@@ -335,10 +335,10 @@ include( INCLUDES . "c_header.php" );
 				$totals['prevDay'] += round( $amountYesterday );
 				$totals['today'] += round( $amountToday );
 				$totals['existingAccrual'] += round( $existingRevenueMTD + $newRevenueMTD );
-				$totals['existingExpectation'] += round( $expectationValues->existingBusinessAmount );
+				$totals['existingExpectation'] += round( $expectationValues->existingBusinessAmount ?? 0 );
 				$totals['existingProjected'] += round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange );
 				$totals['newExpectation'] += round( $newRevenueMTD );
-				$totals['newAaccural'] += round( $expectationValues->newBusinessAmount );
+				$totals['newAaccural'] += round( $expectationValues->newBusinessAmount ?? 0 );
 				$totals['grossProfit'] += round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD );
 
 				?>
@@ -348,9 +348,9 @@ include( INCLUDES . "c_header.php" );
 					<td class="text-right">$<?php echo number_format( round( $amountToday ), 0 ); ?></td>
 					<td class="text-right">$<?php echo number_format( round( $existingRevenueMTD + $newRevenueMTD ), 0 ); ?></td>
 					<td class="text-right">$<?php echo number_format( round( $expectationValues->existingBusinessAmount ?? 0 ), 0 ); ?></td>
-					<td class="text-right<?php echo $expectationValues->existingBusinessAmount > ( $projectedRevenueMTD * $diffTotal ) / $diffRange ? ' bg-danger' : ''; ?>">$<?php echo number_format( round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange ), 0 ); ?></td>
+					<td class="text-right<?php echo ( $expectationValues->existingBusinessAmount ?? 0 ) > ( $projectedRevenueMTD * $diffTotal ) / $diffRange ? ' bg-danger' : ''; ?>">$<?php echo number_format( round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange ), 0 ); ?></td>
 					<td class="text-right">$<?php echo number_format( round( $newRevenueMTD ), 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( round( $expectationValues->newBusinessAmount ), 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( round( $expectationValues->newBusinessAmount ?? 0 ), 0 ); ?></td>
 					<td class="text-right">$<?php echo number_format( round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD ), 0 ); ?></td>
 				</tr>
 				<?php
