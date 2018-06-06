@@ -1875,7 +1875,7 @@ class Leads
 			}
 		}
 		if( !empty( $feedCategory ) ) {
-			$sql .= "AND ( f.feedCategory = 'both' OR f.feedCategory = ? ) ";
+			$sql .= "AND f.feedCategory = ? ";
 			$params[] = $feedCategory;
 		}
 		$sql .= "GROUP BY f.idFeedIn ";
@@ -2161,7 +2161,7 @@ class Leads
 			$params[] = $status;
 		}
 		if( !empty( $feedCategory ) ) {
-			$sql .= "AND ( o.feedCategory = 'both' OR o.feedCategory = ? ) ";
+			$sql .= "AND o.feedCategory = ? ";
 			$params[] = $feedCategory;
 		}
 		$sql .= "GROUP BY o.idFeedOut ";
@@ -2431,7 +2431,7 @@ class Leads
 				'idFeedIn' => $idFeedIn,
 				'idFeedOut' => $idFeedOut,
 				'processed' => $processed,
-				//'url' => $urlRewritten ? $this->parseUrl( $url ) : null,
+				'url' => !empty( $url ) ? $this->parseUrl( $url ) : null,
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
@@ -2552,7 +2552,7 @@ class Leads
 				$table = $this->quoteIdentifier( 'data_outbound_' . date( 'Ym' ) );
 				$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
 
-				$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . "(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed) SELECT idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
+				$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . "(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url) SELECT idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
 				$query->execute( array( $row->idRecord, $feedOut->idFeedOut ) );
 				$rows = $query->rowCount();
 
@@ -2572,14 +2572,20 @@ class Leads
 
 	public function toggleBillable( $row, $billable ) {
 
-		if( empty( $row ) ) {
+		if( empty( $row ) || empty( $row->timestampConverted ) ) {
+			return null;
+		}
+
+		$archiveDate = date( 'Ym', strtotime( $row->timestampConverted ) );
+		$statsDate = date( 'Y-m-d', strtotime( $row->timestampConverted ) );
+		if( empty( $archiveDate ) || empty( $statsDate ) ) {
 			return null;
 		}
 
 		$this->db->beginTransaction();
 
 		try {
-			$query = $this->db->prepare( 'UPDATE archive.data_outbound_201805 SET isBillable = ? WHERE idRecord = ? AND idFeedOut = ?' );
+			$query = $this->db->prepare( 'UPDATE archive.' . $this->quoteIdentifier( 'data_outbound_' . $archiveDate ) . ' SET isBillable = ? WHERE idRecord = ? AND idFeedOut = ?' );
 			$query->execute( array( !empty( $billable ) ? 1 : 0, $row->idRecord, $row->idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
@@ -2589,11 +2595,11 @@ class Leads
 
 		try {
 			if( empty( $billable ) ) {
-				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,billable) VALUES(?,?,?,0) ON DUPLICATE KEY UPDATE billable = billable - 1' );
+				$query = $this->db->prepare( 'UPDATE stats_outbound SET billable = billable - 1 WHERE billable >= 1 AND idFeedOut = ? AND url = ? AND stamp = ?' );
 			} else {
-				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,billable) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE billable = billable + 1' );
+				$query = $this->db->prepare( 'UPDATE stats_outbound SET billable = billable + 1 WHERE idFeedOut = ? AND url = ? AND stamp = ?' );
 			}
-			$query->execute( array( $row->idFeedOut, $this->parseUrl( $row->url ), date( 'Y-m-d', strtotime( $row->timestampConverted ) ) ) );
+			$query->execute( array( $row->idFeedOut, $this->parseUrl( !empty( $row->urlOutbound ) ? $row->urlOutbound : $row->url ), $statsDate ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to toggle billable on stats_outbound record: ' . $e->getMessage() );
@@ -2602,11 +2608,11 @@ class Leads
 
 		try {
 			if( empty( $billable ) ) {
-				$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedOut,url,stamp,billable) VALUES(?,?,?,0) ON DUPLICATE KEY UPDATE billable = billable - 1' );
+				$query = $this->db->prepare( 'UPDATE stats_correlated SET billable = billable - 1 WHERE billable >= 1 AND idFeedIn = ? AND idFeedOut = ? AND url = ? AND stamp = ?' );
 			} else {
-				$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedOut,url,stamp,billable) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE billable = billable + 1' );
+				$query = $this->db->prepare( 'UPDATE stats_correlated SET billable = billable + 1 WHERE idFeedIn = ? AND idFeedOut = ? AND url = ? AND stamp = ?' );
 			}
-			$query->execute( array( $row->idFeedOut, $this->parseUrl( $row->url ), date( 'Y-m-d', strtotime( $row->timestampConverted ) ) ) );
+			$query->execute( array( $row->idFeedIn, $row->idFeedOut, $this->parseUrl( !empty( $row->urlOutbound ) ? $row->urlOutbound : $row->url ), $statsDate ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to toggle billable on stats_correlated record: ' . $e->getMessage() );
@@ -3581,24 +3587,45 @@ class Leads
 		return $results;
 	}
 
-	public function archivedOutboundRecordsSearch( $idFeedOut, $dateStart, $dateEnd ) {
+	public function archivedOutboundRecordsSearch( $idFeedOut, $dateStart, $dateEnd, $idRecord = null ) {
 		$results = array();
+		$params = array();
+
+		$archiveDate = date( 'Ym', strtotime( $dateStart ) );
 
 		try {
-			$sql = "SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,o.idFeedOut,o.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip ";
-			$sql .= "FROM archive.data_outbound_201805 o "; // TODO: Fix me
+			$sql = "SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,o.idFeedOut,o.idFeedIn,o.idRecord,o.isBillable,o.url AS urlOutbound,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip ";
+			$params[] = DB_TIMEZONE;
+			$params[] = LOCAL_TIMEZONE;
+			$sql .= "FROM archive." . $this->quoteIdentifier( 'data_outbound_' . $archiveDate ) . " o ";
 			$sql .= "INNER JOIN data_inbound i ON i.idRecord = o.idRecord ";
 			$sql .= "WHERE o.idFeedOut = ? ";
+			$params[] = $idFeedOut;
 			$sql .= "AND o.processed = 1 ";
 			$sql .= "AND o.result IS NULL ";
-			$sql .= "AND o.timestamp >= CONVERT_TZ(?,?,?) ";
-			$sql .= "AND o.timestamp <= CONVERT_TZ(?,?,?) ";
+			if( !empty( $idRecord ) ) {
+				$sql .= "AND o.idRecord = ? ";
+				$params[] = $idRecord;
+			} else {
+				$sql .= "AND o.timestamp >= CONVERT_TZ(?,?,?) ";
+				$params[] = $dateStart;
+				$params[] = LOCAL_TIMEZONE;
+				$params[] = DB_TIMEZONE;
+				$sql .= "AND o.timestamp <= CONVERT_TZ(?,?,?) ";
+				$params[] = $dateEnd;
+				$params[] = LOCAL_TIMEZONE;
+				$params[] = DB_TIMEZONE;
+			}
 			$sql .= "ORDER BY o.timestamp ";
 			//$sql .= "LIMIT " . intval( $offset ) . ",100";
 
 			$query = $this->db->prepare( $sql );
-			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut, $dateStart, LOCAL_TIMEZONE, DB_TIMEZONE, $dateEnd, LOCAL_TIMEZONE, DB_TIMEZONE ) );
-			$results = $query->fetchAll( \PDO::FETCH_OBJ );
+			$query->execute( $params );
+			if( !empty( $idRecord ) ) {
+				$results = $query->fetch( \PDO::FETCH_OBJ );
+			} else {
+				$results = $query->fetchAll( \PDO::FETCH_OBJ );
+			}
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get archived outbound records search results: ' . $e->getMessage() );
 		}
@@ -4117,7 +4144,7 @@ class Leads
 
 	public function backfillStatsCorrelated() {
 
-		$idRecord = 0;
+		$idRecord = 760666734;
 		$rowCount = 0;
 
 		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,accepted,billable) VALUES(?,?,?,?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
@@ -4128,7 +4155,8 @@ class Leads
 		$sqlSelect .= "LEFT JOIN dnrdmktg.feedinc fi ON fi.idFeedIn = a.idFeedIn ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.feedout fo ON fo.idFeedOut = a.idFeedOut ";
 		$sqlSelect .= "WHERE a.idRecord > ? ";
-		$sqlSelect .= "ORDER BY a.idRecord LIMIT 10000";
+		//$sqlSelect .= "WHERE a.timestamp >= CONVERT_TZ('2018-05-29 00:00:00',?,?) AND a.timestamp <= CONVERT_TZ('2018-05-29 23:59:59',?,?) ";
+		//$sqlSelect .= "ORDER BY a.idRecord LIMIT 10000";
 		$query = $this->db->prepare( $sqlSelect );
 		do {
 			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, $idRecord ) );

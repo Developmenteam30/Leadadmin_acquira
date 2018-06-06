@@ -277,4 +277,8 @@ class Display
 		print "</form>\n";
 		print "</div>\n";
 	}
+
+	public static function escHtml( $html, $flags = ENT_HTML5 | ENT_QUOTES ) {
+		return htmlspecialchars( $html, $flags, 'UTF-8' );
+	}
 }

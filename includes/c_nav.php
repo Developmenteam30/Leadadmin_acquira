@@ -22,6 +22,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'Publisher', 'url' => '/leadadmin/ledger.php?type=0', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'Advertiser', 'url' => '/leadadmin/ledger.php?type=1', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+			array( 'name' => '+PPC Billable Leads', 'url' => '/leadadmin/ppc-billable.php', 'level' => LEADS_SESSION_LEVEL_MANAGER ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'Commissions Report', 'url' => '/leadadmin/commissions.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => '+Revenue Expectations', 'url' => '/leadadmin/forecast/expectations.php', 'level' => LEADS_SESSION_LEVEL_MANAGER ),
