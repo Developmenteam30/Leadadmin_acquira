@@ -75,8 +75,8 @@ include(INCLUDES."c_header.php");
 				$info = $leads->getOutboundFeedPopulation( $log->notes );
 				$notes = $log->notes . ': ' . $info->label . ' (' . htmlentities( $info->description ) . ')';
 			} else if( !empty( $log->notes ) && strpos( $log->action, 'FEEDOUT:' ) === 0 ) {
-				$info = $leads->getOutboundFeed( $log->notes );
-				$notes = $log->notes . ': ' . $info->label . ' (' . htmlentities( $info->description ) . ')';
+				$info = $leads->getOutboundFeed( $log->notes ?? '' );
+				$notes = ( $log->notes ?? '' ) . ': ' . ( $info->label ?? '' ) . ' (' . htmlentities( ( $info->description ?? '' ) ) . ')';
 			} else if( !empty( $log->notes ) && strpos( $log->action, 'USERS:' ) === 0 ) {
 				$info = $leads->getUser( $log->notes );
 				if( !empty( $info ) && !empty( $info->username ) ) {
