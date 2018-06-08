@@ -420,7 +420,7 @@ class Leads
 			$sql = "SELECT idUser,fullName,SUM(existingRevenueMTD) AS existingRevenueMTD,SUM(newRevenueMTD) AS newRevenueMTD,SUM(accuralCostMTD) AS accuralCostMTD ";
 			$sql .= "FROM ( ";
 
-			$sql .= "(SELECT u.idUser,u.fullName,0 AS existingRevenueMTD,SUM(sc.revenuePerLead*sc.accepted*0.5) AS newRevenueMTD,SUM(sc.costPerLead*sc.accepted*0.5) AS accuralCostMTD ";
+			$sql .= "(SELECT u.idUser,u.fullName,0 AS existingRevenueMTD,SUM(sc.revenuePerLead*sc.billable*0.5) AS newRevenueMTD,SUM(sc.costPerLead*sc.billable*0.5) AS accuralCostMTD ";
 			$sql .= "FROM stats_correlated AS sc ";
 			$sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
 			$sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
@@ -439,7 +439,7 @@ class Leads
 
 			$sql .= "UNION ALL ";
 
-			$sql .= "(SELECT u.idUser,u.fullName,0 AS existingRevenueMTD,SUM(sc.revenuePerLead*sc.accepted*0.5) AS newRevenueMTD,SUM(sc.costPerLead*sc.accepted*0.5) AS accuralCostMTD ";
+			$sql .= "(SELECT u.idUser,u.fullName,0 AS existingRevenueMTD,SUM(sc.revenuePerLead*sc.billable*0.5) AS newRevenueMTD,SUM(sc.costPerLead*sc.billable*0.5) AS accuralCostMTD ";
 			$sql .= "FROM stats_correlated AS sc ";
 			$sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
 			$sql .= "JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn ";
@@ -459,7 +459,7 @@ class Leads
 
 			$sql .= "UNION ALL ";
 
-			$sql .= "(SELECT u.idUser,u.fullName,SUM(sc.revenuePerLead*sc.accepted*0.5) AS existingRevenueMTD,0 AS newRevenueMTD,SUM(sc.costPerLead*sc.accepted*0.5) AS accuralCostMTD ";
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(sc.revenuePerLead*sc.billable*0.5) AS existingRevenueMTD,0 AS newRevenueMTD,SUM(sc.costPerLead*sc.billable*0.5) AS accuralCostMTD ";
 			$sql .= "FROM stats_correlated AS sc ";
 			$sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
 			$sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
@@ -478,7 +478,7 @@ class Leads
 
 			$sql .= "UNION ALL ";
 
-			$sql .= "(SELECT u.idUser,u.fullName,SUM(sc.revenuePerLead*sc.accepted*0.5) AS existingRevenueMTD,0 AS newRevenueMTD,SUM(sc.costPerLead*sc.accepted*0.5) AS accuralCostMTD ";
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(sc.revenuePerLead*sc.billable*0.5) AS existingRevenueMTD,0 AS newRevenueMTD,SUM(sc.costPerLead*sc.billable*0.5) AS accuralCostMTD ";
 			$sql .= "FROM stats_correlated AS sc ";
 			$sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
 			$sql .= "JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn ";
@@ -492,6 +492,110 @@ class Leads
 			$sql .= "AND c.salesperson IS NOT NULL ";
 			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND c.salesperson = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			// Table: ledger
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(IF(l.commissionRevenue1='existing',l.invoiceAmount,0)*IF(l.userId2 IS NOT NULL,0.5,1)) AS existingRevenueMTD,SUM(IF(l.commissionRevenue1='new',l.invoiceAmount,0)*IF(l.userId2 IS NOT NULL,0.5,1)) AS newRevenueMTD,SUM(l.paymentAmount*IF(l.userId2 IS NOT NULL,0.5,1)) AS accuralCostMTD ";
+			$sql .= "FROM ledger AS l ";
+			$sql .= "LEFT JOIN users u ON u.idUser = l.userId1 ";
+			$sql .= "WHERE l.ledgerMonth BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND l.commissionRevenue1 IS NOT NULL ";
+			$sql .= "AND l.userId1 IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND l.userId1 = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(IF(l.commissionRevenue2='existing',l.invoiceAmount,0)*IF(l.userId1 IS NOT NULL,0.5,1)) AS existingRevenueMTD,SUM(IF(l.commissionRevenue2='new',l.invoiceAmount,0)*IF(l.userId1 IS NOT NULL,0.5,1)) AS newRevenueMTD,SUM(l.paymentAmount*IF(l.userId1 IS NOT NULL,0.5,1)) AS accuralCostMTD ";
+			$sql .= "FROM ledger AS l ";
+			$sql .= "LEFT JOIN users u ON u.idUser = l.userId2 ";
+			$sql .= "WHERE l.ledgerMonth BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND l.commissionRevenue2 IS NOT NULL ";
+			$sql .= "AND l.userId2 IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND l.userId2 = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			// Table: ledger_phones
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(IF(l.commissionRevenue1='existing',l.invoiceAmount,0)*IF(l.userId2 IS NOT NULL,0.5,1)) AS existingRevenueMTD,SUM(IF(l.commissionRevenue1='new',l.invoiceAmount,0)*IF(l.userId2 IS NOT NULL,0.5,1)) AS newRevenueMTD,SUM(lpv.loInvoiceAmount*IF(l.userId2 IS NOT NULL,0.5,1)) AS accuralCostMTD ";
+			$sql .= "FROM ledger_phones AS l ";
+			$sql .= "LEFT JOIN ledger_phones_vendors lpv ON lpv.ledgerId = l.ledgerId ";
+			$sql .= "LEFT JOIN users u ON u.idUser = l.userId1 ";
+			$sql .= "WHERE l.ledgerMonth BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND l.commissionRevenue1 IS NOT NULL ";
+			$sql .= "AND l.userId1 IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND l.userId1 = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(IF(l.commissionRevenue2='existing',l.invoiceAmount,0)*IF(l.userId1 IS NOT NULL,0.5,1)) AS existingRevenueMTD,SUM(IF(l.commissionRevenue2='new',l.invoiceAmount,0)*IF(l.userId1 IS NOT NULL,0.5,1)) AS newRevenueMTD,SUM(lpv.loInvoiceAmount*IF(l.userId1 IS NOT NULL,0.5,1)) AS accuralCostMTD ";
+			$sql .= "FROM ledger_phones AS l ";
+			$sql .= "LEFT JOIN ledger_phones_vendors lpv ON lpv.ledgerId = l.ledgerId ";
+			$sql .= "LEFT JOIN users u ON u.idUser = l.userId2 ";
+			$sql .= "WHERE l.ledgerMonth BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND l.commissionRevenue2 IS NOT NULL ";
+			$sql .= "AND l.userId2 IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND l.userId2 = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			// Table: ledger_offline
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(IF(l.commissionRevenue1='existing',l.invoiceAmount,0)*IF(l.userId2 IS NOT NULL,0.5,1)) AS existingRevenueMTD,SUM(IF(l.commissionRevenue1='new',l.invoiceAmount,0)*IF(l.userId2 IS NOT NULL,0.5,1)) AS newRevenueMTD,SUM(l.loInvoiceAmount*IF(l.userId2 IS NOT NULL,0.5,1)) AS accuralCostMTD ";
+			$sql .= "FROM ledger_offline AS l ";
+			$sql .= "LEFT JOIN users u ON u.idUser = l.userId1 ";
+			$sql .= "WHERE l.ledgerMonth BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND l.commissionRevenue1 IS NOT NULL ";
+			$sql .= "AND l.userId1 IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND l.userId1 = ? ";
+				$params[] = LeadsSession::getUserId();
+			}
+			$sql .= "GROUP BY u.idUser) ";
+
+			$sql .= "UNION ALL ";
+
+			$sql .= "(SELECT u.idUser,u.fullName,SUM(IF(l.commissionRevenue2='existing',l.invoiceAmount,0)*IF(l.userId1 IS NOT NULL,0.5,1)) AS existingRevenueMTD,SUM(IF(l.commissionRevenue2='new',l.invoiceAmount,0)*IF(l.userId1 IS NOT NULL,0.5,1)) AS newRevenueMTD,SUM(l.loInvoiceAmount*IF(l.userId1 IS NOT NULL,0.5,1)) AS accuralCostMTD ";
+			$sql .= "FROM ledger_offline AS l ";
+			$sql .= "LEFT JOIN users u ON u.idUser = l.userId2 ";
+			$sql .= "WHERE l.ledgerMonth BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+			$params[] = $startDate;
+			$params[] = $endDate;
+			$sql .= "AND l.commissionRevenue2 IS NOT NULL ";
+			$sql .= "AND l.userId2 IS NOT NULL ";
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+				$sql .= "AND l.userId2 = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
 			$sql .= "GROUP BY u.idUser) ";
