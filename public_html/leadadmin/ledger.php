@@ -153,11 +153,13 @@ if( isset( $_REQUEST['a'] ) ) {
 					'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
 					'commissionDate1' => !isset( $commissionDate1 ) ? null : $commissionDate1->format( 'Y-m-d' ),
 					'commissionAmount1' => empty( $_REQUEST['commissionAmount1'] ) ? null : $_REQUEST['commissionAmount1'],
+					'commissionRevenue1' => empty( $_REQUEST['commissionRevenue1'] ) ? null : $_REQUEST['commissionRevenue1'],
+					'userId1' => empty( $_REQUEST['userId1'] ) ? null : $_REQUEST['userId1'],
 					'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
 					'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
-					'type' => $type,
-					'userId1' => empty( $_REQUEST['userId1'] ) ? null : $_REQUEST['userId1'],
+					'commissionRevenue2' => empty( $_REQUEST['commissionRevenue2'] ) ? null : $_REQUEST['commissionRevenue2'],
 					'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
+					'type' => $type,
 					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId'] ) ? null : $_REQUEST['vendorCompanyId'],
 				) );
 
@@ -330,9 +332,11 @@ if( isset( $_REQUEST['a'] ) ) {
 					'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
 					'commissionDate1' => !isset( $commissionDate1 ) ? null : $commissionDate1->format( 'Y-m-d' ),
 					'commissionAmount1' => empty( $_REQUEST['commissionAmount1'] ) ? null : $_REQUEST['commissionAmount1'],
+					'commissionRevenue1' => empty( $_REQUEST['commissionRevenue1'] ) ? null : $_REQUEST['commissionRevenue1'],
 					'userId1' => empty( $_REQUEST['userId1'] ) ? null : $_REQUEST['userId1'],
 					'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
 					'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
+					'commissionRevenue2' => empty( $_REQUEST['commissionRevenue2'] ) ? null : $_REQUEST['commissionRevenue2'],
 					'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
 					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId'] ) ? null : $_REQUEST['vendorCompanyId'],
 				) );
@@ -475,6 +479,15 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'currency',
 				),
 				array(
+					'id' => 'commissionRevenue1',
+					'label' => 'Revenue/Profit 1',
+					'type' => 'select',
+					'choices' => array(
+						'existing' => 'Existing revenue/profit',
+						'new' => 'New revenue/profit',
+					),
+				),
+				array(
 					'id' => 'userId2',
 					'label' => 'Salesperson 2',
 					'type' => 'select',
@@ -491,6 +504,15 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionAmount2',
 					'label' => 'Commission Amt 2',
 					'type' => 'currency',
+				),
+				array(
+					'id' => 'commissionRevenue2',
+					'label' => 'Revenue/Profit 2',
+					'type' => 'select',
+					'choices' => array(
+						'existing' => 'Existing revenue/profit',
+						'new' => 'New revenue/profit',
+					),
 				),
 				array(
 					'id' => 'a',
@@ -740,6 +762,17 @@ if( isset( $_REQUEST['d'] ) ) {
 						'readonly' => true,
 					),
 					array(
+						'id' => 'commissionRevenue1',
+						'label' => 'Revenue/Profit 1',
+						'type' => 'select',
+						'choices' => array(
+							'existing' => 'Existing revenue/profit',
+							'new' => 'New revenue/profit',
+						),
+						'value' => $entry->commissionRevenue1,
+						'readonly' => true,
+					),
+					array(
 						'id' => 'userId2',
 						'label' => 'Salesperson 2',
 						'type' => 'select',
@@ -762,7 +795,19 @@ if( isset( $_REQUEST['d'] ) ) {
 						'type' => 'currency',
 						'value' => $entry->commissionAmount2,
 						'readonly' => true,
-					), array(
+					),
+					array(
+						'id' => 'commissionRevenue1',
+						'label' => 'Revenue/Profit 1',
+						'type' => 'select',
+						'choices' => array(
+							'existing' => 'Existing revenue/profit',
+							'new' => 'New revenue/profit',
+						),
+						'value' => $entry->commissionRevenue2,
+						'readonly' => true,
+					),
+					array(
 						'id' => 'a',
 						'type' => 'hidden',
 						'value' => 'deleteLedger',
@@ -891,6 +936,16 @@ if( isset( $_REQUEST['d'] ) ) {
 						'value' => $entry->commissionAmount1,
 					),
 					array(
+						'id' => 'commissionRevenue1',
+						'label' => 'Revenue/Profit 1',
+						'type' => 'select',
+						'choices' => array(
+							'existing' => 'Existing revenue/profit',
+							'new' => 'New revenue/profit',
+						),
+						'value' => $entry->commissionRevenue1,
+					),
+					array(
 						'id' => 'userId2',
 						'label' => 'Salesperson 2',
 						'type' => 'select',
@@ -910,6 +965,16 @@ if( isset( $_REQUEST['d'] ) ) {
 						'label' => 'Commission Amt 2',
 						'type' => 'currency',
 						'value' => $entry->commissionAmount2,
+					),
+					array(
+						'id' => 'commissionRevenue2',
+						'label' => 'Revenue/Profit 2',
+						'type' => 'select',
+						'choices' => array(
+							'existing' => 'Existing revenue/profit',
+							'new' => 'New revenue/profit',
+						),
+						'value' => $entry->commissionRevenue2,
 					),
 					array(
 						'id' => 'a',
