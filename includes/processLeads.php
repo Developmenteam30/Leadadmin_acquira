@@ -68,7 +68,7 @@ class ProcessLeads
 		return '<?xml version="1.0" encoding="utf-8"?>
 <AgentCubedAPI xmlns="http://dataexchange.agentcubed.com">
     <LoginCredentials>
-        <ErrorNotificationEmail>chris@qatalystmedia.com</ErrorNotificationEmail>
+        <ErrorNotificationEmail>chris@qatalystinc.com</ErrorNotificationEmail>
         <Username>' . htmlspecialchars( $requestdata['Username'] ?? '', ENT_XML1, 'UTF-8' ) . '</Username>
         <Password>' . htmlspecialchars( 'healthinsuranceinnovations=#1!', ENT_XML1, 'UTF-8' ) . '</Password>
         <Group_WebLead_ID>' . htmlspecialchars( $requestdata['Group_WebLead_ID'] ?? '', ENT_XML1, 'UTF-8' ) . '</Group_WebLead_ID>
