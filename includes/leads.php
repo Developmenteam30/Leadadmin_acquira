@@ -536,7 +536,11 @@ class Leads
 
 			$sql .= "(SELECT u.idUser,u.fullName,SUM(IF(l.commissionRevenue1='existing',l.invoiceAmount,0)*IF(l.userId2 IS NOT NULL,0.5,1)) AS existingRevenueMTD,SUM(IF(l.commissionRevenue1='new',l.invoiceAmount,0)*IF(l.userId2 IS NOT NULL,0.5,1)) AS newRevenueMTD,SUM(lpv.loInvoiceAmount*IF(l.userId2 IS NOT NULL,0.5,1)) AS accuralCostMTD ";
 			$sql .= "FROM ledger_phones AS l ";
-			$sql .= "LEFT JOIN ledger_phones_vendors lpv ON lpv.ledgerId = l.ledgerId ";
+			$sql .= "LEFT JOIN ( ";
+			$sql .= "    SELECT ledgerId, SUM(loInvoiceAmount) AS loInvoiceAmount ";
+			$sql .= "    FROM ledger_phones_vendors ";
+			$sql .= "    GROUP  BY 1 ";
+			$sql .= ") AS lpv ON lpv.ledgerId = l.ledgerId ";
 			$sql .= "LEFT JOIN users u ON u.idUser = l.userId1 ";
 			$sql .= "WHERE l.ledgerMonth BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
 			$params[] = $startDate;
@@ -553,7 +557,11 @@ class Leads
 
 			$sql .= "(SELECT u.idUser,u.fullName,SUM(IF(l.commissionRevenue2='existing',l.invoiceAmount,0)*IF(l.userId1 IS NOT NULL,0.5,1)) AS existingRevenueMTD,SUM(IF(l.commissionRevenue2='new',l.invoiceAmount,0)*IF(l.userId1 IS NOT NULL,0.5,1)) AS newRevenueMTD,SUM(lpv.loInvoiceAmount*IF(l.userId1 IS NOT NULL,0.5,1)) AS accuralCostMTD ";
 			$sql .= "FROM ledger_phones AS l ";
-			$sql .= "LEFT JOIN ledger_phones_vendors lpv ON lpv.ledgerId = l.ledgerId ";
+			$sql .= "LEFT JOIN ( ";
+			$sql .= "    SELECT ledgerId, SUM(loInvoiceAmount) AS loInvoiceAmount ";
+			$sql .= "    FROM ledger_phones_vendors ";
+			$sql .= "    GROUP  BY 1 ";
+			$sql .= ") AS lpv ON lpv.ledgerId = l.ledgerId ";
 			$sql .= "LEFT JOIN users u ON u.idUser = l.userId2 ";
 			$sql .= "WHERE l.ledgerMonth BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
 			$params[] = $startDate;
