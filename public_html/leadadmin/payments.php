@@ -1,6 +1,6 @@
 <?php
 
-include("../../includes/c_config.php");
+include( "../../includes/c_config.php" );
 
 require_once( INCLUDES . 'session.php' );
 LeadsSession::requireAccess( LEADS_SESSION_LEVEL_ADMIN );
@@ -47,7 +47,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				$c = false;
 			}
 
-			if( $c && !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === FALSE ) {
+			if( $c && !empty( $_REQUEST['paymentAmount'] ) && is_numeric( $_REQUEST['paymentAmount'] ) === false ) {
 				$result['error'] = 'Payment amount must be a numeric value.';
 				$c = false;
 			}
@@ -57,11 +57,16 @@ if( isset( $_REQUEST['a'] ) ) {
 				$c = false;
 			}
 
+			if( $c && empty( $_REQUEST['paymentDate'] ) ) {
+				$result['error'] = 'Payment date cannot be blank.';
+				$c = false;
+			}
+
 			if( $c ) {
 
 				try {
 					$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
-				} catch ( Exception $e ) {
+				} catch( Exception $e ) {
 					$result['error'] = 'Please enter a valid ledger month.';
 					$c = false;
 				}
@@ -99,7 +104,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					$date = date( 'F Y', strtotime( $_REQUEST['ledgerMonth'] . '01' ) );
 					list( $first, $garbage ) = explode( ' ', $company->acct_name, 2 );
 
-					$message  = "Hi, {$first}.\r\n";
+					$message = "Hi, {$first}.\r\n";
 					$message .= "\r\n";
 					if( strpos( $_REQUEST['invoiceNum'], ',' ) ) {
 						$message .= "The invoices below have been paid.\r\n";
@@ -114,6 +119,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						$message .= "Invoice Number: " . $_REQUEST['invoiceNum'] . "\r\n";
 					}
 					$message .= "Amount: \$" . number_format( $_REQUEST['paymentAmount'], 2 ) . "\r\n";
+					$message .= "Payment Date: " . date( 'n/j/Y', strtotime( $_REQUEST['paymentDate'] ) ) . "\r\n";
 					$message .= "Payment Method: " . $_REQUEST['paymentMethod'] . "\r\n";
 					$message .= "\r\n";
 					$message .= "\r\n";
@@ -134,26 +140,26 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			}
 
-			if($c){
+			if( $c ) {
 				$result['status'] = 1;
 				$result['error'] = 'Successfully sent payment email.';
 			}
-		break;
+			break;
 	}
 
-	echo json_encode($result);
+	echo json_encode( $result );
 	exit;
 }
 
-if(isset($_REQUEST['d'])){
-	switch($_REQUEST['d']){
+if( isset( $_REQUEST['d'] ) ) {
+	switch( $_REQUEST['d'] ) {
 		case 'errorCount':
 			Display::errorCount();
-		break;
+			break;
 
 		case 'errorList':
 			Display::errorList();
-		break;
+			break;
 
 		case 'dialog_email':
 
@@ -172,9 +178,11 @@ if(isset($_REQUEST['d'])){
 								'invoiceNum' => $entry->invoiceNumber,
 								'paymentAmount' => isset( $revenue[0]['partner'] ) ? $revenue[0]['partner'] : 0.00,
 								'paymentMethod' => 'ACH',
+								'paymentDate' => $entry->paymentDate,
 								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
 								'companyId' => $entry->idCompany,
-								'userId' => $entry->userId,
+								'userId1' => $entry->userId1,
+								'userId2' => $entry->userId2,
 							);
 						}
 					} else if( '4' === $divisionId ) {
@@ -185,9 +193,11 @@ if(isset($_REQUEST['d'])){
 								'invoiceNum' => $entry->loInvoiceNum,
 								'paymentAmount' => $entry->loPaymentAmount,
 								'paymentMethod' => $entry->loPaymentMethod,
+								'paymentDate' => $entry->loPaymentDate,
 								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
 								'companyId' => $entry->vendorCompanyId,
-								'userId' => $entry->userId,
+								'userId1' => $entry->userId1,
+								'userId2' => $entry->userId2,
 							);
 						}
 					} else if( 'L' === $divisionId ) {
@@ -199,9 +209,11 @@ if(isset($_REQUEST['d'])){
 								'invoiceNum' => $entry->loInvoiceNum,
 								'paymentAmount' => $entry->loPaymentAmount,
 								'paymentMethod' => $entry->loPaymentMethod,
+								'paymentDate' => $entry->loPaymentDate,
 								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
 								'companyId' => $entry->vendorCompanyId,
-								'userId' => $entry->userId,
+								'userId1' => $entry->userId1,
+								'userId2' => $entry->userId2,
 							);
 						}
 					} else {
@@ -212,9 +224,11 @@ if(isset($_REQUEST['d'])){
 								'invoiceNum' => $entry->invoiceNum,
 								'paymentAmount' => $entry->paymentAmount,
 								'paymentMethod' => $entry->paymentMethod,
+								'paymentDate' => $entry->paymentDate,
 								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
 								'companyId' => $entry->companyId,
-								'userId' => $entry->userId,
+								'userId1' => $entry->userId1,
+								'userId2' => $entry->userId2,
 							);
 						}
 					}
@@ -231,6 +245,7 @@ if(isset($_REQUEST['d'])){
 			$mixedCompanies = false;
 			$invoiceNumbers = '';
 			$paymentMethod = '';
+			$paymentDate = '';
 			$ledgerMonth = '';
 			$paymentAmount = 0.00;
 			$commissionBCCs = array();
@@ -255,9 +270,18 @@ if(isset($_REQUEST['d'])){
 					$paymentMethod = $entry['paymentMethod'];
 				}
 
+				if( empty( $paymentDate ) ) {
+					$paymentDate = $entry['paymentDate'];
+				}
+
 				$paymentAmount += floatval( $entry['paymentAmount'] );
 
-				$commissionBCCs[$entry['userId']] = true;
+				if( !empty( $entry['userId1'] ) ) {
+					$commissionBCCs[$entry['userId1']] = true;
+				}
+				if( !empty( $entry['userId2'] ) ) {
+					$commissionBCCs[$entry['userId2']] = true;
+				}
 			}
 
 			if( $mixedCompanies ) {
@@ -324,76 +348,83 @@ if(isset($_REQUEST['d'])){
 					'required' => true,
 					'value' => !empty( $paymentAmount ) ? number_format( $paymentAmount, 2, '.', '' ) : '',
 				),
+				array(
+					'id' => 'paymentDate',
+					'label' => 'Payment Date',
+					'type' => 'text',
+					'value' => $paymentDate,
+					'required' => true,
+				),
 			);
 
 			Display::displayForm( 'email_form', $fields );
 
-?>
+			?>
 
-<script type="text/javascript">
-$('#email_form input[name=paymentDate]').datepicker({
-		// Consistent format with the HTML5 picker
-		dateFormat: 'yy-mm-dd'
-});
-
-$("#email_form select[name='divisionId']").select2({
-		placeholder: "Select a division",
-		allowClear: true
-});
-
-$("#email_form select[name='companyId']").select2({
-		placeholder: "Select a company",
-		allowClear: true
-});
-
-$("#email_form select[name='divisionId']").change( function() {
-	$.ajax({
-		type: "post",
-		url: "ledger.php",
-		data: {
-			a: 'getDivisionCompanies',
-			divisionId: $("#email_form select[name='divisionId']").val()
-		},
-		dataType: "json",
-		success: function(data) {
-			var companyId = $("#email_form select[name='companyId']")
-			if( companyId ) {
-				companyId.empty();
-				companyId.append('<option></option>');
-				$.each( data, function(i, obj) {
-					companyId.append('<option value="' + obj.companyId + '">' + obj.name + '</option>');
+			<script type="text/javascript">
+				$('#email_form input[name=paymentDate]').datepicker({
+					// Consistent format with the HTML5 picker
+					dateFormat: 'yy-mm-dd'
 				});
-				companyId.select2({
+
+				$("#email_form select[name='divisionId']").select2({
+					placeholder: "Select a division",
+					allowClear: true
+				});
+
+				$("#email_form select[name='companyId']").select2({
 					placeholder: "Select a company",
 					allowClear: true
 				});
-			}
-		}
-	}); //close $.ajax()
-});
 
-</script>
+				$("#email_form select[name='divisionId']").change(function () {
+					$.ajax({
+						type: "post",
+						url: "ledger.php",
+						data: {
+							a: 'getDivisionCompanies',
+							divisionId: $("#email_form select[name='divisionId']").val()
+						},
+						dataType: "json",
+						success: function (data) {
+							var companyId = $("#email_form select[name='companyId']")
+							if (companyId) {
+								companyId.empty();
+								companyId.append('<option></option>');
+								$.each(data, function (i, obj) {
+									companyId.append('<option value="' + obj.companyId + '">' + obj.name + '</option>');
+								});
+								companyId.select2({
+									placeholder: "Select a company",
+									allowClear: true
+								});
+							}
+						}
+					}); //close $.ajax()
+				});
 
-<?php
-		break;
+			</script>
+
+			<?php
+			break;
 	}
 	exit;
 }
 
 $title = 'Payments Report';
-include(INCLUDES."c_header.php");
+include( INCLUDES . "c_header.php" );
 ?>
 <body>
 
-<?php include(INCLUDES.'c_nav.php'); ?>
+<?php include( INCLUDES . 'c_nav.php' ); ?>
 
 <div class="container-fluid">
 
-<button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#sendEmail">Send Email</button>
-<h2>Payment Ledger</h2>
-<input class="email-payment" type="hidden" name="d" value="dialog_email" />
+	<button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#sendEmail">Send Email</button>
+	<h2>Payment Ledger</h2>
+	<input class="email-payment" type="hidden" name="d" value="dialog_email"/>
 
-<?php
+	<?php
 	$monthIn = !empty( $_REQUEST['month'] ) ? $_REQUEST['month'] : null;
 	$monthSelected = null;
 	$months = $leads->getPaidLedger( 0, null, 'LEFT(ledgerMonth,7)' );
@@ -469,9 +500,9 @@ include(INCLUDES."c_header.php");
 		}
 
 		if( empty( $entries ) ) {
-?>
-<p>No ledger entries exist in the database.</p>
-<?php
+			?>
+			<p>No ledger entries exist in the database.</p>
+			<?php
 		} else {
 			$months = array();
 			foreach( $entries as $entry ) {
@@ -481,66 +512,68 @@ include(INCLUDES."c_header.php");
 			ksort( $months );
 
 			foreach( $months as $month => $val ) {
-?>
-<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
-<table class="table table-bordered table-condensed table-striped" id="payment_ledger_<?php echo $month; ?>">
-	<thead>
-		<tr class="bgGray header">
-			<th>Entry #</th>
-			<th>Division</th>
-			<th>Company</th>
-			<th>Invoice #</th>
-			<th>Salesperson</th>
-			<th>Payment Date</th>
-			<th>Payment Method</th>
-			<th>Payment Amount</th>
-			<th>Email</th>
-		</tr>
-	</thead>
-	<tbody>
-<?php
-				$paymentTotal = 0;
-				foreach( $entries as $entry ) {
-					if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
-						$paymentTotal += $entry->paymentAmount;
-?>
-		<tr>
-			<td><?php echo htmlentities( $entry->entryId ); ?></td>
-			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
-			<td><?php echo htmlentities( $entry->companyName ); ?></td>
-			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-			<td><?php echo $entry->fullName1; ?>&nbsp;<br/><?php echo $entry->fullName2; ?>&nbsp;</td>
-			<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
-			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-			<td class="text-center">
-<?php if( 'email' === $entry->source ) { ?>
-				<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'E|' . $entry->ledgerId . '|' . $entry->companyId; ?>" />
-<?php } else if( 'ledger_phones' === $entry->source ) { ?>
-				<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'L|' . $entry->ledgerId . '|' . $entry->indexId; ?>" />
-<?php } else { ?>
-				<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>" />
-<?php } ?>
-			</td>
-		</tr>
-<?php
+				?>
+				<h4><?php echo date( 'F Y', strtotime( $month . '-01' ) ); ?></h4>
+				<table class="table table-bordered table-condensed table-striped" id="payment_ledger_<?php echo $month; ?>">
+					<thead>
+					<tr class="bgGray header">
+						<th>Entry #</th>
+						<th>Division</th>
+						<th>Company</th>
+						<th>Invoice #</th>
+						<th>Salesperson</th>
+						<th>Payment Date</th>
+						<th>Payment Method</th>
+						<th>Payment Amount</th>
+						<th>Email</th>
+					</tr>
+					</thead>
+					<tbody>
+					<?php
+					$paymentTotal = 0;
+					foreach( $entries as $entry ) {
+						if( substr( $entry->ledgerMonth, 0, 7 ) == $month ) {
+							$paymentTotal += $entry->paymentAmount;
+							?>
+							<tr>
+								<td><?php echo htmlentities( $entry->entryId ); ?></td>
+								<td><?php echo htmlentities( $entry->divisionName ); ?></td>
+								<td><?php echo htmlentities( $entry->companyName ); ?></td>
+								<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+								<td><?php echo $entry->fullName1; ?>&nbsp;<br/><?php echo $entry->fullName2; ?>&nbsp;</td>
+								<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
+								<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
+								<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+								<td class="text-center">
+									<?php if( 'email' === $entry->source ) { ?>
+										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'E|' . $entry->ledgerId . '|' . $entry->companyId; ?>"/>
+									<?php } else if( 'ledger_phones' === $entry->source ) { ?>
+										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'L|' . $entry->ledgerId . '|' . $entry->indexId; ?>"/>
+									<?php } else { ?>
+										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>"/>
+									<?php } ?>
+								</td>
+							</tr>
+							<?php
+						}
 					}
-				}
-?>
-	</tbody>
-	<tfoot>
-		<tr>
-			<td colspan="7">Monthly Total</td>
-			<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
-			<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#sendEmail">Send Email</button></td>
-		</tr>
-	</tfoot>
-</table>
-<?php
+					?>
+					</tbody>
+					<tfoot>
+					<tr>
+						<td colspan="7">Monthly Total</td>
+						<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
+						<td class="text-center">
+							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#sendEmail">Send Email</button>
+						</td>
+					</tr>
+					</tfoot>
+				</table>
+				<?php
 			}
 		}
 	}
-?>
+	?>
 
 </div>
 
@@ -549,7 +582,7 @@ include(INCLUDES."c_header.php");
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="sendEmail_title">Send a payment email</h4>
+				<h4 class="modal-title" id="sendEmail_title">Send a payment email</h4>
 			</div>
 			<div class="modal-body">
 			</div>
@@ -562,73 +595,73 @@ include(INCLUDES."c_header.php");
 </div>
 
 <script type="text/javascript">
-$('.form-inline select').change(function() {
-	$('.form-inline').submit();
-});
-$( "table" ).each(function( index ) {
-	var tf = new TableFilter($(this).attr('id'), {
-		base_path: '/leadadmin/libraries/tablefilter/',
-		state: {
-			types: ['local_storage'],
-			sort: true,
-			filters: false,
-			page_number: false,
-			page_length: false,
-			columns_visibility: false,
-			filters_visibility: false
-		},
-		grid: false,
-		filters_row_index: 1,
-		extensions: [{
-			name: 'sort',
-			types: [
-				'string',
-				'string',
-				'string',
-				'string',
-				'string',
-				'date',
-				'string',
-				'formatted-number',
-				'none'
-			],
-			image_asc_class_name: 'custom-ascending',
-			image_desc_class_name: 'custom-descending'
-		}],
-		sort: true
+	$('.form-inline select').change(function () {
+		$('.form-inline').submit();
 	});
-	tf.init();
-});
-
-$('#modal-send-email').click( function(event) {
-	event.preventDefault();
-
-	var response = $.ajax({
-		url: "payments.php",
-		type: "POST",
-		async: true,
-		data: $("#email_form").serialize()
-	}).done(function(result){
-		alert(result.error);
-		if(result.status == 1){
-			window.location.reload(true);
-		}
+	$("table").each(function (index) {
+		var tf = new TableFilter($(this).attr('id'), {
+			base_path: '/leadadmin/libraries/tablefilter/',
+			state: {
+				types: ['local_storage'],
+				sort: true,
+				filters: false,
+				page_number: false,
+				page_length: false,
+				columns_visibility: false,
+				filters_visibility: false
+			},
+			grid: false,
+			filters_row_index: 1,
+			extensions: [{
+				name: 'sort',
+				types: [
+					'string',
+					'string',
+					'string',
+					'string',
+					'string',
+					'date',
+					'string',
+					'formatted-number',
+					'none'
+				],
+				image_asc_class_name: 'custom-ascending',
+				image_desc_class_name: 'custom-descending'
+			}],
+			sort: true
+		});
+		tf.init();
 	});
-});
 
-$('#sendEmail').on('show.bs.modal', function(e) {
-	var modal = $(this);
+	$('#modal-send-email').click(function (event) {
+		event.preventDefault();
 
-	$.ajax({
-		cache: false,
-		type: 'POST',
-		url: 'payments.php',
-		data: $(".email-payment").serialize(),
-		success: function(data) {
-			modal.find('.modal-body').html(data);
-		}
+		var response = $.ajax({
+			url: "payments.php",
+			type: "POST",
+			async: true,
+			data: $("#email_form").serialize()
+		}).done(function (result) {
+			alert(result.error);
+			if (result.status == 1) {
+				window.location.reload(true);
+			}
+		});
 	});
-});
+
+	$('#sendEmail').on('show.bs.modal', function (e) {
+		var modal = $(this);
+
+		$.ajax({
+			cache: false,
+			type: 'POST',
+			url: 'payments.php',
+			data: $(".email-payment").serialize(),
+			success: function (data) {
+				modal.find('.modal-body').html(data);
+			}
+		});
+	});
 </script>
 
 </body>
