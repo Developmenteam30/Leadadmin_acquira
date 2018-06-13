@@ -415,15 +415,15 @@ if( myTable ) {
 		extensions: [{
 			name: 'sort',
 			types: [
-				'String',
-				'String',
-				'String',
-				'String',
-				'String',
-				'date',
-				'date',
-				'formatted-number',
-				'formatted-number'
+				'caseinsensitivestring', // Incoming Company
+				'caseinsensitivestring', // Incoming Feed
+				'caseinsensitivestring', // Incoming URL
+				'caseinsensitivestring', // Outgoing Company
+				'caseinsensitivestring', // Outgoing Feed
+				'date', // First Out
+				'date', // Last Out
+				'formatted-number', // Gross
+				'formatted-number' // Partner
 			],
 		}],
 		sort: true

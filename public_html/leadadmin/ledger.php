@@ -1256,17 +1256,17 @@ include( INCLUDES . "c_header.php" );
 			grid: false,
 			filters_row_index: 1,
 			col_types: [
-				'number',
-				'caseinsensitivestring',
-				'caseinsensitivestring',
-				{type: 'formatted-number', decimal: '.', thousands: ','},
-				'caseinsensitivestring',
-				{type: 'date', locale: 'en-US'},
-				'caseinsensitivestring',
-				{type: 'formatted-number', decimal: '.', thousands: ','},
-				'caseinsensitivestring',
-				'caseinsensitivestring',
-				{type: 'formatted-number', decimal: '.', thousands: ','}
+				'number', // Entry #
+				'caseinsensitivestring', // Company Name
+				'caseinsensitivestring', // Vertical
+				{type: 'formatted-number', decimal: '.', thousands: ','}, // Invoice Amount
+				'caseinsensitivestring', // Invoice #
+				{type: 'date', locale: 'en-US'}, // Date Paid
+				'caseinsensitivestring', // Vendor
+				{type: 'formatted-number', decimal: '.', thousands: ','}, // Payment Amount
+				'caseinsensitivestring', // Method
+				'caseinsensitivestring', // Salesperson
+				{type: 'formatted-number', decimal: '.', thousands: ','} // Commissions
 			],
 			extensions: [{
 				name: 'sort',

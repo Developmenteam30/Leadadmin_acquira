@@ -615,15 +615,15 @@ include( INCLUDES . "c_header.php" );
 			extensions: [{
 				name: 'sort',
 				types: [
-					'string',
-					'string',
-					'string',
-					'string',
-					'string',
-					'date',
-					'string',
-					'formatted-number',
-					'none'
+					'caseinsensitivestring', // Entry #
+					'caseinsensitivestring', // Division
+					'caseinsensitivestring', // Company
+					'caseinsensitivestring', // Invoice #
+					'caseinsensitivestring', // Salesperson
+					'date', // Payment Date
+					'caseinsensitivestring', // Payment Method
+					'formatted-number', // Payment Amount
+					'none' // Email
 				],
 				image_asc_class_name: 'custom-ascending',
 				image_desc_class_name: 'custom-descending'

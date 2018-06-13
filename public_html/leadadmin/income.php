@@ -212,16 +212,16 @@ $( "table" ).each(function( index ) {
 		extensions: [{
 			name: 'sort',
 			types: [
-				'String',
-				'date',
-				'String',
-				'String',
-				'String',
-				'String',
-				'formatted-number',
-				'date',
-				'String',
-				'formatted-number'
+				'caseinsensitivestring', // Entry #
+				'date', // Payment Date
+				'caseinsensitivestring', // Division
+				'caseinsensitivestring', // Company
+				'caseinsensitivestring', // Invoice #
+				'caseinsensitivestring', // Salesperson
+				'formatted-number', // Commissions
+				'date', // Commission Date
+				'caseinsensitivestring', // Payment Method
+				'formatted-number' // Payment Amount
 			],
 			image_asc_class_name: 'custom-ascending',
 			image_desc_class_name: 'custom-descending'

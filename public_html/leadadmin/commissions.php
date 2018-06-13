@@ -270,13 +270,14 @@ include( INCLUDES . "c_header.php" );
 			extensions: [{
 				name: 'sort',
 				types: [
-					'number',
-					'string',
-					'string',
-					'date',
-					'string',
-					'formatted-number',
-					'formatted-number'
+					'number', // ID #
+					'caseinsensitivestring', // Division
+					'caseinsensitivestring', // Company
+					'date', // Ledger Month
+					'caseinsensitivestring', // Invoice #
+					'formatted-number', // Payment Amount
+					'date', // Payment Date
+					'formatted-number' // Commission
 				],
 				image_asc_class_name: 'custom-ascending',
 				image_desc_class_name: 'custom-descending'
