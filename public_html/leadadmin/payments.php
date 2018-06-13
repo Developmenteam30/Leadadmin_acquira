@@ -420,7 +420,7 @@ include( INCLUDES . "c_header.php" );
 
 <div class="container-fluid">
 
-	<button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#sendEmail">Send Email</button>
+	<button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-backdrop="static" data-target="#sendEmail">Send Email</button>
 	<h2>Payment Ledger</h2>
 	<input class="email-payment" type="hidden" name="d" value="dialog_email"/>
 
@@ -564,7 +564,7 @@ include( INCLUDES . "c_header.php" );
 						<td colspan="7">Monthly Total</td>
 						<td>$<?php echo number_format( $paymentTotal, 2 ); ?></td>
 						<td class="text-center">
-							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#sendEmail">Send Email</button>
+							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#sendEmail">Send Email</button>
 						</td>
 					</tr>
 					</tfoot>

@@ -1194,7 +1194,7 @@ include( INCLUDES . "c_header.php" );
 
 	<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
         <p>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new entry</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#genericledger">Add a new entry</button>
         </p>
 	<?php } ?>
 
@@ -1349,13 +1349,13 @@ include( INCLUDES . "c_header.php" );
 								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
                                     <td class="text-center" rowspan="2" style="vertical-align: middle;">
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editphoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
+                                            <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editphoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
                                             <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu">
-                                                <li><a href="#" data-toggle="modal" data-target="#deletephoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
+                                                <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#deletephoneledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
                                             </ul>
                                         </div>
                                     </td>

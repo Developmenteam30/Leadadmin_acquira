@@ -1276,7 +1276,7 @@ include( INCLUDES . "c_header.php" );
 
 	<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
 		<p>
-			<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#genericledger">Add a new
+			<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#genericledger">Add a new
 				entry
 			</button>
 		</p>
@@ -1444,7 +1444,7 @@ include( INCLUDES . "c_header.php" );
 								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
 									<td class="text-center" rowspan="2" style="vertical-align: middle;">
 										<div class="btn-group">
-											<button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+											<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static"
 											        data-target="#editofflineledger"
 											        data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit
 											</button>
@@ -1454,7 +1454,7 @@ include( INCLUDES . "c_header.php" );
 												<span class="sr-only">Toggle Dropdown</span>
 											</button>
 											<ul class="dropdown-menu">
-												<li><a href="#" data-toggle="modal" data-target="#deleteofflineledger"
+												<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#deleteofflineledger"
 												       data-ledger-id="<?php echo $entry->ledgerId; ?>">Delete</a></li>
 											</ul>
 										</div>

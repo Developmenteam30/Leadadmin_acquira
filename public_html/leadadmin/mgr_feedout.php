@@ -2122,7 +2122,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			</p>
 
 			<p>
-				<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal-newpop" data-dismiss="modal" data-feed-id="<?php echo $feed->idFeedOut; ?>">Add a new population parameter</button>
+				<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#modal-newpop" data-dismiss="modal" data-feed-id="<?php echo $feed->idFeedOut; ?>">Add a new population parameter</button>
 			</p>
 			<?php
 			if( $populationSettings === false ) {
@@ -2277,7 +2277,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								<p><?php echo $forceUrlList; ?></p>
 							</td>
 							<td valign='top' class="text-center">
-								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#modal-editpop" data-feed-id="<?php echo $feed->idFeedOut; ?>" data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Edit</button>
+								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#modal-editpop" data-feed-id="<?php echo $feed->idFeedOut; ?>" data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Edit</button>
 							</td>
 						</tr>
 						<?php
@@ -2354,7 +2354,7 @@ include( INCLUDES . "c_header.php" );
 		</form>
 
 		<p>
-			<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newfeed" data-feed-id="">Add a new feed</button>
+			<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newfeed" data-feed-id="">Add a new feed</button>
 		</p>
 
 	<?php } ?>
@@ -2478,19 +2478,19 @@ include( INCLUDES . "c_header.php" );
 						<td class="text-right"><?php echo $feed->queued; ?></td>
 						<td class="text-center">
 							<div class="btn-group">
-								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editfeed" data-mode="edit" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Edit Feed</button>
+								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editfeed" data-mode="edit" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Edit Feed</button>
 								<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 									<span class="caret"></span>
 									<span class="sr-only">Toggle Dropdown</span>
 								</button>
 								<ul class="dropdown-menu">
-									<li><a href="#" data-toggle="modal" data-target="#modal-showpop" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Show populations</a></li>
-									<li><a href="#" data-toggle="modal" data-target="#newfeed" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Duplicate feed</a></li>
-									<li><a href="#" data-toggle="modal" data-target="#modal-testrecord" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Send test record</a></li>
-									<li><a href="#" data-toggle="modal" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
-									<li><a href="#" data-toggle="modal" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
-									<li><a href="#" data-toggle="modal" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
-									<li><a href="#" data-toggle="modal" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Retry rejections</a></li>
+									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-showpop" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Show populations</a></li>
+									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#newfeed" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Duplicate feed</a></li>
+									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-testrecord" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Send test record</a></li>
+									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
+									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
+									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
+									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Retry rejections</a></li>
 								</ul>
 							</div>
 						</td>

@@ -633,7 +633,7 @@ include( INCLUDES . "c_header.php" );
 	</form>
 
 	<p>
-		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newprospect">Add a new prospect</button>
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newprospect">Add a new prospect</button>
 	</p>
 
 	<?php
@@ -706,13 +706,13 @@ include( INCLUDES . "c_header.php" );
 					<td class="hidden-md hidden-sm hidden-xs" data-tf-sortKey="<?php echo htmlentities( $prospect->timestamp ); ?>"><?php echo !empty( $prospect->timestamp ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->timestamp ) ) : ''; ?></td>
 					<td class="text-center" style="min-width:75px;">
 						<div class="btn-group">
-							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
+							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
 							<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 								<span class="caret"></span>
 								<span class="sr-only">Toggle Dropdown</span>
 							</button>
 							<ul class="dropdown-menu">
-								<li><a href="#" data-toggle="modal" data-target="#prospectnotes" data-prospect-id="<?php echo $prospect->prospectId; ?>">Notes</a></li>
+								<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#prospectnotes" data-prospect-id="<?php echo $prospect->prospectId; ?>">Notes</a></li>
 							</ul>
 						</div>
 					</td>

@@ -199,7 +199,7 @@ include(INCLUDES."c_header.php");
 
 <h2>Vertical Management</h2>
 
-<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newvertical">Add a new vertical</button></p>
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newvertical">Add a new vertical</button></p>
 
 <?php
 	if( empty( $divisions ) ) {
@@ -230,7 +230,7 @@ include(INCLUDES."c_header.php");
 ?>
 		<tr>
 			<td><?php echo htmlentities( $val ); ?></td>
-			<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editvertical" data-vertical-id="<?php echo intval( $key ); ?>">Edit</button></td>
+			<td class="text-center"><button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editvertical" data-vertical-id="<?php echo intval( $key ); ?>">Edit</button></td>
 		</tr>
 <?php
 		}

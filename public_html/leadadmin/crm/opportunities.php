@@ -547,7 +547,7 @@ include(INCLUDES."c_header.php");
 </select>
 </form>
 
-<p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newopportunity">Add a new opportunity</button></p>
+<p><button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newopportunity">Add a new opportunity</button></p>
 
 <?php
 	$opportunities = $leads->getOpportunities( $status );
@@ -605,13 +605,13 @@ include(INCLUDES."c_header.php");
 			<td>$<?php echo number_format( ( $opportunity->goalQty * $opportunity->revenue ) - ( $opportunity->goalQty * $opportunity->expense ), 2 ); ?></td>
 			<td class="text-center">
 <div class="btn-group">
-	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editopportunity" data-opportunity-id="<?php echo $opportunity->opportunityId; ?>">Edit</button>
+	<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editopportunity" data-opportunity-id="<?php echo $opportunity->opportunityId; ?>">Edit</button>
 	<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 		<span class="caret"></span>
 		<span class="sr-only">Toggle Dropdown</span>
 	</button>
 	<ul class="dropdown-menu">
-		<li><a href="#" data-toggle="modal" data-target="#opportunitynotes" data-opportunity-id="<?php echo $opportunity->opportunityId; ?>">Notes</a></li>
+		<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#opportunitynotes" data-opportunity-id="<?php echo $opportunity->opportunityId; ?>">Notes</a></li>
 	</ul>
 </div></td>
 		</tr>

@@ -302,7 +302,7 @@ include( INCLUDES . "c_header.php" );
 	<h2>User Management</h2>
 
 	<p>
-		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newuser">Add a new user</button>
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newuser">Add a new user</button>
 	</p>
 
 	<?php
@@ -356,7 +356,7 @@ include( INCLUDES . "c_header.php" );
 				<td><?php echo $level; ?></td>
 				<td><?php echo $user->idCompany; ?></td>
 				<td class="text-center">
-					<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#edituser" data-user-id="<?php echo $user->idUser; ?>">Edit</button>
+					<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#edituser" data-user-id="<?php echo $user->idUser; ?>">Edit</button>
 				</td>
 			</tr>
 			<?php

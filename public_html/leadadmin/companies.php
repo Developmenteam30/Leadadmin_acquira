@@ -931,7 +931,7 @@ include( INCLUDES . "c_header.php" );
 	</form>
 
 	<p>
-		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newcompany">Add a new company</button>
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newcompany">Add a new company</button>
 	</p>
 
 	<?php
@@ -961,7 +961,7 @@ include( INCLUDES . "c_header.php" );
 					<td><?php echo htmlentities( $company->name ); ?></td>
 					<td class="hidden-xs"><?php echo htmlentities( $company->note ); ?></td>
 					<td class="text-center">
-						<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-target="#editcompany" data-company-id="<?php echo $company->idCompany; ?>">Edit</button>
+						<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editcompany" data-company-id="<?php echo $company->idCompany; ?>">Edit</button>
 					</td>
 				</tr>
 				<?php

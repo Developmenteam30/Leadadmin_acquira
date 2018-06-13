@@ -459,7 +459,7 @@ include( INCLUDES . "c_header.php" );
 							<tr class="clickable striped-master" onclick="toggleHidden('incoming_companyFeedList_<?php echo $categoryKey; ?>', {'sub':<?php echo $idCompany; ?>});">
 								<td class=" dashboard-incoming-col-large"><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
 								<td class="text-center dashboard-incoming-col-small">
-									<button type="button" class="btn <?php echo ( empty( $feed->lastDate ) || strtotime( $feed->lastDate ) < strtotime( '1 month ago' ) ) ? 'btn-danger' : 'btn-primary'; ?> btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button>
+									<button type="button" class="btn <?php echo ( empty( $feed->lastDate ) || strtotime( $feed->lastDate ) < strtotime( '1 month ago' ) ) ? 'btn-danger' : 'btn-primary'; ?> btn-xs" data-toggle="modal" data-backdrop="static" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button>
 								</td>
 								<td class="text-right dashboard-incoming-col-small"><?php echo number_format( $totalAccepted, 0 ); ?></td>
 								<td class="text-right dashboard-incoming-col-small"><?php echo number_format( $totalRejected, 0 ); ?></td>
@@ -580,7 +580,7 @@ include( INCLUDES . "c_header.php" );
 							<tr class="clickable striped-master" onclick="toggleHidden('outgoing_companyFeedList_<?php echo $categoryKey; ?>', {'sub':<?php echo $idCompany; ?>});">
 								<td class="dashboard-outgoing-col-large"><?php echo $feed->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
 								<td class="text-center dashboard-outgoing-col-small">
-									<button type="button" class="btn <?php echo ( empty( $feed->lastDate ) || strtotime( $feed->lastDate ) < strtotime( '1 month ago' ) ) ? 'btn-danger' : 'btn-primary'; ?> btn-xs" data-toggle="modal" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button>
+									<button type="button" class="btn <?php echo ( empty( $feed->lastDate ) || strtotime( $feed->lastDate ) < strtotime( '1 month ago' ) ) ? 'btn-danger' : 'btn-primary'; ?> btn-xs" data-toggle="modal" data-backdrop="static" data-target="#companynotes" data-company-id="<?php echo $idCompany; ?>"><?php echo !empty( $feed->lastDate ) ? date( 'Y-m-d', strtotime( $feed->lastDate ) ) : 'None'; ?></button>
 								</td>
 								<td class="text-right dashboard-outgoing-col-small"><?php echo number_format( $totalAccepted, 0 ); ?></td>
 								<td class="text-right dashboard-outgoing-col-small"><?php echo number_format( $totalRejected, 0 ); ?></td>

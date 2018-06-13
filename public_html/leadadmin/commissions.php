@@ -199,19 +199,19 @@ include( INCLUDES . "c_header.php" );
 										<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
                                             <td class="text-center"><?php if( 'ledger_offline' === $entry->source ) { ?>
                                                     <button type="button" class="btn btn-primary btn-xs"
-                                                            data-toggle="modal" data-target="#editofflineledger"
+                                                            data-toggle="modal" data-backdrop="static" data-target="#editofflineledger"
                                                             data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit
                                                     </button>
 												<?php } else if( 'ledger_phones' === $entry->source ) { ?>
                                                     <button type="button" class="btn btn-primary btn-xs"
-                                                            data-toggle="modal" data-target="#editphoneledger"
+                                                            data-toggle="modal" data-backdrop="static" data-target="#editphoneledger"
                                                             data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit
                                                     </button>
 												<?php } else if( 'email' === $entry->source ) {
 													print "&nbsp;"; ?>
 												<?php } else { ?>
                                                     <button type="button" class="btn btn-primary btn-xs"
-                                                            data-toggle="modal" data-target="#editledger"
+                                                            data-toggle="modal" data-backdrop="static" data-target="#editledger"
                                                             data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit
                                                     </button>
 												<?php } ?></td>
