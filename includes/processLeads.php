@@ -167,7 +167,9 @@ class ProcessLeads
 			}
 
 			// Add an entry to the notification table to see if this feed goes dormant
-			$leads->addNotification( $feedParams->idFeedIn, $data['url'] );
+			if( empty( $idFeedOut ) ) {
+				$leads->addNotification( $feedParams->idFeedIn, $data['url'] );
+			}
 
 		}
 
