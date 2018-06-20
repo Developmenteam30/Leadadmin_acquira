@@ -278,7 +278,7 @@ class Display
 		print "</div>\n";
 	}
 
-	public static function displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd ) {
+	public static function displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd, $offline = false ) {
 
 		$today = new \DateTime();
 		$yesterday = new \DateTime();
@@ -352,15 +352,15 @@ class Display
 				<?php
 				$diffRange = intval( $statsStartFOM->diff( $statsEnd )->format( "%a" ) );
 				$diffTotal = intval( $statsStartFOM->diff( $statsEndEOM )->format( "%a" ) ) + 1;
-				$forecastsToday = $leads->getForecasts( $today->format( 'Y-m-d' ), $today->format( 'Y-m-d' ) );
-				$forecastsYesterday = $leads->getForecasts( $yesterday->format( 'Y-m-d' ), $yesterday->format( 'Y-m-d' ) );
-				$forecastsMTD = $leads->getForecasts( $statsStartFOM->format( 'Y-m-d' ), $statsEndEOM->format( 'Y-m-d' ) );
+				$forecastsToday = $leads->getForecasts( $today->format( 'Y-m-d' ), $today->format( 'Y-m-d' ), $offline );
+				$forecastsYesterday = $leads->getForecasts( $yesterday->format( 'Y-m-d' ), $yesterday->format( 'Y-m-d' ), $offline );
+				$forecastsMTD = $leads->getForecasts( $statsStartFOM->format( 'Y-m-d' ), $statsEndEOM->format( 'Y-m-d' ), $offline );
 				try {
 					$statsEndEOM->sub( new \DateInterval( 'P1D' ) );
 				} catch( \Exception $e ) {
 					// Do nothing
 				}
-				$forecastsProjected = $leads->getForecasts( $today->format( 'Y-m-01' ), $yesterday->format( 'Y-m-d' ) );
+				$forecastsProjected = $leads->getForecasts( $today->format( 'Y-m-01' ), $yesterday->format( 'Y-m-d' ), $offline );
 				foreach( $users as $userId => $fullName ) {
 					$amountToday = $amountYesterday = $existingRevenueMTD = $newRevenueMTD = $accuralCostMTD = $projectedRevenueMTD = 0;
 					if( !empty( $forecastsToday ) && is_array( $forecastsToday ) ) {
@@ -419,28 +419,28 @@ class Display
 					</tr>
 					<?php
 				}
-
-				if( sizeOf( $users ) > 1 ) {
 				?>
-				<tfoot>
-				<tr>
-					<td>TOTAL</td>
-					<td class="text-right">$<?php echo number_format( $totals['prevDay'], 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $totals['today'], 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $totals['existingAccrual'], 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $totals['existingExpectation'], 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $totals['existingProjected'], 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $totals['newExpectation'], 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $totals['newAaccural'], 0 ); ?></td>
-					<td class="text-right">$<?php echo number_format( $totals['grossProfit'], 0 ); ?></td>
-				</tr>
-				</tfoot>
-
+				</tbody>
 				<?php
+				if( sizeOf( $users ) > 1 ) {
+					?>
+					<tfoot>
+					<tr>
+						<td>TOTAL</td>
+						<td class="text-right">$<?php echo number_format( $totals['prevDay'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( $totals['today'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( $totals['existingAccrual'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( $totals['existingExpectation'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( $totals['existingProjected'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( $totals['newExpectation'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( $totals['newAaccural'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( $totals['grossProfit'], 0 ); ?></td>
+					</tr>
+					</tfoot>
+
+					<?php
 				}
 				?>
-
-				</tbody>
 			</table>
 
 			<?php

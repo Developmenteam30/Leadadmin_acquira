@@ -425,7 +425,7 @@ class Leads
 		return $results;
 	}
 
-	public function getForecasts( $startDate, $endDate ) {
+	public function getForecasts( $startDate, $endDate, $offline = false ) {
 		$results = null;
 		$params = array();
 
@@ -445,7 +445,7 @@ class Leads
 			$sql .= "AND fo.launchDate >= CAST(? AS DATE) ";
 			$params[] = $startDate;
 			$sql .= "AND c.salesperson IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND c.salesperson = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -465,7 +465,7 @@ class Leads
 			$sql .= "AND fo.launchDate >= CAST(? AS DATE) ";
 			$params[] = $startDate;
 			$sql .= "AND c.salesperson IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND c.salesperson = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -484,7 +484,7 @@ class Leads
 			$sql .= "AND ( fo.launchDate IS NULL OR fo.launchDate < CAST(? AS DATE) ) ";
 			$params[] = $startDate;
 			$sql .= "AND c.salesperson IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND c.salesperson = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -504,7 +504,7 @@ class Leads
 			$sql .= "AND ( fo.launchDate IS NULL OR fo.launchDate < CAST(? AS DATE) ) ";
 			$params[] = $startDate;
 			$sql .= "AND c.salesperson IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND c.salesperson = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -522,7 +522,7 @@ class Leads
 			$params[] = $endDate;
 			$sql .= "AND l.commissionRevenue1 IS NOT NULL ";
 			$sql .= "AND l.userId1 IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND l.userId1 = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -538,7 +538,7 @@ class Leads
 			$params[] = $endDate;
 			$sql .= "AND l.commissionRevenue2 IS NOT NULL ";
 			$sql .= "AND l.userId2 IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND l.userId2 = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -561,7 +561,7 @@ class Leads
 			$params[] = $endDate;
 			$sql .= "AND l.commissionRevenue1 IS NOT NULL ";
 			$sql .= "AND l.userId1 IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND l.userId1 = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -582,7 +582,7 @@ class Leads
 			$params[] = $endDate;
 			$sql .= "AND l.commissionRevenue2 IS NOT NULL ";
 			$sql .= "AND l.userId2 IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND l.userId2 = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -600,7 +600,7 @@ class Leads
 			$params[] = $endDate;
 			$sql .= "AND l.commissionRevenue1 IS NOT NULL ";
 			$sql .= "AND l.userId1 IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND l.userId1 = ? ";
 				$params[] = LeadsSession::getUserId();
 			}
@@ -616,7 +616,7 @@ class Leads
 			$params[] = $endDate;
 			$sql .= "AND l.commissionRevenue2 IS NOT NULL ";
 			$sql .= "AND l.userId2 IS NOT NULL ";
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			if( !$offline && !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
 				$sql .= "AND l.userId2 = ? ";
 				$params[] = LeadsSession::getUserId();
 			}

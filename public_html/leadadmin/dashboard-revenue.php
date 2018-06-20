@@ -5,6 +5,12 @@ include( "../../includes/c_config.php" );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
+require_once( INCLUDES . 'session.php' );
+if( session_status() !== PHP_SESSION_ACTIVE ) {
+//	session_start();
+}
+//$_SESSION['level'] = LEADS_SESSION_LEVEL_MANAGER;
+
 require_once( INCLUDES . 'display.php' );
 
 if( !isset( $_SERVER['REMOTE_ADDR'] ) || !in_array( $_SERVER['REMOTE_ADDR'], IP_WHITELIST ) ) {
@@ -31,7 +37,7 @@ include( INCLUDES . "c_header.php" );
 
 	<?php
 	$users = $leads->getDashboardRevenueUsers();
-	Display::displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd );
+	Display::displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd, true );
 	?>
 </div>
 

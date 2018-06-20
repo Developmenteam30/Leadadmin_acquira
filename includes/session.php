@@ -117,18 +117,18 @@ class LeadsSession
 		if( isset( $_REQUEST['a'] ) ) {
 
 			Header( 'Content-Type: application/json' );
-			$result = array('status' => 0, 'error'=> 'Sorry, you do not have access to this page. Log back in and try again.');
-			echo json_encode($result);
+			$result = array( 'status' => 0, 'error' => 'Sorry, you do not have access to this page. Log back in and try again.' );
+			echo json_encode( $result );
 			exit;
 
-    	} else if( isset( $_REQUEST['d'] ) ) {
+		} else if( isset( $_REQUEST['d'] ) ) {
 
 			echo "Sorry, you do not have access to this page. Log back in and try again.";
 			exit;
 
 		} else {
 
-			header("Location: /leadadmin/");
+			header( "Location: /leadadmin/" );
 			exit;
 
 		}
