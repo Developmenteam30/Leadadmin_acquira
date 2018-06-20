@@ -278,6 +278,175 @@ class Display
 		print "</div>\n";
 	}
 
+	public static function displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd ) {
+
+		$today = new \DateTime();
+		$yesterday = new \DateTime();
+		try {
+			$yesterday->sub( new \DateInterval( 'P1D' ) );
+		} catch( \Exception $e ) {
+			// Do nothing
+		}
+
+		// Check for invalid date inputs
+		try {
+			$statsStart = new \DateTime( $statsStart );
+		} catch( \Exception $e ) {
+			$statsStart = new \DateTime();
+		}
+
+		try {
+			$statsEnd = new \DateTime( $statsEnd );
+		} catch( \Exception $e ) {
+			$statsEnd = new \DateTime();
+		}
+
+		// Ensure the end date after the start date
+		if( $statsEnd < $statsStart ) {
+			$statsEnd = $statsStart;
+		}
+
+		try {
+			$statsStartFOM = new DateTime( $statsStart->format( 'Y-m-01' ) );
+			$statsEndEOM = new DateTime( $statsEnd->format( 'Y-m-t' ) );
+		} catch( \Exception $e ) {
+			// Do nothing
+		}
+
+
+		if( !empty( $users ) && is_array( $users ) ) {
+			$totals = array(
+				'prevDay' => 0,
+				'today' => 0,
+				'existingAccrual' => 0,
+				'existingExpectation' => 0,
+				'existingProjected' => 0,
+				'newExpectation' => 0,
+				'newAaccural' => 0,
+				'grossProfit' => 0,
+			);
+
+			?>
+
+			<table class="table table-bordered table-condensed table-striped-custom table-small-font dashboard-forecasts">
+				<thead>
+				<tr>
+					<th>&nbsp;</th>
+					<th colspan="5">Total Business</th>
+					<th colspan="2">New Business</th>
+					<th>&nbsp;</th>
+				</tr>
+				<tr>
+					<th>Employee</th>
+					<th>Prev Day</th>
+					<th>Today</th>
+					<th>Accrual MTD</th>
+					<th>Expectation</th>
+					<th>Projected MTD</th>
+					<th>Accrual MTD</th>
+					<th>Expectation</th>
+					<th>GP</th>
+				</tr>
+				</thead>
+				<tbody>
+				<?php
+				$diffRange = intval( $statsStartFOM->diff( $statsEnd )->format( "%a" ) );
+				$diffTotal = intval( $statsStartFOM->diff( $statsEndEOM )->format( "%a" ) ) + 1;
+				$forecastsToday = $leads->getForecasts( $today->format( 'Y-m-d' ), $today->format( 'Y-m-d' ) );
+				$forecastsYesterday = $leads->getForecasts( $yesterday->format( 'Y-m-d' ), $yesterday->format( 'Y-m-d' ) );
+				$forecastsMTD = $leads->getForecasts( $statsStartFOM->format( 'Y-m-d' ), $statsEndEOM->format( 'Y-m-d' ) );
+				try {
+					$statsEndEOM->sub( new \DateInterval( 'P1D' ) );
+				} catch( \Exception $e ) {
+					// Do nothing
+				}
+				$forecastsProjected = $leads->getForecasts( $today->format( 'Y-m-01' ), $yesterday->format( 'Y-m-d' ) );
+				foreach( $users as $userId => $fullName ) {
+					$amountToday = $amountYesterday = $existingRevenueMTD = $newRevenueMTD = $accuralCostMTD = $projectedRevenueMTD = 0;
+					if( !empty( $forecastsToday ) && is_array( $forecastsToday ) ) {
+						foreach( $forecastsToday as $forecastToday ) {
+							if( $userId == $forecastToday->idUser ) {
+								$amountToday = $forecastToday->existingRevenueMTD;
+							}
+						}
+					}
+					if( !empty( $forecastsYesterday ) && is_array( $forecastsYesterday ) ) {
+						foreach( $forecastsYesterday as $forecastYesterday ) {
+							if( $userId == $forecastYesterday->idUser ) {
+								$amountYesterday = $forecastYesterday->existingRevenueMTD;
+							}
+						}
+					}
+					if( !empty( $forecastsMTD ) && is_array( $forecastsMTD ) ) {
+						foreach( $forecastsMTD as $forecastMTD ) {
+							if( $userId == $forecastMTD->idUser ) {
+								$existingRevenueMTD = $forecastMTD->existingRevenueMTD;
+								$accuralCostMTD = $forecastMTD->accuralCostMTD;
+								$newRevenueMTD = $forecastMTD->newRevenueMTD;
+							}
+						}
+					}
+					if( !empty( $forecastsProjected ) && is_array( $forecastsProjected ) ) {
+						foreach( $forecastsProjected as $forecastProjected ) {
+							if( $userId == $forecastProjected->idUser ) {
+								$projectedRevenueMTD = $forecastProjected->existingRevenueMTD;
+							}
+						}
+					}
+
+					$expectationValues = $leads->getExpectationValues( $userId, $statsStartFOM->format( 'Y-m-' ) );
+
+					$totals['prevDay'] += round( $amountYesterday );
+					$totals['today'] += round( $amountToday );
+					$totals['existingAccrual'] += round( $existingRevenueMTD + $newRevenueMTD );
+					$totals['existingExpectation'] += round( $expectationValues->existingBusinessAmount ?? 0 );
+					$totals['existingProjected'] += round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange );
+					$totals['newExpectation'] += round( $newRevenueMTD );
+					$totals['newAaccural'] += round( $expectationValues->newBusinessAmount ?? 0 );
+					$totals['grossProfit'] += round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD );
+
+					?>
+					<tr>
+						<td><?php echo htmlentities( $fullName ); ?></td>
+						<td class="text-right">$<?php echo number_format( round( $amountYesterday ), 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( round( $amountToday ), 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( round( $existingRevenueMTD + $newRevenueMTD ), 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( round( $expectationValues->existingBusinessAmount ?? 0 ), 0 ); ?></td>
+						<td class="text-right<?php echo ( $expectationValues->existingBusinessAmount ?? 0 ) > ( $projectedRevenueMTD * $diffTotal ) / $diffRange ? ' bg-danger' : ''; ?>">$<?php echo number_format( round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange ), 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( round( $newRevenueMTD ), 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( round( $expectationValues->newBusinessAmount ?? 0 ), 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD ), 0 ); ?></td>
+					</tr>
+					<?php
+				}
+
+				if( sizeOf( $users ) > 1 ) {
+				?>
+				<tfoot>
+				<tr>
+					<td>TOTAL</td>
+					<td class="text-right">$<?php echo number_format( $totals['prevDay'], 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( $totals['today'], 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( $totals['existingAccrual'], 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( $totals['existingExpectation'], 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( $totals['existingProjected'], 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( $totals['newExpectation'], 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( $totals['newAaccural'], 0 ); ?></td>
+					<td class="text-right">$<?php echo number_format( $totals['grossProfit'], 0 ); ?></td>
+				</tr>
+				</tfoot>
+
+				<?php
+				}
+				?>
+
+				</tbody>
+			</table>
+
+			<?php
+		}
+	}
+
 	public static function escHtml( $html, $flags = ENT_HTML5 | ENT_QUOTES ) {
 		return htmlspecialchars( $html, $flags, 'UTF-8' );
 	}

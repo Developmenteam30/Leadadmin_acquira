@@ -85,3 +85,8 @@ define( 'COMPANY_LEGAL_NAME', 'Qatalyst, Inc.' );
 define( 'COMPANY_ADDRESS_1', '100 4th Avenue South #138' );
 define( 'COMPANY_ADDRESS_2', 'St Petersburg, FL 33701' );
 define( 'MAX_PHONE_LEADS_VENDORS', 10 );
+define( 'ENCRYPTION_KEY', 'TJ>VJ2!S%0?l`3s<}r5v7hL(Q(tm%nXo' );
+define( 'IP_WHITELIST', array(
+	'108.191.119.96', // Qatalyst Office
+	'100.37.120.82', // Ryan home
+) );

@@ -301,6 +301,20 @@ class Leads
 		return $results;
 	}
 
+	public function getDashboardRevenueUsers() {
+		$results = null;
+
+		try {
+			$query = $this->db->prepare( "SELECT idUser,fullName FROM users WHERE level = ? AND idUser NOT IN (2, 5, 63, 67) ORDER BY username" );
+			$query->execute( array( LEADS_SESSION_LEVEL_STAFF ) );
+			$results = $query->fetchAll( \PDO::FETCH_KEY_PAIR );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get dashboard revenue users: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function findClientUser( $idCompany ) {
 		try {
 			$query = $this->db->prepare( "SELECT username FROM users WHERE idCompany = ? AND level = ?" );
@@ -1540,6 +1554,68 @@ class Leads
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get prospect notes: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function addCredential( $fields ) {
+
+		$credentialId = null;
+
+		try {
+			$credentialId = $this->insertRow( 'credentials', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add credential: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $credentialId;
+	}
+
+	public function updateCredential( $credentialId, $fields ) {
+
+		try {
+			$status = $this->update( 'credentials', $fields, array(
+				'credentialId' => $credentialId,
+			) );
+			return $status;
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to update credential: ' . $pdoException->getMessage() );
+			return null;
+		}
+	}
+
+	public function getCredential( $credentialId ) {
+		$results = array();
+
+		try {
+			$query = $this->db->prepare( "SELECT * FROM credentials WHERE credentialId = ?" );
+			$query->execute( array( $credentialId ) );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get credential info: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getCredentials( $status = null ) {
+		$results = array();
+
+		try {
+			if( !empty( $status ) ) {
+				$query = $this->db->prepare( "SELECT c.*,x.name FROM credentials c LEFT JOIN companies x ON x.idCompany = c.companyId WHERE c.status = ? ORDER BY x.name,c.url" );
+				$query->execute( array( $status ) );
+			} else {
+				$query = $this->db->prepare( "SELECT c.*,x.name FROM credentials c LEFT JOIN companies x ON x.idCompany = c.companyId ORDER BY x.name,c.url" );
+				$query->execute();
+			}
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get company list: ' . $e->getMessage() );
 		}
 
 		return $results;
@@ -3762,7 +3838,7 @@ class Leads
 	public function outboundEmailSearch( $email ) {
 		$results = array();
 
-		$query = "SELECT i.*,o.idFeedOut,f.label ";
+		$query = "SELECT i.*,o.idFeedOut,f.label,o.result ";
 		$query .= "FROM data_inbound i ";
 		$query .= "INNER JOIN data_outbound o ON o.idRecord = i.idRecord ";
 		$query .= "LEFT JOIN feedout f ON o.idFeedOut = f.idFeedOut ";
