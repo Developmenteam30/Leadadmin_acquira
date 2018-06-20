@@ -281,4 +281,27 @@ class Display
 	public static function escHtml( $html, $flags = ENT_HTML5 | ENT_QUOTES ) {
 		return htmlspecialchars( $html, $flags, 'UTF-8' );
 	}
+
+	public static function decryptValue( $data ) {
+
+		try {
+			$data = \Cryptor::Decrypt( $data, ENCRYPTION_KEY );
+		} catch( \Exception $e ) {
+			// Do nothing
+		}
+
+		return $data;
+	}
+
+	public static function encryptValue( $data ) {
+
+		try {
+			$data = \Cryptor::Encrypt( $data, ENCRYPTION_KEY );
+		} catch( \Exception $e ) {
+			// Do nothing
+		}
+
+		return $data;
+	}
+
 }
