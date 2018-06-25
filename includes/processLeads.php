@@ -108,6 +108,12 @@ class ProcessLeads
 	function curlLead( $requestdata, $url, $post, $verifypeer = false, $returntransfer = true, $header = false, $httpheader = null, $followlocation = false ) {
 
 		$ch = curl_init();
+		$verbose = false;
+
+		if( $verbose ) {
+			ob_start();
+			$out = fopen( 'php://output', 'w' );
+		}
 
 		curl_setopt( $ch, CURLOPT_URL, $url );
 		if( $post ) {
@@ -124,10 +130,20 @@ class ProcessLeads
 		}
 		curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, $followlocation );
 		curl_setopt( $ch, CURLOPT_TIMEOUT, 65 );
+		if( $verbose ) {
+			curl_setopt( $ch, CURLOPT_VERBOSE, 1 );
+			curl_setopt( $ch, CURLOPT_STDERR, $out );
+		}
 
 		$response = curl_exec( $ch );
 		if( curl_errno( $ch ) != 0 ) {
 			$response = "CURL Error: " . curl_error( $ch );
+		}
+		if( $verbose ) {
+			if( $out ) {
+				fclose( $out );
+			}
+			echo nl2br( ob_get_clean() );
 		}
 		curl_close( $ch );
 
@@ -507,15 +523,7 @@ class ProcessLeads
 		$geturl = '';
 		if( $feedOut->feedType == 'curlGET' ) { // Method is GET
 
-			$geturl = $feedOut->postUrl . "?";
-			$flag = false;
-			foreach( $requestdata as $field => $value ) {
-				if( $flag ) {
-					$geturl .= "&";
-				}
-				$geturl .= $field . "=" . urlencode( $value );
-				$flag = true;
-			}
+			$geturl = $feedOut->postUrl . "?" . http_build_query( $requestdata );
 			if( $debug ) {
 				echo "\tGet URL: \n";
 				echo "\t" . $geturl . "\n";
@@ -526,6 +534,19 @@ class ProcessLeads
 				$geturl,
 				false
 			);
+
+		} else if( $feedOut->feedType == 'curlPOST-urlencoded' ) { // Method is GET
+
+			if( $debug ) {
+				echo "\tPosting data.\n";
+			}
+			$result['text'] = ProcessLeads::curlLead(
+				http_build_query( $requestdata ),
+				$feedOut->postUrl,
+				true
+			);
+
+			$geturl = $feedOut->postUrl . "\n\nPOST BODY (application/x-www-form-urlencoded): " . http_build_query( $requestdata );
 
 		} else if( 'csvString' == $feedOut->feedType ) { // Method is CVS
 
@@ -587,7 +608,7 @@ class ProcessLeads
 				true
 			);
 
-			$geturl = $feedOut->postUrl . "\n\nPOST BODY: " . http_build_query( $requestdata );
+			$geturl = $feedOut->postUrl . "\n\nPOST BODY (multipart/form-data): " . http_build_query( $requestdata );
 		}
 
 		// Check if the response we got is a success for this feed.

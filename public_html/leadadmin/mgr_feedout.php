@@ -1018,7 +1018,8 @@ if( isset( $_REQUEST['d'] ) ) {
 							<p>
 								<select name='feedType'>
 									<option value='curlGET' <?php if( $feed_feedType == 'curlGET' ){ ?>selected='selected'<?php } ?>>HTTP GET</option>
-									<option value='curlPOST' <?php if( $feed_feedType == 'curlPOST' ){ ?>selected='selected'<?php } ?>>HTTP POST</option>
+									<option value='curlPOST' <?php if( $feed_feedType == 'curlPOST' ){ ?>selected='selected'<?php } ?>>HTTP POST (form-data)</option>
+									<option value='curlPOST-urlencoded' <?php if( $feed_feedType == 'curlPOST-urlencoded' ){ ?>selected='selected'<?php } ?>>HTTP POST (urlencoded)</option>
 									<option value='JSON' <?php if( $feed_feedType == 'JSON' ){ ?>selected='selected'<?php } ?>>JSON</option>
 									<option value='csvString' <?php if( $feed_feedType == 'csvString' ){ ?>selected='selected'<?php } ?>>CSV string</option>
 									<option value='soapPOST' <?php if( $feed_feedType == 'soapPOST' ){ ?>selected='selected'<?php } ?>>SOAP POST</option>
