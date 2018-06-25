@@ -221,6 +221,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? 0 : $_REQUEST['notifyThresholdCount'],
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
+						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 					) );
 
 					if( null === $idFeedIn ) {
@@ -385,6 +386,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdCount' => empty( $_REQUEST['notifyThresholdCount'] ) ? 0 : $_REQUEST['notifyThresholdCount'],
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
+						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 					) );
 
 					if( null === $status ) {
@@ -541,6 +543,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'costPerLead',
 				'notifyThresholdCount',
 				'notifyThresholdTimeFormatted',
+				'salesperson',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -881,6 +884,27 @@ if( isset( $_REQUEST['d'] ) ) {
 						<td>
 							<p>
 								<input type="text" name="costPerLead" value="<?php echo htmlentities( $feed_costPerLead ); ?>"/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Salesperson</p></td>
+						<td>
+							<p>By default, salesperson revenues are assigned at a company level. Only set this value if you are overriding the company-level salesperson with a feed-level salesperson.</p>
+							<p>
+								<select name="salesperson">
+									<option></option>
+									<?php
+									$users = $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true );
+									foreach( $users as $idUser => $fullName ) {
+										printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+											Display::escHtml( $idUser ),
+											$feed_salesperson == $idUser ? ' selected="selected"' : '',
+											Display::escHtml( $fullName )
+										);
+									}
+									?>
+								</select>
 							</p>
 						</td>
 					</tr>

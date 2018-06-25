@@ -171,6 +171,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
+						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -256,6 +257,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
+						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -904,6 +906,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'revenuePerLead',
 				'costPerLeadOverride',
 				'launchDate',
+				'salesperson',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -1215,6 +1218,27 @@ if( isset( $_REQUEST['d'] ) ) {
 							<p>
 								RPL: <input type="text" name="revenuePerLead" value="<?php echo htmlentities( $feed_revenuePerLead ); ?>"/> CPL Override: <input type="text" name="costPerLeadOverride" value="<?php echo htmlentities( $feed_costPerLeadOverride ); ?>"/><br/>
 								If a value is set for CPL Override (including a 0.00 amount), this will override the CPL set on the incoming feed. To use the default CPL from the incoming feed, leave this field completely blank.
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Salesperson Override</p></td>
+						<td>
+							<p>By default, salesperson revenues are assigned at a company level. Only set this value if you are overriding the company-level salesperson with a feed-level salesperson.</p>
+							<p>
+								<select name="salesperson">
+									<option></option>
+									<?php
+									$users = $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true );
+									foreach( $users as $idUser => $fullName ) {
+										printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+											Display::escHtml( $idUser ),
+											$feed_salesperson == $idUser ? ' selected="selected"' : '',
+											Display::escHtml( $fullName )
+										);
+									}
+									?>
+								</select>
 							</p>
 						</td>
 					</tr>
