@@ -52,6 +52,22 @@ if( empty( $_REQUEST['pswd'] ) || $_REQUEST['pswd'] != $feedParams->password ) {
 	http_response_code( 403 );
 	$result['reason'] = 'Unauthorized access.';
 	$leads->logError( 'Feed ' . $feedParams->label . ' Unauthorized user at ' . $_SERVER["REMOTE_ADDR"], true, false );
+
+	// Verbose logging for troubleshooting. Turn off once testing is complete.
+	if( false ) {
+		$from = 'lmsalerts@' . SITE_URL;
+		$body = print_r( $_REQUEST, true ) . PHP_EOL;
+		$body .= print_r( $_SERVER, true ) . PHP_EOL;
+		$fromName = CONFIG_COMPANY_NAME . ' List Management System';
+		$to = ADMINISTRATOR_EMAIL;
+		$subject = 'Incoming Feed Password Mismatch';
+		$header = "From:" . $fromName . " <" . $from . ">\n";
+		$header .= "Content-type: text/html; charset=iso-8859-1\n";
+		$header .= "Reply-To: <" . $from . ">\n";
+		$header .= "Return-Path: <" . $from . ">\n";
+		$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
+	}
+
 	$_REQUEST['url'] = $_REQUEST['url'] ?? ''; // Ensure a value for the URL is set
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null );
 	showResultAndDie( $result );
