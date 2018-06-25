@@ -113,7 +113,7 @@ include( INCLUDES . "c_header.php" );
 									( $population->queueType == 'waterfallLimitLive' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL LIMIT LIVE - Priority: ' . $population->waterfallPriority . '</span>]' ) :
 										'' ) ) ),
 						( !empty( $population->dailyLimit ) ? ' [<span style="color:orange;font-weight:bold;">Limit: ' . $population->dailyLimit . '</span>]' : '' ),
-						( !empty( $population->delay ) ? ' [<span style="color:green;font-weight:bold;">Delay: ' . ( ( $population->delay % ( 60 * 24 ) ) == 0 ? ( $population->delay / ( 60 * 24 ) . ' Days' ) : ( $population->delay . ' Minutes' ) ) . '</span>]' : '' )
+						( !empty( $population->delay ) ? ( ' [<span style="color:green;font-weight:bold;">Delay ' . ( !empty( $population->delayDump ) ? ' Dump' : '' ) . ': ' . ( ( $population->delay % ( 60 * 24 ) ) == 0 ? ( $population->delay / ( 60 * 24 ) . ' Days' ) : ( $population->delay . ' Minutes' ) ) . '</span>]' ) : '' )
 					);
 				}
 			}
