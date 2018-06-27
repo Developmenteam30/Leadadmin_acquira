@@ -32,17 +32,13 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			if( empty( $_REQUEST['url'] ) ) {
-				$result['error'] = 'You must type in a URL.';
-				break;
-			}
-
 			$credentialId = $leads->addCredential( array(
 				'companyId' => $_REQUEST['companyId'],
 				'url' => empty( $_REQUEST['url'] ) ? null : Display::encryptValue( trim( $_REQUEST['url'] ) ),
 				'username' => empty( $_REQUEST['username'] ) ? null : Display::encryptValue( trim( $_REQUEST['username'] ) ),
 				'password' => empty( $_REQUEST['password'] ) ? null : Display::encryptValue( trim( $_REQUEST['password'] ) ),
 				'notes' => empty( $_REQUEST['notes'] ) ? null : trim( $_REQUEST['notes'] ),
+				'employeeName' => empty( $_REQUEST['employeeName'] ) ? null : trim( $_REQUEST['employeeName'] ),
 			) );
 
 			if( null === $credentialId ) {
@@ -65,17 +61,13 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			if( empty( $_REQUEST['url'] ) ) {
-				$result['error'] = 'You must type in a URL.';
-				break;
-			}
-
 			$alterCredentialResult = $leads->updateCredential( $_REQUEST['credentialId'], array(
 				'companyId' => $_REQUEST['companyId'],
 				'url' => empty( $_REQUEST['url'] ) ? null : Display::encryptValue( trim( $_REQUEST['url'] ) ),
 				'username' => empty( $_REQUEST['username'] ) ? null : Display::encryptValue( trim( $_REQUEST['username'] ) ),
 				'password' => empty( $_REQUEST['password'] ) ? null : Display::encryptValue( trim( $_REQUEST['password'] ) ),
 				'notes' => empty( $_REQUEST['notes'] ) ? null : trim( $_REQUEST['notes'] ),
+				'employeeName' => empty( $_REQUEST['employeeName'] ) ? null : trim( $_REQUEST['employeeName'] ),
 				'status' => empty( $_REQUEST['status'] ) ? 'active' : trim( $_REQUEST['status'] ),
 			) );
 
@@ -135,6 +127,11 @@ if( isset( $_REQUEST['d'] ) ) {
 				array(
 					'id' => 'password',
 					'label' => 'Password',
+					'type' => 'text',
+				),
+				array(
+					'id' => 'employeeName',
+					'label' => 'Employee Name',
 					'type' => 'text',
 				),
 				array(
@@ -199,10 +196,27 @@ if( isset( $_REQUEST['d'] ) ) {
 						'value' => Display::decryptValue( $credential->password ),
 					),
 					array(
+						'id' => 'employeeName',
+						'label' => 'Employee Name',
+						'type' => 'text',
+						'value' => $credential->employeeName,
+					),
+					array(
 						'id' => 'notes',
 						'label' => 'Notes',
 						'type' => 'textarea',
 						'value' => $credential->notes,
+					),
+					array(
+						'id' => 'status',
+						'label' => 'Status',
+						'type' => 'select',
+						'required' => true,
+						'choices' => array(
+								'active' => 'Active',
+								'archived' => 'Archived',
+						),
+						'value' => $credential->status,
 					),
 					array(
 						'id' => 'credentialId',
@@ -272,6 +286,7 @@ include( INCLUDES . "c_header.php" );
 				<th>Company Name</th>
 				<th>URL</th>
 				<th class="hidden-xs">Username</th>
+				<th class="hidden-xs">Employee</th>
 				<th>Options</th>
 			</tr>
 			</thead>
@@ -282,8 +297,9 @@ include( INCLUDES . "c_header.php" );
 				<tr>
 					<td><?php echo $credential->credentialId; ?></td>
 					<td><?php echo Display::escHtml( $credential->name ); ?></td>
-					<td class="text-center"><a class="btn btn-primary btn-xs" href="<?php echo Display::escHtml( Display::decryptValue( $credential->url ) ); ?>" target="_blank">Open URL</a></td>
+					<td class="text-center"><?php if( !empty( $credential->url ) ) { ?><a class="btn btn-primary btn-xs" href="<?php echo Display::escHtml( Display::decryptValue( $credential->url ) ); ?>" target="_blank">Open URL</a><?php } else { ?>&nbsp;<?php } ?></td>
 					<td class="hidden-xs"><?php echo Display::escHtml( Display::decryptValue( $credential->username ) ); ?></td>
+					<td class="hidden-xs"><?php echo Display::escHtml( $credential->employeeName ); ?></td>
 					<td class="text-center">
 						<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editcredential" data-credential-id="<?php echo $credential->credentialId; ?>">Edit</button>
 					</td>
