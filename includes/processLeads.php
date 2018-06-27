@@ -250,7 +250,7 @@ class ProcessLeads
 				if( !is_null( $feed->dailyLimit ) && intval( $feed->dailyLimit ) > 0 ) {
 					$cnt = $leads->getOutboundDailyCount( $feed->idFeedOut );
 					if( $cnt && $cnt >= $feed->dailyLimit ) {
-						$leads->logError( 'Feed ' . $feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
+						//$leads->logError( 'Feed ' . $feed->label . ' Daily feed limit of ' . $feed->dailyLimit . ' reached', true, false );
 						if( $debug ) {
 							print "Skipping because we've hit our feed limit of {$feed->dailyLimit}</p>";
 						}
