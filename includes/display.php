@@ -37,16 +37,19 @@ class Display
 		}
 	}
 
-	public static function displayForm( $name, $fields = array(), $title = '' ) {
+	public static function displayForm( $name, $fields = array(), $title = '', $options = array() ) {
 		print "<div class=\"form-input\">\n";
 		if( !empty( $title ) ) {
 			printf( '<h3>%s</h3>',
 				htmlentities( $title )
 			);
 		}
-		printf( "<form class=\"form-inline\" id=\"%s\">\n",
-			htmlspecialchars( $name, ENT_QUOTES | ENT_HTML5 )
-		);
+
+		if( empty( $options['fieldOnly'] ) ) {
+			printf( "<form class=\"form-inline\" id=\"%s\">\n",
+				htmlspecialchars( $name, ENT_QUOTES | ENT_HTML5 )
+			);
+		}
 
 		foreach( $fields as $field ) {
 
@@ -223,7 +226,7 @@ class Display
 			} else if( 'submit' == $field['type'] ) {
 
 				printf( "\t<label></label>\n" );
-				printf( "\t<input type=\"submit\" value=\"%s\" />\n",
+				printf( "\t<input class=\"btn btn-primary\" type=\"submit\" value=\"%s\" />\n",
 					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
 				);
 
@@ -256,7 +259,7 @@ class Display
 
 			} else if( '_html' == $field['type'] ) {
 
-				printf( "\t<span>%s</span>\n", $field['value'] );
+				print $field['value'];
 
 			} else if( '_text' == $field['type'] ) {
 
@@ -274,7 +277,9 @@ class Display
 
 		}
 
-		print "</form>\n";
+		if( empty( $options['fieldOnly'] ) ) {
+			print "</form>\n";
+		}
 		print "</div>\n";
 	}
 

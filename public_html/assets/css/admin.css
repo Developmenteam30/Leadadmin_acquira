@@ -182,7 +182,7 @@ table tr.bg-gray {
 	width: 375px;
 }
 
-.form-input input[type="submit"] {
+.XXform-input input[type="submit"] {
 	width: auto;
 	color: #ffffff;
 	border: 0px;
@@ -227,6 +227,13 @@ table tr.bg-gray {
 #edit_ledger select,
 #new_ledger select {
 	width: 300px;
+}
+
+#crm_search #searchVerticals,
+#crm_search #searchDivisions,
+#company_search #searchVerticals,
+#company_search #searchDivisions {
+	height: 225px;
 }
 
 .modal-header {

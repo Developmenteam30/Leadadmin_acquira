@@ -1516,6 +1516,78 @@ class Leads
 		return $results;
 	}
 
+	public function searchProspects( $filters = array() ) {
+		$results = array();
+
+		try {
+			$params = array();
+
+			$sql = "SELECT p.*,n.*,u.fullName ";
+			$sql .= "FROM prospects AS p ";
+			$sql .= "LEFT JOIN prospects_notes AS n ON n.prospectId = p.prospectId ";
+			$sql .= "LEFT JOIN prospects_notes pn ON pn.prospectId = p.prospectId ";
+			$sql .= "LEFT JOIN users u ON p.userId = u.idUser ";
+			$sql .= "JOIN (";
+			$sql .= "SELECT MAX(noteId) AS noteId FROM prospects_notes GROUP BY prospectId ";
+			$sql .= ") AS nm ON nm.noteId = n.noteId ";
+			$sql .= "WHERE 1=1 ";
+			if( !empty( $filters['text'] ) ) {
+				$sql .= "AND ( p.company LIKE ? OR p.name LIKE ? OR pn.note LIKE ? OR p.opportunity LIKE ? OR pn.nextSteps LIKE ? ) ";
+				$params[] = '%' . $filters['text'] . '%';
+				$params[] = '%' . $filters['text'] . '%';
+				$params[] = '%' . $filters['text'] . '%';
+				$params[] = '%' . $filters['text'] . '%';
+				$params[] = '%' . $filters['text'] . '%';
+			}
+			if( isset( $filters['isArchived'] ) ) {
+				$sql .= "AND p.isArchived = ? ";
+				$params[] = $filters['isArchived'];
+			}
+			if( !empty( $filters['salesperson'] ) ) {
+				$sql .= "AND p.userId = ? ";
+				$params[] = $filters['salesperson'];
+			}
+			if( isset( $filters['percentage'] ) ) {
+				$sql .= "AND p.percentage = ? ";
+				$params[] = $filters['percentage'];
+			}
+			if( !empty( $filters['companyType'] ) && 'isPublisher' == $filters['companyType'] ) {
+				$sql .= "AND p.isPublisher = 1 ";
+			}
+			if( !empty( $filters['companyType'] ) && 'isAdvertiser' == $filters['companyType'] ) {
+				$sql .= "AND p.isAdvertiser = 1 ";
+			}
+			if( !empty( $filters['divisions'] ) && is_array( $filters['divisions'] ) ) {
+				$sql .= "AND (";
+				foreach( $filters['divisions'] as $division ) {
+					$sql .= "FIND_IN_SET(?,divisions) OR ";
+					$params[] = $division;
+				}
+				$sql = substr( $sql, 0, -3 ); // Remove the last OR
+				$sql .= ")";
+			}
+			if( !empty( $filters['verticals'] ) && is_array( $filters['verticals'] ) ) {
+				$sql .= "AND (";
+				foreach( $filters['verticals'] as $division ) {
+					$sql .= "FIND_IN_SET(?,verticals) OR ";
+					$params[] = $division;
+				}
+				$sql = substr( $sql, 0, -3 ); // Remove the last OR
+				$sql .= ")";
+			}
+			$sql .= "GROUP BY p.prospectId ";
+			$sql .= "ORDER BY p.prospectId DESC";
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to search prospects: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
 	public function getProspect( $prospectId ) {
 		$results = array();
 
@@ -1680,6 +1752,79 @@ class Leads
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to get company list: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function searchCompanies( $filters = array() ) {
+		$results = array();
+
+		try {
+			$params = array();
+			$sql = "SELECT c.* FROM companies c ";
+			$sql .= "LEFT JOIN companies_divisions cd ON cd.companyId = c.idCompany ";
+			$sql .= "LEFT JOIN companies_verticals cv ON cv.companyId = c.idCompany ";
+			$sql .= "LEFT JOIN companies_notes cn ON cn.companyId = c.idCompany ";
+			$sql .= "WHERE 1 = 1 ";
+			if( !empty( $filters['textSearch'] ) ) {
+				$sql .= "AND ( c.name LIKE ? OR c.note LIKE ? OR c.url LIKE ? OR c.main_name LIKE ? OR c.returns_name LIKE ? OR c.tech_name LIKE ? OR cn.note LIKE ? ) ";
+				$params[] = '%' . $filters['textSearch'] . '%';
+				$params[] = '%' . $filters['textSearch'] . '%';
+				$params[] = '%' . $filters['textSearch'] . '%';
+				$params[] = '%' . $filters['textSearch'] . '%';
+				$params[] = '%' . $filters['textSearch'] . '%';
+				$params[] = '%' . $filters['textSearch'] . '%';
+				$params[] = '%' . $filters['textSearch'] . '%';
+			}
+			if( !empty( $filters['status'] ) ) {
+				$sql .= "AND c.status = ? ";
+				$params[] = $filters['status'];
+			}
+			if( !empty( $filters['salesperson'] ) ) {
+				$sql .= "AND c.salesperson = ? ";
+				$params[] = $filters['salesperson'];
+			}
+			if( !empty( $filters['accountManager'] ) ) {
+				$sql .= "AND c.accountManager = ? ";
+				$params[] = $filters['accountManager'];
+			}
+			if( !empty( $filters['accountOpener'] ) ) {
+				$sql .= "AND c.accountOpener = ? ";
+				$params[] = $filters['accountOpener'];
+			}
+			if( !empty( $filters['companyType'] ) && 'isPublisher' == $filters['companyType'] ) {
+				$sql .= "AND c.isPublisher = 1 ";
+			}
+			if( !empty( $filters['companyType'] ) && 'isAdvertiser' == $filters['companyType'] ) {
+				$sql .= "AND c.isAdvertiser = 1 ";
+			}
+			if( !empty( $filters['divisions'] ) && is_array( $filters['divisions'] ) ) {
+				$sql .= "AND cd.divisionId IN (";
+				foreach( $filters['divisions'] as $division ) {
+					$sql .= "?,";
+					$params[] = $division;
+				}
+				$sql = substr( $sql, 0, -1 ); // Remove the last comma
+				$sql .= ")";
+			}
+			if( !empty( $filters['verticals'] ) && is_array( $filters['verticals'] ) ) {
+				$sql .= "AND cv.verticalId IN (";
+				foreach( $filters['verticals'] as $vertical ) {
+					$sql .= "?,";
+					$params[] = $vertical;
+				}
+				$sql = substr( $sql, 0, -1 ); // Remove the last comma
+				$sql .= ")";
+			}
+			$sql .= "GROUP BY c.idCompany ";
+			$sql .= "ORDER BY c.name";
+
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			$results = $query->fetchAll( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to search companies: ' . $e->getMessage() );
 		}
 
 		return $results;

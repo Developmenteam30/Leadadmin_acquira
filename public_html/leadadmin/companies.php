@@ -355,7 +355,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'checkbox',
 					'choices' => array(
 						'isPublisher' => 'Publisher / Affiliate',
-						'isAdvertiser' => 'Advertister',
+						'isAdvertiser' => 'Advertiser',
 					),
 					'choice_append' => '<br/>',
 				),
@@ -684,7 +684,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'type' => 'checkbox',
 						'choices' => array(
 							'isPublisher' => 'Publisher / Affiliate',
-							'isAdvertiser' => 'Advertister',
+							'isAdvertiser' => 'Advertiser',
 						),
 						'choice_append' => '<br/>',
 						'value' => array(
@@ -909,36 +909,135 @@ include( INCLUDES . "c_header.php" );
 
 	<h2>Companies</h2>
 
-	<form class="pull-right" id="status-select" method="get">
-		<select id="status" name="status">
-			<option value="active"<?php if( 'active' === $status ) {
-				print ' selected="selected"';
-			} ?>>Show active companies
-			</option>
-			<option value="hidden"<?php if( 'hidden' === $status ) {
-				print ' selected="selected"';
-			} ?>>Show hidden companies
-			</option>
-			<option value="retired"<?php if( 'retired' === $status ) {
-				print ' selected="selected"';
-			} ?>>Show retired companies
-			</option>
-			<option value=""<?php if( null === $status ) {
-				print ' selected="selected"';
-			} ?>>Show all companies
-			</option>
-		</select>
-	</form>
-
 	<p>
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newcompany">Add a new company</button>
+		<a class="btn btn-primary" href="/leadadmin/companies.php?searchStatus=active">Reset All Filters</a>
 	</p>
 
 	<?php
-	$companies = $leads->getCompanies( $status );
+
+	$divisions = $leads->getDivisions();
+	$verticals = array();
+	foreach( $divisions as $key => $val ) {
+		$db_verticals = $leads->getDivisionVerticals( $key );
+		$verticals[$val] = $db_verticals;
+	}
+
+	$fields = array(
+		array(
+			'id' => 'html_start',
+			'type' => '_html',
+			'value' => '<div class="row"><div class="col-md-4">',
+		),
+		array(
+			'id' => 'searchText',
+			'label' => 'Text Search',
+			'type' => 'text',
+			'value' => $_REQUEST['searchText'] ?? '',
+		),
+		array(
+			'id' => 'searchAcountManager',
+			'label' => 'Account Manager',
+			'type' => 'select',
+			'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+			'value' => $_REQUEST['searchAccountManager'] ?? '',
+		),
+		array(
+			'id' => 'searchDivisions',
+			'label' => 'Division(s)',
+			'choices' => $divisions,
+			'choice_append' => '<br/>',
+			'type' => 'select',
+			'multiple' => true,
+			'placeholder' => false,
+			'value' => !empty( $_REQUEST['searchDivisions'] ) && is_array( $_REQUEST['searchDivisions'] ) ? array_combine( $_REQUEST['searchDivisions'], $_REQUEST['searchDivisions'] ) : array(),
+		),
+		array(
+			'id' => 'html_start',
+			'type' => '_html',
+			'value' => '</div><div class="col-md-4">',
+		),
+		array(
+			'id' => 'searchStatus',
+			'label' => 'Status',
+			'type' => 'select',
+			'choices' => array(
+				'active' => 'Active companies',
+				'hidden' => 'Hidden companies',
+				'retired' => 'Retired companies',
+			),
+			'value' => $_REQUEST['searchStatus'] ?? '',
+		),
+		array(
+			'id' => 'searchAccountOpener',
+			'label' => 'Account Opener',
+			'type' => 'select',
+			'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+			'value' => $_REQUEST['searchAccountOpener'] ?? '',
+		),
+		array(
+			'id' => 'searchVerticals',
+			'label' => 'Verticals',
+			'type' => 'select',
+			'multiple' => true,
+			'placeholder' => false,
+			'choices' => $verticals,
+			'choice_append' => '<br/>',
+			'value' => !empty( $_REQUEST['searchVerticals'] ) && is_array( $_REQUEST['searchVerticals'] ) ? array_combine( $_REQUEST['searchVerticals'], $_REQUEST['searchVerticals'] ) : array(),
+		),
+		array(
+			'id' => 'html_start',
+			'type' => '_html',
+			'value' => '</div><div class="col-md-4">',
+		),
+		array(
+			'id' => 'searchCompanyType',
+			'label' => 'Company Type',
+			'type' => 'select',
+			'choices' => array(
+				'isPublisher' => 'Publisher / Affiliate',
+				'isAdvertiser' => 'Advertiser',
+			),
+			'value' => $_REQUEST['searchCompanyType'] ?? '',
+		),
+		array(
+			'id' => 'searchSalesperson',
+			'label' => 'Sales Person',
+			'type' => 'select',
+			'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+			'value' => $_REQUEST['searchSalesperson'] ?? '',
+		),
+		array(
+			'id' => 'submit',
+			'label' => 'Search',
+			'type' => 'submit',
+			'class' => 'btn btn-primary',
+		),
+		array(
+			'id' => 'html_start',
+			'type' => '_html',
+			'value' => '</div></div>',
+		),
+	);
+
+	Display::displayForm( 'company_search', $fields, '' );
+
+	?>
+
+	<?php
+	$companies = $leads->searchCompanies( array(
+		'status' => $_REQUEST['searchStatus'] ?? null,
+		'text' => $_REQUEST['searchText'] ?? null,
+		'salesperson' => $_REQUEST['searchSalesperson'] ?? null,
+		'accountManager' => $_REQUEST['searchAccountManager'] ?? null,
+		'accountOpener' => $_REQUEST['searchAccountOpener'] ?? null,
+		'companyType' => $_REQUEST['searchCompanyType'] ?? null,
+		'divisions' => $_REQUEST['searchDivisions'] ?? null,
+		'verticals' => $_REQUEST['searchVerticals'] ?? null,
+	) );
 	if( empty( $companies ) ) {
 
-		print '<p>No companies exist in the database.</p>';
+		print '<p>No companies exist in the database with this search criteria.</p>';
 
 	} else {
 		?>
@@ -958,8 +1057,8 @@ include( INCLUDES . "c_header.php" );
 				?>
 				<tr>
 					<td><?php echo $company->idCompany; ?></td>
-					<td><?php echo htmlentities( $company->name ); ?></td>
-					<td class="hidden-xs"><?php echo htmlentities( $company->note ); ?></td>
+					<td><?php echo Display::escHtml( $company->name ); ?></td>
+					<td class="hidden-xs"><?php echo Display::escHtml( $company->note ); ?></td>
 					<td class="text-center">
 						<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editcompany" data-company-id="<?php echo $company->idCompany; ?>">Edit</button>
 					</td>

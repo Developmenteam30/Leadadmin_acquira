@@ -149,6 +149,18 @@ if( isset( $_REQUEST['a'] ) ) {
 			}
 
 			if( $c ) {
+				$isPublisher = false;
+				$isAdvertiser = false;
+				if( !empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
+					foreach( $_REQUEST['companyType'] as $key => $val ) {
+						if( 'isPublisher' === $val ) {
+							$isPublisher = true;
+						} else if( 'isAdvertiser' === $val ) {
+							$isAdvertiser = true;
+						}
+					}
+				}
+
 				$prospectId = $leads->addProspect( array(
 					'company' => $_REQUEST['company'],
 					'name' => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
@@ -157,8 +169,11 @@ if( isset( $_REQUEST['a'] ) ) {
 					'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
 					'userId' => $userId,
 					'divisions' => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
+					'verticals' => empty( $_REQUEST['verticals'] ) ? null : implode( ',', $_REQUEST['verticals'] ),
 					'percentage' => intval( $_REQUEST['percentage'] ),
 					'expectedClose' => !isset( $expectedClose ) ? null : $expectedClose->format( 'Y-m-d' ),
+					'isPublisher' => $isPublisher ? 1 : 0,
+					'isAdvertiser' => $isAdvertiser ? 1 : 0,
 				) );
 				if( null === $prospectId ) {
 					$c = false;
@@ -226,6 +241,18 @@ if( isset( $_REQUEST['a'] ) ) {
 			}
 
 			if( $c ) {
+				$isPublisher = false;
+				$isAdvertiser = false;
+				if( !empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
+					foreach( $_REQUEST['companyType'] as $key => $val ) {
+						if( 'isPublisher' === $val ) {
+							$isPublisher = true;
+						} else if( 'isAdvertiser' === $val ) {
+							$isAdvertiser = true;
+						}
+					}
+				}
+
 				$alterProspectResult = $leads->updateProspect( $_REQUEST['prospectId'], array(
 					'company' => $_REQUEST['company'],
 					'name' => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
@@ -234,9 +261,12 @@ if( isset( $_REQUEST['a'] ) ) {
 					'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
 					'userId' => $userId,
 					'divisions' => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
+					'verticals' => empty( $_REQUEST['verticals'] ) ? null : implode( ',', $_REQUEST['verticals'] ),
 					'percentage' => intval( $_REQUEST['percentage'] ),
 					'isArchived' => !empty( $_REQUEST['isArchived'] ) ? 1 : 0,
 					'expectedClose' => !isset( $expectedClose ) ? null : $expectedClose->format( 'Y-m-d' ),
+					'isPublisher' => $isPublisher ? 1 : 0,
+					'isAdvertiser' => $isAdvertiser ? 1 : 0,
 				) );
 
 				if( $alterProspectResult === false ) {
@@ -271,6 +301,11 @@ if( isset( $_REQUEST['d'] ) ) {
 		case "dialog_newprospect":
 
 			$divisions = $leads->getDivisions();
+			$verticals = array();
+			foreach( $divisions as $key => $val ) {
+				$db_verticals = $leads->getDivisionVerticals( $key );
+				$verticals[$val] = $db_verticals;
+			}
 
 			$fields = array(
 				array(
@@ -300,10 +335,29 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'text',
 				),
 				array(
+					'id' => 'companyType',
+					'label' => 'Company Type',
+					'type' => 'checkbox',
+					'choices' => array(
+						'isPublisher' => 'Publisher / Affiliate',
+						'isAdvertiser' => 'Advertiser',
+					),
+					'choice_append' => '<br/>',
+				),
+				array(
 					'id' => 'divisions',
 					'label' => 'Division(s)',
 					'type' => 'checkbox',
 					'choices' => $divisions,
+					'choice_append' => '<br/>',
+				),
+				array(
+					'id' => 'verticals',
+					'label' => 'Verticals',
+					'type' => 'select',
+					'multiple' => true,
+					'placeholder' => false,
+					'choices' => $verticals,
 					'choice_append' => '<br/>',
 				),
 				array(
@@ -391,6 +445,19 @@ if( isset( $_REQUEST['d'] ) ) {
 					$divisions_selected[$val] = 1;
 				}
 			}
+			$verticals = array();
+			$verticals_selected = array();
+			foreach( $divisions as $key => $val ) {
+				$db_verticals = $leads->getDivisionVerticals( $key );
+				$verticals[$val] = $db_verticals;
+			}
+			if( !empty( $prospect->verticals ) ) {
+				$tmp = explode( ',', $prospect->verticals );
+				foreach( $tmp as $key => $val ) {
+					$verticals_selected[$val] = 1;
+				}
+			}
+
 
 			$fields = array(
 				array(
@@ -425,12 +492,32 @@ if( isset( $_REQUEST['d'] ) ) {
 					'value' => $prospect->email,
 				),
 				array(
+					'id' => 'companyType',
+					'label' => 'Company Type',
+					'type' => 'checkbox',
+					'choices' => array(
+						'isPublisher' => 'Publisher / Affiliate',
+						'isAdvertiser' => 'Advertiser',
+					),
+					'choice_append' => '<br/>',
+				),
+				array(
 					'id' => 'divisions',
 					'label' => 'Division(s)',
 					'type' => 'checkbox',
 					'choices' => $divisions,
 					'choice_append' => '<br/>',
 					'value' => $divisions_selected,
+				),
+				array(
+					'id' => 'verticals',
+					'label' => 'Verticals',
+					'type' => 'select',
+					'multiple' => true,
+					'placeholder' => false,
+					'choices' => $verticals,
+					'choice_append' => '<br/>',
+					'value' => $verticals_selected,
 				),
 				array(
 					'id' => 'percentage',
@@ -570,11 +657,11 @@ if( isset( $_REQUEST['d'] ) ) {
 					printf( '<hr/><p>On <strong>%s</strong> at %s, <strong>%s</strong> wrote:</p>%s%s%s%s' . PHP_EOL,
 						date( 'D, M jS, Y', strtotime( $note->timestamp ) ),
 						date( 'g:ia', strtotime( $note->timestamp ) ),
-						htmlentities( $note->fullName ),
-						!empty( $note->actionType ) ? ( '<p><strong>Action Taken:</strong> ' . nl2br( htmlentities( $note->actionType ) ) . '</p>' ) : '',
-						!empty( $note->note ) ? ( '<p><strong>Notes:</strong> ' . nl2br( htmlentities( $note->note ) ) . '</p>' ) : '',
-						!empty( $note->followUpDate ) ? ( '<p><strong>Follow-Up Date:</strong> ' . nl2br( htmlentities( $note->followUpDate ) ) . '</p>' ) : '',
-						!empty( $note->nextSteps ) ? ( '<p><strong>Next Steps:</strong> ' . nl2br( htmlentities( $note->nextSteps ) ) . '</p>' ) : ''
+						Display::escHtml( $note->fullName ),
+						!empty( $note->actionType ) ? ( '<p><strong>Action Taken:</strong> ' . nl2br( Display::escHtml( $note->actionType ) ) . '</p>' ) : '',
+						!empty( $note->note ) ? ( '<p><strong>Notes:</strong> ' . nl2br( Display::escHtml( $note->note ) ) . '</p>' ) : '',
+						!empty( $note->followUpDate ) ? ( '<p><strong>Follow-Up Date:</strong> ' . nl2br( Display::escHtml( $note->followUpDate ) ) . '</p>' ) : '',
+						!empty( $note->nextSteps ) ? ( '<p><strong>Next Steps:</strong> ' . nl2br( Display::escHtml( $note->nextSteps ) ) . '</p>' ) : ''
 					);
 				}
 			}
@@ -595,54 +682,130 @@ include( INCLUDES . "c_header.php" );
 
 	<h2>Prospects</h2>
 
-	<form class="pull-right" id="filter-select" method="get">
-		<select id="filterStatus" name="filterStatus">
-			<option value=""<?php if( null === $filterStatus ) {
-				print ' selected="selected"';
-			} ?>>Show all prospects
-			</option>
-			<option value="active"<?php if( 'active' === $filterStatus ) {
-				print ' selected="selected"';
-			} ?>>Show active prospects
-			</option>
-			<option value="archived"<?php if( 'archived' === $filterStatus ) {
-				print ' selected="selected"';
-			} ?>>Show archived prospects
-			</option>
-		</select>
-		<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
-			$users = $leads->getStaffUsers();
-		} else {
-			$users = $staffUsers;
-		} ?>
-		<select id="filterUserId" name="filterUserId">
-			<option value=""<?php if( empty( $filterUserId ) ) {
-				print ' selected="selected"';
-			} ?>>Show all users
-			</option>
-			<?php
-			foreach( $users as $key => $val ) {
-				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
-					htmlentities( $key ),
-					$filterUserId == $key ? ' selected="selected"' : '',
-					htmlentities( $val )
-				);
-			}
-			?>
-		</select>
-	</form>
-
 	<p>
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newprospect">Add a new prospect</button>
+		<a class="btn btn-primary" href="/leadadmin/crm/prospects.php?searchIsArchived=0">Reset All Filters</a>
 	</p>
 
 	<?php
+
+	$divisions = $leads->getDivisions();
+	$verticals = array();
+	foreach( $divisions as $key => $val ) {
+		$db_verticals = $leads->getDivisionVerticals( $key );
+		$verticals[$val] = $db_verticals;
+	}
+
+	$fields = array(
+		array(
+			'id' => 'html_start',
+			'type' => '_html',
+			'value' => '<div class="row"><div class="col-md-4">',
+		),
+		array(
+			'id' => 'searchText',
+			'label' => 'Text Search',
+			'type' => 'text',
+			'value' => $_REQUEST['searchText'] ?? '',
+		),
+		array(
+			'id' => 'searchSalesperson',
+			'label' => 'Sales Person',
+			'type' => 'select',
+			'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+			'value' => $_REQUEST['searchSalesperson'] ?? '',
+		),
+		array(
+			'id' => 'searchDivisions',
+			'label' => 'Division(s)',
+			'choices' => $divisions,
+			'choice_append' => '<br/>',
+			'type' => 'select',
+			'multiple' => true,
+			'placeholder' => false,
+			'value' => !empty( $_REQUEST['searchDivisions'] ) && is_array( $_REQUEST['searchDivisions'] ) ? array_combine( $_REQUEST['searchDivisions'], $_REQUEST['searchDivisions'] ) : array(),
+		),
+		array(
+			'id' => 'html_start',
+			'type' => '_html',
+			'value' => '</div><div class="col-md-4">',
+		),
+		array(
+			'id' => 'searchIsArchived',
+			'label' => 'Status',
+			'type' => 'select',
+			'choices' => array(
+				'0' => 'Active prospects',
+				'1' => 'Archived prospects',
+			),
+			'value' => isset( $_REQUEST['searchIsArchived'] ) && strlen( $_REQUEST['searchIsArchived'] ) > 0 ? $_REQUEST['searchIsArchived'] : null,
+		),
+		array(
+			'id' => 'searchPercentage',
+			'label' => 'Pct Complete',
+			'type' => 'select',
+			'choices' => array(
+				'0' => 'New Lead (0%)',
+				'25' => 'Initial Contact Made (25%)',
+				'50' => 'Opportunity Defined (50%)',
+				'75' => 'Agreement/IO Pending (75%)',
+				'100' => 'Closed (100%)',
+			),
+			'value' => isset( $_REQUEST['searchPercentage'] ) && strlen( $_REQUEST['searchPercentage'] ) > 0 ? $_REQUEST['searchPercentage'] : null,
+		),
+		array(
+			'id' => 'searchVerticals',
+			'label' => 'Verticals',
+			'type' => 'select',
+			'multiple' => true,
+			'placeholder' => false,
+			'choices' => $verticals,
+			'choice_append' => '<br/>',
+			'value' => !empty( $_REQUEST['searchVerticals'] ) && is_array( $_REQUEST['searchVerticals'] ) ? array_combine( $_REQUEST['searchVerticals'], $_REQUEST['searchVerticals'] ) : array(),
+		),
+		array(
+			'id' => 'html_start',
+			'type' => '_html',
+			'value' => '</div><div class="col-md-4">',
+		),
+		array(
+			'id' => 'searchCompanyType',
+			'label' => 'Company Type',
+			'type' => 'select',
+			'choices' => array(
+				'isPublisher' => 'Publisher / Affiliate',
+				'isAdvertiser' => 'Advertiser',
+			),
+			'value' => $_REQUEST['searchCompanyType'] ?? '',
+		),
+		array(
+			'id' => 'submit',
+			'label' => 'Search',
+			'type' => 'submit',
+			'class' => 'btn btn-primary',
+		),
+		array(
+			'id' => 'html_start',
+			'type' => '_html',
+			'value' => '</div></div>',
+		),
+	);
+
+	Display::displayForm( 'crm_search', $fields, '' );
 
 	if( !empty( $filterUserId ) && !array_key_exists( $filterUserId, $staffUsers ) ) {
 		$filterUserId = LeadsSession::getUserId();
 	}
 
-	$prospects = $leads->getProspects( $filterStatus, $filterUserId );
+	$prospects = $leads->searchProspects( array(
+		'isArchived' => isset( $_REQUEST['searchIsArchived'] ) && strlen( $_REQUEST['searchIsArchived'] ) > 0 ? $_REQUEST['searchIsArchived'] : null,
+		'text' => $_REQUEST['searchText'] ?? null,
+		'salesperson' => $_REQUEST['searchSalesperson'] ?? null,
+		'divisions' => $_REQUEST['searchDivisions'] ?? null,
+		'verticals' => $_REQUEST['searchVerticals'] ?? null,
+		'companyType' => $_REQUEST['searchCompanyType'] ?? null,
+		'percentage' => isset( $_REQUEST['searchPercentage'] ) && strlen( $_REQUEST['searchPercentage'] ) > 0 ? $_REQUEST['searchPercentage'] : null,
+	) );
 	if( empty( $prospects ) ) {
 
 		print '<p>No prospects exist in the database.</p>';
@@ -660,6 +823,7 @@ include( INCLUDES . "c_header.php" );
 				<th class="hidden-md hidden-sm hidden-xs">Email</th>
 				<th>Divisions</th>
 				<th>Percentage</th>
+				<th class="hidden-md hidden-sm hidden-xs">Salesperson</th>
 				<th>Follow-Up</th>
 				<th class="hidden-md hidden-sm hidden-xs">Updated</th>
 				<th>Options</th>
@@ -688,11 +852,11 @@ include( INCLUDES . "c_header.php" );
 				}
 				?>
 				<tr>
-					<td><?php echo htmlentities( $prospect->company ); ?></td>
-					<td><?php echo htmlentities( $prospect->name ); ?></td>
-					<td class="hidden-md hidden-sm hidden-xs"><?php echo htmlentities( $prospect->opportunity ); ?></td>
-					<td class="hidden-md hidden-sm hidden-xs"><?php echo htmlentities( $prospect->phone ); ?></td>
-					<td class="hidden-md hidden-sm hidden-xs"><?php echo htmlentities( $prospect->email ); ?></td>
+					<td><?php echo Display::escHtml( $prospect->company ); ?></td>
+					<td><?php echo Display::escHtml( $prospect->name ); ?></td>
+					<td class="hidden-md hidden-sm hidden-xs"><?php echo Display::escHtml( $prospect->opportunity ); ?></td>
+					<td class="hidden-md hidden-sm hidden-xs"><?php echo Display::escHtml( $prospect->phone ); ?></td>
+					<td class="hidden-md hidden-sm hidden-xs"><?php echo Display::escHtml( $prospect->email ); ?></td>
 					<td class="pnt-nowrap"><?php echo $divisions_selected; ?></td>
 					<td data-tf-sortKey="<?php echo intval( $prospect->percentage ); ?>">
 						<div class="progress">
@@ -702,8 +866,9 @@ include( INCLUDES . "c_header.php" );
 						</div>
 						<?php echo !empty( $prospect->expectedClose ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->expectedClose ) ) : '&nbsp;'; ?>
 					</td>
-					<td data-tf-sortKey="<?php echo htmlentities( $prospect->followUpDate ); ?>"><?php echo !empty( $prospect->followUpDate ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->followUpDate ) ) : ''; ?></td>
-					<td class="hidden-md hidden-sm hidden-xs" data-tf-sortKey="<?php echo htmlentities( $prospect->timestamp ); ?>"><?php echo !empty( $prospect->timestamp ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->timestamp ) ) : ''; ?></td>
+					<td class="hidden-md hidden-sm hidden-xs"><?php echo Display::escHtml( $prospect->fullName ); ?></td>
+					<td data-tf-sortKey="<?php echo Display::escHtml( $prospect->followUpDate ); ?>"><?php echo !empty( $prospect->followUpDate ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->followUpDate ) ) : ''; ?></td>
+					<td class="hidden-md hidden-sm hidden-xs" data-tf-sortKey="<?php echo Display::escHtml( $prospect->timestamp ); ?>"><?php echo !empty( $prospect->timestamp ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->timestamp ) ) : ''; ?></td>
 					<td class="text-center" style="min-width:75px;">
 						<div class="btn-group">
 							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
