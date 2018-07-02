@@ -233,7 +233,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 	$fields = unserialize( $job->fields );
 	$status = 'Unknown error.';
 
-	if( empty( $job->destination ) || empty( $fields['columns'] ) ) {
+	if( empty( $job->destination ) ) {
 
 		$leads->updateJob( $job->jobId, array(
 			'status' => 'error',
