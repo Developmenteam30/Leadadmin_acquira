@@ -228,6 +228,79 @@ if( 'clear-outbound-queue' === $job->type ) {
 	$header .= "CC: " . OWNER_EMAIL . "\r\n";
 	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 
+} else if( 'export-outgoing' === $job->type ) {
+
+	$fields = unserialize( $job->fields );
+	$status = 'Unknown error.';
+
+	if( empty( $job->destination ) || empty( $fields['columns'] ) ) {
+
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Missing required fields',
+		) );
+		$status = 'ERROR: Missing required fields.';
+
+	} else {
+
+		print "Exporting outgoing records for: {$job->destination}\n";
+
+		$result = $leads->exportOutboundRecords( $job->destination, $fields );
+
+		if( $result['success'] !== true ) {
+
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'error',
+				'message' => $result['reason'],
+			) );
+			$status = $result['reason'];
+
+		} else {
+
+			$leads->updateJob( $job->jobId, array(
+				'status' => 'finished',
+				'records' => $result['cnt'],
+				'filename' => $result['fileLink'],
+				'message' => null,
+			) );
+			$status = "Successful";
+		}
+
+	}
+
+	$user = $leads->getUser( $job->idUser );
+	if( empty( $user ) || empty( $user->email ) ) {
+		return;
+	}
+
+	$body = "Job Results\r\n";
+	$body .= "\r\n";
+	$body .= "Job ID: {$job->jobId}\r\n";
+	$body .= "Job Type: export-outgoing\r\n";
+	$body .= "\r\n";
+	$body .= "Feed ID: {$job->destination}\r\n";
+	$body .= "Feed Label: {$fields['label']}\r\n";
+	$body .= "\r\n";
+	$body .= "Job Status: {$status}\r\n";
+	if( isset( $result['cnt'] ) ) {
+		$body .= "Total Records: {$result['cnt']}\r\n";
+	}
+	if( !empty( $result['cnt'] ) && !empty( $result['fileLink'] ) ) {
+		$body .= sprintf( "\r\nDownload Link: https://www.%s/leadadmin/%s\r\n",
+			SITE_URL,
+			$result['fileLink']
+		);
+	}
+	$body .= "\r\n";
+
+	$from = 'lmsalerts@' . SITE_URL;
+	$fromName = CONFIG_COMPANY_NAME;
+	$to = filter_var( $user->email, FILTER_SANITIZE_EMAIL );
+	$subject = 'Job Results - Export Outgoing Data';
+	$header = "From:" . $fromName . " <" . $from . ">\n";
+	$header .= "CC: " . OWNER_EMAIL . "\r\n";
+	$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
+
 } else if( 'feedinc' === $job->type ) {
 
 	$handle = @fopen( $job->filename, "r" );

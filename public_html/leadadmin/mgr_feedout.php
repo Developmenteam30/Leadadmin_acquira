@@ -639,6 +639,52 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			break;
 
+		case 'exportData':
+			$c = true;
+			$result['error'] = 'Failed when trying to export data.';
+
+			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				$c = false;
+				$result['error'] = 'Sorry, you do not have permission to export data.';
+			}
+
+			if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedOut'] ) ) {
+					$c = false;
+					$result['error'] = 'Sorry, you do not have access to this feed.';
+				}
+			}
+
+			if( $c ) {
+				$feed = $leads->getOutboundFeed( $_REQUEST['idFeedOut'] );
+				if( $feed === false ) {
+					$c = false;
+					$result['error'] = 'Database failure - could not fetch feed information.';
+				}
+				if( $c && !is_object( $feed ) && $feed == 0 ) {
+					$c = false;
+					$result['error'] = 'Error - could not fetch feed. Feed does not exist.';
+				}
+			}
+
+			if( $c ) {
+				$jobId = $leads->addJob( 'export-outgoing', $feed->idFeedOut, serialize( $_REQUEST ), '', 0 );
+				if( null === $jobId ) {
+					$c = false;
+					$result['error'] = 'Error adding this job to the database.';
+				} else {
+					$leads->auditLog( 'FEEDOUT:EXPORT', $jobId );
+					$result['status'] = 1;
+					$result['error'] = 'Export job #' . $jobId . ' submitted succesfully. You will be notified by email when your download is ready.';
+				}
+			}
+
+			break;
+
 		case 'retry-outbound-rejections':
 			$c = true;
 			$result['error'] = 'Failed when trying to retry outbound rejections.';
@@ -1274,6 +1320,107 @@ if( isset( $_REQUEST['d'] ) ) {
 				});
 			</script>
 			<?php
+			break;
+
+		case 'dialog_export':
+			$idFeedOut = $_REQUEST['idFeedOut'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+				die( 'Sorry, you do not have permission to export data.' );
+			}
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkInboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
+			$feed = $leads->getOutboundFeed( $idFeedOut );
+			?>
+			<?php
+			if( $feed === false ) {
+				?>
+				<p>Database failure - could not fetch feed information.</p>
+				<?php
+			} else if( !is_object( $feed ) && $feed == 0 ) {
+				?>
+				<p>Error fetching feed information - feed does not exist.</p>
+				<?php
+			} else {
+				?>
+				<p>Exporting Data from Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
+				<form id="form-export">
+					<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+					<input type="hidden" name="a" value="exportData"/>
+					<input type="hidden" name="label" value="<?php echo htmlspecialchars( $feed->label, ENT_QUOTES ); ?>"/>
+					<table class="table table-bordered table-condensed table-striped">
+						<tr>
+							<td colspan='2'><p class='aCenter'>Export Settings</p></td>
+						</tr>
+						<tr>
+							<td>
+								Period
+							</td>
+							<td>
+								<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
+								<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date( "Y-m-d" ); ?>'/>
+									to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date( "Y-m-d", strtotime( 'Tomorrow' ) ); ?>'/></p>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								URLs
+							</td>
+							<td>
+								<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
+								<p><a href='#' class='nonLink' onclick='element("export_<?php echo $idFeedOut; ?>_urls", "urlField", {"idFeedOut": <?php echo $idFeedOut; ?>} );'>Add URL</a></p>
+								<div>
+									<div id='export_<?php echo $idFeedOut; ?>_urls'>
+									</div>
+								</div>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Email domains
+							</td>
+							<td>
+								<p>Email domains to limit the selection by. Leave blank to select all records regardless of email address. Do not include the @ symbol.</p>
+								<p><a href='#' class='nonLink' onclick='element("export_<?php echo $idFeedOut; ?>_emails", "emailField", {"idFeedOut": <?php echo $idFeedOut; ?>} );'>Add email domain</a></p>
+								<div>
+									<div id='export_<?php echo $idFeedOut; ?>_emails'>
+									</div>
+								</div>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Limit</p>
+							</td>
+							<td>
+								<p>Set a limit on the number of records that are returned. Leave blank to return ALL records.</p>
+								<p><input type="text" name="limit" value=""/></p>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Rejects</p>
+							</td>
+							<td>
+								<p><input type="checkbox" name="includeRejects" value="1"/> Include rejected records in the export.</p>
+							</td>
+						</tr>
+					</table>
+				</form>
+				<?php
+			}
 			break;
 
 		case 'dialog_import':
@@ -2515,6 +2662,7 @@ include( INCLUDES . "c_header.php" );
 									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
 									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
 									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
+									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Export data</a></li>
 									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Retry rejections</a></li>
 								</ul>
 							</div>
@@ -2704,6 +2852,22 @@ include( INCLUDES . "c_header.php" );
 		</div>
 	</div>
 
+	<div class="modal fade" id="modal-export" tabindex="-1" role="dialog" aria-labelledby="modal-export_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="modal-export_title">Export legacy data</h4>
+				</div>
+				<div class="modal-body"></div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-export" type="button" class="btn btn-primary">Export Data</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<script type="text/javascript">
 		$('#modal-save-newfeed').click(function (event) {
 			event.preventDefault();
@@ -2887,6 +3051,42 @@ include( INCLUDES . "c_header.php" );
 				type: 'POST',
 				url: 'mgr_feedout.php',
 				data: $("#form-import").serialize(),
+				success: function (result) {
+					if (result.status == 1) {
+						window.location.reload(true);
+					} else {
+						alert(result.error);
+					}
+				}
+			});
+		});
+
+		$('#modal-export').on('show.bs.modal', function (e) {
+			var modal = $(this);
+			var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+			$.ajax({
+				cache: false,
+				type: 'POST',
+				url: 'mgr_feedout.php',
+				data: {
+					'd': 'dialog_export',
+					'idFeedOut': idFeedOut
+				},
+				success: function (data) {
+					modal.find('.modal-body').html(data);
+				}
+			});
+		});
+
+		$('#modal-save-export').click(function (event) {
+			event.preventDefault();
+
+			$.ajax({
+				cache: false,
+				type: 'POST',
+				url: 'mgr_feedout.php',
+				data: $("#form-export").serialize(),
 				success: function (result) {
 					if (result.status == 1) {
 						window.location.reload(true);
