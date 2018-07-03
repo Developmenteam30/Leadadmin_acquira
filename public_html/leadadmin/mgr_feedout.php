@@ -124,6 +124,11 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['xmlDTD'] ) && @simplexml_load_string( $_REQUEST['xmlDTD'] ) === false ) {
+				$result['error'] = 'XML DTD/Schema is not valid.';
+				break;
+			}
+
 			if( $action == 'new' ) {
 
 				if( $c ) {
@@ -172,6 +177,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
+						'xmlDTD' => empty( $_REQUEST['xmlDTD'] ) ? null : $_REQUEST['xmlDTD'],
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -258,6 +264,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'revenuePerLead' => !empty( $_REQUEST['revenuePerLead'] ) ? $_REQUEST['revenuePerLead'] : 0.00,
 						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
+						'xmlDTD' => empty( $_REQUEST['xmlDTD'] ) ? null : $_REQUEST['xmlDTD'],
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -953,6 +960,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'costPerLeadOverride',
 				'launchDate',
 				'salesperson',
+				'xmlDTD',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -1068,6 +1076,7 @@ if( isset( $_REQUEST['d'] ) ) {
 									<option value='curlPOST-urlencoded' <?php if( $feed_feedType == 'curlPOST-urlencoded' ){ ?>selected='selected'<?php } ?>>HTTP POST (urlencoded)</option>
 									<option value='JSON' <?php if( $feed_feedType == 'JSON' ){ ?>selected='selected'<?php } ?>>JSON</option>
 									<option value='csvString' <?php if( $feed_feedType == 'csvString' ){ ?>selected='selected'<?php } ?>>CSV string</option>
+									<option value='xmlPOST' <?php if( $feed_feedType == 'xmlPOST' ){ ?>selected='selected'<?php } ?>>XML POST</option>
 									<option value='soapPOST' <?php if( $feed_feedType == 'soapPOST' ){ ?>selected='selected'<?php } ?>>SOAP POST</option>
 								</select>
 							</p>
@@ -1077,7 +1086,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						<td><p>Post URL</p></td>
 						<td>
 							<p>
-								<input type='text' name='postUrl' value='<?php echo $feed_postUrl; ?>' class='long'/>
+								<input type='text' name='postUrl' value='<?php echo $feed_postUrl; ?>' style="width:100%"/>
 							</p>
 						</td>
 					</tr>
@@ -1214,6 +1223,15 @@ if( isset( $_REQUEST['d'] ) ) {
 									<?php } ?>
 								</div>
 							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>XML DTD/Schema</p></td>
+						<td>
+							<p>This is only required for SOAP and XML feeds. Define the XML schema to be sent.</p>
+							<p>
+								<textarea name="xmlDTD" style="width:100%; height:300px;"><?php echo htmlentities( $feed_xmlDTD ); ?></textarea>
+							</p>
 						</td>
 					</tr>
 					<tr>

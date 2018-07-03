@@ -2,10 +2,11 @@
 
 require_once( 'c_config.php' );
 require_once( INCLUDES . '_f_validation.php' );
+require_once( INCLUDES . 'f_site.php' );
 
 class ProcessLeads
 {
-	public static function assignValue( $key, $value, &$requestdata ) {
+	public static function assignValue( $key, $value, &$requestdata, &$xmldata ) {
 
 		if( strpos( $key, '|' ) !== false ) {
 			// Send a subarray with the data
@@ -25,6 +26,10 @@ class ProcessLeads
 			} else {
 				$requestdata[$vars[0]] = json_encode( (object) array( $vars[1] => $value ) );
 			}
+		} else if( strpos( $key, '~' ) === 0 ) {
+			// Assign this as XML data
+			$key = str_replace( '~', '', $key );
+			$xmldata[$key] = $value;
 		} else {
 			$requestdata[$key] = $value;
 		}
@@ -105,7 +110,7 @@ class ProcessLeads
 </AgentCubedAPI>';
 	}
 
-	function curlLead( $requestdata, $url, $post, $verifypeer = false, $returntransfer = true, $header = false, $httpheader = null, $followlocation = false ) {
+	public static function curlLead( $requestdata, $url, $post, $verifypeer = false, $returntransfer = true, $header = false, $httpheader = null, $followlocation = false ) {
 
 		$ch = curl_init();
 		$verbose = false;
@@ -407,10 +412,11 @@ class ProcessLeads
 		}
 
 		$requestdata = array();
+		$xmldata = array();
 		foreach( $staticFields as $sF ) { //Compile Static Fields into the post array.
 			if( !empty( $sF ) ) {
 				$fieldValuePair = explode( "=", $sF );
-				ProcessLeads::assignValue( $fieldValuePair[0], $fieldValuePair[1], $requestdata );
+				ProcessLeads::assignValue( $fieldValuePair[0], $fieldValuePair[1], $requestdata, $xmldata );
 			}
 		}
 
@@ -432,83 +438,83 @@ class ProcessLeads
 								}
 							}
 						}
-						ProcessLeads::assignValue( $varFields[$count], $urlassignment, $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], $urlassignment, $requestdata, $xmldata );
 						break;
 
 					case 'recordId':
-						ProcessLeads::assignValue( $varFields[$count], $row->idRecord ?? '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], $row->idRecord ?? '', $requestdata, $xmldata );
 						break;
 
 					case 'dobUS':
-						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y", strtotime( $row->dob ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y", strtotime( $row->dob ) ), $requestdata, $xmldata );
 						break;
 
 					case 'stampUS':
-						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y H:i:s", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y H:i:s", strtotime( $row->stamp ) ), $requestdata, $xmldata );
 						break;
 
 					case 'stampUS_dateOnly':
-						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y", strtotime( $row->stamp ) ), $requestdata, $xmldata );
 						break;
 
 					case 'stamp_YYYYmmdd':
-						ProcessLeads::assignValue( $varFields[$count], date( "Ymd", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "Ymd", strtotime( $row->stamp ) ), $requestdata, $xmldata );
 						break;
 
 					case 'stamp_YYYY-mm-dd':
-						ProcessLeads::assignValue( $varFields[$count], date( "Y-m-d", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "Y-m-d", strtotime( $row->stamp ) ), $requestdata, $xmldata );
 						break;
 
 					case 'stampUSAMPM':
-						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y h:i:sA", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y h:i:sA", strtotime( $row->stamp ) ), $requestdata, $xmldata );
 						break;
 
 					case 'stampUS+AMPM':
-						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y h:i:s A", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y h:i:s A", strtotime( $row->stamp ) ), $requestdata, $xmldata );
 						break;
 
 					case 'stampUS_slashes':
-						ProcessLeads::assignValue( $varFields[$count], date( "m/d/Y H:i:s", strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( "m/d/Y H:i:s", strtotime( $row->stamp ) ), $requestdata, $xmldata );
 						break;
 
 					case 'stamp_ISO8601':
-						ProcessLeads::assignValue( $varFields[$count], date( 'c', strtotime( $row->stamp ) ), $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], date( 'c', strtotime( $row->stamp ) ), $requestdata, $xmldata );
 						break;
 
 					case 'landline_areacode':
-						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 0, 3 ) : '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 0, 3 ) : '', $requestdata, $xmldata );
 						break;
 
 					case 'landline_NXX':
-						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 3, 3 ) : '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 3, 3 ) : '', $requestdata, $xmldata );
 						break;
 
 					case 'landline_XXXX':
-						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 6, 4 ) : '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 6, 4 ) : '', $requestdata, $xmldata );
 						break;
 
 					case 'landline_NXX+XXXX':
-						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 3, 7 ) : '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->landline ) ? substr( $row->landline, 3, 7 ) : '', $requestdata, $xmldata );
 						break;
 
 					case 'cellphone_areacode':
-						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 0, 3 ) : '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 0, 3 ) : '', $requestdata, $xmldata );
 						break;
 
 					case 'cellphone_NXX':
-						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 3, 3 ) : '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 3, 3 ) : '', $requestdata, $xmldata );
 						break;
 
 					case 'cellphone_XXXX':
-						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 6, 4 ) : '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 6, 4 ) : '', $requestdata, $xmldata );
 						break;
 
 					case 'cellphone_NXX+XXXX':
-						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 3, 7 ) : '', $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], 10 == strlen( $row->cellphone ) ? substr( $row->cellphone, 3, 7 ) : '', $requestdata, $xmldata );
 						break;
 
 					default:
-						ProcessLeads::assignValue( $varFields[$count], $row->{$fieldMap[$count]}, $requestdata );
+						ProcessLeads::assignValue( $varFields[$count], $row->{$fieldMap[$count]}, $requestdata, $xmldata );
 						break;
 
 				}
@@ -535,7 +541,7 @@ class ProcessLeads
 				false
 			);
 
-		} else if( $feedOut->feedType == 'curlPOST-urlencoded' ) { // Method is GET
+		} else if( $feedOut->feedType == 'curlPOST-urlencoded' ) { // Method is POST
 
 			if( $debug ) {
 				echo "\tPosting data.\n";
@@ -590,12 +596,37 @@ class ProcessLeads
 				echo "\tPosting SOAP data.\n";
 			}
 
-			$xml = ProcessLeads::getXml813( $requestdata );
+//			$xml = ProcessLeads::getXml813( $requestdata );
+			$xml = $feedOut->xmlDTD;
+			foreach( $xmldata as $key => $val ) {
+				$xml = str_replace( '##' . $key . '##', htmlspecialchars( $val, ENT_COMPAT | ENT_XML1 ), $xml );
+			}
+
 			$geturl = $feedOut->postUrl . ' SOAP BODY: ' . $xml;
 
 			$client = new SoapClient( $feedOut->postUrl, array( 'trace' => true ) );
 			$response = $client->AddLeadsUsingXMLString( array( 'xmlstring' => $xml ) );
 			$result['text'] = $client->__getLastResponse();
+
+		} else if( 'xmlPOST' == $feedOut->feedType ) { // Method is XML
+
+			$geturl = $feedOut->postUrl . "?" . http_build_query( $requestdata );
+			if( $debug ) {
+				echo "\tPosting XML data.\n";
+			}
+
+			$xml = $feedOut->xmlDTD;
+			foreach( $xmldata as $key => $val ) {
+				$xml = str_replace( '##' . $key . '##', htmlspecialchars( $val, ENT_COMPAT | ENT_XML1 ), $xml );
+			}
+
+			$result['text'] = ProcessLeads::curlLead(
+				$xml,
+				$geturl,
+				true
+			);
+
+			$geturl = $geturl . ' XML BODY: ' . $xml;
 
 		} else { // Method is post
 
