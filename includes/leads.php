@@ -2262,7 +2262,7 @@ class Leads
 		$results = array();
 
 		try {
-			$sql = "SELECT fp.*, fo.label, fo.dailyLimit, fo.delay, fo.description, fo.delayDump, fo.revenuePerLead, fo.costPerLeadOverride, fo.cron, c.name ";
+			$sql = "SELECT fp.*, fo.label, fo.dailyLimit, fo.delay, fo.description, fo.delayDump, fo.revenuePerLead, fo.costPerLeadOverride, fo.cron, fo.xmlDTD, c.name ";
 			$sql .= "FROM feedPopulation fp ";
 			$sql .= "LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut ";
 			$sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
@@ -3978,6 +3978,7 @@ class Leads
 				$results = $query->fetchAll( \PDO::FETCH_OBJ );
 			}
 		} catch( PDOException $e ) {
+			echo $e->getMessage();
 			$this->logError( 'Unable to get archived outbound records search results: ' . $e->getMessage() );
 		}
 
@@ -4589,11 +4590,11 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports / ' . "comcast_" . $jobId . ".csv";
+		$fileLink = 'exports/' . "comcast_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
-			$result['reason'] = 'Unable to create CSV file . ';
+			$result['reason'] = 'Unable to create CSV file.';
 			return;
 		}
 
@@ -4603,7 +4604,7 @@ class Leads
 
 			$fields = array();
 
-			$query = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE email LIKE ' % @comcast . net' AND result IS NULL" );
+			$query = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE email LIKE '%@comcast.net' AND result IS NULL" );
 			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, $row );
 			}
@@ -4622,11 +4623,11 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports / ' . "cable_" . $jobId . ".csv";
+		$fileLink = 'exports/' . "cable_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
-			$result['reason'] = 'Unable to create CSV file . ';
+			$result['reason'] = 'Unable to create CSV file.';
 			return;
 		}
 
@@ -4636,7 +4637,7 @@ class Leads
 
 			$fields = array();
 
-			$query = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE ( email LIKE ' % @att . net' OR email LIKE ' % @bellsouth . net' OR email LIKE ' % @earthlink . net' ) AND result IS NULL" );
+			$query = $this->db->query( "SELECT url,ip,leadstamp,email FROM data_inbound WHERE ( email LIKE '%@att.net' OR email LIKE '%@bellsouth.net' OR email LIKE '%@earthlink.net' ) AND result IS NULL" );
 			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fputcsv( $file, $row );
 			}
@@ -4701,15 +4702,15 @@ class Leads
 		$idRecord = 760666734;
 		$rowCount = 0;
 
-		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated( idFeedIn, idFeedOut, url, stamp, costPerLead, revenuePerLead, accepted, billable ) VALUES(?,?,?,?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
+		$statsQuery = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,accepted,billable) VALUES(?,?,?,?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
 
-		$sqlSelect = "SELECT a.idRecord,a.idFeedIn,a.idFeedOut,DATE_FORMAT(CONVERT_TZ(a.`timestamp`,?,?),' % Y -%m -%d') AS `timestamp`,di.url,fi.costPerLead,fo.revenuePerLead,fo.costPerLeadOverride ";
+		$sqlSelect = "SELECT a.idRecord,a.idFeedIn,a.idFeedOut,DATE_FORMAT(CONVERT_TZ(a.`timestamp`,?,?),'%Y-%m-%d') AS `timestamp`,di.url,fi.costPerLead,fo.revenuePerLead,fo.costPerLeadOverride ";
 		$sqlSelect .= "FROM archive.data_outbound_201801 AS a ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.data_inbound AS di ON di.idRecord = a.idRecord ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.feedinc fi ON fi.idFeedIn = a.idFeedIn ";
 		$sqlSelect .= "LEFT JOIN dnrdmktg.feedout fo ON fo.idFeedOut = a.idFeedOut ";
 		$sqlSelect .= "WHERE a.idRecord > ? ";
-		//$sqlSelect .= "WHERE a.timestamp >= CONVERT_TZ('2018 - 05 - 29 00:00:00',?,?) AND a.timestamp <= CONVERT_TZ('2018 - 05 - 29 23:59:59',?,?) ";
+		//$sqlSelect .= "WHERE a.timestamp >= CONVERT_TZ('2018-05-29 00:00:00',?,?) AND a.timestamp <= CONVERT_TZ('2018-05-29 23:59:59',?,?) ";
 		//$sqlSelect .= "ORDER BY a.idRecord LIMIT 10000";
 		$query = $this->db->prepare( $sqlSelect );
 		do {
@@ -4745,7 +4746,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports / ' . $feedOut->label . "_" . $jobId . ".csv";
+		$fileLink = 'exports/' . $feedOut->label . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -4834,7 +4835,7 @@ class Leads
 			} else {
 				if( !empty( $feed->delay ) ) {
 					if( !empty( $feed->delayDump ) ) {
-						$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),' % Y -%m -%d 23:59:59') LIMIT 500" );
+						$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
 						$query->execute( array( $idFeedOut, DB_TIMEZONE, LOCAL_TIMEZONE, $feed->delay ) );
 					} else {
 						$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
@@ -4876,7 +4877,7 @@ class Leads
 		try {
 			if( !empty( $feed->delay ) ) {
 				if( !empty( $feed->delayDump ) ) {
-					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),' % Y -%m -%d 23:59:59') LIMIT 500" );
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
 					$query->execute( array( $idFeedOut, DB_TIMEZONE, LOCAL_TIMEZONE, $feed->delay ) );
 				} else {
 					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 1" );
@@ -4994,7 +4995,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports / ' . $feedOut->label . "_" . $jobId . ".csv";
+		$fileLink = 'exports/' . $feedOut->label . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -5088,7 +5089,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( "SELECT SUM(accepted) FROM stats_outbound WHERE idFeedOut = ? AND stamp = ?" );
-			$query->execute( array( $idFeedOut, date( 'Y - m - d' ) ) );
+			$query->execute( array( $idFeedOut, date( 'Y-m-d' ) ) );
 			$cnt = $query->fetchColumn();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to check outbound daily count: ' . $e->getMessage() );
@@ -5103,7 +5104,7 @@ class Leads
 
 		try {
 			$query = $this->db->prepare( "SELECT SUM(accepted) FROM stats_inbound WHERE idFeedIn = ? AND stamp = ?" );
-			$query->execute( array( $idFeedIn, date( 'Y - m - d' ) ) );
+			$query->execute( array( $idFeedIn, date( 'Y-m-d' ) ) );
 			$cnt = $query->fetchColumn();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to check inbound daily count: ' . $e->getMessage() );
@@ -5178,14 +5179,14 @@ class Leads
 		$result = array();
 
 		if( empty( $idCompany ) ) {
-			$result['file'] = 'exports / suppression_global_' . time() . ' . csv';
+			$result['file'] = 'exports/suppression_global_' . time() . '.csv';
 		} else {
-			$result['file'] = 'exports / suppression_' . intval( $idCompany ) . '_' . time() . ' . csv';
+			$result['file'] = 'exports/suppression_' . intval( $idCompany ) . '_' . time() . '.csv';
 		}
 		$filePath = ADMIN_ROOT . $result['file'];
 		$fh = fopen( $filePath, 'w' );
 		if( !$fh ) {
-			$result['reason'] = 'Failed to create CSV file . ';
+			$result['reason'] = 'Failed to create CSV file.';
 			return $result;
 		}
 
@@ -5202,7 +5203,7 @@ class Leads
 			}
 			$result['reason'] = 'Success';
 		} catch( PDOException $e ) {
-			$result['reason'] = 'DB query error . ';
+			$result['reason'] = 'DB query error.';
 			$this->logError( 'Unable to get get supression records for export: ' . $e->getMessage() );
 		}
 
@@ -5223,7 +5224,7 @@ class Leads
 				}
 			}
 		} catch( PDOException $e ) {
-			$result['reason'] = 'DB query error . ';
+			$result['reason'] = 'DB query error.';
 			$this->logError( 'Unable to get get supression records for validation: ' . $e->getMessage() );
 		}
 	}
@@ -5231,7 +5232,7 @@ class Leads
 	public function archiveLegacyOutbound( $table, $success ) {
 		try {
 			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $table ) . " WHERE poststamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND processed = '1' AND postresponse NOT LIKE ?" );
-			$query->execute( array( ' % ' . $success . ' % ' ) );
+			$query->execute( array( '%' . $success . '%' ) );
 			return $query->rowCount();
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete old legacy outbound entries: ' . $e->getMessage() );
@@ -5298,7 +5299,7 @@ class Leads
 			$this->logError( 'Unable to reset queued stats: ' . $e->getMessage() );
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
-			$this->logError( 'Unable to lock / unlock tables: ' . $pdoException->getMessage() );
+			$this->logError( 'Unable to lock/unlock tables: ' . $pdoException->getMessage() );
 		} finally {
 			$this->unlockTables();
 		}
@@ -5310,17 +5311,17 @@ class Leads
 
 		try {
 			$sql = <<<'SQL'
-SELECT i.*,c.*,IFNULL(SUM(si.accepted+si.rejected),0) AS leadsPassed,DATE_FORMAT(i.notifyThresholdTime,' % l:%i % p') AS notifyThresholdTimeFormatted
+SELECT i.*,c.*,IFNULL(SUM(si.accepted+si.rejected),0) AS leadsPassed,DATE_FORMAT(i.notifyThresholdTime,'%l:%i%p') AS notifyThresholdTimeFormatted
 FROM feedinc AS i
 LEFT JOIN companies c ON c.idCompany = i.idCompany
-LEFT JOIN stats_inbound AS si ON si.idFeedIn = i.idFeedIn AND si.stamp = DATE_FORMAT(CONVERT_TZ(NOW(),?,?),' % Y -%m -%d')
+LEFT JOIN stats_inbound AS si ON si.idFeedIn = i.idFeedIn AND si.stamp = DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%Y-%m-%d')
 WHERE i.status != 'retired'
 AND i.notifyThresholdCount > 0
 AND i.notifyThresholdCount IS NOT NULL
 AND i.notifyThresholdTime IS NOT NULL
-AND i.notifyThresholdTime <= DATE_FORMAT(CONVERT_TZ(NOW(),?,?),' % H:%i')
-AND FIND_IN_SET(DATE_FORMAT(CONVERT_TZ(NOW(),?,?),' % w'),i.notifyThresholdDays)
-AND ( i.notifyThresholdLastSent < DATE_FORMAT(CONVERT_TZ(NOW(),?,?),' % Y -%m -%d 00:00:00') OR i.notifyThresholdLastSent IS NULL )
+AND i.notifyThresholdTime <= DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%H:%i')
+AND FIND_IN_SET(DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%w'),i.notifyThresholdDays)
+AND ( i.notifyThresholdLastSent < DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%Y-%m-%d 00:00:00') OR i.notifyThresholdLastSent IS NULL )
 GROUP BY i.idFeedIn
 HAVING IFNULL(SUM(si.accepted+si.rejected),0) < i.notifyThresholdCount;
 SQL;
@@ -5338,18 +5339,18 @@ SQL;
 
 		try {
 			$sql = <<<'SQL'
-SELECT o.*,c.*,IFNULL(SUM(so.accepted+so.rejected),0) AS leadsPassed,DATE_FORMAT(o.notifyThresholdTime,' % l:%i % p') AS notifyThresholdTimeFormatted
+SELECT o.*,c.*,IFNULL(SUM(so.accepted+so.rejected),0) AS leadsPassed,DATE_FORMAT(o.notifyThresholdTime,'%l:%i%p') AS notifyThresholdTimeFormatted
 FROM feedout AS o
 LEFT JOIN companies c ON c.idCompany = o.idCompany
-LEFT JOIN stats_outbound AS so ON so.idFeedOut = o.idFeedOut AND so.stamp = DATE_FORMAT(CONVERT_TZ(NOW(),?,?),' % Y -%m -%d')
+LEFT JOIN stats_outbound AS so ON so.idFeedOut = o.idFeedOut AND so.stamp = DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%Y-%m-%d')
 WHERE o.status != 'retired'
 AND o.cron = '1'
 AND o.notifyThresholdCount > 0
 AND o.notifyThresholdCount IS NOT NULL
 AND o.notifyThresholdTime IS NOT NULL
-AND o.notifyThresholdTime <= DATE_FORMAT(CONVERT_TZ(NOW(),?,?),' % H:%i')
-AND FIND_IN_SET(DATE_FORMAT(CONVERT_TZ(NOW(),?,?),' % w'),o.notifyThresholdDays)
-AND ( o.notifyThresholdLastSent < DATE_FORMAT(CONVERT_TZ(NOW(),?,?),' % Y -%m -%d 00:00:00') OR o.notifyThresholdLastSent IS NULL )
+AND o.notifyThresholdTime <= DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%H:%i')
+AND FIND_IN_SET(DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%w'),o.notifyThresholdDays)
+AND ( o.notifyThresholdLastSent < DATE_FORMAT(CONVERT_TZ(NOW(),?,?),'%Y-%m-%d 00:00:00') OR o.notifyThresholdLastSent IS NULL )
 GROUP BY o.idFeedOut
 HAVING IFNULL(SUM(so.accepted+so.rejected),0) < o.notifyThresholdCount;
 SQL;
@@ -5366,7 +5367,7 @@ SQL;
 	public function logError( $message, $db = false, $email = true ) {
 
 		$stamp = date( 'Y-m-d H:i:s' );
-		$errfile = fopen( SITE_ROOT . 'error' . FD . 'leads - log', 'a' );
+		$errfile = fopen( SITE_ROOT . 'error' . FD . 'leads-log', 'a' );
 		if( $errfile ) {
 			fwrite( $errfile, $stamp . ' ' . $message . PHP_EOL );
 			fwrite( $errfile, $stamp . ' REQUEST: ' . print_r( $_REQUEST, true ) . PHP_EOL );
