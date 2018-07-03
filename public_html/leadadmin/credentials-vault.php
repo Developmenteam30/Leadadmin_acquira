@@ -75,7 +75,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				$c = false;
 				$result['error'] = 'Database failure, could not alter credential.';
 			} else {
-				$leads->auditLog( 'COMPANIES:EDIT', $_REQUEST['credentialId'] );
+				$leads->auditLog( 'CREDENTIALS:EDIT', $_REQUEST['credentialId'] );
 			}
 
 			$result['status'] = 1;
@@ -160,6 +160,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				<?php
 			} else {
 
+				$leads->auditLog( 'CREDENTIALS:VIEW', $_REQUEST['credentialId'] );
 				$db_companies = $leads->getCompanies( 'active' );
 				$companies = array();
 				foreach( $db_companies as $db_company ) {
