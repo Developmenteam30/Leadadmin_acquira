@@ -1140,15 +1140,13 @@ if( isset( $_REQUEST['d'] ) ) {
 										<div>
 											API Field: <input type='text' name='varFields[]' value='<?php echo $vF; ?>'/>
 											Mapped To: <select name='fieldMap[]'>
-												<?php foreach( $recordFields as $rF ) { ?>
+												<?php
+												$sortedFields = array_merge( $recordFields, $additionalMapFields );
+												asort( $sortedFields );
+												foreach( $sortedFields as $rF ) { ?>
 													<option value='<?php echo htmlentities( $rF, ENT_QUOTES ); ?>' <?php if( $feed_fieldMap[$sFCount] == $rF ) {
 														echo "selected='selected'";
 													} ?>><?php echo htmlentities( $rF ); ?></option>
-												<?php } ?>
-												<?php foreach( $additionalMapFields as $aF ) { ?>
-													<option value='<?php echo htmlentities( $aF, ENT_QUOTES ); ?>' <?php if( $feed_fieldMap[$sFCount] == $aF ) {
-														echo "selected='selected'";
-													} ?>><?php echo htmlentities( $aF ); ?></option>
 												<?php } ?>
 											</select>
 											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>

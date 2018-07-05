@@ -420,6 +420,11 @@ class ProcessLeads
 			}
 		}
 
+		$genderMap = array(
+			'M' => 'Male',
+			'F' => 'Female',
+		);
+
 		for( $count = 0; $count < count( $varFields ); $count++ ) { //Compile mapped fields into the post array.
 			if( !empty( $varFields[$count] ) ) {
 				switch( $fieldMap[$count] ) {
@@ -447,6 +452,10 @@ class ProcessLeads
 
 					case 'dobUS':
 						ProcessLeads::assignValue( $varFields[$count], date( "m-d-Y", strtotime( $row->dob ) ), $requestdata, $xmldata );
+						break;
+
+					case 'gender_full':
+						ProcessLeads::assignValue( $varFields[$count], $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata );
 						break;
 
 					case 'stampUS':

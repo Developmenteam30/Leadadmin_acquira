@@ -32,6 +32,7 @@ $recordFields = array(
 $additionalMapFields = array(
 	'urlAssign',
 	'dobUS',
+	'gender_full',
 	'stampUS',
 	'stampUS_dateOnly',
 	'stampUSAMPM',
