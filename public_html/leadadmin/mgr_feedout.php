@@ -806,49 +806,272 @@ if( isset( $_REQUEST['d'] ) ) {
 				break;
 			}
 
-			$settings['testing'] = 0;
-			$settings['testrecord'] = 1;
-			$leaddata = (object) array(
-				'stamp' => date( 'Y-m-d H:i:s' ),
-				'url' => 'http://www.' . SITE_URL,
-				'ip' => '1.2.3.4',
-				'email' => 'johndoe@somewhere.com',
-				'fname' => 'John',
-				'lname' => 'Adams',
-				'addr' => '123 Main St',
-				'addr2' => '',
-				'city' => 'New York',
-				'state' => 'NY',
-				'zip' => '10003',
-				'dob' => '1970-01-01',
-				'gender' => 'M',
-				'landline' => '2125551212',
-				'cellphone' => '2125559999',
-				'country' => 'US',
-				'listcode' => '',
-				'leadId' => '12345',
-				'custom1' => 'hsdiploma',
-				'custom2' => '99',
-				'custom3' => '97',
-				'custom4' => '1998',
-				'custom5' => 'custom5',
-				'custom6' => 'custom6',
+			$_REQUEST['gender'] = strtoupper( $_REQUEST['gender'] ?? 'M' );
+			$_REQUEST['country'] = strtoupper( $_REQUEST['country'] ?? 'US' );
+			$_REQUEST['cellphone'] = preg_replace( '/[^0-9]/', '', ( $_REQUEST['cellphone'] ?? '2125551818' ) );
+			$_REQUEST['landline'] = preg_replace( '/[^0-9]/', '', ( $_REQUEST['landline'] ?? '2125552020' ) );
+
+			print '<h2>Test submission parameters</h2>' . PHP_EOL;
+			print '<p>You may use the default values below, or change them appropriately if you are receiving duplicate errors due to multiple test submissions.</p>' . PHP_EOL;
+
+			$fields = array(
+				array(
+					'id' => 'idFeedOut',
+					'type' => 'hidden',
+					'value' => $_REQUEST['idFeedOut'],
+				),
+				array(
+					'id' => 'd',
+					'type' => 'hidden',
+					'value' => 'dialog_testrecord',
+				),
+				array(
+					'id' => 'submit',
+					'type' => 'hidden',
+					'value' => 'true',
+				),
+				array(
+					'id' => 'email',
+					'label' => 'Email',
+					'type' => 'email',
+					'value' => $_REQUEST['email'] ?? 'johndoe@somewhere.com',
+				),
+				array(
+					'id' => 'fname',
+					'label' => 'First Name',
+					'type' => 'text',
+					'value' => $_REQUEST['fname'] ?? 'John',
+				),
+				array(
+					'id' => 'lname',
+					'label' => 'Last Name',
+					'type' => 'text',
+					'value' => $_REQUEST['lname'] ?? 'Adams',
+				),
+				array(
+					'id' => 'addr',
+					'label' => 'Adddress 1',
+					'type' => 'text',
+					'value' => $_REQUEST['addr'] ?? '123 Main St',
+				),
+				array(
+					'id' => 'addr2',
+					'label' => 'Adddress 2',
+					'type' => 'text',
+					'value' => $_REQUEST['addr2'] ?? '',
+				),
+				array(
+					'id' => 'city',
+					'label' => 'City',
+					'type' => 'text',
+					'value' => $_REQUEST['city'] ?? 'New York',
+				),
+				array(
+					'id' => 'state',
+					'label' => 'State',
+					'type' => 'text',
+					'value' => $_REQUEST['state'] ?? 'NY',
+				),
+				array(
+					'id' => 'zip',
+					'label' => 'Zip Code',
+					'type' => 'text',
+					'value' => $_REQUEST['zip'] ?? '10013',
+				),
+				array(
+					'id' => 'country',
+					'label' => 'Country (2-letters)',
+					'type' => 'text',
+					'value' => $_REQUEST['country'],
+				),
+				array(
+					'id' => 'cellphone',
+					'label' => 'Cellphone',
+					'type' => 'text',
+					'value' => $_REQUEST['cellphone'],
+				),
+				array(
+					'id' => 'landline',
+					'label' => 'Landline',
+					'type' => 'text',
+					'value' => $_REQUEST['landline'],
+				),
+				array(
+					'id' => 'gender',
+					'label' => 'Gender (M or F only)',
+					'type' => 'text',
+					'value' => $_REQUEST['gender'],
+				),
+				array(
+					'id' => 'dob',
+					'label' => 'DOB (YYYY-MM-DD)',
+					'type' => 'text',
+					'value' => $_REQUEST['dob'] ?? '1980-02-03',
+				),
+				array(
+					'id' => 'ip',
+					'label' => 'IP Address',
+					'type' => 'text',
+					'value' => $_REQUEST['ip'] ?? '10.1.2.3',
+				),
+				array(
+					'id' => 'url',
+					'label' => 'URL',
+					'type' => 'text',
+					'value' => $_REQUEST['url'] ?? ( 'http://www.' . SITE_URL ),
+				),
+				array(
+					'id' => 'stamp',
+					'label' => 'Lead Timestamp',
+					'type' => 'text',
+					'value' => $_REQUEST['stamp'] ?? date( 'Y-m-d H:i:s' ),
+				),
+				array(
+					'id' => 'listcode',
+					'label' => 'List Code',
+					'type' => 'text',
+					'value' => $_REQUEST['listcode'] ?? '',
+				),
+				array(
+					'id' => 'leadId',
+					'label' => 'Lead ID',
+					'type' => 'text',
+					'value' => $_REQUEST['leadId'] ?? '12345',
+				),
+				array(
+					'id' => 'custom1',
+					'label' => 'Custom Field 1',
+					'type' => 'text',
+					'value' => $_REQUEST['custom1'] ?? '',
+				),
+				array(
+					'id' => 'custom2',
+					'label' => 'Custom Field 2',
+					'type' => 'text',
+					'value' => $_REQUEST['custom2'] ?? '',
+				),
+				array(
+					'id' => 'custom3',
+					'label' => 'Custom Field 3',
+					'type' => 'text',
+					'value' => $_REQUEST['custom3'] ?? '',
+				),
+				array(
+					'id' => 'custom4',
+					'label' => 'Custom Field 4',
+					'type' => 'text',
+					'value' => $_REQUEST['custom4'] ?? '',
+				),
+				array(
+					'id' => 'custom5',
+					'label' => 'Custom Field 5',
+					'type' => 'text',
+					'value' => $_REQUEST['custom5'] ?? '',
+				),
+				array(
+					'id' => 'custom6',
+					'label' => 'Custom Field 6',
+					'type' => 'text',
+					'value' => $_REQUEST['custom6'] ?? '',
+				),
 			);
 
-			print "<p><strong>HTTP Method:</strong> " . $feedOut->feedType . "</p>";
+			Display::displayForm( 'testrecord', $fields );
 
-			$response = ProcessLeads::pushOutboundData( $feedOut, $leaddata );
+			if( empty( $_REQUEST['submit'] ) ) {
+				break;
+			}
 
-			// Manually increment the queue counter because the pushOutboundData function will decrement the queue, resulting in a mismatch
-			//$leads->incrementOutboundQueue( $idFeedOut );
+			print '<hr id="scroll-to"/>';
 
-			print "<p><strong>Query String:</strong> " . nl2br( htmlspecialchars( $response['querystring'], ENT_QUOTES | ENT_HTML5 ) ) . "</p>";
+			$leaddata = (object) array(
+				'stamp' => $_REQUEST['stamp'] ?? '',
+				'url' => $_REQUEST['url'] ?? '',
+				'ip' => $_REQUEST['ip'] ?? '',
+				'email' => $_REQUEST['email'] ?? '',
+				'fname' => $_REQUEST['fname'] ?? '',
+				'lname' => $_REQUEST['lname'] ?? '',
+				'addr' => $_REQUEST['addr'] ?? '',
+				'addr2' => $_REQUEST['addr2'] ?? '',
+				'city' => $_REQUEST['city'] ?? '',
+				'state' => $_REQUEST['state'] ?? '',
+				'zip' => $_REQUEST['zip'] ?? '',
+				'dob' => $_REQUEST['dob'] ?? '',
+				'gender' => $_REQUEST['gender'] ?? '',
+				'landline' => $_REQUEST['landline'] ?? '',
+				'cellphone' => $_REQUEST['cellphone'] ?? '',
+				'country' => $_REQUEST['country'] ?? '',
+				'listcode' => $_REQUEST['listcode'] ?? '',
+				'leadId' => $_REQUEST['leadId'] ?? '',
+				'custom1' => $_REQUEST['custom1'] ?? '',
+				'custom2' => $_REQUEST['custom2'] ?? '',
+				'custom3' => $_REQUEST['custom3'] ?? '',
+				'custom4' => $_REQUEST['custom4'] ?? '',
+				'custom5' => $_REQUEST['custom5'] ?? '',
+				'custom6' => $_REQUEST['custom6'] ?? '',
+			);
+			$errors = array();
 
-			print "<p><strong>Status:</strong> " . ( true === $response['status'] ? '<span class="success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>' ) . "</p>";
+			if( !empty( $leaddata->stamp ) && !preg_match( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $leaddata->stamp ) ) {
+				$errors[] = 'Lead Timestamp must be in the format: YYYY-MM-DD HH:mm:ss';
+			}
 
-			print "<p><strong>Response:</strong> " . htmlspecialchars( $response['text'], ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE ) . "</p>";
+			if( !empty( $leaddata->url ) && filter_var( $leaddata->url, FILTER_VALIDATE_URL ) === false ) {
+				$errors[] = 'URL is invalid.';
+			}
 
-			$leads->auditLog( 'FEEDOUT:TEST-RECORD', $idFeedOut );
+			if( !empty( $leaddata->ip ) && filter_var( $leaddata->ip, FILTER_VALIDATE_IP ) === false ) {
+				$errors[] = 'IP address is invalid.';
+			}
+
+			if( !empty( $leaddata->email ) && filter_var( $leaddata->email, FILTER_VALIDATE_EMAIL ) === false ) {
+				$errors[] = 'Email address is invalid.';
+			}
+
+			if( !empty( $leaddata->country ) && !preg_match( '/^[A-Z]{2}$/', $leaddata->country ) ) {
+				$errors[] = 'Country must be a 2-letter country code.';
+			}
+
+			if( !empty( $leaddata->gender ) && !preg_match( '/^[MF]{1}$/', $leaddata->gender ) ) {
+				$errors[] = 'Gender must be either M or F.';
+			}
+			if( !empty( $leaddata->dob ) && !preg_match( '/^\d{4}-\d{2}-\d{2}$/', $leaddata->dob ) ) {
+				$errors[] = 'Date of Birth must be in the format: YYYY-MM-DD';
+			}
+
+			if( !empty( $errors ) ) {
+
+				print '<ul class="errors">' . PHP_EOL;
+				foreach( $errors as $error ) {
+					printf( '<li>%s</li>' . PHP_EOL,
+						Display::escHtml( $error )
+					);
+				}
+				print '</ul>' . PHP_EOL;
+
+			} else {
+				print '<h2>Test submission results</h2>';
+
+				$settings['testing'] = 0;
+				$settings['testrecord'] = 1;
+
+				print "<p><strong>HTTP Method:</strong> " . $feedOut->feedType . "</p>";
+
+				$response = ProcessLeads::pushOutboundData( $feedOut, $leaddata );
+
+				// Manually increment the queue counter because the pushOutboundData function will decrement the queue, resulting in a mismatch
+				//$leads->incrementOutboundQueue( $idFeedOut );
+
+				print "<p><strong>Query String:</strong> " . nl2br( htmlspecialchars( $response['querystring'], ENT_QUOTES | ENT_HTML5 ) ) . "</p>";
+
+				print "<p><strong>Status:</strong> " . ( true === $response['status'] ? '<span class="success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>' ) . "</p>";
+
+				print "<p><strong>Response:</strong> " . htmlspecialchars( $response['text'], ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE ) . "</p>";
+
+				$leads->auditLog( 'FEEDOUT:TEST-RECORD', $idFeedOut );
+
+				print '<hr/><p class="text-right">Click "Submit" again to send another test record, or click "Close" when finished.</p>';
+			}
 
 			break;
 
@@ -2779,6 +3002,7 @@ include( INCLUDES . "c_header.php" );
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-testrecord" type="button" class="btn btn-primary">Submit</button>
 				</div>
 			</div>
 		</div>
@@ -3008,6 +3232,25 @@ include( INCLUDES . "c_header.php" );
 				}
 			});
 		});
+
+		$('#modal-save-testrecord').click(function (event) {
+			event.preventDefault();
+
+			var data = $("#testrecord").serialize();
+			$('#modal-testrecord').find('.modal-body').html('Processing ...');
+
+			$.ajax({
+				cache: false,
+				type: 'POST',
+				url: 'mgr_feedout.php',
+				data: data,
+				success: function (result) {
+					$('#modal-testrecord').find('.modal-body').html(result);
+					$('#modal-testrecord').animate({scrollTop: $('#scroll-to').offset().top}, 'fast');
+				}
+			});
+		});
+
 
 		$('#modal-urlreport').on('show.bs.modal', function (e) {
 			var modal = $(this);
