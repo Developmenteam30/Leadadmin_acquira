@@ -1332,6 +1332,8 @@ include( INCLUDES . "c_header.php" );
 										echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
 									} ?><br/><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : '&nbsp;'; ?><?php if( ( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId2 ) && !empty( $entry->commissionDate2 ) && !empty( $entry->commissionAmount2 ) ) {
 										echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
+									} ?><br/><?php echo ( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId3 ) ? '$' . number_format( $entry->commissionAmount3, 2 ) : '&nbsp;'; ?><?php if( ( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId3 ) && !empty( $entry->commissionDate3 ) && !empty( $entry->commissionAmount3 ) ) {
+										echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
 									} ?></td>
 								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) { ?>
 									<td class="text-center">

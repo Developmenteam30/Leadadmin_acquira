@@ -83,6 +83,14 @@ include( INCLUDES . "c_header.php" );
 								$months['000000'][$entry->type] = true;
 							}
 						}
+						if( $entry->userId3 == $user->idUser ) {
+							if( !empty( $entry->commissionDate3 ) ) {
+								$month = substr( $entry->commissionDate3, 0, 7 );
+								$months[$month][$entry->type] = true;
+							} else {
+								$months['000000'][$entry->type] = true;
+							}
+						}
 					}
 					krsort( $months );
 				}
@@ -179,6 +187,9 @@ include( INCLUDES . "c_header.php" );
 								} else if( $entry->userId2 == $user->idUser ) {
 									$commissionDate = $entry->commissionDate2;
 									$commissionAmount = $entry->commissionAmount2;
+								} else if( $entry->userId3 == $user->idUser ) {
+									$commissionDate = $entry->commissionDate3;
+									$commissionAmount = $entry->commissionAmount3;
 								} else {
 								    continue;
                                 }
