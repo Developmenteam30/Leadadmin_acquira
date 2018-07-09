@@ -159,6 +159,25 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['commissionDate3'] ) ) {
+				try {
+					$commissionDate3 = new DateTime( $_REQUEST['commissionDate3'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date 3.';
+					break;
+				}
+			}
+
+			if( !empty( $_REQUEST['commissionAmount3'] ) && is_numeric( $_REQUEST['commissionAmount3'] ) === false ) {
+				$result['error'] = 'Commission amount 3 must be a numeric value.';
+				break;
+			}
+
+			if( !empty( $_REQUEST['commissionAmount3'] ) && floatval( $_REQUEST['commissionAmount3'] ) < 0 ) {
+				$result['error'] = 'Commission amount 3 cannot be less than zero.';
+				break;
+			}
+
 			$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
 
 			$ledgerId = $leads->addPhoneLedger( array(
@@ -180,7 +199,11 @@ if( isset( $_REQUEST['a'] ) ) {
 				'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
 				'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
 				'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
-				'commissionRevenue2' => empty( $_REQUEST['commissionRevenue2'] ) ? null : $_REQUEST['commissionRevenue2'],
+				'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
+				'commissionDate3' => !isset( $commissionDate3 ) ? null : $commissionDate3->format( 'Y-m-d' ),
+				'commissionAmount3' => empty( $_REQUEST['commissionAmount3'] ) ? null : $_REQUEST['commissionAmount3'],
+				'userId3' => empty( $_REQUEST['userId3'] ) ? null : $_REQUEST['userId3'],
+				'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
 			) );
 
 			if( null === $ledgerId ) {
@@ -370,6 +393,25 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['commissionDate3'] ) ) {
+				try {
+					$commissionDate3 = new DateTime( $_REQUEST['commissionDate3'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date 3.';
+					break;
+				}
+			}
+
+			if( !empty( $_REQUEST['commissionAmount3'] ) && is_numeric( $_REQUEST['commissionAmount3'] ) === false ) {
+				$result['error'] = 'Commission amount 3 must be a numeric value.';
+				break;
+			}
+
+			if( !empty( $_REQUEST['commissionAmount3'] ) && floatval( $_REQUEST['commissionAmount3'] ) < 0 ) {
+				$result['error'] = 'Commission amount 3 cannot be less than zero.';
+				break;
+			}
+			
 			$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
 
 			$ledgerId = $leads->updatePhoneLedger( $_REQUEST['ledgerId'], array(
@@ -392,6 +434,10 @@ if( isset( $_REQUEST['a'] ) ) {
 				'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
 				'commissionRevenue2' => empty( $_REQUEST['commissionRevenue2'] ) ? null : $_REQUEST['commissionRevenue2'],
 				'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
+				'commissionDate3' => !isset( $commissionDate3 ) ? null : $commissionDate3->format( 'Y-m-d' ),
+				'commissionAmount3' => empty( $_REQUEST['commissionAmount3'] ) ? null : $_REQUEST['commissionAmount3'],
+				'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
+				'userId3' => empty( $_REQUEST['userId3'] ) ? null : $_REQUEST['userId3'],
 			) );
 
 			if( null === $ledgerId ) {
@@ -622,13 +668,44 @@ if( isset( $_REQUEST['d'] ) ) {
 				'type' => 'text',
 			);
 			$fields[] = array(
-				'id' => 'commissionAmount 2',
+				'id' => 'commissionAmount2',
 				'label' => 'Commission Amt 2',
 				'type' => 'currency',
 			);
 			$fields[] = array(
 				'id' => 'commissionRevenue2',
 				'label' => 'Revenue/Profit 2',
+				'type' => 'select',
+				'choices' => array(
+					'existing' => 'Existing revenue/profit',
+					'new' => 'New revenue/profit',
+				),
+			);
+
+			$fields[] = array(
+				'type' => '_divider',
+			);
+			$fields[] = array(
+				'id' => 'userId3',
+				'label' => 'Salesperson 3',
+				'type' => 'select',
+				'required' => true,
+				'placeholder' => 'Select a salesperson',
+				'choices' => $leads->getStaffUsers(),
+			);
+			$fields[] = array(
+				'id' => 'commissionDate3',
+				'label' => 'Commission Date 3',
+				'type' => 'text',
+			);
+			$fields[] = array(
+				'id' => 'commissionAmount3',
+				'label' => 'Commission Amt 3',
+				'type' => 'currency',
+			);
+			$fields[] = array(
+				'id' => 'commissionRevenue3',
+				'label' => 'Revenue/Profit 3',
 				'type' => 'select',
 				'choices' => array(
 					'existing' => 'Existing revenue/profit',
@@ -647,7 +724,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			?>
 
             <script type="text/javascript">
-				$("#new_phoneledger input[name=orderDate], #new_phoneledger input[name=paymentDate], #new_phoneledger input[name=commissionDate1], #new_phoneledger input[name=commissionDate2]").datepicker({
+				$("#new_phoneledger input[name=orderDate], #new_phoneledger input[name=paymentDate], #new_phoneledger input[name=commissionDate1], #new_phoneledger input[name=commissionDate2], #new_phoneledger input[name=commissionDate3]").datepicker({
 					// Consistent format with the HTML5 picker
 					dateFormat: 'yy-mm-dd'
 				});
@@ -678,7 +755,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					allowClear: true
 				});
 
-				$("#new_phoneledger select[name='userId1'], #new_phoneledger select[name='userId2']").select2({
+				$("#new_phoneledger select[name='userId1'], #new_phoneledger select[name='userId2'], #new_phoneledger select[name='userId3']").select2({
 					placeholder: "Select a salesperson",
 					allowClear: true
 				});
@@ -871,6 +948,46 @@ if( isset( $_REQUEST['d'] ) ) {
 							'new' => 'New revenue/profit',
 						),
 						'value' => $entry->commissionRevenue2,
+						'readonly' => true,
+					),
+
+					array(
+						'type' => '_divider',
+					),
+
+					array(
+						'id' => 'userId3',
+						'label' => 'Salesperson 3',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a salesperson',
+						'choices' => $leads->getStaffUsers(),
+						'value' => $entry->userId3,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionDate3',
+						'label' => 'Commission Date 3',
+						'type' => 'text',
+						'value' => $entry->commissionDate3,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionAmount3',
+						'label' => 'Commission Amt 3',
+						'type' => 'currency',
+						'value' => $entry->commissionAmount3,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionRevenue3',
+						'label' => 'Revenue/Profit 3',
+						'type' => 'select',
+						'choices' => array(
+							'existing' => 'Existing revenue/profit',
+							'new' => 'New revenue/profit',
+						),
+						'value' => $entry->commissionRevenue3,
 						'readonly' => true,
 					),
 
@@ -1111,6 +1228,42 @@ if( isset( $_REQUEST['d'] ) ) {
 				);
 
 				$fields[] = array(
+					'type' => '_divider',
+				);
+
+				$fields[] = array(
+					'id' => 'userId3',
+					'label' => 'Salesperson 3',
+					'type' => 'select',
+					'required' => true,
+					'placeholder' => 'Select a salesperson',
+					'choices' => $leads->getStaffUsers(),
+					'value' => $entry->userId3,
+				);
+				$fields[] = array(
+					'id' => 'commissionDate3',
+					'label' => 'Commission Date 3',
+					'type' => 'text',
+					'value' => $entry->commissionDate3,
+				);
+				$fields[] = array(
+					'id' => 'commissionAmount3',
+					'label' => 'Commission Amt 3',
+					'type' => 'currency',
+					'value' => $entry->commissionAmount3,
+				);
+				$fields[] = array(
+					'id' => 'commissionRevenue3',
+					'label' => 'Revenue/Profit 3',
+					'type' => 'select',
+					'choices' => array(
+						'existing' => 'Existing revenue/profit',
+						'new' => 'New revenue/profit',
+					),
+					'value' => $entry->commissionRevenue3,
+				);
+
+				$fields[] = array(
 					'id' => 'a',
 					'type' => 'hidden',
 					'value' => 'editPhoneLedger',
@@ -1136,7 +1289,7 @@ if( isset( $_REQUEST['d'] ) ) {
                         console.log('firing');
 					});
 					$('#editphoneledger').on('shown.bs.modal', function (e) {
-						$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2]").datepicker({
+						$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2], #edit_phoneledger input[name=commissionDate3]").datepicker({
 							// Consistent format with the HTML5 picker
 							dateFormat: 'yy-mm-dd'
 						});
@@ -1167,7 +1320,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 
-						$("#edit_phoneledger select[name='userId1'], #edit_phoneledger select[name='userId2']").select2({
+						$("#edit_phoneledger select[name='userId1'], #edit_phoneledger select[name='userId2'], #edit_phoneledger select[name='userId3']").select2({
 							placeholder: "Select a salesperson",
 							allowClear: true
 						});
@@ -1326,6 +1479,9 @@ include( INCLUDES . "c_header.php" );
 							}
 							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId2 ) {
 								$commissionTotal += $entry->commissionAmount2;
+							}
+							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId3 ) {
+								$commissionTotal += $entry->commissionAmount3;
 							}
 							$paymentTotal += $entry->paymentAmount;
 							$loPaymentTotal += $entry->loPaymentAmount1;

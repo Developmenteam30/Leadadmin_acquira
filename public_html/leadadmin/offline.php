@@ -163,6 +163,25 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['commissionDate3'] ) ) {
+				try {
+					$commissionDate3 = new DateTime( $_REQUEST['commissionDate3'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date 3.';
+					break;
+				}
+			}
+
+			if( !empty( $_REQUEST['commissionAmount3'] ) && is_numeric( $_REQUEST['commissionAmount3'] ) === false ) {
+				$result['error'] = 'Commission amount 3 must be a numeric value.';
+				break;
+			}
+
+			if( !empty( $_REQUEST['commissionAmount3'] ) && floatval( $_REQUEST['commissionAmount3'] ) < 0 ) {
+				$result['error'] = 'Commission amount 3 cannot be less than zero.';
+				break;
+			}
+			
 			$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
 
 			$ledgerId = $leads->addOfflineLedger( array(
@@ -195,6 +214,10 @@ if( isset( $_REQUEST['a'] ) ) {
 				'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
 				'commissionRevenue2' => empty( $_REQUEST['commissionRevenue2'] ) ? null : $_REQUEST['commissionRevenue2'],
 				'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
+				'commissionDate3' => !isset( $commissionDate3 ) ? null : $commissionDate3->format( 'Y-m-d' ),
+				'commissionAmount3' => empty( $_REQUEST['commissionAmount3'] ) ? null : $_REQUEST['commissionAmount3'],
+				'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
+				'userId3' => empty( $_REQUEST['userId3'] ) ? null : $_REQUEST['userId3'],
 			) );
 
 			if( null === $ledgerId ) {
@@ -373,6 +396,25 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['commissionDate3'] ) ) {
+				try {
+					$commissionDate3 = new DateTime( $_REQUEST['commissionDate3'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid commission date 3.';
+					break;
+				}
+			}
+
+			if( !empty( $_REQUEST['commissionAmount3'] ) && is_numeric( $_REQUEST['commissionAmount3'] ) === false ) {
+				$result['error'] = 'Commission amount 3 must be a numeric value.';
+				break;
+			}
+
+			if( !empty( $_REQUEST['commissionAmount3'] ) && floatval( $_REQUEST['commissionAmount3'] ) < 0 ) {
+				$result['error'] = 'Commission amount 3 cannot be less than zero.';
+				break;
+			}
+
 			$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
 
 			$ledgerId = $leads->updateOfflineLedger( $_REQUEST['ledgerId'], array(
@@ -405,6 +447,10 @@ if( isset( $_REQUEST['a'] ) ) {
 				'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
 				'commissionRevenue2' => empty( $_REQUEST['commissionRevenue2'] ) ? null : $_REQUEST['commissionRevenue2'],
 				'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
+				'commissionDate3' => !isset( $commissionDate3 ) ? null : $commissionDate3->format( 'Y-m-d' ),
+				'commissionAmount3' => empty( $_REQUEST['commissionAmount3'] ) ? null : $_REQUEST['commissionAmount3'],
+				'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
+				'userId3' => empty( $_REQUEST['userId3'] ) ? null : $_REQUEST['userId3'],
 			) );
 
 			if( null === $ledgerId ) {
@@ -622,7 +668,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				),
 				array(
 					'id' => 'commissionDate2',
-					'label' => 'Commission Date2',
+					'label' => 'Commission Date 2',
 					'type' => 'text',
 				),
 				array(
@@ -633,6 +679,38 @@ if( isset( $_REQUEST['d'] ) ) {
 				array(
 					'id' => 'commissionRevenue2',
 					'label' => 'Revenue/Profit 2',
+					'type' => 'select',
+					'choices' => array(
+						'existing' => 'Existing revenue/profit',
+						'new' => 'New revenue/profit',
+					),
+				),
+
+				array(
+					'type' => '_divider',
+				),
+
+				array(
+					'id' => 'userId3',
+					'label' => 'Salesperson 3',
+					'type' => 'select',
+					'required' => true,
+					'placeholder' => 'Select a salesperson',
+					'choices' => $leads->getStaffUsers(),
+				),
+				array(
+					'id' => 'commissionDate3',
+					'label' => 'Commission Date 3',
+					'type' => 'text',
+				),
+				array(
+					'id' => 'commissionAmount3',
+					'label' => 'Commission Amt 3',
+					'type' => 'currency',
+				),
+				array(
+					'id' => 'commissionRevenue3',
+					'label' => 'Revenue/Profit 3',
 					'type' => 'select',
 					'choices' => array(
 						'existing' => 'Existing revenue/profit',
@@ -657,7 +735,7 @@ if( isset( $_REQUEST['d'] ) ) {
 			?>
 
 			<script type="text/javascript">
-				$("#new_offlineledger input[name=orderDate], #new_offlineledger input[name=mailDate], #new_offlineledger input[name=paymentDate], #new_offlineledger input[name=loPaymentDate], #new_offlineledger input[name=commissionDate1], #new_offlineledger input[name=commissionDate2]").datepicker({
+				$("#new_offlineledger input[name=orderDate], #new_offlineledger input[name=mailDate], #new_offlineledger input[name=paymentDate], #new_offlineledger input[name=loPaymentDate], #new_offlineledger input[name=commissionDate1], #new_offlineledger input[name=commissionDate2], #new_offlineledger input[name=commissionDate3]").datepicker({
 					// Consistent format with the HTML5 picker
 					dateFormat: 'yy-mm-dd'
 				});
@@ -677,7 +755,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					allowClear: true
 				});
 
-				$("#new_offlineledger select[name='userId1'], #new_offlineledger select[name='userId2']").select2({
+				$("#new_offlineledger select[name='userId1'], #new_offlineledger select[name='userId2'], #new_offlineledger select[name='userId3']").select2({
 					placeholder: "Select a salesperson",
 					allowClear: true
 				});
@@ -957,6 +1035,46 @@ if( isset( $_REQUEST['d'] ) ) {
 					),
 
 					array(
+						'type' => '_divider',
+					),
+
+					array(
+						'id' => 'userId3',
+						'label' => 'Salesperson 3',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a salesperson',
+						'choices' => $leads->getStaffUsers(),
+						'value' => $entry->userId3,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionDate3',
+						'label' => 'Commission Date 3',
+						'type' => 'text',
+						'value' => $entry->commissionDate3,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionAmount3',
+						'label' => 'Commission Amt 3',
+						'type' => 'currency',
+						'value' => $entry->commissionAmount3,
+						'readonly' => true,
+					),
+					array(
+						'id' => 'commissionRevenue3',
+						'label' => 'Revenue/Profit 3',
+						'type' => 'select',
+						'choices' => array(
+							'existing' => 'Existing revenue/profit',
+							'new' => 'New revenue/profit',
+						),
+						'value' => $entry->commissionRevenue3,
+						'readonly' => true,
+					),
+
+					array(
 						'id' => 'a',
 						'type' => 'hidden',
 						'value' => 'deleteOfflineLedger',
@@ -1213,6 +1331,42 @@ if( isset( $_REQUEST['d'] ) ) {
 					),
 
 					array(
+						'type' => '_divider',
+					),
+
+					array(
+						'id' => 'userId3',
+						'label' => 'Salesperson 3',
+						'type' => 'select',
+						'required' => true,
+						'placeholder' => 'Select a salesperson',
+						'choices' => $leads->getStaffUsers(),
+						'value' => $entry->userId3,
+					),
+					array(
+						'id' => 'commissionDate3',
+						'label' => 'Commission Date 3',
+						'type' => 'text',
+						'value' => $entry->commissionDate3,
+					),
+					array(
+						'id' => 'commissionAmount3',
+						'label' => 'Commission Amt 3',
+						'type' => 'currency',
+						'value' => $entry->commissionAmount3,
+					),
+					array(
+						'id' => 'commissionRevenue3',
+						'label' => 'Revenue/Profit 3',
+						'type' => 'select',
+						'choices' => array(
+							'existing' => 'Existing revenue/profit',
+							'new' => 'New revenue/profit',
+						),
+						'value' => $entry->commissionRevenue3,
+					),
+
+					array(
 						'id' => 'a',
 						'type' => 'hidden',
 						'value' => 'editOfflineLedger',
@@ -1229,7 +1383,7 @@ if( isset( $_REQUEST['d'] ) ) {
 
 				<script type="text/javascript">
 					$('#editofflineledger').on('shown.bs.modal', function (e) {
-						$("#edit_offlineledger input[name=orderDate], #edit_offlineledger input[name=mailDate], #edit_offlineledger input[name=paymentDate], #edit_offlineledger input[name=loPaymentDate], #edit_offlineledger input[name=commissionDate1], #edit_offlineledger input[name=commissionDate2]").datepicker({
+						$("#edit_offlineledger input[name=orderDate], #edit_offlineledger input[name=mailDate], #edit_offlineledger input[name=paymentDate], #edit_offlineledger input[name=loPaymentDate], #edit_offlineledger input[name=commissionDate1], #edit_offlineledger input[name=commissionDate2], #edit_offlineledger input[name=commissionDate3]").datepicker({
 							// Consistent format with the HTML5 picker
 							dateFormat: 'yy-mm-dd'
 						});
@@ -1249,7 +1403,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 
-						$("#edit_offlineledger select[name='userId1'], #edit_offlineledger select[name='userId2']").select2({
+						$("#edit_offlineledger select[name='userId1'], #edit_offlineledger select[name='userId2'], #edit_offlineledger select[name='userId3']").select2({
 							placeholder: "Select a salesperson",
 							allowClear: true
 						});
@@ -1419,6 +1573,9 @@ include( INCLUDES . "c_header.php" );
 							}
 							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId2 ) {
 								$commissionTotal += $entry->commissionAmount2;
+							}
+							if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) || LeadsSession::getUserId() == $entry->userId3 ) {
+								$commissionTotal += $entry->commissionAmount3;
 							}
 							$paymentTotal += $entry->paymentAmount;
 							$loPaymentTotal += $entry->loPaymentAmount;

@@ -183,6 +183,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								'companyId' => $entry->idCompany,
 								'userId1' => $entry->userId1,
 								'userId2' => $entry->userId2,
+								'userId3' => $entry->userId3,
 							);
 						}
 					} else if( '4' === $divisionId ) {
@@ -198,6 +199,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								'companyId' => $entry->vendorCompanyId,
 								'userId1' => $entry->userId1,
 								'userId2' => $entry->userId2,
+								'userId3' => $entry->userId3,
 							);
 						}
 					} else if( 'L' === $divisionId ) {
@@ -214,6 +216,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								'companyId' => $entry->vendorCompanyId,
 								'userId1' => $entry->userId1,
 								'userId2' => $entry->userId2,
+								'userId3' => $entry->userId3,
 							);
 						}
 					} else {
@@ -229,6 +232,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								'companyId' => $entry->companyId,
 								'userId1' => $entry->userId1,
 								'userId2' => $entry->userId2,
+								'userId3' => $entry->userId3,
 							);
 						}
 					}
@@ -281,6 +285,9 @@ if( isset( $_REQUEST['d'] ) ) {
 				}
 				if( !empty( $entry['userId2'] ) ) {
 					$commissionBCCs[$entry['userId2']] = true;
+				}
+				if( !empty( $entry['userId3'] ) ) {
+					$commissionBCCs[$entry['userId3']] = true;
 				}
 			}
 
