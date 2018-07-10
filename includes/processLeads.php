@@ -316,7 +316,7 @@ class ProcessLeads
 						if( ( isset( $status['status'] ) && $status['status'] != true ) || ( !empty( $feedParams->chokePercent ) && random_int( 1, 100 ) <= $feedParams->chokePercent ) ) {
 
 							$liveData['reason'] = sprintf( 'Third-party rejection [Reason: %s] [Code: %s%s]',
-								( isset( $status['status'] ) && $status['status'] != true && !empty( $status['text'] ) ) ? $status['text'] : 'Record failure',
+								( isset( $status['status'] ) && $status['status'] != true && !empty( $status['text'] ) ) ? $status['text'] : 'Duplicate record',
 								$feed->idFeedOut,
 								( isset( $status['status'] ) && $status['status'] != true ) ? '0' : '1'
 							);
