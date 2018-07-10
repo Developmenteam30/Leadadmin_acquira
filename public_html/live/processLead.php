@@ -51,7 +51,6 @@ if( $feedParams === null ) {
 if( empty( $_REQUEST['pswd'] ) || $_REQUEST['pswd'] != $feedParams->password ) {
 	http_response_code( 403 );
 	$result['reason'] = 'Unauthorized access.';
-	$leads->logError( 'Feed ' . $feedParams->label . ' Unauthorized user at ' . $_SERVER["REMOTE_ADDR"], true, false );
 
 	// Verbose logging for troubleshooting. Turn off once testing is complete.
 	if( false ) {
@@ -68,8 +67,12 @@ if( empty( $_REQUEST['pswd'] ) || $_REQUEST['pswd'] != $feedParams->password ) {
 		$sent = @mail( $to, $subject, $body, $header, "-f {$from}" );
 	}
 
-	$_REQUEST['url'] = $_REQUEST['url'] ?? ''; // Ensure a value for the URL is set
-	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null );
+	// Only log if a password was actually sent
+	if( !empty( $_REQUEST['pswd'] ) ) {
+		$leads->logError( 'Feed ' . $feedParams->label . ' Unauthorized user at ' . $_SERVER["REMOTE_ADDR"], true, false );
+		$_REQUEST['url'] = $_REQUEST['url'] ?? ''; // Ensure a value for the URL is set
+		$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null );
+	}
 	showResultAndDie( $result );
 }
 
