@@ -67,6 +67,12 @@ $crmStatuses = array(
 	'retired' => 'Retired',
 );
 
+$feedCategories = array(
+	'ppc' => 'PPC',
+	'phone' => 'Phone',
+	'email' => 'Email',
+);
+
 //Utility Functions//
 function hex2rgb( $hex ) { //Converts a hex color code to rgb color code for css.
 	$hex = str_replace( "#", "", $hex );
@@ -92,4 +98,9 @@ function genFeedPass( $length = 16 ) {
 		$randomString .= $characters[rand( 0, strlen( $characters ) - 1 )];
 	}
 	return $randomString;
+}
+
+function companyListSort( $item1, $item2 ) {
+	global $companyCache;
+	return strcasecmp( $companyCache[$item1]->name, $companyCache[$item2]->name );
 }

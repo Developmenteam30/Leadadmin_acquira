@@ -9,6 +9,7 @@ require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
 require_once( INCLUDES . 'display.php' );
+require_once( INCLUDES . 'f_site.php' );
 
 $statsStart = !empty( $_REQUEST['statsStart'] ) ? $_REQUEST['statsStart'] : date( 'Y-m-d' );
 $statsEnd = !empty( $_REQUEST['statsEnd'] ) ? $_REQUEST['statsEnd'] : date( 'Y-m-d' );
@@ -220,11 +221,6 @@ include( INCLUDES . "c_header.php" );
 	$users = $leads->getStaffUsers();
 	Display::displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd );
 
-	$feedCategories = array(
-		'ppc' => 'PPC',
-		'phone' => 'Phone',
-		'email' => 'Email',
-	);
 	foreach( $feedCategories as $categoryKey => $categoryVal ) {
 		?>
 		<div class="row">

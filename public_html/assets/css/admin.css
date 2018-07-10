@@ -393,10 +393,12 @@ div.logoContainer {
 	white-space: nowrap;
 }
 
+.incoming-col-large,
 .dashboard-incoming-col-large {
 	width: 55%;
 }
 
+.incoming-col-small,
 .dashboard-incoming-col-small {
 	width: 15%;
 }
@@ -411,6 +413,14 @@ div.logoContainer {
 
 .dashboard-outgoing-col-small {
 	width: 15%;
+}
+
+.outgoing-col-large {
+	width: 40%;
+}
+
+.outgoing-col-small {
+	width: 12%;
 }
 
 .weights-calendar {

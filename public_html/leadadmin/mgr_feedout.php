@@ -2661,7 +2661,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							<td valign='top' class="text-center">
 								<input class="population-toggle" <?php if( !empty( $popSet->enabled ) ) {
 									print 'checked="checked" ';
-								} ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Enabled" data-onstyle="success" data-off="Disabled" data-offstyle="danger" data-assoc-id="<?php echo $popSet->idAssoc; ?>" type="checkbox"/></td>
+								} ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Queueing" data-onstyle="success" data-off="Queueing" data-offstyle="danger" data-assoc-id="<?php echo $popSet->idAssoc; ?>" type="checkbox"/></td>
 							</td>
 							<td valign='top'>
 								<p><?php echo $filterTypeUrl; ?></p>
@@ -2772,157 +2772,157 @@ include( INCLUDES . "c_header.php" );
 
 	<?php
 
-	if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-		$outgoingFeeds = $leads->getOutboundFeeds( null, $status );
-	} else {
-		$idCompany = LeadsSession::getCompanyId();
-		if( empty( $idCompany ) ) {
-			$idCompany = -9999;
-		}
-		$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, $status );
-	}
-	?>
-	<?php
-	if( $outgoingFeeds === false ) {
-		?>
-		<p>Error when trying to fetch feeds: database error.</p>
-		<?php
-	} else if( $outgoingFeeds == 0 ) {
-		?>
-		<p>Error when trying to fetch feeds: there are no feeds.</p>
-		<?php
-	} else {
-		//Go through each and compile the company list.
-		$companyFeedLists = array();
-		foreach( $outgoingFeeds as $feed ) {
-			//Add company to the cache list of companies.
-			if( !isset( $companyCache[$feed->idCompany] ) ) {
-				$company = $leads->getCompany( $feed->idCompany );
-				if( is_object( $company ) ) {
-					$companyCache[$feed->idCompany] = $company;
-					$companyFeedLists[$feed->idCompany] = array();
-				}
+	foreach( $feedCategories
+
+	         as $categoryKey => $categoryVal ) {
+
+		print "<h4>Outgoing $categoryVal Feeds</h4>" . PHP_EOL;
+
+		if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			$outgoingFeeds = $leads->getOutboundFeeds( null, $status, $categoryKey );
+		} else {
+			$idCompany = LeadsSession::getCompanyId();
+			if( empty( $idCompany ) ) {
+				$idCompany = -9999;
 			}
-			//Add feed to list of feeds for the specified company.
-			$companyFeedLists[$feed->idCompany][] = $feed;
+			$outgoingFeeds = $leads->getOutboundFeeds( $idCompany, $status, $categoryKey );
 		}
-		//print_r($companyFeedLists);
-		function companyListSort( $item1, $item2 ) {
-			global $companyCache;
-			//print_r($companyCache[$item1]->name);
-			//print_r($companyCache[$item2]->name);
-			return strcasecmp( $companyCache[$item1]->name, $companyCache[$item2]->name );
-		}
-
-		uksort( $companyFeedLists, 'companyListSort' );
 		?>
-		<table class="table table-bordered table-condensed table-striped-custom">
-			<thead>
-			<tr>
-				<th class='fTO_companyName' colspan='2'>Company</th>
-				<th class='fTO_feedOverview' colspan='4'>Total Feeds</th>
-				<th class='fTO_accepted'>Total Accepted</th>
-				<th class='fTO_rejected'>Total Rejected</th>
-				<th class='fTO_rejected'>Total Queued</th>
-				<th class='fTO_options'>Options</th>
-			</tr>
-			</thead>
+		<?php
+		if( $outgoingFeeds === false ) {
+			?>
+			<p>Error when trying to fetch feeds: database error.</p>
 			<?php
-			$grandTotalFeeds = 0;
-			$grandTotalAccepted = 0;
-			$grandTotalRejected = 0;
-			$grandTotalQueued = 0;
-			foreach( $companyFeedLists as $idCompany => $companyFeedList ) {
-				$totalAccepted = 0;
-				$totalRejected = 0;
-				$totalActive = 0;
-				$totalQueued = 0;
-
-				foreach( $companyFeedList as $keyFeed => $feed ) {
-
-					$stats = $leads->getOutboundStats( $feed->idFeedOut );
-
-					$companyFeedList[$keyFeed]->accepted = $stats['accepted'];
-					$totalAccepted += $stats['accepted'];
-					$grandTotalAccepted += $stats['accepted'];
-
-					$companyFeedList[$keyFeed]->rejected = $stats['rejected'];
-					$totalRejected += $stats['rejected'];
-					$grandTotalRejected += $stats['rejected'];
-
-					$companyFeedList[$keyFeed]->queued = $feed->queued;
-					$totalQueued += $feed->queued;
-					$grandTotalQueued += $feed->queued;
-
-					if( 'active' === $feed->status ) {
-						$totalActive++;
+		} else if( $outgoingFeeds == 0 ) {
+			?>
+			<p>Error when trying to fetch feeds: there are no feeds.</p>
+			<?php
+		} else {
+			//Go through each and compile the company list.
+			$companyFeedLists = array();
+			foreach( $outgoingFeeds as $feed ) {
+				//Add company to the cache list of companies.
+				if( !isset( $companyCache[$feed->idCompany] ) ) {
+					$company = $leads->getCompany( $feed->idCompany );
+					if( is_object( $company ) ) {
+						$companyCache[$feed->idCompany] = $company;
+						$companyFeedLists[$feed->idCompany] = array();
 					}
-					$companyFeedList[$keyFeed]->statusFeed = $feed->status;
-					$companyFeedList[$keyFeed]->statusPop = $leads->getPopulationStatus( $feed->idFeedOut );
 				}
-				$grandTotalFeeds += count( $companyFeedList );
-				?>
-				<tr class='fTORow fTO_Row bgGray'>
-					<td colspan='2'><?php echo $companyCache[$idCompany]->name; ?></td>
-					<td colspan='4'><?php echo count( $companyFeedList ); ?> (<?php echo $totalActive; ?> Active)</td>
-					<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
-					<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
-					<td class="text-right"><?php echo number_format( $totalQueued, 0 ); ?></td>
-					<td class="text-center">
-						<button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button>
-					</td>
+				//Add feed to list of feeds for the specified company.
+				$companyFeedLists[$feed->idCompany][] = $feed;
+			}
+
+			uksort( $companyFeedLists, 'companyListSort' );
+			?>
+			<table class="table table-bordered table-condensed table-striped-custom">
+				<thead>
+				<tr>
+					<th class="fTO_companyName outgoing-col-large" colspan="4">Company</th>
+					<th class="fTO_feedOverview outgoing-col-small" colspan="2">Total Feeds</th>
+					<th class="fTO_accepted outgoing-col-small">Total Accepted</th>
+					<th class="fTO_rejected outgoing-col-small">Total Rejected</th>
+					<th class="fTO_rejected outgoing-col-small">Total Queued</th>
+					<th class="fTO_options outgoing-col-small">Options</th>
 				</tr>
+				</thead>
 				<?php
-				foreach( $companyFeedList as $feed ) {
+				$grandTotalFeeds = 0;
+				$grandTotalAccepted = 0;
+				$grandTotalRejected = 0;
+				$grandTotalQueued = 0;
+				foreach( $companyFeedLists as $idCompany => $companyFeedList ) {
+					$totalAccepted = 0;
+					$totalRejected = 0;
+					$totalActive = 0;
+					$totalQueued = 0;
+
+					foreach( $companyFeedList as $keyFeed => $feed ) {
+
+						$stats = $leads->getOutboundStats( $feed->idFeedOut );
+
+						$companyFeedList[$keyFeed]->accepted = $stats['accepted'];
+						$totalAccepted += $stats['accepted'];
+						$grandTotalAccepted += $stats['accepted'];
+
+						$companyFeedList[$keyFeed]->rejected = $stats['rejected'];
+						$totalRejected += $stats['rejected'];
+						$grandTotalRejected += $stats['rejected'];
+
+						$companyFeedList[$keyFeed]->queued = $feed->queued;
+						$totalQueued += $feed->queued;
+						$grandTotalQueued += $feed->queued;
+
+						if( 'active' === $feed->status ) {
+							$totalActive++;
+						}
+						$companyFeedList[$keyFeed]->statusFeed = $feed->status;
+						$companyFeedList[$keyFeed]->statusPop = $leads->getPopulationStatus( $feed->idFeedOut );
+					}
+					$grandTotalFeeds += count( $companyFeedList );
 					?>
-					<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
-						<td><?php echo $feed->idFeedOut; ?></td>
-						<td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo htmlentities( $feed->label ); ?></td>
-						<td><?php echo htmlentities( $feed->description ); ?></td>
-						<td><?php echo htmlentities( $feed->statusPop ); ?></td>
-						<td><?php echo ucfirst( $feed->status ); ?></td>
-						<td><input class="cron-toggle" <?php if( !empty( $feed->cron ) ) {
-								print 'checked="checked" ';
-							} ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Running" data-onstyle="success" data-off="Paused" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedOut; ?>" type="checkbox"/></td>
-						<td class="text-right"><?php echo $feed->accepted; ?></td>
-						<td class="text-right"><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode( $feed->idFeedOut ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
-						<td class="text-right"><?php echo $feed->queued; ?></td>
+					<tr class='fTORow fTO_Row bgGray'>
+						<td colspan='4'><?php echo $companyCache[$idCompany]->name; ?></td>
+						<td colspan='2'><?php echo count( $companyFeedList ); ?> (<?php echo $totalActive; ?> Active)</td>
+						<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
+						<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
+						<td class="text-right"><?php echo number_format( $totalQueued, 0 ); ?></td>
 						<td class="text-center">
-							<div class="btn-group">
-								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editfeed" data-mode="edit" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Edit Feed</button>
-								<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-									<span class="caret"></span>
-									<span class="sr-only">Toggle Dropdown</span>
-								</button>
-								<ul class="dropdown-menu">
-									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-showpop" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Show populations</a></li>
-									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#newfeed" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Duplicate feed</a></li>
-									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-testrecord" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Send test record</a></li>
-									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
-									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
-									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
-									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Export data</a></li>
-									<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Retry rejections</a></li>
-								</ul>
-							</div>
+							<button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button>
 						</td>
 					</tr>
 					<?php
+					foreach( $companyFeedList as $feed ) {
+						?>
+						<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
+							<td><?php echo $feed->idFeedOut; ?></td>
+							<td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo htmlentities( $feed->label ); ?></td>
+							<td><?php echo htmlentities( $feed->description ); ?></td>
+							<td><?php echo htmlentities( $feed->statusPop ); ?></td>
+							<td><?php echo ucfirst( $feed->status ); ?></td>
+							<td><input class="cron-toggle" <?php if( !empty( $feed->cron ) ) {
+									print 'checked="checked" ';
+								} ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Pushing" data-onstyle="success" data-off="Pushing" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedOut; ?>" type="checkbox"/></td>
+							<td class="text-right"><?php echo $feed->accepted; ?></td>
+							<td class="text-right"><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode( $feed->idFeedOut ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
+							<td class="text-right"><?php echo $feed->queued; ?></td>
+							<td class="text-center">
+								<div class="btn-group">
+									<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editfeed" data-mode="edit" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Edit Feed</button>
+									<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<span class="caret"></span>
+										<span class="sr-only">Toggle Dropdown</span>
+									</button>
+									<ul class="dropdown-menu">
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-showpop" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Show populations</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#newfeed" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Duplicate feed</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-testrecord" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Send test record</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Export data</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Retry rejections</a></li>
+									</ul>
+								</div>
+							</td>
+						</tr>
+						<?php
+					}
 				}
-			}
-			?>
-			<tfoot>
-			<tr>
-				<td colspan='2'>GRAND TOTAL</td>
-				<td colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
-				<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
-				<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
-				<td class="text-right"><?php echo number_format( $grandTotalQueued, 0 ); ?></td>
-				<td>&nbsp;</td>
-			</tr>
-			</tfoot>
-		</table>
-		<?php
+				?>
+				<tfoot>
+				<tr>
+					<td colspan='2'>GRAND TOTAL</td>
+					<td colspan='4'><?php echo number_format( $grandTotalFeeds, 0 ); ?></td>
+					<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
+					<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
+					<td class="text-right"><?php echo number_format( $grandTotalQueued, 0 ); ?></td>
+					<td>&nbsp;</td>
+				</tr>
+				</tfoot>
+			</table>
+			<?php
+		}
 	}
 	?>
 

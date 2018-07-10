@@ -1478,135 +1478,129 @@ include( INCLUDES . "c_header.php" );
 	<?php } ?>
 
 	<?php
-	if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-		$incomingFeeds = $leads->getInboundFeeds( null, $status );
-	} else {
-		$idCompany = LeadsSession::getCompanyId();
-		if( empty( $idCompany ) ) {
-			$idCompany = -9999;
-		}
-		$incomingFeeds = $leads->getInboundFeeds( $idCompany, $status );
-	}
-	?>
-	<?php
-	if( $incomingFeeds === false ) {
-		?>
-		<p>Error when trying to fetch feeds: database error.</p>
-		<?php
-	} else if( $incomingFeeds == 0 ) {
-		?>
-		<p>Error when trying to fetch feeds: there are no feeds.</p>
-		<?php
-	} else {
-		//Go through each and compile the company list.
-		$companyFeedLists = array();
-		foreach( $incomingFeeds as $feed ) {
-			//Add company to the cache list of companies.
-			if( !isset( $companyCache[$feed->idCompany] ) ) {
-				$company = $leads->getCompany( $feed->idCompany );
-				if( is_object( $company ) ) {
-					$companyCache[$feed->idCompany] = $company;
-					$companyFeedLists[$feed->idCompany] = array();
-				}
+
+	foreach( $feedCategories as $categoryKey => $categoryVal ) {
+
+		print "<h4>Incoming $categoryVal Feeds</h4>" . PHP_EOL;
+
+		if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			$incomingFeeds = $leads->getInboundFeeds( null, $status, $categoryKey );
+		} else {
+			$idCompany = LeadsSession::getCompanyId();
+			if( empty( $idCompany ) ) {
+				$idCompany = -9999;
 			}
-			//Add feed to list of feeds for the specified company.
-			$companyFeedLists[$feed->idCompany][] = $feed;
+			$incomingFeeds = $leads->getInboundFeeds( $idCompany, $status, $categoryKey );
 		}
-		//print_r($companyFeedLists);
-		function companyListSort( $item1, $item2 ) {
-			global $companyCache;
-			//print_r($companyCache[$item1]->name);
-			//print_r($companyCache[$item2]->name);
-			return strcasecmp( $companyCache[$item1]->name, $companyCache[$item2]->name );
-		}
-
-		uksort( $companyFeedLists, 'companyListSort' );
 		?>
-		<table class="table table-bordered table-condensed table-striped-custom">
-			<thead>
-			<tr class='bgGray'>
-				<th>Company
-				</td>
-				<th class="text-right">Accepted
-				</td>
-				<th class="text-right">Rejected
-				</td>
-				<th>Actions
-				</td>
-			</tr>
-			</thead>
+		<?php
+		if( $incomingFeeds === false ) {
+			?>
+			<p>Error when trying to fetch feeds: database error.</p>
 			<?php
-			$grandTotalFeeds = 0;
-			$grandTotalAccepted = 0;
-			$grandTotalRejected = 0;
-			foreach( $companyFeedLists as $idCompany => $companyFeedList ) {
-				$totalAccepted = 0;
-				$totalRejected = 0;
-				foreach( $companyFeedList as $keyFeed => $feed ) {
-
-					$stats = $leads->getInboundStats( $feed->idFeedIn );
-
-					$companyFeedList[$keyFeed]->dailyCount = $stats['accepted'];
-					$totalAccepted += $stats['accepted'];
-					$grandTotalAccepted += $stats['accepted'];
-
-					$companyFeedList[$keyFeed]->dailyCountInvalid = $stats['rejected'];
-					$totalRejected += $stats['rejected'];
-					$grandTotalRejected += $stats['rejected'];
-
+		} else if( $incomingFeeds == 0 ) {
+			?>
+			<p>Error when trying to fetch feeds: there are no feeds.</p>
+			<?php
+		} else {
+			//Go through each and compile the company list.
+			$companyFeedLists = array();
+			foreach( $incomingFeeds as $feed ) {
+				//Add company to the cache list of companies.
+				if( !isset( $companyCache[$feed->idCompany] ) ) {
+					$company = $leads->getCompany( $feed->idCompany );
+					if( is_object( $company ) ) {
+						$companyCache[$feed->idCompany] = $company;
+						$companyFeedLists[$feed->idCompany] = array();
+					}
 				}
-				$grandTotalFeeds += count( $companyFeedList );
-				?>
-				<tr class="custom-master">
-					<td><?php echo $companyCache[$idCompany]->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
-					<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
-					<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
-					<td class="text-center">
-						<button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button>
-					</td>
+				//Add feed to list of feeds for the specified company.
+				$companyFeedLists[$feed->idCompany][] = $feed;
+			}
+
+			uksort( $companyFeedLists, 'companyListSort' );
+			?>
+			<table class="table table-bordered table-condensed table-striped-custom">
+				<thead>
+				<tr class='bgGray'>
+					<th class="incoming-col-large">Company</th>
+					<th class="incoming-col-small text-right">Accepted</th>
+					<th class="incoming-col-small text-right">Rejected</th>
+					<th class="incoming-col-small">Actions</th>
 				</tr>
+				</thead>
 				<?php
-				foreach( $companyFeedList as $feed ) {
+				$grandTotalFeeds = 0;
+				$grandTotalAccepted = 0;
+				$grandTotalRejected = 0;
+				foreach( $companyFeedLists as $idCompany => $companyFeedList ) {
+					$totalAccepted = 0;
+					$totalRejected = 0;
+					foreach( $companyFeedList as $keyFeed => $feed ) {
+
+						$stats = $leads->getInboundStats( $feed->idFeedIn );
+
+						$companyFeedList[$keyFeed]->dailyCount = $stats['accepted'];
+						$totalAccepted += $stats['accepted'];
+						$grandTotalAccepted += $stats['accepted'];
+
+						$companyFeedList[$keyFeed]->dailyCountInvalid = $stats['rejected'];
+						$totalRejected += $stats['rejected'];
+						$grandTotalRejected += $stats['rejected'];
+
+					}
+					$grandTotalFeeds += count( $companyFeedList );
 					?>
-					<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
-						<td class="status-<?php print $feed->status; ?>"><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo htmlentities( $feed->description ); ?>)</td>
-						<td class="text-right"><?php echo $feed->dailyCount; ?></td>
-						<td class="text-right"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
+					<tr class="custom-master">
+						<td><?php echo $companyCache[$idCompany]->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
+						<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
+						<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
 						<td class="text-center">
-							<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) { ?>
-								<div class="btn-group">
-									<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editfeedinc" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Edit Feed</button>
-									<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-										<span class="caret"></span>
-										<span class="sr-only">Toggle Dropdown</span>
-									</button>
-									<ul class="dropdown-menu">
-										<li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>" target="_blank">API Spec</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Import data</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Export data</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">URL report</a></li>
-									</ul>
-								</div>
-							<?php } else { ?>
-								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Import data</button>
-							<?php } ?>
+							<button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button>
 						</td>
 					</tr>
 					<?php
+					foreach( $companyFeedList as $feed ) {
+						?>
+						<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
+							<td class="status-<?php print $feed->status; ?>"><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo htmlentities( $feed->description ); ?>)</td>
+							<td class="text-right"><?php echo $feed->dailyCount; ?></td>
+							<td class="text-right"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
+							<td class="text-center">
+								<?php if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) { ?>
+									<div class="btn-group">
+										<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editfeedinc" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Edit Feed</button>
+										<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+											<span class="caret"></span>
+											<span class="sr-only">Toggle Dropdown</span>
+										</button>
+										<ul class="dropdown-menu">
+											<li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>" target="_blank">API Spec</a></li>
+											<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Import data</a></li>
+											<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Export data</a></li>
+											<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">URL report</a></li>
+										</ul>
+									</div>
+								<?php } else { ?>
+									<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feedinc-id="<?php echo intval( $feed->idFeedIn ); ?>">Import data</button>
+								<?php } ?>
+							</td>
+						</tr>
+						<?php
+					}
 				}
-			}
-			?>
-			<tfoot>
-			<tr>
-				<td>GRAND TOTAL</td>
-				<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
-				<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
-				<td></td>
-			</tr>
-			</tfoot>
-		</table>
+				?>
+				<tfoot>
+				<tr>
+					<td>GRAND TOTAL</td>
+					<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
+					<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
+					<td></td>
+				</tr>
+				</tfoot>
+			</table>
+		<?php } ?>
 	<?php } ?>
-
 </div>
 
 <div class="modal fade" id="newfeedinc" tabindex="-1" role="dialog" aria-labelledby="newfeedinc_title">
