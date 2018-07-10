@@ -77,8 +77,13 @@ if( empty( $_REQUEST['pswd'] ) || $_REQUEST['pswd'] != $feedParams->password ) {
 }
 
 if( 'retired' == $feedParams->status ) {
-	http_response_code( 403 );
 	$result['reason'] = 'This feed has been disabled.';
+	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null );
+	showResultAndDie( $result );
+}
+
+if( !empty( $feedParams->paused ) ) {
+	$result['reason'] = ( !empty( $feedParams->pauseMessage ) ? $feedParams->pauseMessage : 'Lead rejected.' ) . ' [Status: PIF]';
 	$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null );
 	showResultAndDie( $result );
 }

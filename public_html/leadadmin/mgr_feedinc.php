@@ -222,6 +222,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
+						'pauseMessage' => empty( $_REQUEST['pauseMessage'] ) ? null : trim( $_REQUEST['pauseMessage'] ),
 					) );
 
 					if( null === $idFeedIn ) {
@@ -387,6 +388,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdTime' => !empty( $notifyThresholdTime ) ? $notifyThresholdTime->format( 'H:i:s' ) : null,
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
+						'pauseMessage' => empty( $_REQUEST['pauseMessage'] ) ? null : trim( $_REQUEST['pauseMessage'] ),
 					) );
 
 					if( null === $status ) {
@@ -455,6 +457,44 @@ if( isset( $_REQUEST['a'] ) ) {
 				}
 			}
 
+			break;
+
+		case "managePaused":
+			$c = true;
+			$result['error'] = 'Failed when attempting to manage incoming feed.';
+			switch( $_REQUEST['action'] ) {
+				case "toggle":
+					if( $c ) {
+						$feed = $leads->getInboundFeed( $_REQUEST['idFeedIn'] ?? '' );
+						if( empty( $feed ) ) {
+							$c = false;
+							$result['error'] = 'Database failure - could not fetch feed for editing.';
+						}
+					}
+					if( $c ) {
+						if( $feed->paused ) {
+							$paused = 0;
+						} else {
+							$paused = 1;
+						}
+
+						$alterResult = $leads->updateInboundFeed( $_REQUEST['idFeedIn'], array( 'paused' => $paused ) );
+
+						if( empty( $alterResult ) ) {
+							$c = false;
+							$result['error'] = 'Unable to update feed.';
+						} else {
+							$leads->auditLog( 'FEEDINC:PAUSED', $feed->idFeedIn . ':' . ( $paused ? 'PAUSED' : 'ENABLED' ) );
+						}
+					}
+					if( $c ) {
+						$result['error'] = 'Successfully toggled paused status.';
+					}
+					break;
+			}
+			if( $c ) {
+				$result['status'] = 1;
+			}
 			break;
 	}
 	echo json_encode( $result );
@@ -544,6 +584,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'notifyThresholdCount',
 				'notifyThresholdTimeFormatted',
 				'salesperson',
+				'pauseMessage',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -857,7 +898,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						<td>
 							<p>How old are leads allowed to be before we reject them? This should be a text string like "7 Days Ago" or "30 Days Ago". Do not enter just a number. A blank value disables this feature.</p>
 							<p>
-								<input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge' value='<?php echo $feed_rejectOldLeadsMaxAge; ?>' class='long'/>
+								<input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge' value='<?php echo $feed_rejectOldLeadsMaxAge; ?>' class='input-long'/>
 							</p>
 						</td>
 					</tr>
@@ -927,6 +968,15 @@ if( isset( $_REQUEST['d'] ) ) {
 								<?php } ?>
 							</p>
 							<p><strong>To disable notifications from being sent, set the lead count to zero or uncheck all day boxes.</strong></p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Pause Message</p></td>
+						<td>
+							<p>If the feed is paused, send this rejection message to the vendor. If nothing is set here, the default message is "Lead rejected".</p>
+							<p>
+								<input type="text" name="pauseMessage" value="<?php echo $feed_pauseMessage; ?>" class="input-long" />
+							</p>
 						</td>
 					</tr>
 					<tr>
@@ -1523,7 +1573,7 @@ include( INCLUDES . "c_header.php" );
 			<table class="table table-bordered table-condensed table-striped-custom">
 				<thead>
 				<tr class='bgGray'>
-					<th class="incoming-col-large">Company</th>
+					<th class="incoming-col-large" colspan="2">Company</th>
 					<th class="incoming-col-small text-right">Accepted</th>
 					<th class="incoming-col-small text-right">Rejected</th>
 					<th class="incoming-col-small">Actions</th>
@@ -1552,7 +1602,7 @@ include( INCLUDES . "c_header.php" );
 					$grandTotalFeeds += count( $companyFeedList );
 					?>
 					<tr class="custom-master">
-						<td><?php echo $companyCache[$idCompany]->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
+						<td colspan="2"><?php echo $companyCache[$idCompany]->name; ?> (<?php echo count( $companyFeedList ); ?>)</td>
 						<td class="text-right"><?php echo number_format( $totalAccepted, 0 ); ?></td>
 						<td class="text-right"><?php echo number_format( $totalRejected, 0 ); ?></td>
 						<td class="text-center">
@@ -1564,6 +1614,11 @@ include( INCLUDES . "c_header.php" );
 						?>
 						<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
 							<td class="status-<?php print $feed->status; ?>"><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo htmlentities( $feed->description ); ?>)</td>
+							<td>
+								<input class="paused-toggle" <?php if( empty( $feed->paused ) ) {
+									print 'checked="checked" ';
+								} ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Enabled" data-onstyle="success" data-off="Paused" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedIn; ?>" type="checkbox"/></td>
+							</td>
 							<td class="text-right"><?php echo $feed->dailyCount; ?></td>
 							<td class="text-right"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
 							<td class="text-center">
@@ -1592,7 +1647,7 @@ include( INCLUDES . "c_header.php" );
 				?>
 				<tfoot>
 				<tr>
-					<td>GRAND TOTAL</td>
+					<td colspan="2">GRAND TOTAL</td>
 					<td class="text-right"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
 					<td class="text-right"><?php echo number_format( $grandTotalRejected, 0 ); ?></td>
 					<td></td>
@@ -1856,6 +1911,24 @@ include( INCLUDES . "c_header.php" );
 	});
 	$('.feed-toggle').on('hide.bs.collapse', function () {
 		$(this).prev().find('button[data-toggle="collapse"]').html('Show Feeds');
+	});
+
+	$('.paused-toggle').bootstrapToggle();
+
+	$('.paused-toggle').change(function () {
+		var idFeedIn = $(this).data('feed-id');
+
+		$.ajax({
+			cache: false,
+			type: 'POST',
+			url: 'mgr_feedinc.php',
+			data: {
+				'a': 'managePaused',
+				'idFeedIn': idFeedIn,
+				'action': 'toggle',
+				'param': 'enabled'
+			}
+		});
 	});
 </script>
 
