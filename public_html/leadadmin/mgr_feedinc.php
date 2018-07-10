@@ -453,7 +453,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				} else {
 					$leads->auditLog( 'FEEDINC:EXPORT', $jobId );
 					$result['status'] = 1;
-					$result['error'] = 'Export job #' . $jobId . ' submitted succesfully. You will be notified by email when your download is ready.';
+					$result['error'] = 'Export job #' . $jobId . ' submitted successfully. You will be notified by email when your download is ready.';
 				}
 			}
 

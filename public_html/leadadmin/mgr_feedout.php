@@ -640,7 +640,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				} else {
 					$leads->auditLog( 'FEEDOUT:IMPORT', $jobId );
 					$result['status'] = 1;
-					$result['error'] = 'Import job #' . $jobId . ' submitted succesfully. The selected records will be added to the outbound queue.';
+					$result['error'] = 'Import job #' . $jobId . ' submitted successfully. The selected records will be added to the outbound queue.';
 				}
 			}
 
@@ -686,7 +686,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				} else {
 					$leads->auditLog( 'FEEDOUT:EXPORT', $jobId );
 					$result['status'] = 1;
-					$result['error'] = 'Export job #' . $jobId . ' submitted succesfully. You will be notified by email when your download is ready.';
+					$result['error'] = 'Export job #' . $jobId . ' submitted successfully. You will be notified by email when your download is ready.';
 				}
 			}
 
@@ -766,7 +766,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				} else {
 					$leads->auditLog( 'FEEDOUT:IMPORT', $jobId );
 					$result['status'] = 1;
-					$result['error'] = 'Retry rejections job #' . $jobId . ' submitted succesfully. The selected records will be readded to the outbound queue.';
+					$result['error'] = 'Retry rejections job #' . $jobId . ' submitted successfully. The selected records will be readded to the outbound queue.';
 				}
 			}
 
