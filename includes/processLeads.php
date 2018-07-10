@@ -386,7 +386,7 @@ class ProcessLeads
 		}
 
 		// Check global and local suppression lists for email feeds
-		if( $feedOut->feedCategory != 'phone' ) {
+		if( 'email' == $feedOut->feedCategory ) {
 
 			if( !empty( $row->email ) && $leads->checkSuppression( $row->email, null ) ) {
 
@@ -1024,7 +1024,7 @@ class ProcessLeads
 		}
 
 		// Check global suppression list for email feeds
-		if( !empty( $data['email'] ) && $feedParams->feedCategory != 'phone' ) {
+		if( !empty( $data['email'] ) && 'email' == $feedParams->feedCategory ) {
 			$exists = $leads->checkSuppression( $data['email'], null );
 			if( $exists === true ) {
 				$result['valid'] = false;
