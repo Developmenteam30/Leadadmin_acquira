@@ -270,14 +270,6 @@ if( isset( $_REQUEST['a'] ) ) {
 							$result['error'] = 'Label is already in use.';
 						}
 					}
-
-					if( $c ) {
-						$alterResult = $leads->renameInboundTables( $feed->label, $_REQUEST['label'] );
-						if( null === $alterResult ) {
-							$c = false;
-							$result['error'] = "Error renaming database tables to new label.";
-						}
-					}
 				}
 
 				if( $c && !empty( $_REQUEST['custom1Label'] ) && sizeOf( $_REQUEST['custom1Label'] ) > 255 ) {

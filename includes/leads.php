@@ -2094,26 +2094,6 @@ class Leads
 			$this->logError( 'Unable to add inbound record: ' . $pdoException->getMessage() );
 		}
 
-		if( LEGACY_DB ) {
-			try {
-				$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] ) . " LIKE feedinc_empty" );
-				$query->execute();
-			} catch( PDOException $e ) {
-				$this->db->rollBack();
-				$this->logError( 'Unable to create new inbound table: ' . $e->getMessage() );
-				return null;
-			}
-
-			try {
-				$query = $this->db->prepare( "CREATE TABLE " . $this->quoteIdentifier( "feedinc_" . $fields['label'] . "_invalid" ) . " LIKE feedinc_empty_invalid" );
-				$query->execute();
-			} catch( PDOException $e ) {
-				$this->db->rollBack();
-				$this->logError( 'Unable to create new inbound invalid table: ' . $e->getMessage() );
-				return null;
-			}
-		}
-
 		$this->db->commit();
 
 		return $idFeedIn;
@@ -2132,37 +2112,6 @@ class Leads
 		}
 
 		return null;
-	}
-
-	public function renameInboundTables( $old, $new ) {
-
-		if( LEGACY_DB ) {
-
-			$this->db->beginTransaction();
-
-			try {
-				$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new ) );
-				$query->execute();
-			} catch( PDOException $e ) {
-				$this->db->rollBack();
-				$this->logError( 'Unable to rename inbound table: ' . $e->getMessage() );
-				return null;
-			}
-
-			try {
-				$query = $this->db->prepare( "RENAME TABLE " . $this->quoteIdentifier( "feedinc_" . $old . "_invalid" ) . " TO " . $this->quoteIdentifier( "feedinc_" . $new . "_invalid" ) );
-				$query->execute();
-			} catch( PDOException $e ) {
-				$this->db->rollBack();
-				$this->logError( 'Unable to rename inbound invalid table: ' . $e->getMessage() );
-				return null;
-			}
-
-			$this->db->commit();
-
-		}
-
-		return true;
 	}
 
 	public function getInboundFeed( $idFeedIn ) {
@@ -2830,13 +2779,8 @@ class Leads
 		$this->db->beginTransaction();
 
 		try {
-			if( LEGACY_DB ) {
-				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
-				$query->execute( array( $result, $row->idRecord, $feedOut->idFeedOut ) );
-			} else {
-				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, accepted = ?, result = ? WHERE idRecord = ? AND idFeedOut = ?' );
-				$query->execute( array( !empty( $accepted ) ? 1 : 0, $result, $row->idRecord, $feedOut->idFeedOut ) );
-			}
+			$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, accepted = ?, result = ? WHERE idRecord = ? AND idFeedOut = ?' );
+			$query->execute( array( !empty( $accepted ) ? 1 : 0, $result, $row->idRecord, $feedOut->idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to update data_outbound record: ' . $e->getMessage() );
@@ -4103,7 +4047,7 @@ class Leads
 				$recordId = $query->fetchColumn();
 
 				if( !empty( $recordId ) ) {
-					print date('c') . " Purging inbound rejected {$recordId}\n";
+					print date( 'c' ) . " Purging inbound rejected {$recordId}\n";
 
 					$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = ?" );
 					$query->execute( array( $recordId ) );
@@ -4140,7 +4084,7 @@ class Leads
 				$row = $query->fetch( \PDO::FETCH_OBJ );
 
 				if( !empty( $row ) ) {
-					print date('c') . " Purging outbound rejected {$row->idRecord} {$row->idFeedOut}\n";
+					print date( 'c' ) . " Purging outbound rejected {$row->idRecord} {$row->idFeedOut}\n";
 
 					$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idRecord = :idRecord AND idFeedOut = :idFeedOut" );
 					$query->bindValue( ':idRecord', $row->idRecord, \PDO::PARAM_INT );
@@ -4192,7 +4136,7 @@ class Leads
 				$recordId = $query->fetchColumn();
 
 				if( !empty( $recordId ) ) {
-					print date('c') . " Archiving inbound accepted {$recordId}\n";
+					print date( 'c' ) . " Archiving inbound accepted {$recordId}\n";
 
 					$this->db->beginTransaction();
 
@@ -4246,11 +4190,7 @@ class Leads
 		$rows = null;
 
 		try {
-			if( LEGACY_DB ) {
-				$this->lockTables( "feedout WRITE, data_outbound WRITE, " . $this->quoteIdentifier( 'feedout_' . $label ) . " WRITE" );
-			} else {
-				$this->lockTables( "feedout WRITE, data_outbound WRITE" );
-			}
+			$this->lockTables( "feedout WRITE, data_outbound WRITE" );
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
 			$this->logError( 'Unable to lock tables: ' . $pdoException->getMessage() );
@@ -4264,16 +4204,6 @@ class Leads
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to delete queued records (1): ' . $e->getMessage() );
 			return null;
-		}
-
-		if( LEGACY_DB ) {
-			try {
-				$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $label ) . " WHERE processed = '0'" );
-				$query->execute();
-			} catch( PDOException $e ) {
-				$this->logError( 'Unable to delete queued records (2): ' . $e->getMessage() );
-				return null;
-			}
 		}
 
 		try {
@@ -4912,22 +4842,17 @@ class Leads
 
 		try {
 
-			if( LEGACY_DB ) {
-				$query = $this->db->prepare( "SELECT *,urlTrim AS url,stamp AS leadstamp FROM " . $this->quoteIdentifier( 'feedout_' . $feed->label ) . " WHERE processed = '0' ORDER BY stamp DESC LIMIT 500" );
-				$query->execute();
-			} else {
-				if( !empty( $feed->delay ) ) {
-					if( !empty( $feed->delayDump ) ) {
-						$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
-						$query->execute( array( $idFeedOut, DB_TIMEZONE, LOCAL_TIMEZONE, $feed->delay ) );
-					} else {
-						$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
-						$query->execute( array( $idFeedOut, $feed->delay ) );
-					}
+			if( !empty( $feed->delay ) ) {
+				if( !empty( $feed->delayDump ) ) {
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
+					$query->execute( array( $idFeedOut, DB_TIMEZONE, LOCAL_TIMEZONE, $feed->delay ) );
 				} else {
-					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500" );
-					$query->execute( array( $idFeedOut ) );
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
+					$query->execute( array( $idFeedOut, $feed->delay ) );
 				}
+			} else {
+				$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500" );
+				$query->execute( array( $idFeedOut ) );
 			}
 			return $query;
 
