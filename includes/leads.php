@@ -4230,30 +4230,6 @@ class Leads
 		return -1;
 	}
 
-	public function archiveInbound( $idFeedIn, $datetime ) {
-		$rows = -1;
-
-		try {
-			$table = $this->quoteIdentifier( 'data_inbound_' . $datetime->format( 'Ym' ) );
-			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_inbound" );
-
-			$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idFeedIn = ? AND result IS NULL AND timestamp >= ? AND timestamp <= ?" );
-			$query->execute( array( $idFeedIn, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
-			$rows = $query->rowCount();
-
-			$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idFeedIn = ? AND result IS NULL AND timestamp >= ? AND timestamp <= ?" );
-			$query->execute( array( $idFeedIn, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
-
-			$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL AND timestamp >= ? AND timestamp <= ?" );
-			$query->execute( array( $idFeedIn, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
-
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete old data_inbound entries: ' . $e->getMessage() );
-		}
-
-		return $rows;
-	}
-
 	public function getLegacyInboundTables() {
 		try {
 			$query = $this->db->prepare( "SHOW TABLES LIKE 'feedinc_%_invalid'" );
@@ -4264,39 +4240,6 @@ class Leads
 		}
 
 		return null;
-	}
-
-	public function archiveLegacyInbound( $table ) {
-		try {
-			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( $table ) . " WHERE received <= DATE_SUB(NOW(), INTERVAL 15 DAY)" );
-			$query->execute();
-			return $query->rowCount();
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete old legacy inbound entries: ' . $e->getMessage() );
-		}
-
-		return -1;
-	}
-
-	public function archiveOutbound( $idFeedOut, $datetime ) {
-		try {
-
-			$table = $this->quoteIdentifier( 'data_outbound_' . $datetime->format( 'Ym' ) );
-			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
-
-			$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_outbound WHERE idFeedOut = ? AND processed = 1 AND timestamp >= ? AND timestamp <= ?" );
-			$query->execute( array( $idFeedOut, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
-			$rows = $query->rowCount();
-
-			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idFeedOut = ? AND timestamp >= ? AND timestamp <= ?" );
-			$query->execute( array( $idFeedOut, $datetime->format( 'Y-m-\0\1 \0\0:\0\0:\0\0' ), $datetime->format( 'Y-m-t \2\3:\5\9:\5\9' ) ) );
-
-			return $query->rowCount();
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete old data_outbound entries: ' . $e->getMessage() );
-		}
-
-		return -1;
 	}
 
 	public function clearOutboundQueue( $idFeedOut, $label ) {
@@ -5367,18 +5310,6 @@ class Leads
 			$result['reason'] = 'DB query error.';
 			$this->logError( 'Unable to get get supression records for validation: ' . $e->getMessage() );
 		}
-	}
-
-	public function archiveLegacyOutbound( $table, $success ) {
-		try {
-			$query = $this->db->prepare( "DELETE FROM " . $this->quoteIdentifier( 'feedout_' . $table ) . " WHERE poststamp <= DATE_SUB(NOW(), INTERVAL 15 DAY) AND processed = '1' AND postresponse NOT LIKE ?" );
-			$query->execute( array( '%' . $success . '%' ) );
-			return $query->rowCount();
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to delete old legacy outbound entries: ' . $e->getMessage() );
-		}
-
-		return -1;
 	}
 
 	public function getOutboundStatsDetail( $stamp ) {
