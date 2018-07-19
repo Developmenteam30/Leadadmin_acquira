@@ -4088,6 +4088,136 @@ class Leads
 		return $results;
 	}
 
+	public function purgeInboundRejections() {
+		$cnt = 0;
+		$recordId = 0;
+
+		try {
+
+			do {
+				$query = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND result IS NOT NULL AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
+				$query->bindValue( ':tzLocal', LOCAL_TIMEZONE );
+				$query->bindValue( ':tzServer', DB_TIMEZONE );
+				$query->bindValue( ':idRecord', $recordId, \PDO::PARAM_INT );
+				$query->execute();
+				$recordId = $query->fetchColumn();
+
+				if( !empty( $recordId ) ) {
+					print date('c') . " Purging inbound rejected {$recordId}\n";
+
+					$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = ?" );
+					$query->execute( array( $recordId ) );
+				}
+
+				$cnt++;
+
+				usleep( 5000 );
+
+			} while( !empty( $recordId ) );
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to purge inbound rejections: ' . $e->getMessage() );
+		}
+
+		return $cnt;
+	}
+
+	public function purgeOutboundRejections() {
+		$cnt = 0;
+		$recordId = 0;
+		$idFeedOut = 0;
+
+		try {
+
+			do {
+				$query = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord,idFeedOut FROM data_outbound FORCE INDEX(`recordid`) WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND processed = 1 AND accepted = 0 AND ( idRecord > :idRecordOne OR ( idRecord = :idRecordTwo AND idFeedOut >= :idFeedOut ) ) ORDER BY idRecord,idFeedOut LIMIT 1" );
+				$query->bindValue( ':tzLocal', LOCAL_TIMEZONE );
+				$query->bindValue( ':tzServer', DB_TIMEZONE );
+				$query->bindValue( ':idRecordOne', $recordId, \PDO::PARAM_INT );
+				$query->bindValue( ':idRecordTwo', $recordId, \PDO::PARAM_INT );
+				$query->bindValue( ':idFeedOut', $recordId, \PDO::PARAM_INT );
+				$query->execute();
+				$row = $query->fetch( \PDO::FETCH_OBJ );
+
+				if( !empty( $row ) ) {
+					print date('c') . " Purging outbound rejected {$row->idRecord} {$row->idFeedOut}\n";
+
+					$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idRecord = :idRecord AND idFeedOut = :idFeedOut" );
+					$query->bindValue( ':idRecord', $row->idRecord, \PDO::PARAM_INT );
+					$query->bindValue( ':idFeedOut', $row->idFeedOut, \PDO::PARAM_INT );
+					$query->execute();
+				}
+
+				$cnt++;
+
+				usleep( 5000 );
+
+			} while( !empty( $row ) );
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to purge outbound rejections: ' . $e->getMessage() );
+		}
+
+		return $cnt;
+	}
+
+	public function archiveInboundAccepted() {
+		$cnt = 0;
+		$recordId = 0;
+
+		$startDate = new \DateTime( 'now', new DateTimeZone( LOCAL_TIMEZONE ) );
+		try {
+			$startDate->setTime( 0, 0, 0 );
+			$startDate->sub( new \DateInterval( 'P120D' ) );
+			$endDate = clone $startDate;
+			$endDate->setTime( 23, 59, 59 );
+		} catch( Exception $e ) {
+			die( 'Date Error: ' . $e->getMessage() );
+		}
+
+		try {
+
+			$table = $this->quoteIdentifier( 'data_inbound_' . $startDate->format( 'Ym' ) );
+			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_inbound" );
+
+			$startDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
+			$endDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
+
+			do {
+				$query = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE result IS NULL AND timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
+				$query->bindValue( ':startDate', $startDate->format( 'Y-m-\0\1 H:i:s' ) );
+				$query->bindValue( ':endDate', $endDate->format( 'Y-m-t H:i:s' ) );
+				$query->bindValue( ':idRecord', $recordId, \PDO::PARAM_INT );
+				$query->execute();
+				$recordId = $query->fetchColumn();
+
+				if( !empty( $recordId ) ) {
+					print date('c') . " Archiving inbound accepted {$recordId}\n";
+
+					$this->db->beginTransaction();
+
+					$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idRecord = ?" );
+					$query->execute( array( $recordId ) );
+
+					$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = ?" );
+					$query->execute( array( $recordId ) );
+
+					$this->db->commit();
+				}
+
+				$cnt++;
+
+				usleep( 5000 );
+
+			} while( !empty( $recordId ) );
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to archive inbound accepted: ' . $e->getMessage() );
+		}
+
+		return $cnt;
+	}
+
 	public function archiveErrors() {
 		try {
 			$query = $this->db->prepare( "DELETE FROM errorlog WHERE stamp <= DATE_SUB(NOW(), INTERVAL 15 DAY)" );
