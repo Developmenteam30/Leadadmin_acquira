@@ -2217,7 +2217,7 @@ class Leads
 		return $result;
 	}
 
-	public function getInboundPopulationSettings( $idFeedIn, $enabled = true ) {
+	public function getInboundPopulationSettings( $idFeedIn, $enabled = true, $descending = true ) {
 		$results = array();
 
 		try {
@@ -2229,7 +2229,7 @@ class Leads
 			if( $enabled ) {
 				$sql .= " AND fp.enabled = '1' ";
 			}
-			$sql .= "ORDER BY fp.waterfallPriority DESC,FIELD(fp.queueType,'livedata','waterfallLimitLive','waterfall','waterfallLimit','queue')";
+			$sql .= "ORDER BY fp.waterfallPriority " . ( $descending ? "DESC" : "ASC" ) . ",FIELD(fp.queueType,'livedata','waterfallLimitLive','waterfall','waterfallLimit','queue')";
 //			$sql .= "ORDER BY fp.waterfallPriority DESC";
 			$query = $this->db->prepare( $sql );
 			$query->execute( array( $idFeedIn ) );
@@ -2855,6 +2855,113 @@ class Leads
 		$this->db->commit();
 
 		return true;
+	}
+
+	public function fixLiveStats( $idFeedOut ) {
+
+		$feedOut = $this->getOutboundFeed( $idFeedOut );
+		if( empty( $feedOut ) ) {
+			die( 'Cannot find outbound feed' );
+		}
+
+		$query = "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = -1 AND o.idFeedOut = ? AND i.timestamp >= '2018-07-18' AND i.timestamp < '2018-07-19 14:00'";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $feedOut->idFeedOut ) );
+
+			while( $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
+				print $row->idRecord . ':' . $row->result;
+
+				if( empty( $row->result ) || preg_match( '/Code: \d{3}1\]/', $row->result ) ) {
+					print ' ACCEPTED' . PHP_EOL;
+					$accepted = true;
+					$result = null;
+				} else {
+					$accepted = false;
+					$result = $row->result;
+					print ' REJECTED' . PHP_EOL;
+				}
+				$this->outboundProcess( $row, $feedOut, $result, $accepted );
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to export inbound records: ' . $e->getMessage() );
+			$result['reason'] = 'SQL ERROR: ' . $e->getMessage();
+			return $result;
+		}
+	}
+
+	public function fixWaterfallStats( $idFeedOut ) {
+
+		$feedOut = $this->getOutboundFeed( $idFeedOut );
+		if( empty( $feedOut ) ) {
+			die( 'Cannot find outbound feed' );
+		}
+
+		try {
+			$findRecordQuery = $this->db->prepare( "SELECT 1 FROM data_outbound WHERE idRecord = ? AND idFeedIn = ? AND idFeedOut = ?" );
+
+			$query = "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = -1 AND o.idFeedOut = ? AND i.timestamp >= '2018-07-18' AND i.timestamp < '2018-07-19 14:00'";
+			$query = $this->db->prepare( $query );
+			$query->execute( array( $feedOut->idFeedOut ) );
+
+			while( $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
+				print "Record: [{$row->idRecord}]\n";
+
+				$feedIn = $this->getInboundFeed( $row->idFeedIn );
+				if( empty( $feedIn ) ) {
+					print 'Cannot find inbound feed' . PHP_EOL;
+					continue;
+				}
+
+				$feedPops = $this->getInboundPopulationSettings( $row->idFeedIn, false, false );
+				if( !empty( $feedPops ) && is_array( $feedPops ) ) {
+					$foundSuccess = false;
+					$foundReject = false;
+					foreach( $feedPops as $feedPop ) {
+
+						if( 'livedata' != $feedPop->queueType && 'waterfall' != $feedPop->queueType && 'waterfallLimitLive' != $feedPop->queueType ) {
+							continue;
+						}
+
+						print "\tidFeedOut: [{$feedPop->idFeedOut}] ";
+
+						if( $foundSuccess ) {
+							print " REJECT PREVIOUS\n";
+							$this->outboundProcess( $row, $feedPop, 'Rejected', 0 );
+							continue;
+						}
+
+						$findRecordQuery->execute( array( $row->idRecord, $row->idFeedIn, $feedPop->idFeedOut ) );
+						if( !$findRecordQuery || '1' !== $findRecordQuery->fetchColumn() ) {
+							print " SKIP\n";
+							continue;
+						}
+
+						if( empty( $row->result ) || preg_match( '/Code: \d{3}1\]/', $row->result ) ) {
+							print ' ACCEPTED' . PHP_EOL;
+							$foundSuccess = true;
+							$this->outboundProcess( $row, $feedPop, null, 1 );
+						} else {
+							if( $foundReject ) {
+								print ' REJECTED GENERIC' . PHP_EOL;
+								$this->outboundProcess( $row, $feedPop, 'Rejected', 0 );
+							} else {
+								print " REJECTED ACTUAL: {$row->result}\n";
+								$this->outboundProcess( $row, $feedPop, $row->result, 0 );
+							}
+							$foundReject = true;
+						}
+					}
+				}
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to export inbound records: ' . $e->getMessage() );
+			$result['reason'] = 'SQL ERROR: ' . $e->getMessage();
+			return $result;
+		}
 	}
 
 	public function toggleBillable( $row, $billable ) {

@@ -6,6 +6,6 @@ require_once( INCLUDES . "leads.php" );
 $leads = Leads::getInstance();
 
 $leads->archiveErrors();
-$leads->purgeInboundRejections();
 $leads->purgeOutboundRejections();
+$leads->purgeInboundRejections();
 $leads->archiveInboundAccepted();
