@@ -391,7 +391,7 @@ class ProcessLeads
 			if( !empty( $row->email ) && $leads->checkSuppression( $row->email, null ) ) {
 
 				$result['text'] = 'LOCAL REJECTION: Email is suppressed (global)';
-				$leads->outboundProcess( $row, $feedOut, $result['text'] );
+				$leads->outboundProcess( $row, $feedOut, $result['text'], 0 );
 
 				if( $debug ) {
 					print "\t" . $result['text'] . PHP_EOL;
@@ -401,7 +401,7 @@ class ProcessLeads
 			} else if( !empty( $row->email ) && $leads->checkSuppression( $row->email, $feedOut->idCompany ) ) {
 
 				$result['text'] = 'LOCAL REJECTION: Email is suppressed (company)';
-				$leads->outboundProcess( $row, $feedOut, $result['text'] );
+				$leads->outboundProcess( $row, $feedOut, $result['text'], 0 );
 
 				if( $debug ) {
 					print "\t" . $result['text'] . PHP_EOL;
@@ -676,8 +676,8 @@ class ProcessLeads
 			echo "\tResponse: {$result['text']}\n";
 		}
 
-		if( !empty( $row->idRecord ) ) { // Should only be the case if sending test leads, but we don't need to record these
-			$leads->outboundProcess( $row, $feedOut, ( $result['status'] ? null : trim( $result['text'] ) ) );
+		if( !empty( $row->testRecord ) ) { // We don't need to record test records
+			$leads->outboundProcess( $row, $feedOut, substr( trim( $result['text'] ), 0, 65535 ), $result['status'] );
 		}
 
 		$result['querystring'] = $geturl;

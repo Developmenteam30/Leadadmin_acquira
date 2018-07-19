@@ -2821,7 +2821,7 @@ class Leads
 		}
 	}
 
-	public function outboundProcess( $row, $feedOut, $error = null ) {
+	public function outboundProcess( $row, $feedOut, $result, $accepted ) {
 
 		if( empty( $row ) || empty( $feedOut ) ) {
 			return null;
@@ -2832,10 +2832,10 @@ class Leads
 		try {
 			if( LEGACY_DB ) {
 				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, result = ? WHERE idRecordLegacy = ? AND idFeedOut = ?' );
-				$query->execute( array( $error, $row->idRecord, $feedOut->idFeedOut ) );
+				$query->execute( array( $result, $row->idRecord, $feedOut->idFeedOut ) );
 			} else {
-				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, result = ? WHERE idRecord = ? AND idFeedOut = ?' );
-				$query->execute( array( $error, $row->idRecord, $feedOut->idFeedOut ) );
+				$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, accepted = ?, result = ? WHERE idRecord = ? AND idFeedOut = ?' );
+				$query->execute( array( !empty( $accepted ) ? 1 : 0, $result, $row->idRecord, $feedOut->idFeedOut ) );
 			}
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
@@ -2844,7 +2844,7 @@ class Leads
 		}
 
 		try {
-			if( empty( $error ) ) {
+			if( !empty( $accepted ) ) {
 				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,accepted,billable) VALUES(?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1' );
 			} else {
 				$query = $this->db->prepare( 'INSERT INTO stats_outbound(idFeedOut,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1' );
@@ -2865,7 +2865,7 @@ class Leads
 				$revenuePerLead = !empty( $feedOut->revenuePerLead ) ? $feedOut->revenuePerLead : 0.00;
 
 				try {
-					if( empty( $error ) ) {
+					if( !empty( $accepted ) ) {
 						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,accepted,billable) VALUES(?,?,?,?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?' );
 					} else {
 						$query = $this->db->prepare( 'INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,rejected) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1, costPerLead = ?, revenuePerLead = ?' );
@@ -2889,7 +2889,7 @@ class Leads
 		}
 
 		// Only archive successful records. Errors will get deleted after a few days.
-		if( empty( $error ) ) {
+		if( !empty( $accepted ) ) {
 
 			try {
 				$table = $this->quoteIdentifier( 'data_outbound_' . date( 'Ym' ) );
@@ -3562,7 +3562,7 @@ class Leads
 		$results = array();
 
 		try {
-			$query = $this->db->prepare( "SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idFeedOut = ? AND o.processed = 1 AND o.result IS NOT NULL ORDER BY o.idRecord DESC LIMIT " . intval( $offset ) . ",100" );
+			$query = $this->db->prepare( "SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idFeedOut = ? AND o.processed = 1 AND o.accepted = 0 ORDER BY o.idRecord DESC LIMIT " . intval( $offset ) . ",100" );
 			$query->execute( array( DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut ) );
 			$results = $query->fetchAll();
 		} catch( PDOException $e ) {
@@ -3585,7 +3585,7 @@ class Leads
 		$this->db->beginTransaction();
 
 		try {
-			$query = $this->db->prepare( "UPDATE data_outbound SET timestamp = NULL, processed = 0, result = NULL WHERE result IS NOT NULL AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?" );
+			$query = $this->db->prepare( "UPDATE data_outbound SET timestamp = NULL, processed = 0, result = NULL WHERE accepted = 0 AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?" );
 			$query->execute( array( $idFeedOut, $utcStart->format( 'c' ), $utcEnd->format( 'c' ) ) );
 
 			$count = $query->rowCount();
@@ -3949,7 +3949,7 @@ class Leads
 			$sql .= "WHERE o.idFeedOut = ? ";
 			$params[] = $idFeedOut;
 			$sql .= "AND o.processed = 1 ";
-			$sql .= "AND o.result IS NULL ";
+			$sql .= "AND o.accepted = 1 ";
 			if( !empty( $idRecord ) ) {
 				$sql .= "AND o.idRecord = ? ";
 				$params[] = $idRecord;
@@ -4447,7 +4447,7 @@ class Leads
 		$sql = "SELECT * FROM ( ";
 
 		if( !empty( $settings['includeRejects'] ) ) {
-			$sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,IF(o.result IS NULL,'Accepted','Rejected') AS status,o.result,i.leadstamp,i.listcode ";
+			$sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,IF(o.accepted = 1,'Accepted','Rejected') AS status,o.result,i.leadstamp,i.listcode ";
 			$params[] = DB_TIMEZONE;
 			$params[] = LOCAL_TIMEZONE;
 			$sql .= "FROM data_outbound AS o ";
@@ -4501,7 +4501,7 @@ class Leads
 		}
 
 		do {
-			$sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,IF(o.result IS NULL,'Accepted','Rejected') AS status,o.result,i.leadstamp,i.listcode ";
+			$sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,IF(o.accepted = 1,'Accepted','Rejected') AS status,o.result,i.leadstamp,i.listcode ";
 			$params[] = DB_TIMEZONE;
 			$params[] = LOCAL_TIMEZONE;
 			$sql .= "FROM archive." . $this->quoteIdentifier( 'data_outbound_' . $archiveDate->format( 'Ym' ) ) . " o ";
@@ -4818,7 +4818,7 @@ class Leads
 					$row->custom6,
 				) );
 
-				$this->outboundProcess( $row, $feedOut, null );
+				$this->outboundProcess( $row, $feedOut, null, 1 );
 
 			}
 
@@ -5039,7 +5039,7 @@ class Leads
 
 		try {
 
-			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE processed = 1 AND o.idFeedOut = ? AND o.result IS NOT NULL" );
+			$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE processed = 1 AND o.idFeedOut = ? AND o.accepted = 0" );
 			$query->execute();
 			while( $row = $query->fetch( \PDO::FETCH_OBJ ) ) {
 				fputcsv( $file, array(
@@ -5068,7 +5068,7 @@ class Leads
 				) );
 
 
-				$this->outboundProcess( $row, $feedOut, null );
+				$this->outboundProcess( $row, $feedOut, null, 1 );
 				$q_query = $this->db->prepare( "UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?" );
 				$q_query->execute( array( $idFeedOut ) );
 
@@ -5273,7 +5273,7 @@ class Leads
 		$this->db->beginTransaction();
 
 		try {
-			$query = $this->db->prepare( "SELECT SUM(IF(o.result IS NULL,1,0)) AS accepted,SUM(IF(o.result IS NOT NULL,1,0)) AS rejected,SUM(o.isBillable) AS billable FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp >= ? AND o.timestamp <= ? AND i.url = ?" );
+			$query = $this->db->prepare( "SELECT SUM(IF(o.accepted = 1,1,0)) AS accepted,SUM(IF(o.accepted = 0,1,0)) AS rejected,SUM(o.isBillable) AS billable FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp >= ? AND o.timestamp <= ? AND i.url = ?" );
 			$query->execute( array( $idFeedOut, $date . ' 00:00:00', $date . ' 23:59:59', $url ) );
 			$records = $query->fetchAll();
 

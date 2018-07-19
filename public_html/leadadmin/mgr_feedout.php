@@ -1009,6 +1009,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'custom4' => $_REQUEST['custom4'] ?? '',
 				'custom5' => $_REQUEST['custom5'] ?? '',
 				'custom6' => $_REQUEST['custom6'] ?? '',
+				'testRecord' => 1,
 			);
 			$errors = array();
 
