@@ -676,7 +676,7 @@ class ProcessLeads
 			echo "\tResponse: {$result['text']}\n";
 		}
 
-		if( !empty( $row->testRecord ) ) { // We don't need to record test records
+		if( empty( $row->testRecord ) ) { // We don't need to record test records
 			$leads->outboundProcess( $row, $feedOut, substr( trim( $result['text'] ), 0, 65535 ), $result['status'] );
 		}
 
