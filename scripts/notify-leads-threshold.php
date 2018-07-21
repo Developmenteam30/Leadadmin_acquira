@@ -15,7 +15,7 @@ function sendInboundNotification( $notification ) {
 	$body .= "Feed Description: {$notification->description}\r\n";
 	$body .= "We have received {$notification->leadsPassed} leads on this feed today and we are expecting to have received at least {$notification->notifyThresholdCount} leads by {$notification->notifyThresholdTimeFormatted}.\r\n\r\n";
 	$header = "From: \"{$fromName}\" <" . OWNER_EMAIL_FROM . ">\r\n";
-	$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+	//$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
 	$header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
 
 	$sent = @mail( MANAGER_EMAIL, $subject, wordwrap( $body, 70 ), $header, "-f" . OWNER_EMAIL_FROM );
@@ -35,7 +35,7 @@ function sendOutboundNotification( $notification ) {
 	$body .= "Feed Description: {$notification->description}\r\n\r\n";
 	$body .= "We have sent {$notification->leadsPassed} leads on this feed today and we are expecting to have sent at least {$notification->notifyThresholdCount} leads by {$notification->notifyThresholdTimeFormatted}.\r\n\r\n";
 	$header = "From: \"{$fromName}\" <" . OWNER_EMAIL_FROM . ">\r\n";
-	$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+	//$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
 	$header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
 
 	$sent = @mail( MANAGER_EMAIL, $subject, wordwrap( $body, 70 ), $header, "-f" . OWNER_EMAIL_FROM );
