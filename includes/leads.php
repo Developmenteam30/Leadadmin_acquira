@@ -3836,7 +3836,7 @@ class Leads
 		return $results;
 	}
 
-	public function getOutboundURLStatsReport( $idFeedOut, $urlList, $breakdown, $dateStart, $dateEnd, $sort ) {
+	public function getOutboundURLStatsReport( $idFeedOut, $urlList, $breakdown, $dateStart, $dateEnd, $sort, $group ) {
 		$results = array();
 		$params = array();
 
@@ -3871,7 +3871,11 @@ class Leads
 			$query .= "AND stamp >= '" . $dateStart . "' AND stamp <= '" . $dateEnd . "' ";
 		}
 
-		$query .= "GROUP BY 1,2 ";
+		if( empty( $group ) || 'url' == $group ) {
+			$query .= "GROUP BY 1,2 ";
+		} else if( 'date' == $group ) {
+			$query .= "GROUP BY 2 ";
+		}
 		if( !empty( $sort ) && 'url' == $sort ) {
 			$query .= "ORDER BY 1,2";
 		} else if( !empty( $sort ) && 'count' == $sort ) {
@@ -4145,26 +4149,32 @@ class Leads
 
 		try {
 
+			$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND result IS NOT NULL AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
+			$querySelect->bindValue( ':tzLocal', LOCAL_TIMEZONE );
+			$querySelect->bindValue( ':tzServer', DB_TIMEZONE );
+			$querySelect->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+			$querySelect->bindColumn( 1, $recordId );
+
+			$queryDelete = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = ?" );
+			$queryDelete->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+
 			do {
-				$query = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND result IS NOT NULL AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
-				$query->bindValue( ':tzLocal', LOCAL_TIMEZONE );
-				$query->bindValue( ':tzServer', DB_TIMEZONE );
-				$query->bindValue( ':idRecord', $recordId, \PDO::PARAM_INT );
-				$query->execute();
-				$recordId = $query->fetchColumn();
+				$querySelect->execute();
+				$row = $querySelect->fetch( \PDO::FETCH_BOUND );
 
-				if( !empty( $recordId ) ) {
-					print date( 'c' ) . " Purging inbound rejected {$recordId}\n";
+				if( true === $row ) {
+					if( $cnt % 1000 === 0 ) {
+						print date( 'c' ) . " Purging inbound rejected {$recordId}\n";
+					}
 
-					$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = ?" );
-					$query->execute( array( $recordId ) );
+					$queryDelete->execute();
 				}
 
 				$cnt++;
 
-				usleep( 5000 );
+				//usleep( 5000 );
 
-			} while( !empty( $recordId ) );
+			} while( !empty( $row ) );
 
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to purge inbound rejections: ' . $e->getMessage() );
@@ -4180,28 +4190,34 @@ class Leads
 
 		try {
 
+			$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord,idFeedOut FROM data_outbound FORCE INDEX(`recordid`) WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND processed = 1 AND accepted = 0 AND ( idRecord > :idRecordOne OR ( idRecord = :idRecordTwo AND idFeedOut >= :idFeedOut ) ) ORDER BY idRecord,idFeedOut LIMIT 1" );
+			$querySelect->bindValue( ':tzLocal', LOCAL_TIMEZONE );
+			$querySelect->bindValue( ':tzServer', DB_TIMEZONE );
+			$querySelect->bindParam( ':idRecordOne', $recordId, \PDO::PARAM_INT );
+			$querySelect->bindParam( ':idRecordTwo', $recordId, \PDO::PARAM_INT );
+			$querySelect->bindParam( ':idFeedOut', $idFeedOut, \PDO::PARAM_INT );
+			$querySelect->bindColumn( 1, $recordId );
+			$querySelect->bindColumn( 2, $idFeedOut );
+
+			$queryDelete = $this->db->prepare( "DELETE FROM data_outbound WHERE idRecord = :idRecord AND idFeedOut = :idFeedOut" );
+			$queryDelete->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+			$queryDelete->bindParam( ':idFeedOut', $idFeedOut, \PDO::PARAM_INT );
+
 			do {
-				$query = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord,idFeedOut FROM data_outbound FORCE INDEX(`recordid`) WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND processed = 1 AND accepted = 0 AND ( idRecord > :idRecordOne OR ( idRecord = :idRecordTwo AND idFeedOut >= :idFeedOut ) ) ORDER BY idRecord,idFeedOut LIMIT 1" );
-				$query->bindValue( ':tzLocal', LOCAL_TIMEZONE );
-				$query->bindValue( ':tzServer', DB_TIMEZONE );
-				$query->bindValue( ':idRecordOne', $recordId, \PDO::PARAM_INT );
-				$query->bindValue( ':idRecordTwo', $recordId, \PDO::PARAM_INT );
-				$query->bindValue( ':idFeedOut', $recordId, \PDO::PARAM_INT );
-				$query->execute();
-				$row = $query->fetch( \PDO::FETCH_OBJ );
+				$querySelect->execute();
+				$row = $querySelect->fetch( \PDO::FETCH_BOUND );
 
-				if( !empty( $row ) ) {
-					print date( 'c' ) . " Purging outbound rejected {$row->idRecord} {$row->idFeedOut}\n";
+				if( true === $row ) {
+					if( $cnt % 1000 === 0 ) {
+						print date( 'c' ) . " Purging outbound rejected {$recordId} {$idFeedOut}\n";
+					}
 
-					$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idRecord = :idRecord AND idFeedOut = :idFeedOut" );
-					$query->bindValue( ':idRecord', $row->idRecord, \PDO::PARAM_INT );
-					$query->bindValue( ':idFeedOut', $row->idFeedOut, \PDO::PARAM_INT );
-					$query->execute();
+					$queryDelete->execute();
 				}
 
 				$cnt++;
 
-				usleep( 5000 );
+				//usleep( 5000 );
 
 			} while( !empty( $row ) );
 
@@ -4234,33 +4250,41 @@ class Leads
 			$startDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
 			$endDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
 
-			do {
-				$query = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE result IS NULL AND timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
-				$query->bindValue( ':startDate', $startDate->format( 'Y-m-\0\1 H:i:s' ) );
-				$query->bindValue( ':endDate', $endDate->format( 'Y-m-t H:i:s' ) );
-				$query->bindValue( ':idRecord', $recordId, \PDO::PARAM_INT );
-				$query->execute();
-				$recordId = $query->fetchColumn();
+			$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE result IS NULL AND timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
+			$querySelect->bindValue( ':startDate', $startDate->format( 'Y-m-\0\1 H:i:s' ) );
+			$querySelect->bindValue( ':endDate', $endDate->format( 'Y-m-t H:i:s' ) );
+			$querySelect->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+			$querySelect->bindColumn( 1, $recordId );
 
-				if( !empty( $recordId ) ) {
-					print date( 'c' ) . " Archiving inbound accepted {$recordId}\n";
+			$queryInsert = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idRecord = :idRecord" );
+			$queryInsert->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+
+			$queryDelete = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = :idRecord" );
+			$queryDelete->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+
+			do {
+				$querySelect->execute();
+				$row = $querySelect->fetch( \PDO::FETCH_BOUND );
+
+				if( true === $row ) {
+					if( $cnt % 1000 === 0 ) {
+						print date( 'c' ) . " Archiving inbound accepted {$recordId}\n";
+					}
 
 					$this->db->beginTransaction();
 
-					$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idRecord = ?" );
-					$query->execute( array( $recordId ) );
+					$queryInsert->execute();
 
-					$query = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = ?" );
-					$query->execute( array( $recordId ) );
+					$queryDelete->execute();
 
 					$this->db->commit();
 				}
 
 				$cnt++;
 
-				usleep( 5000 );
+				//usleep( 5000 );
 
-			} while( !empty( $recordId ) );
+			} while( !empty( $row ) );
 
 		} catch( PDOException $e ) {
 			$this->logError( 'Unable to archive inbound accepted: ' . $e->getMessage() );
