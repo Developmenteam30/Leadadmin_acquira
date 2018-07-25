@@ -98,7 +98,7 @@ if( empty( $outgoingFeeds ) ) {
 			print '<tbody>' . PHP_EOL;
 		}
 
-		$stats = $leads->getOutboundURLStatsReport( $outgoingFeed->idFeedOut, array(), 'total', $dateStart, $dateEnd, 'url' );
+		$stats = $leads->getOutboundURLStatsReport( $outgoingFeed->idFeedOut, array(), 'total', $dateStart, $dateEnd, 'url', 'url' );
 
 		$feedAccepted = $feedRejected = 0;
 
@@ -223,7 +223,7 @@ if( empty( $incomingFeeds ) ) {
 			print '<tbody>' . PHP_EOL;
 		}
 
-		$stats = $leads->getInboundURLStatsReport( $incomingFeed->idFeedIn, array(), 'total', $dateStart, $dateEnd, 'url' );
+		$stats = $leads->getInboundURLStatsReport( $incomingFeed->idFeedIn, array(), 'total', $dateStart, $dateEnd, 'url', 'url' );
 
 		$feedAccepted = $feedRejected = 0;
 

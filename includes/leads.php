@@ -3726,7 +3726,7 @@ class Leads
 		return $results;
 	}
 
-	public function getInboundURLStatsReport( $idFeedIn, $urlList, $breakdown, $dateStart, $dateEnd, $sort ) {
+	public function getInboundURLStatsReport( $idFeedIn, $urlList, $breakdown, $dateStart, $dateEnd, $sort, $group ) {
 		$results = array();
 		$params = array();
 
@@ -3761,7 +3761,11 @@ class Leads
 			$query .= "AND stamp >= '" . $dateStart . "' AND stamp <= '" . $dateEnd . "' ";
 		}
 
-		$query .= "GROUP BY 1,2 ";
+		if( empty( $group ) || 'url' == $group ) {
+			$query .= "GROUP BY 1,2 ";
+		} else if( 'date' == $group ) {
+			$query .= "GROUP BY 2 ";
+		}
 		if( !empty( $sort ) && 'url' == $sort ) {
 			$query .= "ORDER BY 1,2";
 		} else if( !empty( $sort ) && 'count' == $sort ) {

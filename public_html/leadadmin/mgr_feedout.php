@@ -1840,18 +1840,12 @@ if( isset( $_REQUEST['d'] ) ) {
 				}
 			}
 
-			if( empty( $_REQUEST['submit'] ) ) {
-				$_REQUEST['dateStart'] = date( "Y-m-d" );
-				$_REQUEST['dateEnd'] = date( "Y-m-d", strtotime( 'Tomorrow' ) );
-				$_REQUEST['urlList'] = array();
-				$_REQUEST['breakdown'] = 'day';
-				$_REQUEST['sort'] = 'date';
-			}
-			$_REQUEST['dateStart'] = !empty( $_REQUEST['dateStart'] ) ? $_REQUEST['dateStart'] : '';
-			$_REQUEST['dateEnd'] = !empty( $_REQUEST['dateEnd'] ) ? $_REQUEST['dateEnd'] : '';
+			$_REQUEST['dateStart'] = !empty( $_REQUEST['dateStart'] ) ? $_REQUEST['dateStart'] : date( "Y-m-d" );
+			$_REQUEST['dateEnd'] = !empty( $_REQUEST['dateEnd'] ) ? $_REQUEST['dateEnd'] : date( "Y-m-d", strtotime( 'Tomorrow' ) );
 			$_REQUEST['urlList'] = !empty( $_REQUEST['urlList'] ) && is_array( $_REQUEST['urlList'] ) ? $_REQUEST['urlList'] : array();
 			$_REQUEST['breakdown'] = !empty( $_REQUEST['breakdown'] ) ? $_REQUEST['breakdown'] : 'day';
 			$_REQUEST['sort'] = !empty( $_REQUEST['sort'] ) ? $_REQUEST['sort'] : 'date';
+			$_REQUEST['group'] = !empty( $_REQUEST['group'] ) ? $_REQUEST['group'] : 'date';
 
 			$feed = $leads->getOutboundFeed( $idFeedOut );
 
@@ -1939,12 +1933,31 @@ if( isset( $_REQUEST['d'] ) ) {
 						</select>
 					</div>
 
+					<div class="form-group">
+						<label for="id">Group By:</label>
+						<select class="form-control" id="group" name="group">
+							<?php
+							$choices = array(
+								'date' => 'Date',
+								'url' => 'URL',
+							);
+							foreach( $choices as $key => $val ) {
+								printf( "<option value=\"%s\"%s>%s</option>\n",
+									htmlspecialchars( $key, ENT_QUOTES ),
+									$_REQUEST['group'] === $key ? ' selected="selected"' : '',
+									htmlspecialchars( $val )
+								);
+							}
+							?>
+						</select>
+					</div>
+
 				</form>
 				<?php
 
 				if( !empty( $_REQUEST['submit'] ) ) {
 
-					$stats = $leads->getOutboundURLStatsReport( $_REQUEST['idFeedOut'], $_REQUEST['urlList'], $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'] );
+					$stats = $leads->getOutboundURLStatsReport( $_REQUEST['idFeedOut'], $_REQUEST['urlList'], $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'], $_REQUEST['group'] );
 
 					if( empty( $stats ) ) {
 						?>
@@ -1976,14 +1989,14 @@ if( isset( $_REQUEST['d'] ) ) {
 							print "\t<tr>\n";
 							foreach( $stats as $stat ) {
 								print "\t<tr>\n";
-								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $stat['url'] ) );
+								printf( "\t\t<td>%s</td>\n", htmlspecialchars( 'date' == $_REQUEST['group'] ? 'N/A' : $stat['url'] ) );
 								printf( "\t\t<td>%s</td>\n", htmlspecialchars( $stat['date'] ) );
 								printf( "\t\t<td>%s</td>\n", number_format( $stat['accepted'], 0 ) );
 								printf( "\t\t<td>%s</td>\n", number_format( $stat['rejected'], 0 ) );
 								print "\t</tr>\n";
 								$accepted += $stat['accepted'];
 								$rejected += $stat['rejected'];
-								fputcsv( $file, array( $stat['url'], $stat['date'], $stat['accepted'], $stat['rejected'] ) );
+								fputcsv( $file, array( 'date' == $_REQUEST['group'] ? 'N/A' : $stat['url'], $stat['date'], $stat['accepted'], $stat['rejected'] ) );
 							}
 							fclose( $file );
 							print "\t<tr>\n";
