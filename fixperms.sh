@@ -1,8 +1,8 @@
 #!/bin/sh
 cd $(dirname $0)
 mkdir uploads error public_html/leadadmin/exports pushLead/lockfiles
-chown -R rscs:webdev * .svn
-chmod -R g+rw,o= * .svn
+chown -R rscs:webdev * .git .gitignore
+chmod -R g+rw,o= * .git .gitignore
 chown -R nginx:webdev error public_html/leadadmin/exports/ uploads
 chmod -R g+rw error public_html/leadadmin/exports/
 chmod -R o+rwx pushLead/lockfiles/
