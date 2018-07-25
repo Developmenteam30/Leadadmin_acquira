@@ -424,7 +424,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'filterListcode' => !empty( $filterListcode ) ? $filterListcode : null,
 					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
-					'queueType' => !empty( $_REQUEST['queueType'] ) ? $_REQUEST['queueType'] : 'queue',
+					'queueType' => !empty( $_REQUEST['queueType'] ) ? $_REQUEST['queueType'] : 'livedata',
 					'waterfallPriority' => !empty( $_REQUEST['waterfallPriority'] ) ? $_REQUEST['waterfallPriority'] : 0,
 				) );
 
@@ -452,7 +452,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'filterListcode' => !empty( $filterListcode ) ? $filterListcode : null,
 					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
-					'queueType' => !empty( $_REQUEST['queueType'] ) ? $_REQUEST['queueType'] : 'queue',
+					'queueType' => !empty( $_REQUEST['queueType'] ) ? $_REQUEST['queueType'] : 'livedata',
 					'waterfallPriority' => !empty( $_REQUEST['waterfallPriority'] ) ? $_REQUEST['waterfallPriority'] : 0,
 				) );
 
@@ -2466,8 +2466,8 @@ if( isset( $_REQUEST['d'] ) ) {
 								Incoming records will be sent to this provider in REAL TIME as they come in. Do not use this option unless authorized. Most feeds have this option disabled.
 							</p>
 							<p>
-								<input type="radio" name="queueType" id="queueType_queue" value="queue" <?php if( empty( $popset_queueType ) || $popset_queueType == 'queue' ) { ?> checked="checked" <?php } ?>/> Standard Queue (DEFAULT)<br/>
-								<input type="radio" name="queueType" id="queueType_livedata" value="livedata" <?php if( $popset_queueType == 'livedata' ) { ?> checked="checked" <?php } ?>/> Live Data (leads sent in real-time)<br/>
+								<input type="radio" name="queueType" id="queueType_livedata" value="livedata" <?php if( empty( $popset_queueType ) || $popset_queueType == 'livedata' ) { ?> checked="checked" <?php } ?>/> Live Data (leads sent in real-time) [DEFAULT]<br/>
+								<input type="radio" name="queueType" id="queueType_queue" value="queue" <?php if( $popset_queueType == 'queue' ) { ?> checked="checked" <?php } ?>/> Standard Queue<br/>
 								<input type="radio" name="queueType" id="queueType_waterfall" value="waterfall" <?php if( $popset_queueType == 'waterfall' ) { ?> checked="checked" <?php } ?>/> Waterfall Live Standard (attempt each vendor in descending priority order; stop after the first accepted response)<br/>
 								<input type="radio" name="queueType" id="queueType_waterfallLimit" value="waterfallLimit" <?php if( $popset_queueType == 'waterfallLimit' ) { ?> checked="checked" <?php } ?>/> Waterfall Limit &amp; Queue (attempt vendors in priority order and queue; only skip to the next after the feed limits are hit)<br/>
 								<input type="radio" name="queueType" id="queueType_waterfallLimitLive" value="waterfallLimitLive" <?php if( $popset_queueType == 'waterfallLimitLive' ) { ?> checked="checked" <?php } ?>/> Waterfall Limit Live (attempt vendors in real-time in priority order; only skip to the next after the feed limits are hit)
