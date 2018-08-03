@@ -141,7 +141,7 @@ if(isset($_REQUEST['a'])){
 				$idCompany = intval ( $_REQUEST['idCompany'] );
 			}
 
-			$export = $leads->exportSuppressions( $idCompany );
+			$export = $leads->exportPhoneSuppressions( $idCompany );
 			if( isset( $export['reason'] ) && 'Success' == $export['reason'] ) {
 				$result['status'] = 1;
 				$result['error'] = 'Successfully exported file.';
@@ -170,19 +170,49 @@ if(isset($_REQUEST['a'])){
 				);
 				switch($_REQUEST['type']){
 					case 'single':
-						if($c && ( //email must not be empty.
-							!isset($_REQUEST['email'])
-							|| $_REQUEST['email'] == ''
+						if($c && ( //phone must not be empty.
+							!isset($_REQUEST['phone'])
+							|| $_REQUEST['phone'] == ''
 						)){
-							$c = false; $result['error'] = 'Email field cannot be empty.';
+							$c = false; $result['error'] = 'Phone field cannot be empty.';
 						}
 						if($c){ //Passed initial validation
-							if( strpos( $_REQUEST['email'], '@' ) !== FALSE && !filter_var( $_REQUEST['email'], FILTER_VALIDATE_EMAIL ) ) {
-								$counts['invalid']++;
-							} else {
+							$request_phone = preg_replace( '/[^0-9]/', '', $_REQUEST['phone'] );
+							if($_REQUEST['list'] == 'multiple'){
+								foreach($_REQUEST['lists'] as $list){
+									$db_result = $leads->addSuppression( 'phone', $list, $request_phone );
+									if( null === $db_result ) {
+										$counts['dupe']++;
+									} else if( false === $db_result ) {
+										$counts['failures']++;
+									} else { 
+										$counts['success']++;
+									}
+								}
+							} else { 
+								$db_result = $leads->addSuppression( 'phone', $_REQUEST['list'], $request_phone );
+								if( null === $db_result ) {
+									$counts['dupe']++;
+								} else if( false === $db_result ) {
+									$counts['failures']++;
+								} else { 
+									$counts['success']++;
+								}
+							}
+						}
+					break;
+					case 'multiple':
+						if($c && ( //phone array must not be empty.
+							count($_REQUEST['phones']) == 0
+						)){
+							$c = false; $result['error'] = 'Phone numbers field cannot be empty.';
+						}
+						if($c){ //Passed initial validation
+							foreach($_REQUEST['phones'] as $phone){
+								$request_phone = preg_replace( '/[^0-9]/', '', $phone );
 								if($_REQUEST['list'] == 'multiple'){
 									foreach($_REQUEST['lists'] as $list){
-										$db_result = $leads->addSuppression( 'email', $list, $_REQUEST['email'] );
+										$db_result = $leads->addSuppression( 'phone', $list, $request_phone );
 										if( null === $db_result ) {
 											$counts['dupe']++;
 										} else if( false === $db_result ) {
@@ -192,49 +222,13 @@ if(isset($_REQUEST['a'])){
 										}
 									}
 								} else { 
-									$db_result = $leads->addSuppression( 'email', $_REQUEST['list'], $_REQUEST['email'] );
+									$db_result = $leads->addSuppression( 'phone', $_REQUEST['list'], $request_phone );
 									if( null === $db_result ) {
 										$counts['dupe']++;
 									} else if( false === $db_result ) {
 										$counts['failures']++;
 									} else { 
 										$counts['success']++;
-									}
-								}
-							}
-						}
-					break;
-					case 'multiple':
-						if($c && ( //email array must not be empty.
-							count($_REQUEST['emails']) == 0
-						)){
-							$c = false; $result['error'] = 'Emails field cannot be empty.';
-						}
-						if($c){ //Passed initial validation
-							foreach($_REQUEST['emails'] as $email){
-								if( strpos( $email, '@' ) !== FALSE && !filter_var( $email, FILTER_VALIDATE_EMAIL ) ) {
-									$counts['invalid']++;
-								} else {
-									if($_REQUEST['list'] == 'multiple'){
-										foreach($_REQUEST['lists'] as $list){
-											$db_result = $leads->addSuppression( 'email', $list, $email );
-											if( null === $db_result ) {
-												$counts['dupe']++;
-											} else if( false === $db_result ) {
-												$counts['failures']++;
-											} else { 
-												$counts['success']++;
-											}
-										}
-									} else { 
-										$db_result = $leads->addSuppression( 'email', $_REQUEST['list'], $email );
-										if( null === $db_result ) {
-											$counts['dupe']++;
-										} else if( false === $db_result ) {
-											$counts['failures']++;
-										} else { 
-											$counts['success']++;
-										}
 									}
 								}
 							}
@@ -267,7 +261,7 @@ if(isset($_REQUEST['d'])){
 		break;
 
 		case 'suppressionCounts':
-			$lists = $leads->getSuppressionCounts( 'email' );
+			$lists = $leads->getSuppressionCounts( 'phone' );
 ?>
 <table class="table table-bordered table-condensed table-striped">
 	<thead>
@@ -310,9 +304,9 @@ if(isset($_REQUEST['d'])){
 ?><p>Database error: could not fetch companies.</p><?php
 					} else {
 ?>
-<p>Add Single Email to Suppression</p>
+<p>Add Single Phone Number to Suppression</p>
 <p>
-	Email: <input type='text' id='suppress_emailS' /> 
+	Phone Number: <input type='text' id='suppress_phoneS' /> 
 	to Suppression List 
 	<select id='suppress_list' onchange='checkIfMulti();'>
 		<option value='0'>Global Suppression</option>
@@ -328,7 +322,7 @@ if(isset($_REQUEST['d'])){
 	<input type='button' value='Add' onclick="processSuppression('single');" />
 </p>
 <div id='dialog_multiselect' class='hidden'>
-	<p>Select suppression lists to add this email to.</p>
+	<p>Select suppression lists to add this phone number to.</p>
 <?php
 						foreach($companies as $company){ 
 ?>
@@ -352,10 +346,10 @@ if(isset($_REQUEST['d'])){
 ?><p>Database error: could not fetch companies.</p><?php
 					} else {
 ?>
-<p>Add Multiple Emails to Suppression</p>
-<p>Add each email on its own line.</p>
+<p>Add Multiple Phone Numbers to Suppression</p>
+<p>Add each phone number on its own line.</p>
 <p>
-	Emails: <textarea id='suppress_emailM' ></textarea> 
+	Phone Numbers: <textarea id='suppress_phoneM' ></textarea> 
 	to Suppression List 
 	<select name="list" id='suppress_list' onchange='checkIfMulti();'>
 		<option value='0'>Global Suppression</option>
@@ -371,7 +365,7 @@ if(isset($_REQUEST['d'])){
 	<input type='button' value='Add' onclick="processSuppression('multiple');" />
 </p>
 <div id='dialog_multiselect' class='hidden'>
-	<p>Select suppression lists to add this email to.</p>
+	<p>Select suppression lists to add this phone number to.</p>
 <?php
 						foreach($companies as $company){ 
 ?>
@@ -395,11 +389,11 @@ if(isset($_REQUEST['d'])){
 					} else {
 ?>
 <p>Upload Suppression File</p>
-<p><strong>Suppression file must be saved in CSV format.  Excel format will not work.  There should only be one column in the spreadsheet and that column will contain the list of email addresses to be added.  Maximum file size is <?php echo (MAX_UPLOAD_SIZE / 1024000);?>MB.</strong></p>
+<p><strong>Suppression file must be saved in CSV format.  Excel format will not work.  There should only be one column in the spreadsheet and that column will contain the list of phone numbers to be added.  Maximum file size is <?php echo (MAX_UPLOAD_SIZE / 1024000);?>MB.</strong></p>
 <p>
 <form enctype="multipart/form-data" action="mgr_import.php" method="post" target="_blank">
 <input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>" />
-<input type="hidden" name="type" value="suppression" />
+<input type="hidden" name="type" value="suppression_phone" />
 <input type="hidden" name="destination" value="0" />
 	File: <input type="file" name="import_file" multiple="false" accept="text/csv" />
 	to Suppression List 
@@ -417,7 +411,7 @@ if(isset($_REQUEST['d'])){
 	<input type="submit" name="a" value="Add" />
 </p>
 <div id="dialog_multiselect" class="hidden">
-	<p>Select suppression lists to add this email to.</p>
+	<p>Select suppression lists to add this phone number to.</p>
 <?php
 						foreach($companies as $company){ 
 ?>
@@ -459,9 +453,9 @@ function checkIfMulti(){
 function processSuppression(type){
 	switch(type){
 		case 'single':
-			email = $('#suppress_emailS').val();
-			if(email == ''){ 
-				alert("Email field must not be empty."); return false;
+			phone = $('#suppress_phoneS').val();
+			if(phone == ''){ 
+				alert("Phone number field must not be empty."); return false;
 			}
 			list = $('#suppress_list').val();
 			if(list == 'multiple'){
@@ -484,7 +478,7 @@ function processSuppression(type){
 				data: ({
 					"a" : "processSuppression"
 					, "type": type
-					, "email": email
+					, "phone": phone
 					, "list": list
 					, "lists": lists
 				})
@@ -498,7 +492,7 @@ function processSuppression(type){
 					alert(
 						result.error+"\n"
 						+"Successes: "+result.counts.success+"\n"
-						+"Invalid Emails: "+result.counts.invalid+"\n"
+						+"Invalid Phone Numbers: "+result.counts.invalid+"\n"
 						+"Duplicates: "+result.counts.dupe+"\n"
 						+"Failures: "+result.counts.failures+"\n"
 					);
@@ -510,11 +504,11 @@ function processSuppression(type){
 			});
 		break;
 		case 'multiple':
-			emaillist = $('#suppress_emailM').val();
-			if(emaillist == ''){ 
-				alert("Email list must not be empty."); return false;
+			phonelist = $('#suppress_phoneM').val();
+			if(phonelist == ''){ 
+				alert("Phone number list must not be empty."); return false;
 			} else { 				
-				emails = emaillist.match(/[^\r\n]+/g);
+				phones = phonelist.match(/[^\r\n]+/g);
 			}
 			list = $('#suppress_list').val();
 			if(list == 'multiple'){
@@ -531,13 +525,13 @@ function processSuppression(type){
 				lists = list;
 			} 
 			var response = $.ajax({
-				url: "mgr_suppress.php",
+				url: "mgr_suppress_phone.php",
 				type: "POST",
 				async: true,
 				data: ({
 					"a" : "processSuppression"
 					, "type": type
-					, "emails": emails
+					, "phones": phones
 					, "list": list
 					, "lists": lists
 				})
@@ -551,7 +545,7 @@ function processSuppression(type){
 					alert(
 						result.error+"\n"
 						+"Successes: "+result.counts.success+"\n"
-						+"Invalid Emails: "+result.counts.invalid+"\n"
+						+"Invalid Phone Numbers: "+result.counts.invalid+"\n"
 						+"Duplicates: "+result.counts.dupe+"\n"
 						+"Failures: "+result.counts.failures+"\n"
 					);
@@ -567,7 +561,7 @@ function processSuppression(type){
 
 function exportFile(idCompany){
 	var response = $.ajax({
-		url: "mgr_suppress.php",
+		url: "mgr_suppress_phone.php",
 		type: "POST",
 		async: true,
 		data: ({
@@ -604,11 +598,11 @@ $(document).ready(function(){
 
 	<div id='controls' class='fl50'>
 		<p>
-			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'single' });">Add Single Email</a>
-			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'multiple' });">Add Multiple Emails</a>
+			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'single' });">Add Single Phone Number</a>
+			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'multiple' });">Add Multiple Phone Numbers</a>
 			<a href='#' class="btn btn-primary nonLink" onclick="display('dialog_import',{ 'type': 'file' });">Add File</a>
 		</p>
-		<div id='resultImport'><?php  if( !empty( $_REQUEST['a'] ) && 'Add' == $_REQUEST['a'] ) { print "<p style=\"color: blue;\">File import status: {$result['error']}</p><p>Successes: {$counts['success']}</p><p>Invalid emails: {$counts['invalid']}</p><p>Duplicates: {$counts['dupe']}</p><p>Failures: {$counts['failures']}</p>" ; } ?></div>
+		<div id='resultImport'><?php  if( !empty( $_REQUEST['a'] ) && 'Add' == $_REQUEST['a'] ) { print "<p style=\"color: blue;\">File import status: {$result['error']}</p><p>Successes: {$counts['success']}</p><p>Invalid phone numbers: {$counts['invalid']}</p><p>Duplicates: {$counts['dupe']}</p><p>Failures: {$counts['failures']}</p>" ; } ?></div>
 		<div id='dialog_import'></div>
 	</div>
 	<div id='suppressionCounts' class='fl50'></div>

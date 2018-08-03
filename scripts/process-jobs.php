@@ -588,7 +588,7 @@ if( 'clear-outbound-queue' === $job->type ) {
 			$counts['invalid']++;
 		} else {
 			foreach( $lists as $list ) {
-				$result = $leads->addSuppression( $list, $raw_data );
+				$result = $leads->addSuppression( 'email', $list, $raw_data );
 				if( null === $result ) {
 					$counts['dupe']++;
 				} else if( false === $result ) {

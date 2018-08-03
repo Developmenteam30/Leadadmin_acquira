@@ -5257,11 +5257,17 @@ class Leads
 		return $cnt;
 	}
 
-	public function addSuppression( $idCompany, $email ) {
+	public function addSuppression( $type, $idCompany, $value ) {
+
+		$table = 'suppression';
+		if ( $type == 'phone' ) {
+			$table .= '_phones';
+		}
+
 		try {
-			$idSuppression = $this->insertRow( 'suppression', array(
+			$idSuppression = $this->insertRow( $table, array(
 				'idCompany' => $idCompany,
-				'email' => $email,
+				$type => $value,
 			) );
 		} catch( Leads_PDOException $e ) {
 			$pdoException = $e->getPrevious();
@@ -5276,11 +5282,16 @@ class Leads
 		return true;
 	}
 
-	public function getSuppressionCounts() {
+	public function getSuppressionCounts( $type ) {
 		$results = array();
 
+		$table = 'suppression';
+		if ( $type == 'phone' ) {
+			$table .= '_phones';
+		}
+
 		try {
-			$query = $this->db->prepare( "SELECT s.idCompany,c.name,COUNT(*) AS cnt FROM suppression s LEFT JOIN companies c ON s.idCompany = c.idCompany GROUP BY s.idCompany" );
+			$query = $this->db->prepare( "SELECT s.idCompany,c.name,COUNT(*) AS cnt FROM $table s LEFT JOIN companies c ON s.idCompany = c.idCompany GROUP BY s.idCompany" );
 			$query->execute( array() );
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
@@ -5318,6 +5329,32 @@ class Leads
 		return $result;
 	}
 
+	public function checkPhoneSuppression( $phone, $idCompany = null ) {
+		$result = false;
+
+		if( empty( $phone ) ) {
+			return $result;
+		}
+
+		try {
+			if( !empty( $idCompany ) ) {
+				$query = $this->db->prepare( "SELECT 1 FROM suppression_phones WHERE phone = ? AND ( idCompany = 0 OR idCompany = ? )" );
+				$query->execute( array( $phone, $idCompany ) );
+			} else {
+				$query = $this->db->prepare( "SELECT 1 FROM suppression_phones WHERE phone = ? AND idCompany = 0" );
+				$query->execute( array( $phone ) );
+			}
+
+			if( '1' == $query->fetchColumn() ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check suppression: ' . $e->getMessage() );
+		}
+
+		return $result;
+	}
+
 	public function exportSuppressions( $idCompany ) {
 		$result = array();
 
@@ -5343,6 +5380,42 @@ class Leads
 			}
 			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
 				fwrite( $fh, $row['email'] . PHP_EOL );
+			}
+			$result['reason'] = 'Success';
+		} catch( PDOException $e ) {
+			$result['reason'] = 'DB query error.';
+			$this->logError( 'Unable to get get supression records for export: ' . $e->getMessage() );
+		}
+
+		fclose( $fh );
+		return $result;
+	}
+
+	public function exportPhoneSuppressions( $idCompany ) {
+		$result = array();
+
+		if( empty( $idCompany ) ) {
+			$result['file'] = 'exports/suppression_phone_global_' . time() . '.csv';
+		} else {
+			$result['file'] = 'exports/suppression_phone_' . intval( $idCompany ) . '_' . time() . '.csv';
+		}
+		$filePath = ADMIN_ROOT . $result['file'];
+		$fh = fopen( $filePath, 'w' );
+		if( !$fh ) {
+			$result['reason'] = 'Failed to create CSV file.';
+			return $result;
+		}
+
+		try {
+			if( empty( $idCompany ) ) {
+				$query = $this->db->prepare( "SELECT phone FROM suppression_phones WHERE idCompany = 0" );
+				$query->execute( array() );
+			} else {
+				$query = $this->db->prepare( "SELECT phone FROM suppression_phones WHERE idCompany = ?" );
+				$query->execute( array( $idCompany ) );
+			}
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fwrite( $fh, $row['phone'] . PHP_EOL );
 			}
 			$result['reason'] = 'Success';
 		} catch( PDOException $e ) {
