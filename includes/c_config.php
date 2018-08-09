@@ -73,7 +73,7 @@ define( "MAX_UPLOAD_SIZE", 10240000 );
 $GLOBALS['dbconnx'] = '';
 $GLOBALS['dbmigration'] = '';
 define( "ADMINISTRATOR_EMAIL", 'ryan@playnicetogether.com' );
-define( "MANAGER_EMAIL", 'david@qatalystinc.com,bobby@qatalystinc.com,naomi@qatalystinc.com' );
+define( "MANAGER_EMAIL", 'david@qatalystinc.com,naomi@qatalystinc.com' );
 define( "OWNER_EMAIL_FROM", 'david@qatalystinc.com' );
 define( "OWNER_EMAIL", 'david@qatalystinc.com,naomi@qatalystinc.com' );
 define( "PAYMENT_EMAIL", 'accounting@qatalystinc.com' );
