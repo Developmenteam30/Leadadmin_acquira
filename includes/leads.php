@@ -4159,7 +4159,7 @@ class Leads
 			$querySelect->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
 			$querySelect->bindColumn( 1, $recordId );
 
-			$queryDelete = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = ?" );
+			$queryDelete = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = :idRecord" );
 			$queryDelete->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
 
 			do {
