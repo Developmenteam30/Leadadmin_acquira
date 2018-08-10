@@ -91,6 +91,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 					$BCCText = '';
 					$BCCText = "BCC: " . PAYMENT_EMAIL . "\r\n";
+					/* Disabled per #1590.
 					if( !empty( $_REQUEST['commissionBCC'] ) ) {
 						$BCCs = explode( ',', $_REQUEST['commissionBCC'] );
 						foreach( $BCCs as $BCC ) {
@@ -100,6 +101,7 @@ if( isset( $_REQUEST['a'] ) ) {
 							}
 						}
 					}
+					*/
 
 					$date = date( 'F Y', strtotime( $_REQUEST['ledgerMonth'] . '01' ) );
 					list( $first, $garbage ) = explode( ' ', $company->acct_name, 2 );
