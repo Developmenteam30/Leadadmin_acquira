@@ -672,6 +672,36 @@ class Leads
 		return $ledgerId;
 	}
 
+	public function addLedgerVendor( $fields ) {
+
+		$ledgerId = null;
+
+		try {
+			$ledgerId = $this->insertRow( 'ledger_vendors', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to add ledger vendor entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $ledgerId;
+	}
+
+	public function replaceLedgerVendor( $fields ) {
+
+		$ledgerId = null;
+
+		try {
+			$ledgerId = $this->replaceRow( 'ledger_vendors', $fields );
+		} catch( Leads_PDOException $e ) {
+			$pdoException = $e->getPrevious();
+			$this->logError( 'Unable to replace ledger vendor entry: ' . $pdoException->getMessage() );
+			return null;
+		}
+
+		return $ledgerId;
+	}
+
 	public function addOfflineLedger( $fields ) {
 
 		$ledgerId = null;
@@ -819,32 +849,41 @@ class Leads
 		return $ledgerId;
 	}
 
-	public function updatePhoneLedgerVendor( $ledgerId, $indexId, $fields ) {
-
-		try {
-			$status = $this->update( 'ledger_phones_vendors', $fields, array(
-				'ledgerId' => $ledgerId,
-				'indexId' => $indexId,
-			) );
-			return $status;
-		} catch( Leads_PDOException $e ) {
-			$pdoException = $e->getPrevious();
-			$this->logError( 'Unable to update phones vendor ledger: ' . $pdoException->getMessage() );
-			return null;
-		}
-
-		return null;
-	}
-
-
 	public function getLedgerById( $ledgerId ) {
 		$results = null;
 		$params = array();
 
-		$sql = "SELECT * FROM ledger WHERE ledgerId = ? ";
+		$sql = "SELECT l.*,";
+		for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+			$sql .= sprintf( "lv%d.vendorCompanyId AS vendorCompanyId%d,lv%d.loInvoiceNum AS loInvoiceNum%d,lv%d.loInvoiceAmount AS loInvoiceAmount%d,lv%d.loPaymentDate AS loPaymentDate%d,lv%d.loPaymentMethod AS loPaymentMethod%d,lv%d.loPaymentAmount AS loPaymentAmount%d,",
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i,
+				$i
+			);
+		}
+		$sql .= "1 AS dummy ";
+		$sql .= "FROM ledger l ";
+		for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+			$sql .= sprintf( "LEFT JOIN ledger_vendors lv%d ON l.ledgerId = lv%d.ledgerId AND lv%d.indexId = %d ",
+				$i,
+				$i,
+				$i,
+				$i
+			);
+		}
+		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
-			$sql .= "AND userId = ? ";
+			$sql .= "AND l.userId = ? ";
 			$params[] = LeadsSession::getUserId();
 		}
 
@@ -859,14 +898,19 @@ class Leads
 		return $results;
 	}
 
-	public function getOfflineLedgerById( $ledgerId ) {
+	public function getLedgerByIdIndex( $ledgerId, $indexId ) {
 		$results = null;
 		$params = array();
 
-		$sql = "SELECT * FROM ledger_offline WHERE ledgerId = ? ";
+		$sql = "SELECT l.*,lv.vendorCompanyId AS vendorCompanyId,lv.loInvoiceNum AS loInvoiceNum,lv.loInvoiceAmount AS loInvoiceAmount,lv.loPaymentDate AS loPaymentDate,lv.loPaymentMethod AS loPaymentMethod,lv.loPaymentAmount AS loPaymentAmount ";
+		$sql .= "FROM ledger l ";
+		$sql .= "LEFT JOIN ledger_vendors lv ON l.ledgerId = lv.ledgerId AND lv.indexId = ? ";
+		$params[] = $indexId;
+		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
-			$sql .= "AND ( userId1 = ? OR userId2 = ? ) ";
+			$sql .= "AND ( userId1 = ? OR userId2 = ? OR userId3 = ? )";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
@@ -876,7 +920,31 @@ class Leads
 			$query->execute( $params );
 			$results = $query->fetch( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get offline ledger entry: ' . $e->getMessage() );
+			$this->logError( 'Unable to get ledger index entry: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+	public function getOfflineLedgerById( $ledgerId ) {
+		$results = null;
+		$params = array();
+
+		$sql = "SELECT * FROM ledger_offline WHERE ledgerId = ? ";
+		$params[] = $ledgerId;
+		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
+			$sql .= "AND ( userId1 = ? OR userId2 = ? OR userId3 = ? )";
+			$params[] = LeadsSession::getUserId();
+			$params[] = LeadsSession::getUserId();
+			$params[] = LeadsSession::getUserId();
+		}
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			$results = $query->fetch( PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to get ledger offline index entry: ' . $e->getMessage() );
 		}
 
 		return $results;
@@ -916,7 +984,8 @@ class Leads
 		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
-			$sql .= "AND ( userId1 = ? OR userId2 = ? ) ";
+			$sql .= "AND ( userId1 = ? OR userId2 = ? OR userId3 = ? ) ";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
@@ -943,7 +1012,8 @@ class Leads
 		$sql .= "WHERE l.ledgerId = ? ";
 		$params[] = $ledgerId;
 		if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
-			$sql .= "AND ( userId1 = ? OR userId2 = ? )";
+			$sql .= "AND ( userId1 = ? OR userId2 = ? OR userId3 = ? )";
+			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 			$params[] = LeadsSession::getUserId();
 		}
@@ -987,14 +1057,37 @@ class Leads
 		$results = array();
 		$params = array();
 
-		if( !empty( $onlyMonths ) ) {
-			$sql = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
+		if( 1 == $type ) {
+			if( !empty( $onlyMonths ) ) {
+				$sql = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
+			} else {
+				$sql = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,";
+				for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+					$sql .= sprintf( 'vc%1$d.name AS vendorCompanyName%1$d,lv%1$d.loInvoiceNum AS loInvoiceNum%1$d,lv%1$d.loInvoiceAmount AS loInvoiceAmount%1$d,lv%1$d.loPaymentDate AS loPaymentDate%1$d,lv%1$d.loPaymentMethod AS loPaymentMethod%1$d,lv%1$d.loPaymentAmount AS loPaymentAmount%1$d,',
+						$i
+					);
+				}
+				$sql .= "c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2 ";
+			}
+			$sql .= "FROM ledger l ";
+			for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+				$sql .= sprintf( 'LEFT JOIN ledger_vendors lv%1$d ON l.ledgerId = lv%1$d.ledgerId AND lv%1$d.indexId = %1$d ',
+					$i
+				);
+				$sql .= sprintf( 'LEFT JOIN companies vc%1$d ON lv%1$d.vendorCompanyId = vc%1$d.idCompany ',
+					$i
+				);
+			}
 		} else {
-			$sql = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,c2.name AS vendorCompanyName ";
+			if( !empty( $onlyMonths ) ) {
+				$sql = "SELECT DISTINCT(LEFT(l.ledgerMonth,7)) AS month ";
+			} else {
+				$sql = "SELECT l.*,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,c2.name AS vendorCompanyName1 ";
+			}
+			$sql .= "FROM ledger l ";
+			$sql .= "LEFT JOIN companies c2 ON l.vendorCompanyId = c2.idCompany ";
 		}
-		$sql .= "FROM ledger l ";
 		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
-		$sql .= "LEFT JOIN companies c2 ON l.vendorCompanyId = c2.idCompany ";
 		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
 		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
 		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
@@ -1153,40 +1246,70 @@ class Leads
 	public function getPaidLedger( $type, $userId = null, $distinctColumn = null, $distinctValue = null ) {
 		$results = array();
 		$params = array();
-
-		if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
-			$sql = "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
-		} else {
-			$sql = "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger' AS source,0 AS indexId ";
-		}
-		$sql .= "FROM ledger l ";
-		$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
-		$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
-		$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
-		$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
-		$sql .= "LEFT JOIN users u3 ON l.userId3 = u3.idUser ";
-		$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
-		$sql .= "WHERE 1=1 ";
-		if( $type !== null ) {
-			$sql .= "AND type = ? ";
-			$params[] = $type;
-		}
-		if( !empty( $userId ) ) {
-			$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? OR l.userId3 = ? ) ";
-			$params[] = $userId;
-			$params[] = $userId;
-			$params[] = $userId;
-		} else {
-			$sql .= "AND l.paymentDate IS NOT NULL ";
-			$sql .= "AND l.paymentAmount IS NOT NULL ";
-			$sql .= "AND l.paymentMethod IS NOT NULL ";
-		}
-		if( !empty( $distinctColumn ) && !empty( $distinctValue ) ) {
-			$sql .= "AND " . $distinctColumn . " = ? ";
-			$params[] = $distinctValue;
-		}
+		$sql = '';
 
 		if( $type === 0 ) {
+
+			// Advertiser ledger entries use separate ledger_vendors for expenses
+			if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
+				$sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
+			} else {
+				$sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,lv.loPaymentDate AS paymentDate,lv.loPaymentMethod AS paymentMethod,l.ledgerMonth,lv.loInvoiceAmount AS invoiceAmount,lv.loInvoiceNum AS invoiceNum,lv.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId,'-',lv.indexId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_vendors' AS source,lv.indexId ";
+			}
+			$sql .= "FROM ledger l ";
+			$sql .= "LEFT JOIN ledger_vendors lv ON l.ledgerId = lv.ledgerId ";
+			$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
+			$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
+			$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+			$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
+			$sql .= "LEFT JOIN users u3 ON l.userId3 = u3.idUser ";
+			$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
+			$sql .= "WHERE type = 1 ";
+			if( !empty( $userId ) ) {
+				$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? OR l.userId3 = ? ) ";
+				$params[] = $userId;
+				$params[] = $userId;
+				$params[] = $userId;
+			} else {
+				$sql .= "AND lv.loPaymentDate IS NOT NULL ";
+				$sql .= "AND lv.loPaymentAmount IS NOT NULL ";
+				$sql .= "AND lv.loPaymentMethod IS NOT NULL ";
+			}
+			if( !empty( $distinctColumn ) && !empty( $distinctValue ) ) {
+				$sql .= "AND " . str_replace( 'paymentDate', 'lv.loPaymentDate', $distinctColumn ) . " = ? ";
+				$params[] = $distinctValue;
+			}
+
+			$sql .= "UNION ";
+
+			// Publisher ledger entries use regular fields for expenses
+			if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
+				$sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
+			} else {
+				$sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger' AS source,0 AS indexId ";
+			}
+			$sql .= "FROM ledger l ";
+			$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
+			$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
+			$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+			$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
+			$sql .= "LEFT JOIN users u3 ON l.userId3 = u3.idUser ";
+			$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
+			$sql .= "WHERE type = 0 ";
+			if( !empty( $userId ) ) {
+				$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? OR l.userId3 = ? ) ";
+				$params[] = $userId;
+				$params[] = $userId;
+				$params[] = $userId;
+			} else {
+				$sql .= "AND l.paymentDate IS NOT NULL ";
+				$sql .= "AND l.paymentAmount IS NOT NULL ";
+				$sql .= "AND l.paymentMethod IS NOT NULL ";
+			}
+			if( !empty( $distinctColumn ) && !empty( $distinctValue ) ) {
+				$sql .= "AND " . $distinctColumn . " = ? ";
+				$params[] = $distinctValue;
+			}
 
 			$sql .= "UNION ";
 
@@ -1272,11 +1395,40 @@ class Leads
 				$sql .= "AND lv.loPaymentMethod IS NOT NULL ";
 			}
 			if( !empty( $distinctColumn ) && !empty( $distinctValue ) ) {
-				$sql .= "AND " . str_replace( 'paymentDate', 'loPaymentDate', $distinctColumn ) . " = ? ";
+				$sql .= "AND " . str_replace( 'paymentDate', 'lv.loPaymentDate', $distinctColumn ) . " = ? ";
 				$params[] = $distinctValue;
 			}
 
 		} else {
+
+			// Advertiser ledger entries use regular fields for income
+			if( !empty( $distinctColumn ) && empty( $distinctValue ) ) {
+				$sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
+			} else {
+				$sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger' AS source,0 AS indexId ";
+			}
+			$sql .= "FROM ledger l ";
+			$sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
+			$sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
+			$sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+			$sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
+			$sql .= "LEFT JOIN users u3 ON l.userId3 = u3.idUser ";
+			$sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
+			$sql .= "WHERE type = 1 ";
+			if( !empty( $userId ) ) {
+				$sql .= "AND ( l.userId1 = ? OR l.userId2 = ? OR l.userId3 = ? ) ";
+				$params[] = $userId;
+				$params[] = $userId;
+				$params[] = $userId;
+			} else {
+				$sql .= "AND l.paymentDate IS NOT NULL ";
+				$sql .= "AND l.paymentAmount IS NOT NULL ";
+				$sql .= "AND l.paymentMethod IS NOT NULL ";
+			}
+			if( !empty( $distinctColumn ) && !empty( $distinctValue ) ) {
+				$sql .= "AND " . $distinctColumn . " = ? ";
+				$params[] = $distinctValue;
+			}
 
 			$sql .= "UNION ";
 

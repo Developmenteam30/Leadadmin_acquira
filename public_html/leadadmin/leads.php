@@ -199,7 +199,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
 				'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
 				'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
-				'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
+				'commissionRevenue2' => empty( $_REQUEST['commissionRevenue2'] ) ? null : $_REQUEST['commissionRevenue2'],
 				'commissionDate3' => !isset( $commissionDate3 ) ? null : $commissionDate3->format( 'Y-m-d' ),
 				'commissionAmount3' => empty( $_REQUEST['commissionAmount3'] ) ? null : $_REQUEST['commissionAmount3'],
 				'userId3' => empty( $_REQUEST['userId3'] ) ? null : $_REQUEST['userId3'],
@@ -1286,7 +1286,6 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 						<?php } ?>
-                        console.log('firing');
 					});
 					$('#editphoneledger').on('shown.bs.modal', function (e) {
 						$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2], #edit_phoneledger input[name=commissionDate3]").datepicker({

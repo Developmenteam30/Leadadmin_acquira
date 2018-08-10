@@ -219,6 +219,23 @@ if( isset( $_REQUEST['d'] ) ) {
 								'userId3' => $entry->userId3,
 							);
 						}
+					} else if( 'V' === $divisionId ) {
+						list( $ledgerId, $indexId ) = explode( '|', $ledgerId );
+						$entry = $leads->getLedgerByIdIndex( $ledgerId, $indexId );
+						if( !empty( $entry ) ) {
+							$ledgerMonth = new DateTime( $entry->ledgerMonth );
+							$entries[] = array(
+								'invoiceNum' => $entry->loInvoiceNum,
+								'paymentAmount' => $entry->loPaymentAmount,
+								'paymentMethod' => $entry->loPaymentMethod,
+								'paymentDate' => $entry->loPaymentDate,
+								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
+								'companyId' => $entry->vendorCompanyId,
+								'userId1' => $entry->userId1,
+								'userId2' => $entry->userId2,
+								'userId3' => $entry->userId3,
+							);
+						}
 					} else {
 						$entry = $leads->getLedgerById( $ledgerId );
 						if( !empty( $entry ) ) {
@@ -394,7 +411,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						},
 						dataType: "json",
 						success: function (data) {
-							var companyId = $("#email_form select[name='companyId']")
+							var companyId = $("#email_form select[name='companyId']");
 							if (companyId) {
 								companyId.empty();
 								companyId.append('<option></option>');
@@ -556,6 +573,8 @@ include( INCLUDES . "c_header.php" );
 										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'E|' . $entry->ledgerId . '|' . $entry->companyId; ?>"/>
 									<?php } else if( 'ledger_phones' === $entry->source ) { ?>
 										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'L|' . $entry->ledgerId . '|' . $entry->indexId; ?>"/>
+									<?php } else if( 'ledger_vendors' === $entry->source ) { ?>
+										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'V|' . $entry->ledgerId . '|' . $entry->indexId; ?>"/>
 									<?php } else { ?>
 										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>"/>
 									<?php } ?>
