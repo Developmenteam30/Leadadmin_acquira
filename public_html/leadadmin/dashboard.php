@@ -229,6 +229,7 @@ include( INCLUDES . "c_header.php" );
 				if( empty( $years[$year] ) ) {
 					$value = $year . '-01-01' . '|' . $year . '-12-31';
 					printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+						$value,
 						$statsQuick == $value ? ' selected="selected"' : '',
 						htmlentities( $year . ' Year' )
 					);
