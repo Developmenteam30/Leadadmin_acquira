@@ -903,7 +903,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								<input type="text" name="dailyLimit" value="<?php echo $feed_dailyLimit; ?>"/>
 							</p>
 							<?php if( !empty( $feed_chokePercent ) ) { ?>
-								<p>Effective daily limit with choke: <?php echo $feed_dailyLimit / ( ( 100 - $feed_chokePercent ) * .01 ); ?></p>
+								<p>Effective daily limit with choke: <?php echo round( $feed_dailyLimit / ( ( 100 - $feed_chokePercent ) * .01 ) ); ?></p>
 							<?php } ?>
 						</td>
 					</tr>

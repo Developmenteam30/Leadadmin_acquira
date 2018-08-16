@@ -95,7 +95,7 @@ include( INCLUDES . "c_header.php" );
 							$incomingFeed->idFeedIn,
 							htmlentities( $incomingFeed->label ),
 							htmlentities( $incomingFeed->description ),
-							( !empty( $incomingFeed->dailyLimit ) ? ' [<span style="color:orange;font-weight:bold;">Limit: ' . $incomingFeed->dailyLimit . '</span>]' : '' ),
+							( !empty( $incomingFeed->dailyLimit ) && !empty( $incomingFeed->chokePercent ) ) ? ( ' [<span style="color:orange;font-weight:bold;">Limit: ' . $incomingFeed->dailyLimit . ' Eff: ' . round( $incomingFeed->dailyLimit / ( ( 100 - $incomingFeed->chokePercent ) * .01 ) ) . '</span>]' ) : ( !empty( $incomingFeed->dailyLimit ) ? ' [<span style="color:orange;font-weight:bold;">Limit: ' . $incomingFeed->dailyLimit . '</span>]' : '' ),
 							( !empty( $incomingFeed->chokePercent ) ? ' [<span style="color:red;font-weight:bold;">Choke: ' . $incomingFeed->chokePercent . '%</span>]' : '' )
 						);
 						$shownPopulation = true;
