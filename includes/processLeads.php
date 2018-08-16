@@ -212,6 +212,13 @@ class ProcessLeads
 					continue;
 				}
 
+				if( empty( $idFeedOut ) && !empty( $feed->startDate ) && $feed->startDate > date( 'Y-m-d' ) ) {
+					if( $debug ) {
+						print "Skipping because feed start date has not passed yet: {$feed->startDate}";
+					}
+					continue;
+				}
+
 				// Are we limiting records to a specific outbound feed?
 				if( !empty( $idFeedOut ) && $idFeedOut != $feed->idFeedOut ) {
 					continue;

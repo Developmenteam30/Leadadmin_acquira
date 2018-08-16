@@ -410,6 +410,15 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( !empty( $_REQUEST['startDate'] ) ) {
+				try {
+					$paymentDate = new DateTime( $_REQUEST['startDate'] );
+				} catch( Exception $e ) {
+					$result['error'] = 'Please enter a valid start date.';
+					break;
+				}
+			}
+
 			if( $action == 'new' ) {
 
 				$idAssoc = $leads->addPopulation( array(
@@ -425,6 +434,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
 					'queueType' => !empty( $_REQUEST['queueType'] ) ? $_REQUEST['queueType'] : 'livedata',
+					'startDate' => !empty( $_REQUEST['startDate'] ) ? $_REQUEST['startDate'] : null,
 					'waterfallPriority' => !empty( $_REQUEST['waterfallPriority'] ) ? $_REQUEST['waterfallPriority'] : 0,
 				) );
 
@@ -453,6 +463,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					'forceUrlList' => !empty( $forceUrlList ) ? $forceUrlList : null,
 					'forceUrl' => !empty( $_REQUEST['forceUrl'] ) ? 1 : 0,
 					'queueType' => !empty( $_REQUEST['queueType'] ) ? $_REQUEST['queueType'] : 'livedata',
+					'startDate' => !empty( $_REQUEST['startDate'] ) ? $_REQUEST['startDate'] : null,
 					'waterfallPriority' => !empty( $_REQUEST['waterfallPriority'] ) ? $_REQUEST['waterfallPriority'] : 0,
 				) );
 
@@ -2087,6 +2098,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'filterTypeListcode',
 				'forceUrl',
 				'queueType',
+				'startDate',
 				'waterfallPriority',
 			);
 			foreach( $populationProperties as $pP ) {
@@ -2483,6 +2495,17 @@ if( isset( $_REQUEST['d'] ) ) {
 							</p>
 						</td>
 					</tr>
+					<tr>
+						<td><p>Population Start Date</p></td>
+						<td>
+							<p>
+								If a value is filled in here, then records will not start populating this queue until midnight of the date provided. When using this feature, it is recommended to turn the "Queueing" option ON, because if the "Queueing" option is set to off, then no records will be queued at all, even if the start date below passes.
+							</p>
+							<p>
+								<input type="text" name="startDate" id="startDate" value="<?php echo Display::escHtml( $popset_startDate ); ?>"/>
+							</p>
+						</td>
+					</tr>
 				</table>
 			</form>
 			<script type="text/javascript">
@@ -2490,6 +2513,12 @@ if( isset( $_REQUEST['d'] ) ) {
 					placeholder: "Select an incoming feed",
 					allowClear: true
 				});
+
+				$('#new_pop input[name="startDate"], #edit_pop input[name="startDate"]').datepicker({
+					// Consistent format with the HTML5 picker
+					dateFormat: 'yy-mm-dd'
+				});
+
 			</script>
 			<?php
 			break;
