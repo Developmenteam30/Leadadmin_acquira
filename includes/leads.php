@@ -4168,7 +4168,7 @@ class Leads
 			$params[] = $phone;
 			$params[] = $phone;
 		}
-		$baseSql .= ") UNION ";
+		$baseSql .= "LIMIT 1000 ) UNION ";
 
 		$sql = "SELECT * FROM ( ";
 		$sql .= $baseSql;
@@ -4199,6 +4199,7 @@ class Leads
 		$sql = substr( $sql, 0, -6 ); // Remove the last UNION statement
 		$sql .= " ) AS recs ";
 		$sql .= "ORDER BY recs.timestampConverted ";
+		$sql .= "LIMIT 500";
 
 		//echo($sql);
 

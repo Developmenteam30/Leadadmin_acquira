@@ -39,7 +39,7 @@ include( INCLUDES . "c_header.php" );
 
 	<h2>Record Search</h2>
 	<p>Fill out any or all of the fields below to perform an "AND" search against all of the fields that are filled in.</p>
-	<p>Searches will be performed against the last 1 year of data.</p>
+	<p>Searches will be performed against the last 1 year of data. Results are limited to the first 500 matching entries.</p>
 
 	<?php
 
