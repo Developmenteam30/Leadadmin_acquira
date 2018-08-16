@@ -37,6 +37,30 @@ class Display
 		}
 	}
 
+	public static function getQuarterEnd( $year, $quarter ) {
+		if( $quarter == 1 ) {
+			return $year . '-03-31';
+		} else if( $quarter == 2 ) {
+			return $year . '-06-30';
+		} else if( $quarter == 3 ) {
+			return $year . '-09-30';
+		} else {
+			return $year . '-12-31';
+		}
+	}
+
+	public static function getQuarterStart( $year, $quarter ) {
+		if( $quarter == 1 ) {
+			return $year . '-01-01';
+		} else if( $quarter == 2 ) {
+			return $year . '-04-01';
+		} else if( $quarter == 3 ) {
+			return $year . '-07-01';
+		} else {
+			return $year . '-10-01';
+		}
+	}
+
 	public static function displayForm( $name, $fields = array(), $title = '', $options = array() ) {
 		print "<div class=\"form-input\">\n";
 		if( !empty( $title ) ) {
