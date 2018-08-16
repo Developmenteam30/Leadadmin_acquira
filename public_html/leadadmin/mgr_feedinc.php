@@ -898,15 +898,19 @@ if( isset( $_REQUEST['d'] ) ) {
 						<td><p>Daily Feed Limit</p></td>
 						<td>
 							<p>Leave blank for no limit (default). If a value is supplied here, the feed will stop accepting records after the daily limit is reached.</p>
+							<p>Note: If a choke percentage is defined below, then we will silently accept that percentage of leads over and above this daily limit. So if the choke is set at 25% and the feed limit is set at 750, we will accept approximately 1,000 leads before hitting the daily limit (but still only show 750 were accepted to the vendor).</p>
 							<p>
 								<input type="text" name="dailyLimit" value="<?php echo $feed_dailyLimit; ?>"/>
 							</p>
+							<?php if( !empty( $feed_chokePercent ) ) { ?>
+								<p>Effective daily limit with choke: <?php echo $feed_dailyLimit / ( ( 100 - $feed_chokePercent ) * .01 ); ?></p>
+							<?php } ?>
 						</td>
 					</tr>
 					<tr>
 						<td>Choke Percent</p></td>
 						<td>
-							<p>The percentage of leads that will randomly be rejected. For example, entering a value of "20" means that approximately 20% of all leads coming in will be rejected. This feature ONLY applies to feeds that are setup as "live" on the outgoing side. Normally this value is zero.</p>
+							<p>The percentage of leads that will randomly be rejected. For example, entering a value of "20" means that approximately 20% of all leads coming in will be rejected. This feature ONLY applies to feeds that are setup as "live" or "waterfall" on the outgoing population side. Normally this value is zero.</p>
 							<p>
 								<input type="text" name="chokePercent" id="chokePercent" value="<?php echo $feed_chokePercent; ?>"/>
 							</p>
@@ -967,7 +971,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						<td>
 							<p>If the feed is paused, send this rejection message to the vendor. If nothing is set here, the default message is "Lead rejected".</p>
 							<p>
-								<input type="text" name="pauseMessage" value="<?php echo $feed_pauseMessage; ?>" class="input-long" />
+								<input type="text" name="pauseMessage" value="<?php echo $feed_pauseMessage; ?>" class="input-long"/>
 							</p>
 						</td>
 					</tr>
