@@ -4141,6 +4141,131 @@ class Leads
 		return $results;
 	}
 
+	public function inboundRecordSearch( $email, $phone, $url ) {
+		$params = array();
+
+		$dateStart = new \DateTime();
+		$dateStart->sub( new \DateInterval( ( 'P1Y' ) ) );
+		$dateEnd = new \DateTime();
+
+		// Establish our baseline SQL that we'll change in the loop
+		$baseSql = "( SELECT fi.label,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip ";
+		$params[] = DB_TIMEZONE;
+		$params[] = LOCAL_TIMEZONE;
+		$baseSql .= "FROM data_inbound AS i ";
+		$baseSql .= "LEFT JOIN feedinc fi ON fi.idFeedIn = i.idFeedIn ";
+		$baseSql .= "WHERE 1=1 ";
+		if( !empty( $email ) ) {
+			$baseSql .= "AND i.email = ? ";
+			$params[] = $email;
+		}
+		if( !empty( $url ) ) {
+			$baseSql .= "AND i.url = ? ";
+			$params[] = $url;
+		}
+		if( !empty( $phone ) ) {
+			$baseSql .= "AND ( i.cellphone = ? OR i.landline = ? ) ";
+			$params[] = $phone;
+			$params[] = $phone;
+		}
+		$baseSql .= ") UNION ";
+
+		$sql = "SELECT * FROM ( ";
+		$sql .= $baseSql;
+
+
+		do {
+			$sql .= str_replace( "FROM data_inbound", "FROM archive." . $this->quoteIdentifier( 'data_inbound_' . $dateStart->format( 'Ym' ) ), $baseSql );
+			$params[] = DB_TIMEZONE;
+			$params[] = LOCAL_TIMEZONE;
+			if( !empty( $email ) ) {
+				$params[] = $email;
+			}
+			if( !empty( $url ) ) {
+				$params[] = $url;
+			}
+			if( !empty( $phone ) ) {
+				$params[] = $phone;
+				$params[] = $phone;
+			}
+
+			try {
+				$dateStart->add( new \DateInterval( ( 'P1M' ) ) );
+			} catch( \Exception $e ) {
+				break;
+			}
+		} while( $dateStart->format( 'Ym' ) <= $dateEnd->format( 'Ym' ) );
+
+		$sql = substr( $sql, 0, -6 ); // Remove the last UNION statement
+		$sql .= " ) AS recs ";
+		$sql .= "ORDER BY recs.timestampConverted ";
+
+		//echo($sql);
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			return $query->fetchAll( \PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			echo $e->getMessage();
+			$this->logError( 'Unable to get inbound record search results: ' . $e->getMessage() );
+		}
+
+		return array();
+	}
+
+	public function outboundRecordSearchById( $recordId ) {
+		$params = array();
+
+		$dateStart = new \DateTime();
+		$dateStart->sub( new \DateInterval( ( 'P1Y' ) ) );
+		$dateEnd = new \DateTime();
+
+		// Establish our baseline SQL that we'll change in the loop
+		$baseSql = "( SELECT fo.label,o.idFeedOut,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result ";
+		$params[] = DB_TIMEZONE;
+		$params[] = LOCAL_TIMEZONE;
+		$baseSql .= "FROM data_outbound AS o ";
+		$baseSql .= "LEFT JOIN feedout fo ON fo.idFeedOut = o.idFeedOut ";
+		$baseSql .= "WHERE o.idRecord = ? ";
+		$params[] = $recordId;
+		$baseSql .= ") UNION ";
+
+		$sql = "SELECT * FROM ( ";
+		$sql .= $baseSql;
+
+
+		do {
+			$sql .= str_replace( "FROM data_outbound", "FROM archive." . $this->quoteIdentifier( 'data_outbound_' . $dateStart->format( 'Ym' ) ), $baseSql );
+			$params[] = DB_TIMEZONE;
+			$params[] = LOCAL_TIMEZONE;
+			$params[] = $recordId;
+
+			try {
+				$dateStart->add( new \DateInterval( ( 'P1M' ) ) );
+			} catch( \Exception $e ) {
+				break;
+			}
+		} while( $dateStart->format( 'Ym' ) <= $dateEnd->format( 'Ym' ) );
+
+		$sql = substr( $sql, 0, -6 ); // Remove the last UNION statement
+		$sql .= " ) AS recs ";
+		$sql .= "ORDER BY recs.timestampConverted ";
+
+		//echo($sql);
+
+		try {
+			$query = $this->db->prepare( $sql );
+			$query->execute( $params );
+			return $query->fetchAll( \PDO::FETCH_OBJ );
+		} catch( PDOException $e ) {
+			echo $e->getMessage();
+			$this->logError( 'Unable to get outbound record search by id results: ' . $e->getMessage() );
+		}
+
+		return array();
+	}
+
 	public function archivedOutboundRecordsSearch( $idFeedOut, $dateStartIn, $dateEndIn, $idRecord = null ) {
 		$results = array();
 		$params = array();

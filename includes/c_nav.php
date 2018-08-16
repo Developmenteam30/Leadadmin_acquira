@@ -32,8 +32,7 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 			array( 'name' => '*Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN ),
 		) ),
 		array( 'name' => 'Admin', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
-			array( 'name' => 'URL Search', 'url' => '/leadadmin/url-search.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
-			array( 'name' => 'Email Search', 'url' => '/leadadmin/email-search.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+			array( 'name' => 'Record Search', 'url' => '/leadadmin/record-search.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => 'Vertical Management', 'url' => '/leadadmin/verticals.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 			array( 'name' => '+Credentials Vault', 'url' => '/leadadmin/credentials-vault.php?status=active', 'level' => LEADS_SESSION_LEVEL_MANAGER ),
 			array( 'name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN ),

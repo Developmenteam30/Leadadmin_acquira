@@ -122,6 +122,12 @@ table.TF th,
 	background-color: #f9f9f9;
 }
 
+.table-striped-triple tbody tr:nth-child(6n+4),
+.table-striped-triple tbody tr:nth-child(6n+5),
+.table-striped-triple tbody tr:nth-child(6n+6) {
+	background-color: #f9f9f9;
+}
+
 table tr.bg-gray {
 	background: #dadada;
 }
