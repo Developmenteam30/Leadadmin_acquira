@@ -221,6 +221,20 @@ class ProcessLeads
 					print "<p>{$idRecord} {$feedParams->idFeedIn} => {$feed->idFeedOut} {$feed->queueType}: ";
 				}
 
+				// Ensure we are within scheduled time frame
+				$current_day = strtolower(date('D'));
+				$current_time = date('H:i');
+				$schedule_array = json_decode($feed->processingSchedule);
+				if( !$schedule_array[$current_day]['enabled'] ||
+					( $schedule_array[$current_day]['startTime'] != '' && $current_time < $schedule_array[$current_day]['startTime'] ) ||
+					( $schedule_array[$current_day]['endTime'] != '' && $current_time > $schedule_array[$current_day]['endTime'] )
+				){
+					if( $debug ) {
+						print "Skipping because not within processing schedule</p>";
+					}
+					continue;
+				}
+
 				// Ensure we don't re-import records sent within the last 6 months
 				if( !empty( $idFeedOut ) && $leads->checkOutboundRecordExists( $idRecord, $feedParams->idFeedIn, $feed->idFeedOut ) ) {
 					if( $debug ) {

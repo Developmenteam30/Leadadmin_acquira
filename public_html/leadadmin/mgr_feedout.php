@@ -148,6 +148,22 @@ if( isset( $_REQUEST['a'] ) ) {
 					}
 				}
 
+				if( $c ) {
+					//Set up processingSchedule array
+					$processingSchedule = array();
+					$schedule_array = array('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat');
+					foreach($schedule_array as $id => $day){
+						if( $_REQUEST[$day.'_schedule'] ){
+							$processingSchedule[$day]['enabled'] = true;
+							$processingSchedule[$day]['startTime'] = $_REQUEST[$day.'_start'];
+							$processingSchedule[$day]['endTime'] = $_REQUEST[$day.'_end'];
+						} else {
+							$processingSchedule[$day]['enabled'] = false;
+						}
+					}
+					$processingSchedule = json_encode($processingSchedule);
+				}
+
 				if( $c ) { //Add entry to the database.
 
 					$fields = array(
@@ -178,6 +194,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 						'xmlDTD' => empty( $_REQUEST['xmlDTD'] ) ? null : $_REQUEST['xmlDTD'],
+						'processingSchedule' => $processingSchedule,
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -241,6 +258,22 @@ if( isset( $_REQUEST['a'] ) ) {
 						}
 					}
 
+					if( $c ) {
+						//Set up processingSchedule array
+						$processingSchedule = array();
+						$schedule_array = array('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat');
+						foreach($schedule_array as $id => $day){
+							if( $_REQUEST[$day.'_schedule'] ){
+								$processingSchedule[$day]['enabled'] = true;
+								$processingSchedule[$day]['startTime'] = $_REQUEST[$day.'_start'];
+								$processingSchedule[$day]['endTime'] = $_REQUEST[$day.'_end'];
+							} else {
+								$processingSchedule[$day]['enabled'] = false;
+							}
+						}
+						$processingSchedule = json_encode($processingSchedule);
+					}
+
 					$fields = array(
 						'label' => $_REQUEST['label'],
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
@@ -265,6 +298,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 						'xmlDTD' => empty( $_REQUEST['xmlDTD'] ) ? null : $_REQUEST['xmlDTD'],
+						'processingSchedule' => $processingSchedule,
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -1551,9 +1585,58 @@ if( isset( $_REQUEST['d'] ) ) {
 							</p>
 						</td>
 					</tr>
+					<tr>
+						<td><p>Processing Schedule</p></td>
+						<td>
+							<table>
+								<tr>
+									<?php $schedule_array = array('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat');
+									foreach($schedule_array as $id => $day){ ?>
+										<td>
+											<p style="text-transform:capitalize;">
+												<input type="checkbox" 
+													id="<?php echo $day; ?>-times" 
+													name="<?php echo $day; ?>_schedule" 
+													value="enabled" 
+													onclick="enableTextBox('<?php echo $day; ?>-times')"> <?php echo $day; ?>
+											</p>
+											<p>
+												<input type="text" 
+													id="<?php echo $day; ?>_start" 
+													class="<?php echo $day; ?>-times" 
+													name="<?php echo $day; ?>_start" 
+													placeholder="Start Time"
+													pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" disabled><br />
+												<input type="text" 
+													id="<?php echo $day; ?>_end" 
+													class="<?php echo $day; ?>-times" 
+													name="<?php echo $day; ?>_end" 
+													placeholder="End Time"
+													pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" disabled>
+											</p>
+										</td>
+									<?php } ?>
+								</tr>
+							</table>
+							<p>Enter start/end time in 24 hour format</p>
+						</td>
+					</tr>
 				</table>
 			</form>
-			<script type="text/javascript">
+			<script type="text/javascript" language="javascript">
+
+				function enableTextBox(classname) {
+					if (document.getElementById(classname).checked == true){            
+						var status = false;
+					} else {
+						var status = true;
+					}
+					var allItems = document.getElementsByClassName(classname);
+					for(var i = 0; i < allItems.length; i++){
+						allItems[i].disabled = status;
+					}
+				}
+
 				$('input[name=launchDate]').datepicker({
 					// Consistent format with the HTML5 picker
 					dateFormat: 'yy-mm-dd'
