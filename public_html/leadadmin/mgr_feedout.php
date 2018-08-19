@@ -129,6 +129,41 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
+			if( $c ) {
+				//Set up processingSchedule array
+				$processingSchedule = array();
+				$schedule_array = array( 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat' );
+				foreach( $schedule_array as $id => $day ) {
+					if( !empty( $_REQUEST[$day . '_schedule'] ) ) {
+						if( ( empty( $_REQUEST[$day . '_start'] ) && !empty( $_REQUEST[$day . '_end'] ) || ( !empty( $_REQUEST[$day . '_start'] ) && empty( $_REQUEST[$day . '_end'] ) ) ) ) {
+							$c = false;
+							$result['error'] = 'Please enter both a start time and an end time for all days where times are used.';
+							break;
+						}
+
+
+						if( ( !empty( $_REQUEST[$day . '_start'] ) && !preg_match( '/([01]?[0-9]|2[0-3]):[0-5][0-9]/', $_REQUEST[$day . '_start'] ) ) || ( !empty( $_REQUEST[$day . '_end'] ) && !preg_match( '/([01]?[0-9]|2[0-3]):[0-5][0-9]/', $_REQUEST[$day . '_end'] ) ) ) {
+							$c = false;
+							$result['error'] = 'Please enter valid start and end times in the 24-hour format of HH:MM.';
+							break;
+						}
+
+						if( strtotime( $_REQUEST[$day . '_start'] ) > strtotime( $_REQUEST[$day . '_end'] ) ) {
+							$c = false;
+							$result['error'] = 'Please enter an end time that is greater than the start time.';
+							break;
+						}
+
+						$processingSchedule[$day]['enabled'] = true;
+						$processingSchedule[$day]['startTime'] = $_REQUEST[$day . '_start'] ?? '';
+						$processingSchedule[$day]['endTime'] = $_REQUEST[$day . '_end'] ?? '';
+					} else {
+						$processingSchedule[$day]['enabled'] = false;
+					}
+				}
+				$processingSchedule = json_encode( $processingSchedule );
+			}
+
 			if( $action == 'new' ) {
 
 				if( $c ) {
@@ -178,6 +213,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 						'xmlDTD' => empty( $_REQUEST['xmlDTD'] ) ? null : $_REQUEST['xmlDTD'],
+						'processingSchedule' => $processingSchedule,
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -265,6 +301,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'costPerLeadOverride' => '' === trim( $_REQUEST['costPerLeadOverride'] ) ? null : $_REQUEST['costPerLeadOverride'],
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 						'xmlDTD' => empty( $_REQUEST['xmlDTD'] ) ? null : $_REQUEST['xmlDTD'],
+						'processingSchedule' => $processingSchedule,
 					);
 
 					if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
@@ -1196,6 +1233,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'launchDate',
 				'salesperson',
 				'xmlDTD',
+				'processingSchedule',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -1562,9 +1600,68 @@ if( isset( $_REQUEST['d'] ) ) {
 							</p>
 						</td>
 					</tr>
+					<tr>
+						<td><p>Processing Schedule</p></td>
+						<td>
+							<p>By default, leads are passed to clients 24 hours a day, 7 days a week. To limit which days and/or times leads are passed, check off the days and input the times you would like leads to be passed. If you would like to pass leads for the entire day, you may leave both the start and end times blank, otherwise both must be filled in if restricted to certain times.</p>
+							<table>
+								<tr>
+									<?php
+									$processing_schedule = json_decode( $feed_processingSchedule ?? '{}' );
+									$schedule_array = array( 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat' );
+									foreach( $schedule_array as $id => $day ) { ?>
+										<td>
+											<p style="text-transform:capitalize;">
+												<input type="checkbox"
+												       id="<?php echo $day; ?>-times"
+												       name="<?php echo $day; ?>_schedule"
+												       value="enabled"
+												       onclick="enableTextBox('<?php echo $day; ?>-times')"
+													<?php echo !empty( $processing_schedule->$day->enabled ) ? ' checked="checked"' : ''; ?>> <?php echo $day; ?>
+											</p>
+											<p>
+												<input type="text"
+												       id="<?php echo $day; ?>_start"
+												       class="<?php echo $day; ?>-times"
+												       name="<?php echo $day; ?>_start"
+												       placeholder="Start Time"
+												       style="width: 100%"
+												       pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
+												       value="<?php echo !empty( $processing_schedule->$day->startTime ) ? Display::escHtml( $processing_schedule->$day->startTime ) : ''; ?>"
+													<?php echo empty( $processing_schedule->$day->enabled ) ? ' disabled' : ''; ?>><br/>
+												<input type="text"
+												       id="<?php echo $day; ?>_end"
+												       class="<?php echo $day; ?>-times"
+												       name="<?php echo $day; ?>_end"
+												       placeholder="End Time"
+												       style="width: 100%"
+												       pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
+												       value="<?php echo !empty( $processing_schedule->$day->endTime ) ? Display::escHtml( $processing_schedule->$day->endTime ) : ''; ?>"
+													<?php echo empty( $processing_schedule->$day->enabled ) ? ' disabled' : ''; ?>>
+											</p>
+										</td>
+									<?php } ?>
+								</tr>
+							</table>
+							<p>Enter start/end time in 24 hour format (HH:MM).</p>
+						</td>
+					</tr>
 				</table>
 			</form>
-			<script type="text/javascript">
+			<script type="text/javascript" language="javascript">
+
+				function enableTextBox(classname) {
+					if (document.getElementById(classname).checked == true) {
+						var status = false;
+					} else {
+						var status = true;
+					}
+					var allItems = document.getElementsByClassName(classname);
+					for (var i = 0; i < allItems.length; i++) {
+						allItems[i].disabled = status;
+					}
+				}
+
 				$('input[name=launchDate]').datepicker({
 					// Consistent format with the HTML5 picker
 					dateFormat: 'yy-mm-dd'
