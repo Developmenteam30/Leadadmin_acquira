@@ -5773,6 +5773,36 @@ SQL;
 		}
 	}
 
+	public function alterArchiveTables() {
+		$cnt = 0;
+		$recordId = 0;
+
+		$startDate = new \DateTime( '2017-09-01 00:00:00' );
+		$endDate = new \DateTime( '2014-06-01 00:00:00' );
+		$tableDate = clone $startDate;
+
+		try {
+
+			while( $tableDate > $endDate ) {
+
+				$table = $this->quoteIdentifier( 'data_inbound_' . $tableDate->format( 'Ym' ) );
+
+				print date( 'c' ) . ' ' . $table . PHP_EOL;
+
+				$query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD INDEX cellphone (cellphone) USING BTREE, ADD INDEX landline (landline) USING BTREE, ADD COLUMN custom1 VARCHAR(255), ADD COLUMN custom2 VARCHAR(255),ADD COLUMN custom3 VARCHAR(255),ADD COLUMN custom4 VARCHAR(255),ADD COLUMN custom5 VARCHAR(255),ADD COLUMN custom6 VARCHAR(255), ADD COLUMN leadId VARCHAR(255);" );
+				$query->execute();
+
+				$tableDate->sub( new \DateInterval( ( 'P1M' ) ) );
+
+			}
+
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to archive inbound accepted: ' . $e->getMessage() );
+		}
+
+		return $cnt;
+	}
+
 	public function logError( $message, $db = false, $email = true ) {
 
 		$stamp = date( 'Y-m-d H:i:s' );
