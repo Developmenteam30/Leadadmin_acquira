@@ -16,9 +16,9 @@ if( empty( $argv[1] ) ) {
 	die();
 }
 
-chdir(dirname(__FILE__));
+chdir( dirname( __FILE__ ) );
 
-function signalHandler($signal) {
+function signalHandler( $signal ) {
 	global $running;
 	// Tell the main loop to stop running so we can exit gracefully
 	$running = false;
@@ -28,8 +28,8 @@ $running = true;
 $debug = true;
 $idFeedOut = $argv[1];
 
-require_once("_f_curl.php"); //Easy to use curl function
-require_once("../includes/c_config.php");
+require_once( "_f_curl.php" ); //Easy to use curl function
+require_once( "../includes/c_config.php" );
 require_once( INCLUDES . 'leads.php' );
 require_once( INCLUDES . 'processLeads.php' );
 $leads = Leads::getInstance();
@@ -43,7 +43,7 @@ if( !$fh ) {
 fwrite( $fh, $idFeedOut );
 fclose( $fh );
 
-declare(ticks = 1);
+declare( ticks = 1 );
 
 pcntl_signal( SIGTERM, 'signalHandler' );// Termination ('kill' was called)
 pcntl_signal( SIGHUP, 'signalHandler' ); // Terminal log-out
@@ -63,9 +63,16 @@ if( empty( $feedOut->cron ) ) {
 	die();
 }
 
+// Ensure we are within scheduled time frame
+if( !ProcessLeads::isWithinProcessingSchedule( $feedOut ) ) {
+	print "Skipping because not within processing schedule";
+	@unlink( $pidFile );
+	die();
+}
+
 $empties = 0;
 
-while($running) {
+while( $running ) {
 
 	$rows = $leads->getOutboundQueueRecord( $feedOut->idFeedOut );
 
@@ -76,7 +83,7 @@ while($running) {
 			print "Too many empty responses ... dying off now\n";
 			$running = false;
 		}
-		sleep(5);
+		sleep( 5 );
 		continue;
 	}
 

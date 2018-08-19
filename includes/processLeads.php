@@ -221,20 +221,6 @@ class ProcessLeads
 					print "<p>{$idRecord} {$feedParams->idFeedIn} => {$feed->idFeedOut} {$feed->queueType}: ";
 				}
 
-				// Ensure we are within scheduled time frame
-				$current_day = strtolower(date('D'));
-				$current_time = date('H:i');
-				$schedule_array = json_decode($feed->processingSchedule);
-				if( !$schedule_array[$current_day]['enabled'] ||
-					( $schedule_array[$current_day]['startTime'] != '' && $current_time < $schedule_array[$current_day]['startTime'] ) ||
-					( $schedule_array[$current_day]['endTime'] != '' && $current_time > $schedule_array[$current_day]['endTime'] )
-				){
-					if( $debug ) {
-						print "Skipping because not within processing schedule</p>";
-					}
-					continue;
-				}
-
 				// Ensure we don't re-import records sent within the last 6 months
 				if( !empty( $idFeedOut ) && $leads->checkOutboundRecordExists( $idRecord, $feedParams->idFeedIn, $feed->idFeedOut ) ) {
 					if( $debug ) {
@@ -301,6 +287,22 @@ class ProcessLeads
 				if( empty( $idFeedOut ) && ( 'livedata' == $feed->queueType || 'waterfall' == $feed->queueType || 'waterfallLimitLive' == $feed->queueType ) ) {
 
 					$liveData['enabled'] = true;
+
+					// Ensure we are within scheduled time frame
+					if( !ProcessLeads::isWithinProcessingSchedule( $feed ) ) {
+						if( $debug ) {
+							print "Skipping because not within processing schedule</p>";
+						}
+
+						$liveData['reason'] = sprintf( 'No suitable buyers found. [Code: %s0]',
+							$feed->idFeedOut
+						);
+						$liveData['idRecord'] = $idRecord;
+						$liveData['idFeedIn'] = $feedParams->idFeedIn;
+						$liveData['url'] = $data['url'];
+						$liveData['anyProcessed'] = true;
+						continue;
+					}
 
 					// If we already had an accepted waterfall submission, skip the rest of the waterfall candidates.
 					if( 'waterfall' == $feed->queueType && $liveData['accepted'] ) {
@@ -1111,6 +1113,24 @@ class ProcessLeads
 		}
 
 		return $result;
+	}
+
+	public static function isWithinProcessingSchedule( $feed ) {
+		if( !empty( $feed->processingSchedule ) ) {
+			$current_day = strtolower( date( 'D' ) );
+			$current_time = date( 'H:i' );
+			$schedule_array = json_decode( $feed->processingSchedule );
+			if( $schedule_array !== false ) {
+				if( empty( $schedule_array->$current_day->enabled ) ||
+					( !empty( $schedule_array->$current_day->startTime ) && strtotime( $current_time ) < strtotime( $schedule_array->$current_day->startTime ) ) ||
+					( !empty( $schedule_array->$current_day->endTime ) && strtotime( $current_time ) > strtotime( $schedule_array->$current_day->endTime ) )
+				) {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 
 }
