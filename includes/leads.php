@@ -4431,7 +4431,7 @@ class Leads
 
 		try {
 
-			$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND result IS NOT NULL AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
+			$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND result IS NOT NULL AND result NOT LIKE 'Third-party rejection [%1]' AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
 			$querySelect->bindValue( ':tzLocal', LOCAL_TIMEZONE );
 			$querySelect->bindValue( ':tzServer', DB_TIMEZONE );
 			$querySelect->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
