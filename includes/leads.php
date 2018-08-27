@@ -2991,7 +2991,7 @@ class Leads
 				$table = $this->quoteIdentifier( 'data_outbound_' . date( 'Ym' ) );
 				$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
 
-				$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . "(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url) SELECT idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
+				$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . "(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted) SELECT idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
 				$query->execute( array( $row->idRecord, $feedOut->idFeedOut ) );
 				$rows = $query->rowCount();
 
