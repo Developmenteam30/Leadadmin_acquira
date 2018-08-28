@@ -4856,9 +4856,9 @@ class Leads
 			'listcode',
 		) );
 
-		$archiveDate = new \DateTime( $settings['dateStart'] );
-		$dateStart = new \DateTime( $settings['dateStart'] );
-		$dateEnd = new \DateTime( $settings['dateEnd'] );
+		$archiveDate = new \DateTime( $settings['dateStart'] . ' 00:00:00' );
+		$dateStart = new \DateTime( $settings['dateStart'] . ' 00:00:00' );
+		$dateEnd = new \DateTime( $settings['dateEnd'] . ' 23:59:59' );
 
 		$sql = "SELECT * FROM ( ";
 
