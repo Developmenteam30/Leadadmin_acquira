@@ -2985,7 +2985,7 @@ class Leads
 		}
 
 		// Only archive successful records. Errors will get deleted after a few days.
-		if( !empty( $accepted ) ) {
+		if( !empty( $accepted ) || date( 'Ymd' ) >= '20180901' ) {
 
 			try {
 				$table = $this->quoteIdentifier( 'data_outbound_' . date( 'Ym' ) );
