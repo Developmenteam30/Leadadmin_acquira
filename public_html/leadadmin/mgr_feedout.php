@@ -1614,7 +1614,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							<table>
 								<tr>
 									<?php
-									$processing_schedule = json_decode( $feed_processingSchedule ?? '{}' );
+									$processing_schedule = json_decode( !empty( $feed_processingSchedule ) ? $feed_processingSchedule : '{"sun":{"enabled":true,"startTime":"","endTime":""},"mon":{"enabled":true,"startTime":"","endTime":""},"tue":{"enabled":true,"startTime":"","endTime":""},"wed":{"enabled":true,"startTime":"","endTime":""},"thu":{"enabled":true,"startTime":"","endTime":""},"fri":{"enabled":true,"startTime":"","endTime":""},"sat":{"enabled":true,"startTime":"","endTime":""}}' );
 									$schedule_array = array( 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat' );
 									foreach( $schedule_array as $id => $day ) { ?>
 										<td>
