@@ -1022,6 +1022,12 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'text',
 					'value' => $_REQUEST['custom6'] ?? '',
 				),
+				array(
+					'id' => 'idRecord',
+					'label' => 'Record Id',
+					'type' => 'text',
+					'value' => $_REQUEST['idRecord'] ?? rand( 10000, getrandmax() ),
+				),
 			);
 
 			Display::displayForm( 'testrecord', $fields );
@@ -1057,6 +1063,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'custom4' => $_REQUEST['custom4'] ?? '',
 				'custom5' => $_REQUEST['custom5'] ?? '',
 				'custom6' => $_REQUEST['custom6'] ?? '',
+				'idRecord' => $_REQUEST['idRecord'] ?? '',
 				'testRecord' => 1,
 			);
 			$errors = array();
