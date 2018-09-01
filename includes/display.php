@@ -351,7 +351,7 @@ class Display
 				'existingExpectation' => 0,
 				'existingProjected' => 0,
 				'newExpectation' => 0,
-				'newAaccural' => 0,
+				'newAccural' => 0,
 				'grossProfit' => 0,
 			);
 
@@ -424,14 +424,15 @@ class Display
 					}
 
 					$expectationValues = $leads->getExpectationValues( $userId, $statsStartFOM->format( 'Y-m-' ) );
+					$projected = $diffRange > 0 ? ( ( $projectedRevenueMTD * $diffTotal ) / $diffRange ) : 0;
 
 					$totals['prevDay'] += round( $amountYesterday );
 					$totals['today'] += round( $amountToday );
 					$totals['existingAccrual'] += round( $existingRevenueMTD + $newRevenueMTD );
 					$totals['existingExpectation'] += round( $expectationValues->existingBusinessAmount ?? 0 );
-					$totals['existingProjected'] += round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange );
+					$totals['existingProjected'] += round( $projected );
 					$totals['newExpectation'] += round( $newRevenueMTD );
-					$totals['newAaccural'] += round( $expectationValues->newBusinessAmount ?? 0 );
+					$totals['newAccural'] += round( $expectationValues->newBusinessAmount ?? 0 );
 					$totals['grossProfit'] += round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD );
 
 					?>
@@ -441,7 +442,7 @@ class Display
 						<td class="text-right">$<?php echo number_format( round( $amountToday ), 0 ); ?></td>
 						<td class="text-right">$<?php echo number_format( round( $existingRevenueMTD + $newRevenueMTD ), 0 ); ?></td>
 						<td class="text-right">$<?php echo number_format( round( $expectationValues->existingBusinessAmount ?? 0 ), 0 ); ?></td>
-						<td class="text-right<?php echo ( $expectationValues->existingBusinessAmount ?? 0 ) > ( $projectedRevenueMTD * $diffTotal ) / $diffRange ? ' bg-danger' : ''; ?>">$<?php echo number_format( round( ( $projectedRevenueMTD * $diffTotal ) / $diffRange ), 0 ); ?></td>
+						<td class="text-right<?php echo ( $expectationValues->existingBusinessAmount ?? 0 ) > $projected ? ' bg-danger' : ''; ?>">$<?php echo number_format( round( $projected ), 0 ); ?></td>
 						<td class="text-right">$<?php echo number_format( round( $newRevenueMTD ), 0 ); ?></td>
 						<td class="text-right">$<?php echo number_format( round( $expectationValues->newBusinessAmount ?? 0 ), 0 ); ?></td>
 						<td class="text-right">$<?php echo number_format( round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD ), 0 ); ?></td>
@@ -462,7 +463,7 @@ class Display
 						<td class="text-right">$<?php echo number_format( $totals['existingExpectation'], 0 ); ?></td>
 						<td class="text-right">$<?php echo number_format( $totals['existingProjected'], 0 ); ?></td>
 						<td class="text-right">$<?php echo number_format( $totals['newExpectation'], 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( $totals['newAaccural'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format( $totals['newAccural'], 0 ); ?></td>
 						<td class="text-right">$<?php echo number_format( $totals['grossProfit'], 0 ); ?></td>
 					</tr>
 					</tfoot>
