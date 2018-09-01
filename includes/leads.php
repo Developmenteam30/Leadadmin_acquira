@@ -4140,7 +4140,7 @@ class Leads
 	public function inboundRecordSearch( $email, $phone, $url ) {
 		$params = array();
 
-		$dateStart = new \DateTime( '2014-09-01' );
+		$dateStart = new \DateTime( '2014-06-01' );
 		$dateEnd = new \DateTime();
 
 		$checkSql = $this->db->prepare( "SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)" );
