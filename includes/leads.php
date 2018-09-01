@@ -4140,12 +4140,13 @@ class Leads
 	public function inboundRecordSearch( $email, $phone, $url ) {
 		$params = array();
 
-		$dateStart = new \DateTime();
-		$dateStart->sub( new \DateInterval( ( 'P1Y' ) ) );
+		$dateStart = new \DateTime( '2014-09-01' );
 		$dateEnd = new \DateTime();
 
+		$checkSql = $this->db->prepare( "SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)" );
+
 		// Establish our baseline SQL that we'll change in the loop
-		$baseSql = "( SELECT fi.label,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip ";
+		$baseSql = "( SELECT fi.label,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.result ";
 		$params[] = DB_TIMEZONE;
 		$params[] = LOCAL_TIMEZONE;
 		$baseSql .= "FROM data_inbound AS i ";
@@ -4169,20 +4170,26 @@ class Leads
 		$sql = "SELECT * FROM ( ";
 		$sql .= $baseSql;
 
-
 		do {
-			$sql .= str_replace( "FROM data_inbound", "FROM archive." . $this->quoteIdentifier( 'data_inbound_' . $dateStart->format( 'Ym' ) ), $baseSql );
-			$params[] = DB_TIMEZONE;
-			$params[] = LOCAL_TIMEZONE;
-			if( !empty( $email ) ) {
-				$params[] = $email;
-			}
-			if( !empty( $url ) ) {
-				$params[] = $url;
-			}
-			if( !empty( $phone ) ) {
-				$params[] = $phone;
-				$params[] = $phone;
+
+			// Check if the table actually exists first, since archive tables are not always created immediately.
+			$checkSql->execute( array( 'data_inbound_' . $dateStart->format( 'Ym' ) ) );
+			if( $checkSql && $checkSql->fetchColumn() ) {
+
+				$sql .= str_replace( "FROM data_inbound", "FROM archive." . $this->quoteIdentifier( 'data_inbound_' . $dateStart->format( 'Ym' ) ), $baseSql );
+				$params[] = DB_TIMEZONE;
+				$params[] = LOCAL_TIMEZONE;
+				if( !empty( $email ) ) {
+					$params[] = $email;
+				}
+				if( !empty( $url ) ) {
+					$params[] = $url;
+				}
+				if( !empty( $phone ) ) {
+					$params[] = $phone;
+					$params[] = $phone;
+				}
+
 			}
 
 			try {
@@ -4196,8 +4203,6 @@ class Leads
 		$sql .= " ) AS recs ";
 		$sql .= "ORDER BY recs.timestampConverted ";
 		$sql .= "LIMIT 500";
-
-		//echo($sql);
 
 		try {
 			$query = $this->db->prepare( $sql );

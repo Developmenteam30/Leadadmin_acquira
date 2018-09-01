@@ -117,9 +117,7 @@ include( INCLUDES . "c_header.php" );
 				</thead>
 				<tbody>
 
-				<?php
-				foreach( $records as $record ) {
-					?>
+				<?php foreach( $records as $record ) { ?>
 					<tr>
 						<td><?php echo Display::escHtml( $record->label ); ?> (#<?php echo Display::escHtml( $record->idFeedIn ); ?>)</td>
 						<td><?php echo Display::escHtml( $record->email ); ?></td>
@@ -142,25 +140,30 @@ include( INCLUDES . "c_header.php" );
 						<td><?php echo Display::escHtml( $record->cellphone ); ?></td>
 						<td><?php echo Display::escHtml( $record->gender ); ?></td>
 					</tr>
-					<?php
-					$outboundRecords = $leads->outboundRecordSearchById( $record->idRecord );
-					if( !empty( $outboundRecords ) ) {
-						print '<tr><td colspan="9">';
-						foreach( $outboundRecords as $outboundRecord ) {
-							printf( '<p>%s: %s (#%s) Response: %s',
-								Display::escHtml( $outboundRecord->timestampConverted ),
-								Display::escHtml( $outboundRecord->label ),
-								Display::escHtml( $outboundRecord->idFeedOut ),
-								Display::escHtml( !empty( $outboundRecord->result ) ? $outboundRecord->result : '<LEGACY SUCCESS RESPONSE>' )
-							);
-						}
-						print '</td></tr>';
-					} else {
-						print '<tr><td colspan="9">No outbound records found.</td></tr>';
-					}
-				}
-				?>
-
+					<tr>
+						<td colspan="9">
+							<p><strong>Incoming Response</strong>: <?php echo Display::escHtml( $record->result ?? 'Success' ); ?></p>
+							<?php
+							$outboundRecords = $leads->outboundRecordSearchById( $record->idRecord );
+							if( !empty( $outboundRecords ) ) {
+								print '<p><strong>Outgoing Responses:</strong></p>';
+								print '<ul>';
+								foreach( $outboundRecords as $outboundRecord ) {
+									printf( '<li>%s: %s (#%s) Response: %s</li>',
+										Display::escHtml( $outboundRecord->timestampConverted ),
+										Display::escHtml( $outboundRecord->label ),
+										Display::escHtml( $outboundRecord->idFeedOut ),
+										Display::escHtml( !empty( $outboundRecord->result ) ? $outboundRecord->result : '<LEGACY SUCCESS RESPONSE>' )
+									);
+								}
+								print '</ul>';
+							} else {
+								print '<p>No outgoing records found.</p>';
+							}
+							?>
+						</td>
+					</tr>
+				<?php } ?>
 				</tbody>
 			</table>
 
