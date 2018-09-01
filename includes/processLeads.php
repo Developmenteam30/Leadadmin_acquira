@@ -1107,29 +1107,6 @@ class ProcessLeads
 			}
 		}
 
-		if( !empty( $data['email'] ) && defined( 'SIFTLOGIC_APIKEY' ) && !is_null( $feedParams->filterTypeSiftLogic ) ) {
-			if( ProcessLeads::filterValue( $feedParams->filterTypeSiftLogic, $data['url'], $feedParams->filterSiftLogic ) ) {
-				require_once( INCLUDES . 'siftLogic.php' );
-				$sl = new SiftLogic;
-				if( $sl->check(
-						$data['email'],
-						!empty( $data['ip'] ) ? $data['ip'] : null,
-						!empty( $data['fname'] ) ? $data['fname'] : null,
-						!empty( $data['lname'] ) ? $data['lname'] : null,
-						!empty( $data['addr'] ) ? $data['addr'] : null,
-						!empty( $data['addr2'] ) ? $data['addr2'] : null,
-						!empty( $data['city'] ) ? $data['city'] : null,
-						!empty( $data['state'] ) ? $data['state'] : null,
-						!empty( $data['zip'] ) ? $data['zip'] : null,
-						!empty( $data['country'] ) ? $data['country'] : null,
-						false
-					) === false ) {
-					$result['valid'] = false;
-					$result['errors'][] = 'Email address was rejected by our third-party filters [SL]';
-				}
-			}
-		}
-
 		if( !empty( $data['cellphone'] ) && !empty( $feedParams->filterTypeDNCScrub ) ) {
 			$dncScrub = json_decode( $feedParams->filterTypeDNCScrub );
 			if( null !== $dncScrub && !empty( $dncScrub->enabled ) && !empty( $dncScrub->rejectStatuses ) && is_array( $dncScrub->rejectStatuses ) ) {

@@ -161,17 +161,6 @@ if( isset( $_REQUEST['a'] ) ) {
 				$filterUrl = implode( ';', $_REQUEST['filterUrl'] );
 			}
 
-			$filterSiftLogic = '';
-			$filterSiftLogicMulti = array();
-			if( !empty( $_REQUEST['filterSiftLogicMulti'] ) ) {
-				$filterSiftLogicMulti = explode( "\n", $_REQUEST['filterSiftLogicMulti'] );
-			}
-			$_REQUEST['filterSiftLogic'] = !empty( $_REQUEST['filterSiftLogic'] ) ? array_merge( $_REQUEST['filterSiftLogic'], $filterSiftLogicMulti ) : $filterSiftLogicMulti;
-			if( !empty( $_REQUEST['filterSiftLogic'] ) && is_array( $_REQUEST['filterSiftLogic'] ) ) {
-				$_REQUEST['filterSiftLogic'] = array_map( 'trim', $_REQUEST['filterSiftLogic'] );
-				$filterSiftLogic = implode( ';', $_REQUEST['filterSiftLogic'] );
-			}
-
 			$dncScrub = new stdClass();
 			$dncScrub->enabled = !empty( $_REQUEST['filterTypeDNCScrub_enabled'] ) ? true : false;
 			$dncScrub->rejectStatuses = !empty( $_REQUEST['filterDNCScrub_reject_status'] ) && is_array( $_REQUEST['filterDNCScrub_reject_status'] ) ? $_REQUEST['filterDNCScrub_reject_status'] : array();
@@ -206,8 +195,6 @@ if( isset( $_REQUEST['a'] ) ) {
 						'dedupeAcross' => empty( $_REQUEST['dedupeAcross'] ) ? null : $_REQUEST['dedupeAcross'],
 						'filterTypeUrl' => empty( $_REQUEST['filterTypeUrl'] ) ? null : $_REQUEST['filterTypeUrl'],
 						'filterUrl' => empty( $filterUrl ) ? null : $filterUrl,
-						'filterTypeSiftLogic' => empty( $_REQUEST['filterTypeSiftLogic'] ) ? null : 'accept',
-						'filterSiftLogic' => empty( $filterSiftLogic ) ? null : $filterSiftLogic,
 						'notifications' => empty( $_REQUEST['notifications'] ) ? 0 : 1,
 						'rejectOldLeads' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? 0 : 1,
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
@@ -365,8 +352,6 @@ if( isset( $_REQUEST['a'] ) ) {
 						'dedupeAcross' => empty( $_REQUEST['dedupeAcross'] ) ? null : $_REQUEST['dedupeAcross'],
 						'filterTypeUrl' => empty( $_REQUEST['filterTypeUrl'] ) ? null : $_REQUEST['filterTypeUrl'],
 						'filterUrl' => empty( $filterUrl ) ? null : $filterUrl,
-						'filterTypeSiftLogic' => empty( $_REQUEST['filterTypeSiftLogic'] ) ? null : 'accept',
-						'filterSiftLogic' => empty( $filterSiftLogic ) ? null : $filterSiftLogic,
 						'notifications' => empty( $_REQUEST['notifications'] ) ? 0 : 1,
 						'rejectOldLeads' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? 0 : 1,
 						'rejectOldLeadsMaxAge' => empty( $_REQUEST['rejectOldLeadsMaxAge'] ) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
@@ -565,7 +550,6 @@ if( isset( $_REQUEST['d'] ) ) {
 				'dedupeCellphone',
 				'dedupeAcross',
 				'filterTypeUrl',
-				'filterTypeSiftLogic',
 				'notifications',
 				'status',
 				'rejectOldLeadsMaxAge',
@@ -604,7 +588,6 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 			$explodableProperties = array(
 				'filterUrl',
-				'filterSiftLogic',
 			);
 			foreach( $explodableProperties as $eP ) {
 				if( !isset( $_REQUEST['options'][$eP] ) ) {
@@ -820,70 +803,6 @@ if( isset( $_REQUEST['d'] ) ) {
 											<input type='text'
 											       name='filterUrl[]'
 											       value='<?php echo $filterUrl; ?>'
-											/>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
-									<?php } ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>SiftLogic Filter Options</p></td>
-						<td>
-							<p>
-								Using the 'Enabled' option, urls that are listed here will be filtered through SiftLogic.
-							</p>
-							<p>
-								<input type='radio'
-								       name='filterTypeSiftLogic'
-								       id='filterTypeSiftLogic_disabled'
-								       value=''
-									<?php if(
-									empty( $feed_filterTypeSiftLogic )
-									) { ?>
-										checked='checked'
-									<?php } ?>
-									   onclick="$('#toggler_filterTypeSiftLogic').hide();"
-								/> Disabled<br/>
-								<input type='radio'
-								       name='filterTypeSiftLogic'
-								       id='filterTypeSiftLogic_accept'
-								       value='accept'
-									<?php if( $feed_filterTypeSiftLogic == 'accept' ) { ?>
-										checked='checked'
-									<?php } ?>
-									   onclick="$('#toggler_filterTypeSiftLogic').show();"
-								/> Enabled<br/>
-							</p>
-							<div id='toggler_filterTypeSiftLogic'
-							     style='display:<?php
-							     if( empty( $feed_filterTypeSiftLogic ) ) {
-								     echo "none";
-							     } else {
-								     echo "block";
-							     }
-							     ?>;'
-							>
-								<p>The following urls:</p>
-								<p>
-									<a href='#' class='nonLink'
-									   onclick='element("filterSiftLogic_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "SiftLogic" });'
-									>Add New URL to filter</a>
-									| <a href='#' class='nonLink'
-									     onclick='element("filterSiftLogic_multipleInsert"<?php
-									     ?>, "element_multifilter"<?php
-									     ?>, { "e": "<?php echo $e ?? ''; ?>"<?php
-									     ?>, "type": "SiftLogic" });'
-									>Add Multiple</a>
-								</p>
-								<div id='filterSiftLogic_multipleInsert'></div>
-								<div id='filterSiftLogic_container'>
-									<?php foreach( $feed_filterSiftLogic as $filterSiftLogic ) { ?>
-										<div>
-											<input type='text'
-											       name='filterSiftLogic[]'
-											       value='<?php echo $filterSiftLogic; ?>'
 											/>
 											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
 										</div>
