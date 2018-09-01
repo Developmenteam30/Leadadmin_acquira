@@ -2931,8 +2931,8 @@ class Leads
 		$this->db->beginTransaction();
 
 		try {
-			$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, accepted = ?, result = ? WHERE idRecord = ? AND idFeedOut = ?' );
-			$query->execute( array( !empty( $accepted ) ? 1 : 0, $result, $row->idRecord, $feedOut->idFeedOut ) );
+			$query = $this->db->prepare( 'UPDATE data_outbound SET timestamp = NOW(), processed = 1, accepted = ?, isBillable = ?, result = ? WHERE idRecord = ? AND idFeedOut = ?' );
+			$query->execute( array( !empty( $accepted ) ? 1 : 0, !empty( $accepted ) ? 1 : 0, $result, $row->idRecord, $feedOut->idFeedOut ) );
 		} catch( PDOException $e ) {
 			$this->db->rollBack();
 			$this->logError( 'Unable to update data_outbound record: ' . $e->getMessage() );
@@ -2984,24 +2984,20 @@ class Leads
 			return null;
 		}
 
-		// Only archive successful records. Errors will get deleted after a few days.
-		if( !empty( $accepted ) || date( 'Ymd' ) >= '20180901' ) {
+		try {
+			$table = $this->quoteIdentifier( 'data_outbound_' . date( 'Ym' ) );
+			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
 
-			try {
-				$table = $this->quoteIdentifier( 'data_outbound_' . date( 'Ym' ) );
-				$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_outbound" );
+			$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . "(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted) SELECT idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
+			$query->execute( array( $row->idRecord, $feedOut->idFeedOut ) );
+			$rows = $query->rowCount();
 
-				$query = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . "(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted) SELECT idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
-				$query->execute( array( $row->idRecord, $feedOut->idFeedOut ) );
-				$rows = $query->rowCount();
-
-				$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
-				$query->execute( array( $row->idRecord, $feedOut->idFeedOut ) );
-			} catch( PDOException $e ) {
-				$this->db->rollBack();
-				$this->logError( 'Unable to archive record: ' . $e->getMessage() );
-				return null;
-			}
+			$query = $this->db->prepare( "DELETE FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?" );
+			$query->execute( array( $row->idRecord, $feedOut->idFeedOut ) );
+		} catch( PDOException $e ) {
+			$this->db->rollBack();
+			$this->logError( 'Unable to archive record: ' . $e->getMessage() );
+			return null;
 		}
 
 		$this->db->commit();
