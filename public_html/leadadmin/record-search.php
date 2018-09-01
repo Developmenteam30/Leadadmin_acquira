@@ -112,7 +112,7 @@ include( INCLUDES . "c_header.php" );
 					<th>Gender</th>
 				</tr>
 				<tr>
-					<th colspan="9">Outbound Records</th>
+					<th colspan="9">Incoming and Outgoing Responses</th>
 				</tr>
 				</thead>
 				<tbody>
