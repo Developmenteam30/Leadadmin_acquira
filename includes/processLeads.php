@@ -194,12 +194,13 @@ class ProcessLeads
 
 		}
 
+		$data['originalUrl'] = $data['url'];
+
 		$liveData = array(
 			'enabled' => false,
 			'accepted' => false,
 			'anyProcessed' => false,
 			'reason' => null,
-			'url' => null,
 		);
 		$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn, false );
 		if( !empty( $feedsOut ) && is_array( $feedsOut ) ) {
@@ -332,7 +333,6 @@ class ProcessLeads
 								$status['text'],
 								$feed->idFeedOut
 							);
-							$liveData['url'] = $data['url'];
 							$liveData['anyProcessed'] = true;
 
 							if( $debug ) {
@@ -367,17 +367,17 @@ class ProcessLeads
 			if( !$liveData['anyProcessed'] ) {
 				// We did not attempt to send any records, probably because we were outside of feed processing hours.
 				$reason = 'No suitable buyers found.';
-				$leads->inboundProcess( $idRecord, $feedParams->idFeedIn, $data['url'], date( 'Y-m-d' ), $reason );
+				$leads->inboundProcess( $idRecord, $feedParams->idFeedIn, $data['originalUrl'], date( 'Y-m-d' ), $reason );
 			} else if( !$liveData['accepted'] || ( !empty( $feedParams->chokePercent ) && $randomChoke <= $feedParams->chokePercent ) ) {
 				// All attempts failed, so send the last failure message or randomly choke the record.
 				if( !$liveData['accepted'] ) {
 					$reason = $liveData['reason'];
-					$leads->inboundProcess( $idRecord, $feedParams->idFeedIn, $liveData['url'], date( 'Y-m-d' ), $reason );
+					$leads->inboundProcess( $idRecord, $feedParams->idFeedIn, $data['originalUrl'], date( 'Y-m-d' ), $reason );
 				} else {
 					$reason = sprintf( 'Third-party rejection [Reason: Duplicate record] [Code: I%s1]',
 						$feedParams->idFeedIn
 					);
-					$leads->inboundProcess( $idRecord, $feedParams->idFeedIn, $data['url'], date( 'Y-m-d' ), $reason );
+					$leads->inboundProcess( $idRecord, $feedParams->idFeedIn, $data['originalUrl'], date( 'Y-m-d' ), $reason );
 				}
 			}
 		}
