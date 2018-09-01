@@ -348,7 +348,7 @@ class ProcessLeads
 							$liveData['anyProcessed'] = true;
 						}
 					}
-				} else {
+				} else if( $debug ) {
 					print "</p>";
 				}
 			} // foreach $feedsOut
@@ -1126,6 +1126,30 @@ class ProcessLeads
 					) === false ) {
 					$result['valid'] = false;
 					$result['errors'][] = 'Email address was rejected by our third-party filters [SL]';
+				}
+			}
+		}
+
+		if( !empty( $data['cellphone'] ) && !empty( $feedParams->filterTypeDNCScrub ) ) {
+			$dncScrub = json_decode( $feedParams->filterTypeDNCScrub );
+			if( null !== $dncScrub && !empty( $dncScrub->enabled ) && !empty( $dncScrub->rejectStatuses ) && is_array( $dncScrub->rejectStatuses ) ) {
+				require_once( INCLUDES . 'dncScrub.php' );
+				$dnc = new DNCScrub();
+				if( ( $dncResult = $dnc->scrub( $data['cellphone'], $dncScrub->rejectStatuses ) ) !== true ) {
+					$result['valid'] = false;
+					$result['errors'][] = 'Cellphone was rejected by our third-party filters [DNC:' . $dncResult . ']';
+				}
+			}
+		}
+
+		if( !empty( $data['landline'] ) && !empty( $feedParams->filterTypeDNCScrub ) ) {
+			$dncScrub = json_decode( $feedParams->filterTypeDNCScrub );
+			if( null !== $dncScrub && !empty( $dncScrub->enabled ) && !empty( $dncScrub->rejectStatuses ) && is_array( $dncScrub->rejectStatuses ) ) {
+				require_once( INCLUDES . 'dncScrub.php' );
+				$dnc = new DNCScrub();
+				if( ( $dncResult = $dnc->scrub( $data['landline'], $dncScrub->rejectStatuses ) ) !== true ) {
+					$result['valid'] = false;
+					$result['errors'][] = 'Landline was rejected by our third-party filters [DNC:' . $dncResult . ']';
 				}
 			}
 		}

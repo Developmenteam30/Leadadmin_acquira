@@ -172,6 +172,10 @@ if( isset( $_REQUEST['a'] ) ) {
 				$filterSiftLogic = implode( ';', $_REQUEST['filterSiftLogic'] );
 			}
 
+			$dncScrub = new stdClass();
+			$dncScrub->enabled = !empty( $_REQUEST['filterTypeDNCScrub_enabled'] ) ? true : false;
+			$dncScrub->rejectStatuses = !empty( $_REQUEST['filterDNCScrub_reject_status'] ) && is_array( $_REQUEST['filterDNCScrub_reject_status'] ) ? $_REQUEST['filterDNCScrub_reject_status'] : array();
+
 			if( 'new' == $action ) {
 
 				if( $c && !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
@@ -223,6 +227,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 						'pauseMessage' => empty( $_REQUEST['pauseMessage'] ) ? null : trim( $_REQUEST['pauseMessage'] ),
+						'filterTypeDNCScrub' => json_encode( $dncScrub ),
 					) );
 
 					if( null === $idFeedIn ) {
@@ -381,6 +386,7 @@ if( isset( $_REQUEST['a'] ) ) {
 						'notifyThresholdDays' => empty( $_REQUEST['notifyThresholdDays'] ) ? null : implode( ',', $_REQUEST['notifyThresholdDays'] ),
 						'salesperson' => empty( $_REQUEST['salesperson'] ) ? null : $_REQUEST['salesperson'],
 						'pauseMessage' => empty( $_REQUEST['pauseMessage'] ) ? null : trim( $_REQUEST['pauseMessage'] ),
+						'filterTypeDNCScrub' => json_encode( $dncScrub ),
 					) );
 
 					if( null === $status ) {
@@ -577,6 +583,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'notifyThresholdTimeFormatted',
 				'salesperson',
 				'pauseMessage',
+				'filterTypeDNCScrub',
 			);
 			foreach( $feedProps as $feedProp ) {
 				if( isset( $feed ) ) {
@@ -882,6 +889,87 @@ if( isset( $_REQUEST['d'] ) ) {
 										</div>
 									<?php } ?>
 								</div>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td><p>DNC Scrub Filter Options</p></td>
+						<td>
+							<p>
+								When enabled, all incoming leads will be filtered through the DNC Scrub API.
+							</p>
+							<?php
+							$dncScrub = json_decode( !empty( $feed_filterTypeDNCScrub ) ? $feed_filterTypeDNCScrub : '{"enabled":false, "rejectStatuses": []}' );
+							if( null === $dncScrub ) {
+								$dncScrub = new stdClass();
+								$dncScrub->enabled = false;
+								$dncScrub->rejectStatuses = array();
+							}
+							?>
+							<p>
+								<input type="radio" name="filterTypeDNCScrub_enabled" id="filterTypeDNCScrub_disabled" value=""<?php if( empty( $dncScrub->enabled ) ) { ?> checked="checked"<?php } ?> onclick="$('#toggler_filterTypeDNCScrub').hide();"
+								/> Disabled<br/>
+								<input type="radio" name="filterTypeDNCScrub_enabled" id="filterTypeDNCScrub_enabled" value="true"<?php if( !empty( $dncScrub->enabled ) ) { ?> checked="checked"<?php } ?> onclick="$('#toggler_filterTypeDNCScrub').show();"/> Enabled<br/>
+							</p>
+							<div id="toggler_filterTypeDNCScrub" style="display:<?php
+							if( !empty( $dncScrub->enabled ) ) {
+								echo "block";
+							} else {
+								echo "none";
+							}
+							?>;">
+								<p><strong>Select the result status codes that you would like to REJECT.</strong></p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="X"<?php if( in_array( 'X', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> X = Industry eXemption applied to an otherwise Do Not Call number – number can be called</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="C"<?php if( in_array( 'C', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> C = Clean, number can be called</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="O"<?php if( in_array( 'O', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> O = ebr Override was applied to an otherwise Do Not Call number (including an explicit EBR overriding a number in Project DNC) – number can be called</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="E"<?php if( in_array( 'E', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> E = Ebr – currently valid, not on a Do Not Call list – number can be called</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="R"<?php if( in_array( 'R', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> R = expiRed ebr - number used to be a valid EBR, not on a Do Not Call list – number can be called (this ResultCode will be available in the near future)</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="W"<?php if( in_array( 'W', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> W = US Wireless number – number is not in any DNC database (or it is but has been overridden by an industry exemption) but it cannot be called from a predictive dialer.</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="G"<?php if( in_array( 'G', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> G = Valid EBR and US Wireless Number or VoIP Number, not on any DNC database (version 2+) – still cannot be called from a predictive dialer as EBRs do not constitute an exemption to those rules.</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="H"<?php if( in_array( 'H', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> H = US Wireless Number or VoIP Number that is also a Valid EBR overriding an otherwise DNC number (version 2+) – still cannot be called from a predictive dialer as EBRs do not constitute an exemption to those rules.</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="L"<?php if( in_array( 'L', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> L = Wireless number in a US state that does not allow telemarketing to wireless numbers even if manually dialed (see W for more details); not on any DNC list; not an EBR.</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="F"<?php if( in_array( 'F', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> F = Valid EBR and Wireless number in a US state that does not allow telemarketing to wireless numbers even if manually dialed (see W for more details); not on any DNC list.</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="V"<?php if( in_array( 'V', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> V = Valid EBR overriding otherwise DNC number that is also a Wireless number in a US state that does not allow telemarketing to wireless numbers even if manually dialed.</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="I"<?php if( in_array( 'I', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> I = Invalid (area code not active or reserved/special use phone number pattern (i.e. 555-5555))</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="M"<?php if( in_array( 'M', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> M = Malformed (number is not 10 digits, etc.) – this actually never shows up in scrub results from the DNC Compliance Network™ Enterprise Edition – instead an error response will be returned</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="B"<?php if( in_array( 'B', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> B = Blocked (number is in an area code not covered by the National Subscription on this project or is in a configured no-call area code or no exemption was available in a pre-recorded call campaign)</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="P"<?php if( in_array( 'P', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> P = Project DNC or DNF database match (No further checks are performed. The choice to scrub against DNC vs. DNF (Do Not Fax) needs to be made previously at the Campaign level.)</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="D"<?php if( in_array( 'D', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> D = Do not call database match; Reason field provides additional details.</p>
+								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="Y"<?php if( in_array( 'Y', $dncScrub->rejectStatuses ) ) {
+										echo ' checked="checked"';
+									}; ?> /> Y = VoIP number not in any DNC databases (or it has been overridden by an industry exemption).</p>
 							</div>
 						</td>
 					</tr>
