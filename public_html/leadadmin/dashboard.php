@@ -527,8 +527,9 @@ include( INCLUDES . "c_header.php" );
 </div>
 
 <script>
+	var refreshTimeout;
 	$(document).ready(function () {
-		setTimeout(function () {
+		refreshTimeout = setTimeout(function () {
 			location.reload();
 		}, 120000);
 	});
@@ -568,6 +569,10 @@ include( INCLUDES . "c_header.php" );
 		var modal = $(this);
 		var companyId = $(e.relatedTarget).data('company-id');
 
+		if(refreshTimeout) {
+			clearTimeout(refreshTimeout);
+		}
+
 		$.ajax({
 			cache: false,
 			type: 'POST',
@@ -584,6 +589,9 @@ include( INCLUDES . "c_header.php" );
 
 	$('#companynotes').on('hide.bs.modal', function (e) {
 		$(this).find('.modal-body').html('');
+		refreshTimeout = setTimeout(function () {
+			location.reload();
+		}, 120000);
 	});
 </script>
 
