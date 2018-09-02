@@ -202,7 +202,31 @@ class ProcessLeads
 			'anyProcessed' => false,
 			'reason' => null,
 		);
-		$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn, false );
+
+		if( !empty( $idFeedOut ) ) {
+			$feedOut = $leads->getOutboundFeed( $idFeedOut );
+			if( empty( $feedOut ) ) {
+				return 'Invalid outbound feed.';
+			}
+
+			// If forcing this to an outbound feed, force all feed parameters.
+			$feed = new stdClass();
+			$feed->enabled = true;
+			$feed->delayDump = false;
+			$feed->startDate = null;
+			$feed->idFeedOut = $idFeedOut;
+			$feed->queueType = 'queue';
+			$feed->filterTypeUrl = null;
+			$feed->filterTypeEmail = null;
+			$feed->filterTypeListcode = null;
+			$feed->dailyLimit = $feedOut->dailyLimit;
+			$feed->forceUrl = null;
+			$feed->forceUrlList = null;
+			$feedsOut = array( $feed );
+		} else {
+			$feedsOut = $leads->getInboundPopulationSettings( $feedParams->idFeedIn, false );
+		}
+
 		if( !empty( $feedsOut ) && is_array( $feedsOut ) ) {
 			foreach( $feedsOut as $feed ) {
 
@@ -1011,6 +1035,10 @@ class ProcessLeads
 
 		foreach( $requiredFields as $requiredKey ) {
 			switch( $requiredKey ) {
+				// Skip empty field definition
+				case '':
+					break;
+
 				case 'phone':
 					if( empty( $data['landline'] ) && empty( $data['cellphone'] ) ) {
 						$result['valid'] = false;

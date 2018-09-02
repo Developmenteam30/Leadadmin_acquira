@@ -436,6 +436,167 @@ if( 'clear-outbound-queue' === $job->type ) {
 	print "Invalid: {$counts['invalid']}\n";
 	print "Failures: {$counts['failures']}\n";
 
+} else if( 'upload-outbound' === $job->type ) {
+
+	if( empty( $job->destination ) ) {
+
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Missing required fields',
+		) );
+		$status = 'ERROR: Missing required fields.';
+
+		return;
+
+	}
+
+	$feedOut = $leads->getOutboundFeed( $job->destination );
+	if( empty( $feedOut ) ) {
+		print 'ERROR: Invalid outgoing feed ID supplied';
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Invalid outgoing feed ID supplied',
+		) );
+		exit;
+	}
+
+	$handle = @fopen( $job->filename, "r" );
+	if( !$handle ) {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Cannot open uploaded file for reading',
+		) );
+		print 'ERROR: Cannot open uploaded file for reading';
+		exit;
+	}
+
+	print "Importing legacy records from: {$job->filename}\n";
+
+	// Override inbound feed settings.
+	$feedParams = new stdClass();
+	$feedParams->idFeedIn = 136;
+	$feedParams->notifications = false;
+	$feedParams->required = null;
+	$feedParams->allowedFields = implode( ";", $recordFields );
+	$feedParams->dailyLimit = null;
+	$feedParams->filterTypeUrl = null;
+	$feedParams->dedupeEmail = null;
+	$feedParams->dedupeLandline = null;
+	$feedParams->dedupeCellphone = null;
+	$feedParams->rejectOldLeads = false;
+	$feedParams->feedCategory = $feedOut->feedCategory;
+
+	$allowedFields = explode( ";", $feedParams->allowedFields );
+	$fields = unserialize( $job->fields );
+
+	$counts = array(
+		'success' => 0,
+		'invalid' => 0,
+		'failures' => 0,
+		'dupe' => 0,
+	);
+
+	$cnt = 0;
+	while( ( $raw_data = fgetcsv( $handle, 1000, ',' ) ) !== false ) {
+
+		$data = array();
+
+		foreach( $allowedFields as $field ) {
+			if( isset( $fields['field_' . $field] ) && is_numeric( $fields['field_' . $field] ) ) {
+				$col = $fields['field_' . $field];
+				if( !empty( $raw_data[$col] ) ) {
+					if( 'stamp' == $field ) {
+						// Check to see if we're using two separate timestamp columns
+						if( !empty( $fields['field_time'] ) && is_numeric( $fields['field_time'] ) ) {
+							$time_col = $fields['field_time'];
+							// Remove extraneous data from the date field
+							if( strpos( $raw_data[$col], ' ' ) !== false ) {
+								list( $date, $garbage ) = explode( ' ', $raw_data[$col], 2 );
+							} else {
+								$date = $raw_data[$col];
+							}
+							$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $date . ( !empty( $raw_data[$time_col] ) ? ' ' . $raw_data[$time_col] : '' ) ) );
+						} else {
+							$data['stamp'] = date( "Y-m-d H:i:s", strtotime( $raw_data[$col] ) );
+						}
+					} else if( 'dob' == $field ) {
+						$data['dob'] = date( "Y-m-d", strtotime( $raw_data[$col] ) );
+					} else {
+						$data[$field] = $raw_data[$col];
+					}
+				}
+			}
+		}
+
+		// Fix zip codes with a missing leading zero
+		if( !empty( $data['zip'] ) ) {
+			$data['zip'] = str_pad( $data['zip'], 5, '0', STR_PAD_LEFT );
+		}
+
+		if( isset( $data['email'] ) ) {
+			print "{$data['email']}";
+		} else {
+			print " ";
+		}
+
+		$result = ProcessLeads::validateIncomingData( $feedParams, $data );
+
+		if( $result['valid'] ) {
+
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date( 'Y-m-d' ), null, $job->jobId );
+			if( null === $inboundId ) {
+				print " - DBFAIL\n";
+				$counts['failures']++;
+			} else {
+
+				if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $data, $inboundId, $job->destination ) ) === null ) {
+					print " - VALID\n";
+					$counts['success']++;
+				} else {
+					print " - ERROR\n";
+					$counts['invalid']++;
+				}
+			}
+
+		} else {
+
+			$counts['invalid']++;
+
+			print " - ERROR\n";
+			foreach( $result['errors'] as $error ) {
+				print "\t{$error}\n";
+			}
+
+			$inboundId = $leads->inboundAdd( $feedParams->idFeedIn, $data, date( 'Y-m-d' ), $result['errors'][0], $job->jobId );
+
+		}
+
+		print "\n";
+
+		$cnt++;
+		unset( $data );
+
+	}
+	fclose( $handle );
+
+	if( $cnt == intval( $job->records ) ) {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'finished',
+		) );
+	} else {
+		$leads->updateJob( $job->jobId, array(
+			'status' => 'error',
+			'message' => 'Record count does not match',
+		) );
+	}
+
+	print "FILE IMPORT COMPLETE!\n";
+
+	print "Successful: {$counts['success']}\n";
+	print "Duplicates: {$counts['dupe']}\n";
+	print "Invalid: {$counts['invalid']}\n";
+	print "Failures: {$counts['failures']}\n";
+
 } else if( 'import-legacy-outbound' === $job->type ) {
 
 	$fields = unserialize( $job->fields );

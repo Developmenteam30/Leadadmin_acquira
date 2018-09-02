@@ -60,24 +60,25 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			if( $c ) {
 				//Make sure that any required fields are also allowed
-				foreach( $_REQUEST['required'] as $f ) {
+				if( !empty( $_REQUEST['required'] )) {
+					foreach( $_REQUEST['required'] as $f ) {
+						switch( $f ) {
+							case "phone":
+								if( !in_array( 'landline', $_REQUEST['allowedFields'] ) || !in_array( 'cellphone', $_REQUEST['allowedFields'] ) ) {
+									$c = false;
+									$result['error'] = 'If phone is selected, both landline and cellphone must be allowed fields.';
+								}
+								break;
 
-					switch( $f ) {
-						case "phone":
-							if( !in_array( 'landline', $_REQUEST['allowedFields'] ) || !in_array( 'cellphone', $_REQUEST['allowedFields'] ) ) {
-								$c = false;
-								$result['error'] = 'If phone is selected, both landline and cellphone must be allowed fields.';
-							}
+							default:
+								if( !in_array( $f, $_REQUEST['allowedFields'] ) ) {
+									$c = false;
+									$result['error'] = "If {$f} is a required field, then that field must be allowed as well.";
+								}
+						}
+						if( !$c ) {
 							break;
-
-						default:
-							if( !in_array( $f, $_REQUEST['allowedFields'] ) ) {
-								$c = false;
-								$result['error'] = "If {$f} is a required field, then that field must be allowed as well.";
-							}
-					}
-					if( !$c ) {
-						break;
+						}
 					}
 				}
 			}

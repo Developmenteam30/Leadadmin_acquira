@@ -1878,6 +1878,85 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 			break;
 
+		case 'dialog_upload':
+			$idFeedOut = $_REQUEST['idFeedOut'];
+
+			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+				$idCompany = LeadsSession::getCompanyId();
+				if( empty( $idCompany ) ) {
+					$idCompany = -9999;
+				}
+				if( !$leads->checkOutboundFeedAccess( $idCompany, $idFeedOut ) ) {
+					die( 'Sorry, you do not have access to this feed.' );
+				}
+			}
+
+			$feed = $leads->getOutboundFeed( $idFeedOut );
+
+			if( $feed === false ) {
+				?>
+				<p>Database failure - could not fetch feed information.</p>
+				<?php
+			} else if( !is_object( $feed ) && $feed == 0 ) {
+				?>
+				<p>Error fetching feed information - feed does not exist.</p>
+				<?php
+			} else {
+
+				$company = $leads->getCompany( $feed->idCompany );
+
+				?>
+				<p><strong>Company:</strong> <?php echo htmlentities( $company->name ); ?></p>
+				<p><strong>Feed:</strong> <?php echo htmlentities( $feed->label ); ?> (#<?php echo $feed->idFeedOut; ?>)</p>
+
+				<form enctype="multipart/form-data" id="form-upload" action="mgr_import.php" method="post" target="_blank">
+					<input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>"/>
+					<input type="hidden" name="destination" value="<?php echo intval( $idFeedOut ); ?>"/>
+					<input type="hidden" name="type" value="upload-outbound"/>
+					<input type="hidden" name="a" value="import"/>
+
+					<table class="table table-bordered table-condensed table-striped">
+						<tr>
+							<td>File</p></td>
+							<td>Please select the file to upload from your computer. File must be in CSV format. Limit <?php echo( MAX_UPLOAD_SIZE / 1024000 ); ?>MB.</p><input type="file" name="import_file" multiple="false" accept="text/csv"/></p></td>
+						</tr>
+						<tr>
+							<td>Field mapping</p></td>
+							<td>
+								<?php
+								$allowedFields = $recordFields;
+								$requiredFields = array();
+
+								// Add a separate time field in case the file uses separate columns
+								if( ( $key = array_search( 'stamp', $allowedFields ) ) !== false ) {
+									array_splice( $allowedFields, $key + 1, 0, 'time' );
+								}
+
+								foreach( $allowedFields as $field ) {
+									printf( "<p>%s%s <select name=\"field_%s\">",
+										$field, in_array( $field, $requiredFields ) ? '*' : '', $field );
+									print "<option>--</option>\n";
+									for( $i = 0; $i < 26; $i++ ) {
+										print "<option value=\"{$i}\">" . chr( 65 + $i ) . "</option>\n";
+									}
+									print "</select>";
+									if( 'stamp' == $field ) {
+										print " (Use for either a full date+time stamp or just a date stamp field)";
+									} else if( 'time' == $field ) {
+										print " (Use for just a time stamp field)";
+									}
+									print "</p>\n";
+								}
+
+								?>
+							</td>
+						</tr>
+					</table>
+				</form>
+				<?php
+			}
+			break;
+
 		case 'dialog_retry_rejections':
 			$idFeedOut = $_REQUEST['idFeedOut'] ?? '';
 
@@ -3047,6 +3126,7 @@ include( INCLUDES . "c_header.php" );
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-clearqueue" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Clear queue</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">URL report</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Import data</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-upload" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Upload data</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Export data</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval( $feed->idFeedOut ); ?>">Retry rejections</a></li>
 									</ul>
@@ -3184,6 +3264,23 @@ include( INCLUDES . "c_header.php" );
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 					<button id="modal-save-import" type="button" class="btn btn-primary">Import</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="modal-upload" tabindex="-1" role="dialog" aria-labelledby="upload_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="upload_title">Upload Legacy Data</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="modal-save-upload" type="button" class="btn btn-primary">Upload</button>
 				</div>
 			</div>
 		</div>
@@ -3465,6 +3562,29 @@ include( INCLUDES . "c_header.php" );
 					}
 				}
 			});
+		});
+		
+		$('#modal-upload').on('show.bs.modal', function (e) {
+			var modal = $(this);
+			var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+			$.ajax({
+				cache: false,
+				type: 'POST',
+				url: 'mgr_feedout.php',
+				data: {
+					'd': 'dialog_upload',
+					'idFeedOut': idFeedOut
+				},
+				success: function (data) {
+					modal.find('.modal-body').html(data);
+				}
+			});
+		});
+
+		$('#modal-save-upload').click(function (event) {
+			event.preventDefault();
+			$('#form-upload').submit();
 		});
 
 		$('#modal-export').on('show.bs.modal', function (e) {
