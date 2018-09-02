@@ -167,14 +167,6 @@ if( isset( $_REQUEST['a'] ) ) {
 			if( $action == 'new' ) {
 
 				if( $c ) {
-					$pattern = '/^[a-z][a-z0-9_]*$/';
-					if( !preg_match( $pattern, $_REQUEST['label'] ) ) {
-						$c = false;
-						$result['error'] = 'Label must start with a letter, can contain letters, numbers, and underscore only.';
-					}
-				}
-
-				if( $c ) {
 					//Label can not be already used
 					$checkResult = $leads->checkOutboundFeedLabelExists( $_REQUEST['label'] );
 					if( true === $checkResult ) {
@@ -186,7 +178,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				if( $c ) { //Add entry to the database.
 
 					$fields = array(
-						'label' => $_REQUEST['label'],
+						'label' => trim( $_REQUEST['label'] ),
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
 						'idCompany' => $_REQUEST['idCompany'],
 						'feedType' => empty( $_REQUEST['feedType'] ) ? 'curlPOST' : $_REQUEST['feedType'],
@@ -278,7 +270,7 @@ if( isset( $_REQUEST['a'] ) ) {
 					}
 
 					$fields = array(
-						'label' => $_REQUEST['label'],
+						'label' => trim( $_REQUEST['label'] ),
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
 						'idCompany' => $_REQUEST['idCompany'],
 						'feedType' => empty( $_REQUEST['feedType'] ) ? 'curlPOST' : $_REQUEST['feedType'],
@@ -2159,7 +2151,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						<?php
 					} else {
 
-						$fileLink = 'exports/' . $feed->label . "_" . time() . ".csv";
+						$fileLink = 'exports/' . $feed->idFeedOut . "_" . time() . ".csv";
 						$filePath = ADMIN_ROOT . $fileLink;
 						$file = fopen( $filePath, "w" );
 						if( !file_exists( $filePath ) ) {

@@ -43,15 +43,6 @@ if( isset( $_REQUEST['a'] ) ) {
 				$result['error'] = 'Company cannot be empty.';
 			}
 
-			if( $c ) {
-				//Label cannot have invalid characters
-				$pattern = '/^[a-z][a-z0-9_]*$/';
-				if( !preg_match( $pattern, $_REQUEST['label'] ) ) {
-					$c = false;
-					$result['error'] = 'Labels must start with a letter, can contain lowercase letters, numbers, and underscore only.';
-				}
-			}
-
 			if( $c && empty( $_REQUEST['allowedFields'] ) || !is_array( $_REQUEST['allowedFields'] ) ) {
 				// Must allow some fields, or the feed is worthless isn't it
 				$c = false;
@@ -60,7 +51,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			if( $c ) {
 				//Make sure that any required fields are also allowed
-				if( !empty( $_REQUEST['required'] )) {
+				if( !empty( $_REQUEST['required'] ) ) {
 					foreach( $_REQUEST['required'] as $f ) {
 						switch( $f ) {
 							case "phone":
@@ -342,7 +333,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 				if( $c ) {
 					$status = $leads->updateInboundFeed( $_REQUEST['idFeedIn'], array(
-						'label' => empty( $_REQUEST['label'] ) ? null : $_REQUEST['label'],
+						'label' => trim( $_REQUEST['label'] ),
 						'description' => empty( $_REQUEST['description'] ) ? null : $_REQUEST['description'],
 						'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
 						'required' => empty( $_REQUEST['required'] ) ? null : implode( ';', $_REQUEST['required'] ),
@@ -624,12 +615,13 @@ if( isset( $_REQUEST['d'] ) ) {
 					<tr>
 						<td>Feed Label</p></td>
 						<td>
-							<input type='hidden' name='idFeedIn'
-							       id='idFeedIn'
-							       value='<?php echo $feed_idFeedIn; ?>'
-							/>
-							<input class="input-long" type='text' name='label' id='label' value='<?php echo htmlentities( $feed_label ); ?>'
-							/>
+							<input type="hidden" name="idFeedIn" id="idFeedIn" value="<?php echo $feed_idFeedIn; ?>"/>
+							<?php if( !empty( $idFeedIn ) && $idFeedIn < 123 ) { ?>
+								<input type="hidden" name="label" id="label" value="<?php echo Display::escHtml( $feed_label ); ?>"/><?php echo Display::escHtml( $feed_label ); ?><br/>(Cannot modify incoming feed labels created before 5/24/18)
+							<?php } else { ?>
+								<input class="input-long" type="text" name="label" id="label" value="<?php echo htmlentities( $feed_label ); ?>"<?php if( !empty( $idFeedIn ) && $idFeedIn < 123 ) {
+									print " readonly='readonly'"; } ?>/>
+							<?php } ?>
 							</p>
 						</td>
 					</tr>
@@ -1332,7 +1324,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						<?php
 					} else {
 
-						$fileLink = 'exports/' . $feed->label . "_" . time() . ".csv";
+						$fileLink = 'exports/' . $feed->idFeedIn . "_" . time() . ".csv";
 						$filePath = ADMIN_ROOT . $fileLink;
 						$file = fopen( $filePath, "w" );
 						if( !file_exists( $filePath ) ) {

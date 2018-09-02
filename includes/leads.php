@@ -4699,7 +4699,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feed->label . "_" . $jobId . ".csv";
+		$fileLink = 'exports/' . $idFeedIn . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -4827,7 +4827,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feed->label . "_" . $jobId . ".csv";
+		$fileLink = 'exports/' . $idFeedOut . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -5173,7 +5173,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feedOut->label . "_" . $jobId . ".csv";
+		$fileLink = 'exports/' . $idFeedOut . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
@@ -5417,7 +5417,7 @@ class Leads
 
 		$jobId = time();
 
-		$fileLink = 'exports/' . $feedOut->label . "_" . $jobId . ".csv";
+		$fileLink = 'exports/' . $idFeedOut . "_" . $jobId . ".csv";
 		$filePath = ADMIN_ROOT . $fileLink;
 		$file = fopen( $filePath, 'w' );
 		if( !$file ) {
