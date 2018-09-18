@@ -62,12 +62,11 @@ if( isset( $_SERVER['SERVER_ADDR'] ) && $_SERVER['SERVER_ADDR'] == '127.0.0.1' )
 		'database' => 'dnrdmktg',
 	);
 }
-define( "FD", $folder_delimiter );
 define( "ADMIN_FOLDER", "leadadmin" );
-define( "ADMIN_ROOT", SITE_ROOT . FD . "public_html" . FD . ADMIN_FOLDER . FD );
+define( "ADMIN_ROOT", SITE_ROOT . DIRECTORY_SEPARATOR  . "public_html" . DIRECTORY_SEPARATOR  . ADMIN_FOLDER . DIRECTORY_SEPARATOR  );
 define( "LIVE_FOLDER", "live" );
-define( "LIVE_ROOT", SITE_ROOT . FD . "public_html" . FD . LIVE_FOLDER . FD );
-define( "INCLUDES", SITE_ROOT . FD . "includes" . FD );
+define( "LIVE_ROOT", SITE_ROOT . DIRECTORY_SEPARATOR  . "public_html" . DIRECTORY_SEPARATOR  . LIVE_FOLDER . DIRECTORY_SEPARATOR  );
+define( "INCLUDES", SITE_ROOT . DIRECTORY_SEPARATOR  . "includes" . DIRECTORY_SEPARATOR  );
 define( "MYSQL_TIMEOUT", 10 );
 define( "MAX_UPLOAD_SIZE", 10240000 );
 $GLOBALS['dbconnx'] = '';

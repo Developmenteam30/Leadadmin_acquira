@@ -4,9 +4,9 @@
 
 if(isset($forceMysqlLogFile)){ 
 	$GLOBALS['mysqlLog'] = $forceMysqlLogFile;
-} else { 
-	$GLOBALS['mysqlLog'] = 
-		SITE_ROOT."error".FD."log"; 
+} else {
+	$GLOBALS['mysqlLog'] =
+		SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "log";
 }
 
 if(isset($mysqlErrorSource)){ 
@@ -146,7 +146,7 @@ function dbQry(
 			if($verbose){
 				return array(
 					'result' => false
-					, 'error' => $error
+					, 'error' => $error,
 				);
 			} else {
 				return false;
@@ -162,7 +162,7 @@ function dbQry(
 		if($verbose){
 			return array(
 				'result' => $result
-				, 'error' => 'Successfully performed query.'
+				, 'error' => 'Successfully performed query.',
 			);
 		} else {
 			return $result;

@@ -5809,7 +5809,7 @@ SQL;
 	public function logError( $message, $db = false, $email = true ) {
 
 		$stamp = date( 'Y-m-d H:i:s' );
-		$errfile = fopen( SITE_ROOT . 'error' . FD . 'leads-log', 'a' );
+		$errfile = fopen( SITE_ROOT . 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a' );
 		if( $errfile ) {
 			fwrite( $errfile, $stamp . ' ' . $message . PHP_EOL );
 			fwrite( $errfile, $stamp . ' REQUEST: ' . print_r( $_REQUEST, true ) . PHP_EOL );
@@ -5830,9 +5830,9 @@ SQL;
 
 		if( $email ) {
 			// Limit notification emails to one per minute to prevent flooding
-			$time = @file_get_contents( SITE_ROOT . "error" . FD . "email-stamp" );
+			$time = @file_get_contents( SITE_ROOT . "error" . DIRECTORY_SEPARATOR  . "email-stamp" );
 			if( $time === false || ( $time < ( time() - 60 ) ) ) {
-				file_put_contents( SITE_ROOT . "error" . FD . "email-stamp", time() );
+				file_put_contents( SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp", time() );
 			} else {
 				return;
 			}
