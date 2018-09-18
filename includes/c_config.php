@@ -3,70 +3,48 @@
 //Verserion 1.1
 //ES20130827 v1.1: Added two new constants for folder names for use in urls and such.
 
+defined( 'APPLICATION_ENV' ) || define( 'APPLICATION_ENV', ( getenv( 'APPLICATION_ENV' ) ? getenv( 'APPLICATION_ENV' ) : 'production' ) );
+
 define( "CONFIG_COMPANY_NAME", "Qatalyst" );
 define( "SITE_URL", "qmleads.com" );
 
-$folder_delimiter = "/";
-if( isset( $_SERVER['SERVER_ADDR'] ) && $_SERVER['SERVER_ADDR'] == '127.0.0.1' ) { //If you are deploying this to test in a local dev environment,
-	//This will be the site root.
-	define( "SITE_ROOT", "M:\\WAMP\\wamp\\www\\qmleads.com\\" );
-	//Uncomment this line if you are running development in a windows environment.
-	$folder_delimiter = "\\";
-	//Database Connection Configuration, Dev Environment
-	define( "DATABASE_NAME", 'dnrdmktg' );
-	define( "DATABASE_HOST", 'localhost' );
-	define( "ENVIRONMENT", 'dev' );
-	define( "MIGRATING", false );
-	define( "DATABASE_HOST_MIGRATION", '' );
-	//Applicable Usernames
-	$username = 'root';
-	$password = 'hammertime10';
-	$GLOBALS['databaseName'] = 'dnrdmktg';
-	$GLOBALS['connxSettings'] = array( //Don't really care for development
-	                                   'selectOnly' => array(
-		                                   'u' => 'root'
-		                                   , 'p' => 'hammertime10',
-	                                   )
-	                                   , 'insertUpdate' => array(
-			'u' => 'root'
-			, 'p' => 'hammertime10',
-		),
-	);
-} else { //Otherwise we're in the production environment, and this is the site root.
+if( 'development' == APPLICATION_ENV ) {
+	define( "SITE_ROOT", "/var/www/html/development/qmleads.com/" );
+} else {
 	define( "SITE_ROOT", "/var/www/html/production/qmleads.com/" );
-	//Uncomment this line if you are running production in a windows environment.
-	//$folder_delimiter = "\\";
-	//Database Connection Configuration, Production Environment
-	define( "DATABASE_NAME", 'dnrdmktg' );
-	//define("DATABASE_HOST", 'qmleads.ck44eyk7mgen.us-east-1.rds.amazonaws.com'); // PNT
-	define( "DATABASE_HOST", 'qmleads.cxkrvmxyvmna.us-east-1.rds.amazonaws.com' ); // QM
-	define( "ENVIRONMENT", 'prod' );
-	define( "MIGRATING", false );
-	define( "DATABASE_HOST_MIGRATION", '' );
-	//Applicable Usernames
-	$GLOBALS['connxSettings'] = array(
-		'selectOnly' => array(
-			'u' => 'dnrdmktg'
-			, 'p' => '6MOuPjjT(zL}7hLnSSMkjUieWmSw]}_x',
-		)
-		, 'insertUpdate' => array(
-			'u' => 'dnrdmktg'
-			, 'p' => '6MOuPjjT(zL}7hLnSSMkjUieWmSw]}_x',
-		),
-	);
-
-	$GLOBALS['database'] = array(
-		'username' => 'dnrdmktg',
-		'password' => 'Pumping#10Lead',
-		'hostname' => 'localhost',
-		'database' => 'dnrdmktg',
-	);
 }
+//Database Connection Configuration, Production Environment
+define( "DATABASE_NAME", 'dnrdmktg' );
+define( "DATABASE_HOST", 'qmleads.cxkrvmxyvmna.us-east-1.rds.amazonaws.com' );
+define( "ENVIRONMENT", 'prod' );
+define( "MIGRATING", false );
+define( "DATABASE_HOST_MIGRATION", '' );
+
+//Applicable Usernames
+$GLOBALS['connxSettings'] = array(
+	'selectOnly' => array(
+		'u' => 'dnrdmktg'
+		, 'p' => '6MOuPjjT(zL}7hLnSSMkjUieWmSw]}_x',
+	)
+	, 'insertUpdate' => array(
+		'u' => 'dnrdmktg'
+		, 'p' => '6MOuPjjT(zL}7hLnSSMkjUieWmSw]}_x',
+	),
+);
+
+$GLOBALS['database'] = array(
+	'username' => 'dnrdmktg',
+	'password' => 'Pumping#10Lead',
+	'hostname' => 'localhost',
+	'database' => 'dnrdmktg',
+);
+
 define( "ADMIN_FOLDER", "leadadmin" );
-define( "ADMIN_ROOT", SITE_ROOT . DIRECTORY_SEPARATOR  . "public_html" . DIRECTORY_SEPARATOR  . ADMIN_FOLDER . DIRECTORY_SEPARATOR  );
+define( "ADMIN_ROOT", SITE_ROOT . DIRECTORY_SEPARATOR . "public_html" . DIRECTORY_SEPARATOR . ADMIN_FOLDER . DIRECTORY_SEPARATOR );
 define( "LIVE_FOLDER", "live" );
-define( "LIVE_ROOT", SITE_ROOT . DIRECTORY_SEPARATOR  . "public_html" . DIRECTORY_SEPARATOR  . LIVE_FOLDER . DIRECTORY_SEPARATOR  );
-define( "INCLUDES", SITE_ROOT . DIRECTORY_SEPARATOR  . "includes" . DIRECTORY_SEPARATOR  );
+define( "LIVE_ROOT", SITE_ROOT . DIRECTORY_SEPARATOR . "public_html" . DIRECTORY_SEPARATOR . LIVE_FOLDER . DIRECTORY_SEPARATOR );
+define( "INCLUDES", SITE_ROOT . DIRECTORY_SEPARATOR . "includes" . DIRECTORY_SEPARATOR );
+define( "UPLOADS_DIR", SITE_ROOT . 'uploads/' );
 define( "MYSQL_TIMEOUT", 10 );
 define( "MAX_UPLOAD_SIZE", 10240000 );
 $GLOBALS['dbconnx'] = '';
