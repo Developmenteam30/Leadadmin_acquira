@@ -44,7 +44,7 @@ define( "ADMIN_ROOT", SITE_ROOT . DIRECTORY_SEPARATOR . "public_html" . DIRECTOR
 define( "LIVE_FOLDER", "live" );
 define( "LIVE_ROOT", SITE_ROOT . DIRECTORY_SEPARATOR . "public_html" . DIRECTORY_SEPARATOR . LIVE_FOLDER . DIRECTORY_SEPARATOR );
 define( "INCLUDES", SITE_ROOT . DIRECTORY_SEPARATOR . "includes" . DIRECTORY_SEPARATOR );
-define( "UPLOADS_DIR", SITE_ROOT . 'uploads/' );
+define( "UPLOADS_DIR", SITE_ROOT . 'uploads' . DIRECTORY_SEPARATOR );
 define( "MYSQL_TIMEOUT", 10 );
 define( "MAX_UPLOAD_SIZE", 10240000 );
 $GLOBALS['dbconnx'] = '';

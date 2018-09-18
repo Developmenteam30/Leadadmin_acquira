@@ -18,6 +18,7 @@ if( !isset( $title ) ) {
 	<link rel="stylesheet" href="/leadadmin/libraries/bootstrap-3.3.6-dist/css/bootstrap-theme.min.css"/>
 	<link rel="stylesheet" href="/leadadmin/libraries/bootstrap-toggle/bootstrap-toggle.min.css"/>
 	<link rel="stylesheet" href="/leadadmin/libraries/select2-4.0.3/dist/css/select2.min.css"/>
+	<link rel="stylesheet" href="/leadadmin/libraries/fine-uploader/fine-uploader-new.css"/>
 	<?php if( file_exists( SITE_ROOT . 'public_html/assets/css/admin.css' ) ) { ?>
 		<link href="/v<?php echo filemtime( SITE_ROOT . 'public_html/assets/css/admin.css' ); ?>/assets/css/admin.css" rel="stylesheet" type="text/css"/>
 	<?php } ?>
@@ -26,6 +27,7 @@ if( !isset( $title ) ) {
 	<script src="/leadadmin/libraries/bootstrap-3.3.6-dist/js/bootstrap.min.js"></script>
 	<script src="/leadadmin/libraries/bootstrap-toggle/bootstrap-toggle.min.js"></script>
 	<script src="/leadadmin/libraries/select2-4.0.3/dist/js/select2.min.js"></script>
+	<script src="/leadadmin/libraries/fine-uploader/fine-uploader.js"></script>
 	<script src="/leadadmin/libraries/default.js"></script>
 	<script src="/leadadmin/libraries/calx-1.1.4/jquery-calx-1.1.4.min.js" type="text/javascript"></script>
 	<script src="/v2/leadadmin/libraries/tablefilter/tablefilter.js" type="text/javascript"></script>

@@ -620,7 +620,8 @@ if( isset( $_REQUEST['d'] ) ) {
 								<input type="hidden" name="label" id="label" value="<?php echo Display::escHtml( $feed_label ); ?>"/><?php echo Display::escHtml( $feed_label ); ?><br/>(Cannot modify incoming feed labels created before 5/24/18)
 							<?php } else { ?>
 								<input class="input-long" type="text" name="label" id="label" value="<?php echo htmlentities( $feed_label ); ?>"<?php if( !empty( $idFeedIn ) && $idFeedIn < 123 ) {
-									print " readonly='readonly'"; } ?>/>
+									print " readonly='readonly'";
+								} ?>/>
 							<?php } ?>
 							</p>
 						</td>
@@ -1020,19 +1021,80 @@ if( isset( $_REQUEST['d'] ) ) {
 				$company = $leads->getCompany( $feed->idCompany );
 
 				?>
+
+				<script type="text/template" id="qq-template">
+					<div class="qq-uploader-selector qq-uploader" qq-drop-area-text="Drop file here">
+						<div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">
+							<div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-total-progress-bar-selector qq-progress-bar qq-total-progress-bar"></div>
+						</div>
+						<div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
+							<span class="qq-upload-drop-area-text-selector"></span>
+						</div>
+						<div class="qq-upload-button-selector qq-upload-button">
+							<div>Upload a file</div>
+						</div>
+						<span class="qq-drop-processing-selector qq-drop-processing">
+                    <span>Processing dropped file...</span>
+                    <span class="qq-drop-processing-spinner-selector qq-drop-processing-spinner"></span>
+                </span>
+						<ul class="qq-upload-list-selector qq-upload-list" aria-live="polite" aria-relevant="additions removals">
+							<li>
+								<div class="qq-progress-bar-container-selector">
+									<div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-progress-bar-selector qq-progress-bar"></div>
+								</div>
+								<span class="qq-upload-spinner-selector qq-upload-spinner"></span>
+								<img class="qq-thumbnail-selector" qq-max-size="100" qq-server-scale>
+								<span class="qq-upload-file-selector qq-upload-file"></span>
+								<span class="qq-upload-size-selector qq-upload-size"></span>
+								<button type="button" class="qq-btn qq-upload-cancel-selector qq-upload-cancel">Cancel</button>
+								<button type="button" class="qq-btn qq-upload-retry-selector qq-upload-retry">Retry</button>
+								<button type="button" class="qq-btn qq-upload-delete-selector qq-upload-delete">Delete</button>
+								<span role="status" class="qq-upload-status-text-selector qq-upload-status-text"></span>
+							</li>
+						</ul>
+
+						<dialog class="qq-alert-dialog-selector">
+							<div class="qq-dialog-message-selector"></div>
+							<div class="qq-dialog-buttons">
+								<button type="button" class="qq-cancel-button-selector">Close</button>
+							</div>
+						</dialog>
+
+						<dialog class="qq-confirm-dialog-selector">
+							<div class="qq-dialog-message-selector"></div>
+							<div class="qq-dialog-buttons">
+								<button type="button" class="qq-cancel-button-selector">No</button>
+								<button type="button" class="qq-ok-button-selector">Yes</button>
+							</div>
+						</dialog>
+
+						<dialog class="qq-prompt-dialog-selector">
+							<div class="qq-dialog-message-selector"></div>
+							<input type="text">
+							<div class="qq-dialog-buttons">
+								<button type="button" class="qq-cancel-button-selector">Cancel</button>
+								<button type="button" class="qq-ok-button-selector">Ok</button>
+							</div>
+						</dialog>
+					</div>
+				</script>
 				<p><strong>Company:</strong> <?php echo htmlentities( $company->name ); ?></p>
 				<p><strong>Feed:</strong> <?php echo htmlentities( $feed->label ); ?> (#<?php echo $feed->idFeedIn; ?>)</p>
 
 				<form enctype="multipart/form-data" id="form-import" action="mgr_import.php" method="post" target="_blank">
-					<input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>"/>
 					<input type="hidden" name="destination" value="<?php echo intval( $idFeedIn ); ?>"/>
 					<input type="hidden" name="type" value="feedinc"/>
 					<input type="hidden" name="a" value="Upload"/>
+					<input type="hidden" name="filename" value=""/>
+					<input type="hidden" name="uuid" value=""/>
 
 					<table class="table table-bordered table-condensed table-striped">
 						<tr>
 							<td>File</p></td>
-							<td>Please select the file to upload from your computer. File must be in CSV format. Limit <?php echo( MAX_UPLOAD_SIZE / 1024000 ); ?>MB.</p><input type="file" name="import_file" multiple="false" accept="text/csv"/></p></td>
+							<td>
+								<p>Please select the file to upload from your computer. File must be in CSV format.</p>
+								<div id="import-uploader"></div>
+							</td>
 						</tr>
 						<tr>
 							<td>Field mapping</p></td>
@@ -1067,6 +1129,50 @@ if( isset( $_REQUEST['d'] ) ) {
 						</tr>
 					</table>
 				</form>
+				<script>
+					var importUploader = new qq.FineUploader({
+						callbacks: {
+							onComplete: function (id, name, responseJSON) {
+								if (responseJSON.success) {
+									$("#form-import input[name='filename']").val(importUploader.getName(id));
+									$("#form-import input[name='uuid']").val(importUploader.getUuid(id));
+								}
+							},
+						},
+						chunking: {
+							concurrent: {
+								enabled: true
+							},
+							enabled: true,
+							success: {
+								endpoint: '/leadadmin/ajax/fileUpload.php?done=1'
+							}
+						},
+						debug: true,
+						element: document.getElementById("import-uploader"),
+						failedUploadTextDisplay: {
+							mode: 'custom'
+						},
+						multiple: false,
+						request: {
+							endpoint: '/leadadmin/ajax/fileUpload.php'
+						},
+						retry: {
+							enableAuto: true
+						},
+						template: 'qq-template',
+						thumbnails: {
+							placeholders: {
+								waitingPath: '/leadadmin/libraries/fine-uploader/placeholders/waiting-generic.png',
+								notAvailablePath: '/leadadmin/libraries/fine-uploader/placeholders/not_available-generic.png'
+							}
+						},
+						validation: {
+							allowedExtensions: ['csv', 'txt'],
+							itemLimit: 1
+						}
+					});
+				</script>
 				<?php
 			}
 			break;
@@ -1837,7 +1943,39 @@ include( INCLUDES . "c_header.php" );
 
 	$('#modal-save-import').click(function (event) {
 		event.preventDefault();
-		$('#form-import').submit();
+		if ($("#form-import select[name='field_url']").val() === '--') {
+			alert('Please select the URL column.');
+		} else if ($("#form-import select[name='field_ip']").val() === '--') {
+			alert('Please select the IP column.');
+		} else if ($("#form-import select[name='field_stamp']").val() === '--') {
+			alert('Please select the stamp column.');
+		} else if ($("#form-import select[name='field_email']").val() === '--') {
+			alert('Please select the email column.');
+		} else if (importUploader.getInProgress()) {
+			alert('Please wait until your file has finished uploading before submitting this job.');
+		} else if (importUploader.getNetUploads() === 0 || $("#form-import input[name='filename']").val() === '' || $("#form-import input[name='uuid']").val() === '') {
+			alert('Please upload a file.');
+		} else {
+
+			var modal = $(this);
+
+			var response = $.ajax({
+				url: "/leadadmin/ajax/submitJob.php",
+				type: "POST",
+				async: true,
+				data: $("#form-import").serialize()
+			}).done(function (result) {
+				if (result.success === true) {
+					if(result.link) {
+						window.location = result.link;
+					}
+				} else {
+					alert("Error: " + (result.error || 'Unknown'));
+				}
+			});
+
+			//$('#form-import').submit();
+		}
 	});
 
 	$('#modal-export').on('show.bs.modal', function (e) {

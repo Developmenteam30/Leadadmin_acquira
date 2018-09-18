@@ -1,6 +1,6 @@
 #!/bin/sh
 cd $(dirname $0)
-mkdir uploads error public_html/leadadmin/exports pushLead/lockfiles
+mkdir uploads uploads/chunks error public_html/leadadmin/exports pushLead/lockfiles
 chown -R rscs:webdev * .git .gitignore
 chmod -R g+rw,o= * .git .gitignore
 chown -R nginx:webdev error public_html/leadadmin/exports/ uploads

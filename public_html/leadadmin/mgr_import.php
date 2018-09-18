@@ -157,7 +157,7 @@ include( INCLUDES . "c_header.php" );
 				dieError( 'File contains no records' );
 			}
 
-			$newFile = SITE_ROOT . 'uploads/' . hash( 'sha256', $_FILES['import_file']['tmp_name'] );
+			$newFile = UPLOADS_DIR . hash( 'sha256', $_FILES['import_file']['tmp_name'] );
 			if( move_uploaded_file( $_FILES['import_file']['tmp_name'], $newFile ) !== true ) {
 				dieError( 'Cannot move uploaded file for processing' );
 			}
