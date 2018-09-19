@@ -1031,31 +1031,31 @@ if( isset( $_REQUEST['d'] ) ) {
 			print '<hr id="scroll-to"/>';
 
 			$leaddata = (object) array(
-				'stamp' => $_REQUEST['stamp'] ?? '',
-				'url' => $_REQUEST['url'] ?? '',
-				'ip' => $_REQUEST['ip'] ?? '',
-				'email' => $_REQUEST['email'] ?? '',
-				'fname' => $_REQUEST['fname'] ?? '',
-				'lname' => $_REQUEST['lname'] ?? '',
-				'addr' => $_REQUEST['addr'] ?? '',
-				'addr2' => $_REQUEST['addr2'] ?? '',
-				'city' => $_REQUEST['city'] ?? '',
-				'state' => $_REQUEST['state'] ?? '',
-				'zip' => $_REQUEST['zip'] ?? '',
-				'dob' => $_REQUEST['dob'] ?? '',
-				'gender' => $_REQUEST['gender'] ?? '',
-				'landline' => $_REQUEST['landline'] ?? '',
-				'cellphone' => $_REQUEST['cellphone'] ?? '',
-				'country' => $_REQUEST['country'] ?? '',
-				'listcode' => $_REQUEST['listcode'] ?? '',
-				'leadId' => $_REQUEST['leadId'] ?? '',
-				'custom1' => $_REQUEST['custom1'] ?? '',
-				'custom2' => $_REQUEST['custom2'] ?? '',
-				'custom3' => $_REQUEST['custom3'] ?? '',
-				'custom4' => $_REQUEST['custom4'] ?? '',
-				'custom5' => $_REQUEST['custom5'] ?? '',
-				'custom6' => $_REQUEST['custom6'] ?? '',
-				'idRecord' => $_REQUEST['idRecord'] ?? '',
+				'stamp' => trim( $_REQUEST['stamp'] ?? '' ),
+				'url' => trim( $_REQUEST['url'] ?? '' ),
+				'ip' => trim( $_REQUEST['ip'] ?? '' ),
+				'email' => trim( $_REQUEST['email'] ?? '' ),
+				'fname' => trim( $_REQUEST['fname'] ?? '' ),
+				'lname' => trim( $_REQUEST['lname'] ?? '' ),
+				'addr' => trim( $_REQUEST['addr'] ?? '' ),
+				'addr2' => trim( $_REQUEST['addr2'] ?? '' ),
+				'city' => trim( $_REQUEST['city'] ?? '' ),
+				'state' => trim( $_REQUEST['state'] ?? '' ),
+				'zip' => trim( $_REQUEST['zip'] ?? '' ),
+				'dob' => trim( $_REQUEST['dob'] ?? '' ),
+				'gender' => trim( $_REQUEST['gender'] ?? '' ),
+				'landline' => trim( $_REQUEST['landline'] ?? '' ),
+				'cellphone' => trim( $_REQUEST['cellphone'] ?? '' ),
+				'country' => trim( $_REQUEST['country'] ?? '' ),
+				'listcode' => trim( $_REQUEST['listcode'] ?? '' ),
+				'leadId' => trim( $_REQUEST['leadId'] ?? '' ),
+				'custom1' => trim( $_REQUEST['custom1'] ?? '' ),
+				'custom2' => trim( $_REQUEST['custom2'] ?? '' ),
+				'custom3' => trim( $_REQUEST['custom3'] ?? '' ),
+				'custom4' => trim( $_REQUEST['custom4'] ?? '' ),
+				'custom5' => trim( $_REQUEST['custom5'] ?? '' ),
+				'custom6' => trim( $_REQUEST['custom6'] ?? '' ),
+				'idRecord' => trim( $_REQUEST['idRecord'] ?? '' ),
 				'testRecord' => 1,
 			);
 			$errors = array();
@@ -1085,6 +1085,10 @@ if( isset( $_REQUEST['d'] ) ) {
 			}
 			if( !empty( $leaddata->dob ) && !preg_match( '/^\d{4}-\d{2}-\d{2}$/', $leaddata->dob ) ) {
 				$errors[] = 'Date of Birth must be in the format: YYYY-MM-DD';
+			}
+
+			if( !empty( $leaddata->url ) ) {
+				$leaddata->url = $leads->parseUrl( $leaddata->url );
 			}
 
 			if( !empty( $errors ) ) {
@@ -3555,7 +3559,7 @@ include( INCLUDES . "c_header.php" );
 				}
 			});
 		});
-		
+
 		$('#modal-upload').on('show.bs.modal', function (e) {
 			var modal = $(this);
 			var idFeedOut = $(e.relatedTarget).data('feed-id');
