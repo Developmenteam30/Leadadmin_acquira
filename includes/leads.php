@@ -4510,33 +4510,35 @@ class Leads
 		return $cnt;
 	}
 
-	public function archiveInboundAccepted() {
+	public function archiveInboundRecords() {
 		$cnt = 0;
 		$recordId = 0;
 
-		$startDate = new \DateTime( 'now', new DateTimeZone( LOCAL_TIMEZONE ) );
-		try {
-			$startDate->setTime( 0, 0, 0 );
-			$startDate->sub( new \DateInterval( 'P120D' ) );
-			$endDate = clone $startDate;
-			$endDate->setTime( 23, 59, 59 );
-		} catch( Exception $e ) {
-			die( 'Date Error: ' . $e->getMessage() );
-		}
+			$startDate = new \DateTime( 'now', new DateTimeZone( LOCAL_TIMEZONE ) );
+			try {
+				$startDate->sub( new \DateInterval( 'P3M' ) );
+				$startDate->modify( 'first day of this month' )->setTime( 0, 0, 0 );
+				$endDate = clone $startDate;
+				$endDate->modify( 'last day of this month' )->setTime( 23, 59, 59 );
+			} catch( Exception $e ) {
+				die( 'Date Error: ' . $e->getMessage() );
+			}
 
 		try {
 
 			$table = $this->quoteIdentifier( 'data_inbound_' . $startDate->format( 'Ym' ) );
 			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_inbound" );
 
-			$startDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
-			$endDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
+				$startDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
+				$endDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
+				echo $startDate->format( 'Y-m-d H:i:s' ) . ' to ' . $endDate->format( 'Y-m-d H:i:s' ) . PHP_EOL;
 
-			$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE result IS NULL AND timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
-			$querySelect->bindValue( ':startDate', $startDate->format( 'Y-m-\0\1 H:i:s' ) );
-			$querySelect->bindValue( ':endDate', $endDate->format( 'Y-m-t H:i:s' ) );
-			$querySelect->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
-			$querySelect->bindColumn( 1, $recordId );
+				//$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE result IS NULL AND timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
+				$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
+				$querySelect->bindValue( ':startDate', $startDate->format( 'Y-m-d H:i:s' ) );
+				$querySelect->bindValue( ':endDate', $endDate->format( 'Y-m-d H:i:s' ) );
+				$querySelect->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+				$querySelect->bindColumn( 1, $recordId );
 
 			$queryInsert = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idRecord = :idRecord" );
 			$queryInsert->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
@@ -4548,10 +4550,10 @@ class Leads
 				$querySelect->execute();
 				$row = $querySelect->fetch( \PDO::FETCH_BOUND );
 
-				if( true === $row ) {
-					if( $cnt % 1000 === 0 ) {
-						print date( 'c' ) . " Archiving inbound accepted {$recordId}\n";
-					}
+					if( true === $row ) {
+						if( $cnt % 1000 === 0 ) {
+							print date( 'c' ) . " Archiving inbound {$recordId}\n";
+						}
 
 					$this->db->beginTransaction();
 
