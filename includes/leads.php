@@ -4140,8 +4140,8 @@ class Leads
 	public function inboundRecordSearch( $email, $phone, $url ) {
 		$params = array();
 
-		$dateStart = new \DateTime( '2014-06-01' );
-		$dateEnd = new \DateTime();
+		$dateStart = new \DateTime();
+		$dateEnd = new \DateTime( '2014-06-01' );
 
 		$checkSql = $this->db->prepare( "SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)" );
 
@@ -4165,7 +4165,7 @@ class Leads
 			$params[] = $phone;
 			$params[] = $phone;
 		}
-		$baseSql .= "LIMIT 1000 ) UNION ";
+		$baseSql .= "LIMIT 1000 ) " . PHP_EOL;
 
 		$sql = "SELECT * FROM ( ";
 		$sql .= $baseSql;
@@ -4176,7 +4176,7 @@ class Leads
 			$checkSql->execute( array( 'data_inbound_' . $dateStart->format( 'Ym' ) ) );
 			if( $checkSql && $checkSql->fetchColumn() ) {
 
-				$sql .= str_replace( "FROM data_inbound", "FROM archive." . $this->quoteIdentifier( 'data_inbound_' . $dateStart->format( 'Ym' ) ), $baseSql );
+				$sql .= " UNION " . str_replace( "FROM data_inbound", "FROM archive." . $this->quoteIdentifier( 'data_inbound_' . $dateStart->format( 'Ym' ) ), $baseSql );
 				$params[] = DB_TIMEZONE;
 				$params[] = LOCAL_TIMEZONE;
 				if( !empty( $email ) ) {
@@ -4193,15 +4193,14 @@ class Leads
 			}
 
 			try {
-				$dateStart->add( new \DateInterval( ( 'P1M' ) ) );
+				$dateStart->sub( new \DateInterval( ( 'P1M' ) ) );
 			} catch( \Exception $e ) {
 				break;
 			}
-		} while( $dateStart->format( 'Ym' ) <= $dateEnd->format( 'Ym' ) );
+		} while( $dateStart->format( 'Ym' ) >= $dateEnd->format( 'Ym' ) );
 
-		$sql = substr( $sql, 0, -6 ); // Remove the last UNION statement
 		$sql .= " ) AS recs ";
-		$sql .= "ORDER BY recs.timestampConverted ";
+		$sql .= "ORDER BY recs.timestampConverted DESC ";
 		$sql .= "LIMIT 500";
 
 		try {
