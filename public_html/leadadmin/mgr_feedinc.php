@@ -1148,7 +1148,7 @@ if( isset( $_REQUEST['d'] ) ) {
 								endpoint: '/leadadmin/ajax/fileUpload.php?done=1'
 							}
 						},
-						debug: true,
+						debug: <?php print ( 'development' === APPLICATION_ENV ? "true" : "false" ); ?>,
 						element: document.getElementById("import-uploader"),
 						failedUploadTextDisplay: {
 							mode: 'custom'
