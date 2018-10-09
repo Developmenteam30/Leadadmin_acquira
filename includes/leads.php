@@ -268,11 +268,17 @@ class Leads
 		return $results;
 	}
 
-	public function getUsers() {
+	public function getUsers($isArchived = 0) {
+
+		$archiveStatement = '';
+		if( 0 === $isArchived || 1 === $isArchived ){
+			$archiveStatement = ' WHERE isArchived = ' . $isArchived;
+		}
+
 		$results = null;
 
 		try {
-			$query = $this->db->prepare( "SELECT idUser,username,fullName,idCompany,level FROM users ORDER BY username" );
+			$query = $this->db->prepare( "SELECT idUser,username,fullName,idCompany,level FROM users$archiveStatement ORDER BY username" );
 			$query->execute();
 			$results = $query->fetchAll( PDO::FETCH_OBJ );
 		} catch( PDOException $e ) {
