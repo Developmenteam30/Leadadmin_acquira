@@ -564,7 +564,7 @@ include( INCLUDES . "c_header.php" );
 							<tr>
 								<td><?php echo htmlentities( $entry->entryId ); ?></td>
 								<td><?php echo htmlentities( $entry->divisionName ); ?></td>
-								<td><?php echo htmlentities( $entry->companyName ); ?></td>
+								<td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>
 								<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 								<td><?php echo $entry->fullName1; ?>&nbsp;<br/><?php echo $entry->fullName2; ?>&nbsp;</td>
 								<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
