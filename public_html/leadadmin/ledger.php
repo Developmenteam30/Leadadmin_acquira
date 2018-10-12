@@ -1465,7 +1465,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 
-						<?php if( 1 == $type ) { ?>
+						<?php if( 1 == $entry->type ) { ?>
 						<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
 						$("#edit_ledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
 							// Consistent format with the HTML5 picker
