@@ -8,7 +8,7 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_ADMIN );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
-$user_status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : 0;
+$user_status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : 'active';
 
 require_once( INCLUDES . 'display.php' );
 
@@ -104,10 +104,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			if( 1 == $_REQUEST['isArchived'] ){
 				$isArchived = 1;
-				$accessBits = 0;
-			} else {
-				$isArchived = 0;
-				$accessBits = 1;
+                $_REQUEST['level'] = 0;
 			}
 
 			$status = $leads->updateUser( $_REQUEST['idUser'], array(
@@ -116,7 +113,6 @@ if( isset( $_REQUEST['a'] ) ) {
 				'level' => empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'],
 				'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
 				'isArchived' => $isArchived,
-				'accessBits' => $accessBits,
 			) );
 			if( null === $status ) {
 				$result['error'] = 'Unable to edit user';
@@ -323,11 +319,11 @@ include( INCLUDES . "c_header.php" );
 
 	<form class="pull-right" id="status-select" method="get">
 		<select id="status" name="status">
-			<option value="active"<?php if( 0 === $user_status ) {
+			<option value="active"<?php if( 'active' === $user_status ) {
 				print ' selected="selected"';
 			} ?>>Show active users
 			</option>
-			<option value="archived"<?php if( 1 === $user_status ) {
+			<option value="archived"<?php if( 'archived' === $user_status ) {
 				print ' selected="selected"';
 			} ?>>Show archived users
 			</option>
