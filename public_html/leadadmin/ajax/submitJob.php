@@ -15,6 +15,10 @@ function dieError( $error ) {
 	die();
 }
 
+if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_IMPORT ) ) {
+	dieError( 'You do not have access to this page or your session has timed out. Log back in and try again.' );
+}
+
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
