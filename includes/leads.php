@@ -4219,7 +4219,166 @@ class Leads
 		return array();
 	}
 
-	public function outboundRecordSearchById( $recordId ) {
+    public function homeownerExportArchived()
+    {
+        $params = array();
+
+        //$dateStart = new \DateTime('2014-06-01');
+        $dateStart = new \DateTime('2018-01-01');
+        //$dateEnd = new \DateTime();
+        $dateEnd = new DateTime('2018-07-31');
+
+        $checkSql = $this->db->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)");
+
+        // Establish our baseline SQL that we'll change in the loop
+        $baseSql = "SELECT i.leadstamp,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.email ";
+        $baseSql .= "FROM data_inbound AS i ";
+        $baseSql .= "WHERE result IS NULL ";
+        $baseSql .= "AND timestamp >= CONVERT_TZ(:dayStart,:tzLocalStart,:tzServerStart) ";
+        $baseSql .= "AND timestamp <= CONVERT_TZ(:dayEnd,:tzLocalEnd,:tzServerEnd) ";
+        $baseSql .= "AND addr IS NOT NULL ";
+        $baseSql .= "AND addr <> ''";
+
+        try {
+            do {
+
+                // Check if the table actually exists first, since archive tables are not always created immediately.
+                $checkSql->execute(array('data_inbound_' . $dateStart->format('Ym')));
+                if ($checkSql && $checkSql->fetchColumn()) {
+
+                    $sql = str_replace("FROM data_inbound", "FROM archive." . $this->quoteIdentifier('data_inbound_' . $dateStart->format('Ym')), $baseSql) . " " . PHP_EOL;
+
+                    $file = fopen(ADMIN_ROOT . 'exports/homeowner_' . $dateStart->format('Ym') . '.csv', 'w');
+                    if (!$file) {
+                        print 'Unable to create CSV file.';
+                    }
+
+                    fputcsv($file, array(
+                        'leadstamp',
+                        'url',
+                        'fname',
+                        'lname',
+                        'addr1',
+                        'addr2',
+                        'city',
+                        'state',
+                        'zip',
+                        'country',
+                        'email',
+                    ));
+
+                    $this->unsetBufferedQuery();
+
+                    $query = $this->db->prepare($sql);
+                    $query->bindValue(':tzLocalStart', LOCAL_TIMEZONE);
+                    $query->bindValue(':tzServerStart', DB_TIMEZONE);
+                    $query->bindValue(':tzLocalEnd', LOCAL_TIMEZONE);
+                    $query->bindValue(':tzServerEnd', DB_TIMEZONE);
+                    $query->bindValue(':dayStart', $dateStart->format('Y-m') . '-01 00:00:00');
+                    $query->bindValue(':dayEnd', $dateStart->format('Y-m-t') . ' 23:59:59');
+
+                    $query->execute();
+                    while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
+                        fputcsv($file, $row);
+                    }
+
+                    fclose($file);
+                }
+
+                $this->setBufferedQuery();
+
+                try {
+                    $dateStart->add(new \DateInterval(('P1M')));
+                } catch (\Exception $e) {
+                    break;
+                }
+            } while ($dateStart->format('Ym') <= $dateEnd->format('Ym'));
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            $this->logError('Unable to get archived inbound homeowner data: ' . $e->getMessage());
+        } finally {
+            $this->setBufferedQuery();
+            if ($file) {
+                fclose($file);
+            }
+        }
+    }
+
+    public function homeownerExportCurrent()
+    {
+        $params = array();
+
+        //$dateStart = new \DateTime('2014-06-01');
+        $dateStart = new \DateTime('2018-07-01');
+        //$dateEnd = new \DateTime();
+        $dateEnd = new DateTime('2018-09-30');
+
+        // Establish our baseline SQL that we'll change in the loop
+        $sql = "SELECT i.leadstamp,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.email ";
+        $sql .= "FROM data_inbound AS i ";
+        $sql .= "WHERE result IS NULL ";
+        $sql .= "AND timestamp >= CONVERT_TZ(:dayStart,:tzLocalStart,:tzServerStart) ";
+        $sql .= "AND timestamp <= CONVERT_TZ(:dayEnd,:tzLocalEnd,:tzServerEnd) ";
+        $sql .= "AND addr IS NOT NULL ";
+        $sql .= "AND addr <> ''";
+
+        try {
+            do {
+
+                $file = fopen(ADMIN_ROOT . 'exports/homeowner_' . $dateStart->format('Ym') . '.csv', 'w');
+                if (!$file) {
+                    print 'Unable to create CSV file.';
+                }
+
+                fputcsv($file, array(
+                    'leadstamp',
+                    'url',
+                    'fname',
+                    'lname',
+                    'addr1',
+                    'addr2',
+                    'city',
+                    'state',
+                    'zip',
+                    'country',
+                    'email',
+                ));
+
+                $this->unsetBufferedQuery();
+
+                $query = $this->db->prepare($sql);
+                $query->bindValue(':tzLocalStart', LOCAL_TIMEZONE);
+                $query->bindValue(':tzServerStart', DB_TIMEZONE);
+                $query->bindValue(':tzLocalEnd', LOCAL_TIMEZONE);
+                $query->bindValue(':tzServerEnd', DB_TIMEZONE);
+                $query->bindValue(':dayStart', $dateStart->format('Y-m') . '-01 00:00:00');
+                $query->bindValue(':dayEnd', $dateStart->format('Y-m-t') . ' 23:59:59');
+
+                $query->execute();
+                while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
+                    fputcsv($file, $row);
+                }
+
+                fclose($file);
+
+                try {
+                    $dateStart->add(new \DateInterval(('P1M')));
+                } catch (\Exception $e) {
+                    break;
+                }
+            } while ($dateStart->format('Ym') <= $dateEnd->format('Ym'));
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            $this->logError('Unable to get current inbound homeowner data: ' . $e->getMessage());
+        } finally {
+            $this->setBufferedQuery();
+            if ($file) {
+                fclose($file);
+            }
+        }
+    }
+
+    public function outboundRecordSearchById( $recordId ) {
 		$params = array();
 
 		$dateStart = new \DateTime();
