@@ -8,6 +8,8 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_ADMIN );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
+$user_status = !empty( $_REQUEST['status'] ) ? $_REQUEST['status'] : 0;
+
 require_once( INCLUDES . 'display.php' );
 
 if( isset( $_REQUEST['a'] ) ) {
@@ -100,11 +102,21 @@ if( isset( $_REQUEST['a'] ) ) {
 				$leads->setPasswordHash( $user->username, $_REQUEST['password'] );
 			}
 
+			if( 1 == $_REQUEST['isArchived'] ){
+				$isArchived = 1;
+				$accessBits = 0;
+			} else {
+				$isArchived = 0;
+				$accessBits = 1;
+			}
+
 			$status = $leads->updateUser( $_REQUEST['idUser'], array(
 				'fullName' => empty( $_REQUEST['fullName'] ) ? null : $_REQUEST['fullName'],
 				'idCompany' => empty( $_REQUEST['idCompany'] ) ? null : $_REQUEST['idCompany'],
 				'level' => empty( $_REQUEST['level'] ) ? 0 : $_REQUEST['level'],
 				'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
+				'isArchived' => $isArchived,
+				'accessBits' => $accessBits,
 			) );
 			if( null === $status ) {
 				$result['error'] = 'Unable to edit user';
@@ -273,6 +285,14 @@ if( isset( $_REQUEST['d'] ) ) {
 						'value' => $user->idCompany,
 					),
 					array(
+						'id' => 'isArchived',
+						'label' => '',
+						'type' => 'checkbox',
+						'choices' => array(
+							1 => 'Archive this user',
+						),
+					),
+					array(
 						'id' => 'a',
 						'type' => 'hidden',
 						'value' => 'editUser',
@@ -301,12 +321,29 @@ include( INCLUDES . "c_header.php" );
 
 	<h2>User Management</h2>
 
+	<form class="pull-right" id="status-select" method="get">
+		<select id="status" name="status">
+			<option value="active"<?php if( 0 === $user_status ) {
+				print ' selected="selected"';
+			} ?>>Show active users
+			</option>
+			<option value="archived"<?php if( 1 === $user_status ) {
+				print ' selected="selected"';
+			} ?>>Show archived users
+			</option>
+			<option value="all"<?php if( 'all' === $user_status ) {
+				print ' selected="selected"';
+			} ?>>Show all users
+			</option>
+		</select>
+	</form>
+
 	<p>
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newuser">Add a new user</button>
 	</p>
 
 	<?php
-	$users = $leads->getUsers();
+	$users = $leads->getUsers($user_status);
 	if( empty( $users ) || !is_array( $users ) ) {
 		print "No users found.";
 	} else {
@@ -470,6 +507,11 @@ include( INCLUDES . "c_header.php" );
 
 	$('#newuser, #edituser').on('hide.bs.modal', function (e) {
 		$(this).find('.modal-body').html('');
+	});
+
+	$('#status-select select').change(function (e) {
+		e.preventDefault();
+		$('#status-select').submit();
 	});
 </script>
 
