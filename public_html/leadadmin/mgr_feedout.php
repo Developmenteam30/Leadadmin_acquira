@@ -3394,7 +3394,8 @@ include( INCLUDES . "c_header.php" );
 				data: $("#edit_feed").serialize()
 			}).done(function (result) {
 				if (result.status == 1) {
-					window.location.reload(true);
+					// window.location.reload(true);
+					$('#editfeed').modal('hide');
 				} else {
 					alert(result.error);
 				}
@@ -3552,7 +3553,8 @@ include( INCLUDES . "c_header.php" );
 				data: $("#form-import").serialize(),
 				success: function (result) {
 					if (result.status == 1) {
-						window.location.reload(true);
+						// window.location.reload(true);
+						$('#modal-import').modal('hide');
 					} else {
 						alert(result.error);
 					}
@@ -3611,7 +3613,8 @@ include( INCLUDES . "c_header.php" );
 				data: $("#form-export").serialize(),
 				success: function (result) {
 					if (result.status == 1) {
-						window.location.reload(true);
+						// window.location.reload(true);
+						$('#modal-export').modal('hide');
 					} else {
 						alert(result.error);
 					}
@@ -3647,7 +3650,8 @@ include( INCLUDES . "c_header.php" );
 				data: $("#form-import").serialize(),
 				success: function (result) {
 					if (result.status == 1) {
-						window.location.reload(true);
+						// window.location.reload(true);
+						$('#modal-retry-rejections').modal('hide');
 					} else {
 						alert(result.error);
 					}
@@ -3699,8 +3703,9 @@ include( INCLUDES . "c_header.php" );
 				async: true,
 				data: $("#edit_pop").serialize()
 			}).done(function (result) {
-				if (result.status == 1) {
-					window.location.reload(true);
+				if (result.status === 1) {
+					// window.location.reload(true);
+					$('#modal-editpop').modal('hide');
 				} else {
 					alert(result.error);
 				}

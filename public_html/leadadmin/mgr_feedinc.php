@@ -1898,7 +1898,8 @@ include( INCLUDES . "c_header.php" );
 			data: $("#edit_feedinc").serialize()
 		}).done(function (result) {
 			if (result.status == 1) {
-				window.location.reload(true);
+				// window.location.reload(true);
+				$('#editfeedinc').modal('hide');
 			} else {
 				alert(result.error);
 			}
@@ -2007,7 +2008,8 @@ include( INCLUDES . "c_header.php" );
 		}).done(function (result) {
 			alert(result.error);
 			if (result.status == 1) {
-				window.location.reload(true);
+				// window.location.reload(true);
+				$('#modal-export').modal('hide');
 			}
 		});
 	});

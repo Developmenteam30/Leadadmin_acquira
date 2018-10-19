@@ -268,19 +268,31 @@ class Leads
 		return $results;
 	}
 
-	public function getUsers() {
-		$results = null;
+    public function getUsers($status = 'active')
+    {
 
-		try {
-			$query = $this->db->prepare( "SELECT idUser,username,fullName,idCompany,level FROM users ORDER BY username" );
-			$query->execute();
-			$results = $query->fetchAll( PDO::FETCH_OBJ );
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to get user list: ' . $e->getMessage() );
-		}
+        $results = null;
 
-		return $results;
-	}
+        try {
+
+            $sql = "SELECT idUser,username,fullName,idCompany,level ";
+            $sql .= "FROM users ";
+            if (!empty($status) && 'active' === $status) {
+                $sql .= "WHERE isArchived = 0 ";
+            } elseif (!empty($status) && 'archived' === $status) {
+                $sql .= "WHERE isArchived = 1 ";
+            }
+            $sql .= "ORDER BY username";
+
+            $query = $this->db->prepare($sql);
+            $query->execute();
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get user list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
 
 	public function getStaffUsers( $format = \PDO::FETCH_KEY_PAIR, $forceAll = false ) {
 		$results = null;
