@@ -3703,7 +3703,7 @@ include( INCLUDES . "c_header.php" );
 				async: true,
 				data: $("#edit_pop").serialize()
 			}).done(function (result) {
-				if (result.status == 1) {
+				if (result.status === 1) {
 					// window.location.reload(true);
 					$('#modal-editpop').modal('hide');
 				} else {
