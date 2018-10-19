@@ -4172,9 +4172,10 @@ class Leads
 		$baseSql .= "LIMIT 1000 ) " . PHP_EOL;
 
 		$sql = "SELECT * FROM ( ";
-		$sql .= $baseSql;
 
-		do {
+        $sql .= $baseSql;
+
+        do {
 
 			// Check if the table actually exists first, since archive tables are not always created immediately.
 			$checkSql->execute( array( 'data_inbound_' . $dateStart->format( 'Ym' ) ) );
@@ -4495,7 +4496,69 @@ class Leads
 		return $results;
 	}
 
-	public function globalEmailSearch( $email ) {
+    public function archiveOutboundPhone( $phone, $dateStartIn, $dateEndIn ) {
+        $results = array();
+        $params = array();
+
+        $archiveDate = new \DateTime( $dateStartIn );
+        $dateStart = new \DateTime( $dateStartIn );
+        $dateEnd = new \DateTime( $dateEndIn );
+
+        $sql = "SELECT * FROM ( ";
+
+        do {
+            $sql .= "( SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,o.idFeedOut,o.idFeedIn,o.idRecord,o.isBillable,o.url AS urlOutbound,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip ";
+            $params[] = DB_TIMEZONE;
+            $params[] = LOCAL_TIMEZONE;
+            $sql .= "FROM archive." . $this->quoteIdentifier( 'data_outbound_' . $archiveDate->format( 'Ym' ) ) . " o ";
+            $sql .= "INNER JOIN archive." . $this->quoteIdentifier( 'data_inbound_' . $archiveDate->format( 'Ym' ) ) . " i ON i.idRecord = o.idRecord ";
+            $sql .= "WHERE 1=1 ";
+            $sql .= "AND (i.cellphone = ? OR i.landline = ? ) ";
+            $params[] = $phone;
+            $params[] = $phone;
+            $sql .= "AND o.timestamp >= CONVERT_TZ(?,?,?) ";
+            $params[] = $dateStart->format( 'Y-m-d H:i:s' );
+            $params[] = LOCAL_TIMEZONE;
+            $params[] = DB_TIMEZONE;
+            $sql .= "AND o.timestamp <= CONVERT_TZ(?,?,?) ";
+            $params[] = $dateEnd->format( 'Y-m-d H:i:s' );
+            $params[] = LOCAL_TIMEZONE;
+            $params[] = DB_TIMEZONE;
+            $sql .= ") UNION ";
+            //$sql .= "LIMIT " . intval( $offset ) . ",100";
+
+            echo $archiveDate->format('Y-m-d') . ' ' . $dateStart->format( 'Y-m-d H:i:s' ) . ' - ' . $dateEnd->format( 'Y-m-d H:i:s' ) . PHP_EOL;
+
+            try {
+                $archiveDate->add( new \DateInterval( ( 'P1M' ) ) );
+            } catch( \Exception $e ) {
+                break;
+            }
+        } while( $archiveDate->format( 'Ym' ) <= $dateEnd->format( 'Ym' ) );
+
+        $sql = substr( $sql, 0, -6 ); // Remove the last UNION statement
+        $sql .= " ) AS recs ";
+        $sql .= "ORDER BY recs.timestampConverted ";
+
+        //echo($sql);
+
+        try {
+            $query = $this->db->prepare( $sql );
+            $query->execute( $params );
+            if( !empty( $idRecord ) ) {
+                $results = $query->fetch( \PDO::FETCH_OBJ );
+            } else {
+                $results = $query->fetchAll( \PDO::FETCH_OBJ );
+            }
+        } catch( PDOException $e ) {
+            echo $e->getMessage();
+            $this->logError( 'Unable to get archived outbound records search results: ' . $e->getMessage() );
+        }
+
+        return $results;
+    }
+
+    public function globalEmailSearch( $email ) {
 		$results = null;
 
 		try {
@@ -4687,10 +4750,10 @@ class Leads
 				die( 'Date Error: ' . $e->getMessage() );
 			}
 
-		try {
+			try {
 
-			$table = $this->quoteIdentifier( 'data_inbound_' . $startDate->format( 'Ym' ) );
-			$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_inbound" );
+				$table = $this->quoteIdentifier( 'data_inbound_' . $startDate->format( 'Ym' ) );
+				$this->db->query( "CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_inbound" );
 
 				$startDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
 				$endDate->setTimeZone( new DateTimeZone( DB_TIMEZONE ) );
@@ -4703,40 +4766,39 @@ class Leads
 				$querySelect->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
 				$querySelect->bindColumn( 1, $recordId );
 
-			$queryInsert = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idRecord = :idRecord" );
-			$queryInsert->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+				$queryInsert = $this->db->prepare( "INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idRecord = :idRecord" );
+				$queryInsert->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
 
-			$queryDelete = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = :idRecord" );
-			$queryDelete->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
+				$queryDelete = $this->db->prepare( "DELETE FROM data_inbound WHERE idRecord = :idRecord" );
+				$queryDelete->bindParam( ':idRecord', $recordId, \PDO::PARAM_INT );
 
-			do {
-				$querySelect->execute();
-				$row = $querySelect->fetch( \PDO::FETCH_BOUND );
+				do {
+					$querySelect->execute();
+					$row = $querySelect->fetch( \PDO::FETCH_BOUND );
 
 					if( true === $row ) {
 						if( $cnt % 1000 === 0 ) {
 							print date( 'c' ) . " Archiving inbound {$recordId}\n";
 						}
 
-					$this->db->beginTransaction();
+						$this->db->beginTransaction();
 
-					$queryInsert->execute();
+						$queryInsert->execute();
 
-					$queryDelete->execute();
+						$queryDelete->execute();
 
-					$this->db->commit();
-				}
+						$this->db->commit();
+					}
 
-				$cnt++;
+					$cnt++;
 
-				//usleep( 5000 );
+					//usleep( 5000 );
 
-			} while( !empty( $row ) );
+				} while( !empty( $row ) );
 
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to archive inbound accepted: ' . $e->getMessage() );
-		}
-
+			} catch( PDOException $e ) {
+				$this->logError( 'Unable to archive inbound accepted: ' . $e->getMessage() );
+			}
 		return $cnt;
 	}
 
@@ -5994,7 +6056,7 @@ SQL;
 
 		if( $email ) {
 			// Limit notification emails to one per minute to prevent flooding
-			$time = @file_get_contents( SITE_ROOT . "error" . DIRECTORY_SEPARATOR  . "email-stamp" );
+			$time = @file_get_contents( SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp" );
 			if( $time === false || ( $time < ( time() - 60 ) ) ) {
 				file_put_contents( SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp", time() );
 			} else {
