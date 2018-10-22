@@ -2768,7 +2768,7 @@ class Leads
 				'custom4' => empty( $fields['custom4'] ) ? null : substr( $fields['custom4'], 0, 255 ),
 				'custom5' => empty( $fields['custom5'] ) ? null : substr( $fields['custom5'], 0, 255 ),
                 'custom6' => empty( $fields['custom6'] ) ? null : substr( $fields['custom6'], 0, 255 ),
-                'timestamp' => empty( $fields['timestampOverride'] ) ? null : $fields['timestampOverride'],
+                'timestamp' => empty( $fields['timestampOverride'] ) ? null : gmdate( 'Y-m-d H:i:s', strtotime( $fields['timestampOverride'] ) ),
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
@@ -5497,8 +5497,8 @@ class Leads
 
 			if( !empty( $feed->delay ) ) {
 				if( !empty( $feed->delayDump ) ) {
-					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(CONVERT_TZ(NOW(),?,?), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
-					$query->execute( array( $idFeedOut, DB_TIMEZONE, LOCAL_TIMEZONE, $feed->delay ) );
+					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp <= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL ? MINUTE ),'%Y-%m-%d 23:59:59') LIMIT 500" );
+					$query->execute( array( $idFeedOut, $feed->delay ) );
 				} else {
 					$query = $this->db->prepare( "SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? AND i.timestamp < DATE_SUB(NOW(), INTERVAL ? MINUTE) LIMIT 500" );
 					$query->execute( array( $idFeedOut, $feed->delay ) );
