@@ -1127,6 +1127,13 @@ if( isset( $_REQUEST['d'] ) ) {
 								?>
 							</td>
 						</tr>
+						<tr>
+							<td>Queue Split</p></td>
+							<td>
+								<p>If you want this upload to be split and siphoned out over the course of X days, enter the number of days below. For normal uploads, you'll leave this blank.  <strong>NOTE: Timestamps will be altered when using this option.</strong></p><br/>
+								<input type="number" name="splitDelay" min="0" value="" />
+							</td>
+						</tr>
 					</table>
 				</form>
 				<script>
