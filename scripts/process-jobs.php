@@ -397,6 +397,7 @@ if ('clear-outbound-queue' === $job->type) {
 
             // Combine our fake date with the original time to provide randomness
             $data['stamp'] = $splitTimestamp->format('Y-m-d') . ' ' . date('H:i:s', strtotime($data['stamp']));
+            $data['timestampOverride'] = $splitTimestamp->format('Y-m-d') . ' ' . date('H:i:s', strtotime($data['stamp']));
         }
 
         $result = ProcessLeads::validateIncomingData($feedParams, $data);

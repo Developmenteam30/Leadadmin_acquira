@@ -2767,7 +2767,8 @@ class Leads
 				'custom3' => empty( $fields['custom3'] ) ? null : substr( $fields['custom3'], 0, 255 ),
 				'custom4' => empty( $fields['custom4'] ) ? null : substr( $fields['custom4'], 0, 255 ),
 				'custom5' => empty( $fields['custom5'] ) ? null : substr( $fields['custom5'], 0, 255 ),
-				'custom6' => empty( $fields['custom6'] ) ? null : substr( $fields['custom6'], 0, 255 ),
+                'custom6' => empty( $fields['custom6'] ) ? null : substr( $fields['custom6'], 0, 255 ),
+                'timestamp' => empty( $fields['timestampOverride'] ) ? null : $fields['timestampOverride'],
 			) );
 		} catch( Leads_PDOException $e ) {
 			$this->db->rollBack();
