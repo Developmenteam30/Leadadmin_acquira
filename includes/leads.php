@@ -5103,9 +5103,11 @@ class Leads
 		$sql = "SELECT * FROM ( ";
 
 		if( !empty( $settings['includeRejects'] ) ) {
-			$sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,IF(o.accepted = 1,'Accepted','Rejected') AS status,o.result,i.leadstamp,i.listcode ";
+			$sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,IF(o.accepted = 1,'Accepted','Rejected') AS status,o.result,CONVERT_TZ(i.leadstamp,?,?),i.listcode ";
 			$params[] = DB_TIMEZONE;
 			$params[] = LOCAL_TIMEZONE;
+            $params[] = DB_TIMEZONE;
+            $params[] = LOCAL_TIMEZONE;
 			$sql .= "FROM data_outbound AS o ";
 			$sql .= "INNER JOIN data_inbound i ON i.idRecord = o.idRecord ";
 			$sql .= "WHERE o.idFeedOut = ? ";
@@ -5157,9 +5159,11 @@ class Leads
 		}
 
 		do {
-			$sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,IF(o.accepted = 1,'Accepted','Rejected') AS status,o.result,i.leadstamp,i.listcode ";
-			$params[] = DB_TIMEZONE;
-			$params[] = LOCAL_TIMEZONE;
+			$sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,IF(o.accepted = 1,'Accepted','Rejected') AS status,o.result,CONVERT_TZ(i.leadstamp,?,?) AS leadstampConverted,i.listcode ";
+            $params[] = DB_TIMEZONE;
+            $params[] = LOCAL_TIMEZONE;
+            $params[] = DB_TIMEZONE;
+            $params[] = LOCAL_TIMEZONE;
 			$sql .= "FROM archive." . $this->quoteIdentifier( 'data_outbound_' . $archiveDate->format( 'Ym' ) ) . " o ";
 			$sql .= "INNER JOIN data_inbound i ON i.idRecord = o.idRecord ";
 			$sql .= "WHERE o.idFeedOut = ? ";
