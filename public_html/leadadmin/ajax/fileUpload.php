@@ -28,31 +28,91 @@
  *    but is now required in all cases if you are making use of this PHP example.
  */
 
-include( "../../../includes/c_config.php" );
+include("../../../includes/c_config.php");
 
-require_once( INCLUDES . 'session.php' );
+require_once(INCLUDES . 'session.php');
 
-if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_IMPORT ) ) {
-	Header( 'Content-Type: application/json' );
-	http_response_code( 403 );
+require_once(INCLUDES . 'leads.php');
+$leads = Leads::getInstance();
 
-	$result = new stdClass();
-	$result->success = false;
-	$result->error = 'You do not have access to this page or your session has timed out. Log back in and try again.';
-	$result->preventRetry = true;
-	echo json_encode( $result );
+if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_IMPORT)) {
+    Header('Content-Type: application/json');
+    http_response_code(403);
 
-	die();
+    $result = new stdClass();
+    $result->success = false;
+    $result->error = 'You do not have access to this page or your session has timed out. Log back in and try again.';
+    $result->preventRetry = true;
+    echo json_encode($result);
+
+    die();
 }
 
+if (empty($_REQUEST['type'])) {
+    Header('Content-Type: application/json');
+    http_response_code(400);
+
+    $result = new stdClass();
+    $result->success = false;
+    $result->error = 'Missing "type" parameter.';
+    $result->preventRetry = true;
+    echo json_encode($result);
+
+    die();
+}
+
+if ('insertion-order-update' === $_REQUEST['type']) {
+    if (empty($_REQUEST['orderId'])) {
+        Header('Content-Type: application/json');
+        http_response_code(400);
+
+        $result = new stdClass();
+        $result->success = false;
+        $result->error = 'Missing "orderId" parameter.';
+        $result->preventRetry = true;
+        echo json_encode($result);
+
+        die();
+    }
+
+    if (empty($order = $leads->getInsertionOrder($_REQUEST['orderId']))) {
+        Header('Content-Type: application/json');
+        http_response_code(404);
+
+        $result = new stdClass();
+        $result->success = false;
+        $result->error = 'Cannot find this order.';
+        $result->preventRetry = true;
+        echo json_encode($result);
+
+        die();
+    }
+}
 
 // Include the upload handler class
-require_once( INCLUDES . "UploadHandler.php" );
+require_once(INCLUDES . "UploadHandler.php");
 
 $uploader = new UploadHandler();
 
-// Specify the list of valid extensions, ex. array("jpeg", "xml", "bmp")
-$uploader->allowedExtensions = array( 'csv', 'txt' ); // all files types allowed by default
+switch ($_REQUEST['type']) {
+    case 'feedinc':
+        $uploader->allowedExtensions = array('csv', 'txt');
+        break;
+
+    case 'insertion-order-add':
+    case 'insertion-order-update':
+        $uploader->allowedExtensions = array('gif', 'jpg', 'jpeg', 'png');
+        break;
+
+    default:
+        $uploader->allowedExtensions = array('xxxxxxx');
+        break;
+}
+
+$uploadsDir = UPLOADS_DIR;
+if ('insertion-order-update' === $_REQUEST['type']) {
+    $uploadsDir = FILES_DIR . 'insertion-orders' . DIRECTORY_SEPARATOR . $order->orderId;
+}
 
 // Specify max file size in bytes.
 $uploader->sizeLimit = 500000000;
@@ -70,38 +130,52 @@ $method = get_request_method();
 // must be hidden in the parameters of the request.  For example, when attempting to
 // delete a file using a POST request. In that case, "DELETE" will be sent along with
 // the request in a "_method" parameter.
-function get_request_method() {
-	global $HTTP_RAW_POST_DATA;
+function get_request_method()
+{
+    global $HTTP_RAW_POST_DATA;
 
-	if( isset( $HTTP_RAW_POST_DATA ) ) {
-		parse_str( $HTTP_RAW_POST_DATA, $_POST );
-	}
+    if (isset($HTTP_RAW_POST_DATA)) {
+        parse_str($HTTP_RAW_POST_DATA, $_POST);
+    }
 
-	if( isset( $_POST["_method"] ) && $_POST["_method"] != null ) {
-		return $_POST["_method"];
-	}
+    if (isset($_POST["_method"]) && $_POST["_method"] != null) {
+        return $_POST["_method"];
+    }
 
-	return $_SERVER["REQUEST_METHOD"];
+    return $_SERVER["REQUEST_METHOD"];
 }
 
-if( $method == "POST" ) {
-	header( "Content-Type: text/plain" );
+if ($method == "POST") {
+    header("Content-Type: text/plain");
 
-	// Assumes you have a chunking.success.endpoint set to point here with a query parameter of "done".
-	// For example: /myserver/handlers/endpoint.php?done
-	if( !empty( $_REQUEST["done"] ) ) {
-		$result = $uploader->combineChunks( UPLOADS_DIR );
-	} // Handles upload requests
-	else {
-		// Call handleUpload() with the name of the folder, relative to PHP's getcwd()
-		$result = $uploader->handleUpload( UPLOADS_DIR );
+    // Assumes you have a chunking.success.endpoint set to point here with a query parameter of "done".
+    // For example: /myserver/handlers/endpoint.php?done
+    if (!empty($_REQUEST["done"])) {
+        $result = $uploader->combineChunks($uploadsDir);
 
-		// To return a name used for uploaded file you can use the following line.
-		$result["uploadName"] = $uploader->getUploadName();
-	}
+        if ('insertion-order-add' === $_REQUEST['type'] && !empty($_REQUEST['uid']) && $result['success']) {
+            $_SESSION['insertionOrderFiles'][$_REQUEST['uid']][$result['uuid']] = true;
+        }
+    } // Handles upload requests
+    else {
+        // Call handleUpload() with the name of the folder, relative to PHP's getcwd()
+        $result = $uploader->handleUpload($uploadsDir);
 
-	echo json_encode( $result );
+        // To return a name used for uploaded file you can use the following line.
+        $result["uploadName"] = $uploader->getUploadName();
+
+        if ('insertion-order-add' === $_REQUEST['type'] && !empty($_REQUEST['uid']) && $result['success'] && !empty($result['uploadName'])) {
+            $_SESSION['insertionOrderFiles'][$_REQUEST['uid']][$result['uuid']] = true;
+        }
+    }
+
+    echo json_encode($result);
+} elseif ($method == "DELETE") {
+    $result = $uploader->handleDelete($uploadsDir);
+    if ('insertion-order-add' === $_REQUEST['type'] && !empty($_REQUEST['uid']) && $result['success'] && isset($_SESSION['insertionOrderFiles'][$_REQUEST['uid']][$result['uuid']])) {
+        unset($_SESSION['insertionOrderFiles'][$_REQUEST['uid']][$result['uuid']]);
+    }
+    echo json_encode($result);
 } else {
-	header( "HTTP/1.0 405 Method Not Allowed" );
+    header("HTTP/1.0 405 Method Not Allowed");
 }
-

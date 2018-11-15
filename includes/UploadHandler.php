@@ -249,7 +249,7 @@ class UploadHandler
 			return array( "success" => true, "uuid" => $uuid );
 		} else {
 			return array( "success" => false,
-			              "error" => "File not found! Unable to delete." . $url,
+			              "error" => "File not found! Unable to delete." . ($url ?? ''),
 			              "path" => $uuid,
 			);
 		}

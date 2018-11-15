@@ -1,361 +1,367 @@
 <?php
 
-require_once( INCLUDES . 'leads.php' );
+require_once(INCLUDES . 'leads.php');
 
 class Display
 {
-	public static function errorCount() {
-		$leads = Leads::getInstance();
-		$errorCount = $leads->getErrorCount();
-		if( $errorCount === false ) {
-			print "X";
-		} else {
-			print $errorCount;
-		}
-	}
+    public static function errorCount()
+    {
+        $leads = Leads::getInstance();
+        $errorCount = $leads->getErrorCount();
+        if ($errorCount === false) {
+            print "X";
+        } else {
+            print $errorCount;
+        }
+    }
 
-	public static function errorList() {
-		$leads = Leads::getInstance();
-		$errorList = $leads->getErrors();
-		?>
+    public static function errorList()
+    {
+        $leads = Leads::getInstance();
+        $errorList = $leads->getErrors();
+        ?>
 		<div class="fr">
 			<a href="#" class="nonLink" onclick="closeContent(" errorList");" >Close [X]</a>
 		</div>
-		<?php
+        <?php
 
-		if( $errorList === null ) {
-			print "Error fetching the errors list.";
-		} else if( sizeOf( $errorList ) == 0 ) {
-			print "No errors on file today.";
-		} else {
-			foreach( $errorList as $error ) {
-				printf( '<p>(%s) [%s] %s</p>',
-					htmlentities( $error->stamp ),
-					htmlentities( $error->origination ),
-					htmlentities( $error->description ) );
-			}
-		}
-	}
+        if ($errorList === null) {
+            print "Error fetching the errors list.";
+        } elseif (sizeOf($errorList) == 0) {
+            print "No errors on file today.";
+        } else {
+            foreach ($errorList as $error) {
+                printf('<p>(%s) [%s] %s</p>',
+                    htmlentities($error->stamp),
+                    htmlentities($error->origination),
+                    htmlentities($error->description));
+            }
+        }
+    }
 
-	public static function getQuarterEnd( $year, $quarter ) {
-		if( $quarter == 1 ) {
-			return $year . '-03-31';
-		} else if( $quarter == 2 ) {
-			return $year . '-06-30';
-		} else if( $quarter == 3 ) {
-			return $year . '-09-30';
-		} else {
-			return $year . '-12-31';
-		}
-	}
+    public static function getQuarterEnd($year, $quarter)
+    {
+        if ($quarter == 1) {
+            return $year . '-03-31';
+        } elseif ($quarter == 2) {
+            return $year . '-06-30';
+        } elseif ($quarter == 3) {
+            return $year . '-09-30';
+        } else {
+            return $year . '-12-31';
+        }
+    }
 
-	public static function getQuarterStart( $year, $quarter ) {
-		if( $quarter == 1 ) {
-			return $year . '-01-01';
-		} else if( $quarter == 2 ) {
-			return $year . '-04-01';
-		} else if( $quarter == 3 ) {
-			return $year . '-07-01';
-		} else {
-			return $year . '-10-01';
-		}
-	}
+    public static function getQuarterStart($year, $quarter)
+    {
+        if ($quarter == 1) {
+            return $year . '-01-01';
+        } elseif ($quarter == 2) {
+            return $year . '-04-01';
+        } elseif ($quarter == 3) {
+            return $year . '-07-01';
+        } else {
+            return $year . '-10-01';
+        }
+    }
 
-	public static function displayForm( $name, $fields = array(), $title = '', $options = array() ) {
-		print "<div class=\"form-input\">\n";
-		if( !empty( $title ) ) {
-			printf( '<h3>%s</h3>',
-				htmlentities( $title )
-			);
-		}
+    public static function displayForm($name, $fields = array(), $title = '', $options = array())
+    {
+        print "<div class=\"form-input\">\n";
+        if (!empty($title)) {
+            printf('<h3>%s</h3>',
+                htmlentities($title)
+            );
+        }
 
-		if( empty( $options['fieldOnly'] ) ) {
-			printf( "<form class=\"form-inline\" id=\"%s\">\n",
-				htmlspecialchars( $name, ENT_QUOTES | ENT_HTML5 )
-			);
-		}
+        if (empty($options['fieldOnly'])) {
+            printf("<form class=\"form-inline\" id=\"%s\">\n",
+                htmlspecialchars($name, ENT_QUOTES | ENT_HTML5)
+            );
+        }
 
-		foreach( $fields as $field ) {
+        foreach ($fields as $field) {
 
-			if( isset( $field['active'] ) && false === $field['active'] ) {
-				continue;
-			}
+            if (isset($field['active']) && false === $field['active']) {
+                continue;
+            }
 
-			if( !in_array( $field['type'], array( '_toggle_start', '_toggle_end', '_html', '_text', 'hidden' ) ) ) {
-				printf( "\t<div class='pnt-form-row'>\n" );
-			}
+            if (!in_array($field['type'], array('_toggle_start', '_toggle_end', '_html', '_text', 'hidden'))) {
+                printf("\t<div class='pnt-form-row'>\n");
+            }
 
-			if( in_array( $field['type'], array( 'text', 'number', 'tel', 'date', 'email', 'password', 'url' ) ) ) {
+            if (in_array($field['type'], array('text', 'number', 'tel', 'date', 'email', 'password', 'url'))) {
 
-				printf( "\t<label data-for=\"%s\">%s</label>\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlentities( $field['label'] )
-				);
-				printf( "\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s />\n",
-					htmlspecialchars( $field['type'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					( !empty( $field['value'] ) ? htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) : '' ),
-					( 'number' == $field['type'] ? ' pattern="[0-9]*"' : '' ),
-					( !empty( $field['required'] ) ? ' required' : '' ),
-					( !empty( $field['readonly'] ) ? ' readonly' : '' )
-				);
+                printf("\t<label data-for=\"%s\">%s</label>\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlentities($field['label'])
+                );
+                printf("\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s />\n",
+                    htmlspecialchars($field['type'], ENT_QUOTES | ENT_HTML5),
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    (!empty($field['value']) ? htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5) : ''),
+                    ('number' == $field['type'] ? ' pattern="[0-9]*"' : ''),
+                    (!empty($field['required']) ? ' required' : ''),
+                    (!empty($field['readonly']) ? ' readonly' : '')
+                );
 
-			} else if( 'currency' == $field['type'] ) {
+            } elseif ('currency' == $field['type']) {
 
-				printf( "\t<label data-for=\"%s\">%s</label>\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlentities( $field['label'] )
-				);
-				printf( "\t<input class=\"form-control\" type=\"text\" name=\"%s\" id=\"%s\" pattern=\"^\\$?(([1-9](\\d*|\\d{0,2}(,\\d{3})*))|0)(\\.\\d{1,2})?$\" value=\"%s\"%s%s />\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					( !empty( $field['value'] ) ? htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) : '' ),
-					( !empty( $field['required'] ) ? ' required' : '' ),
-					( !empty( $field['readonly'] ) ? ' readonly' : '' )
-				);
+                printf("\t<label data-for=\"%s\">%s</label>\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlentities($field['label'])
+                );
+                printf("\t<input class=\"form-control\" type=\"text\" name=\"%s\" id=\"%s\" pattern=\"^\\$?(([1-9](\\d*|\\d{0,2}(,\\d{3})*))|0)(\\.\\d{1,2})?$\" value=\"%s\"%s%s />\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    (!empty($field['value']) ? htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5) : ''),
+                    (!empty($field['required']) ? ' required' : ''),
+                    (!empty($field['readonly']) ? ' readonly' : '')
+                );
 
-			} else if( 'checkbox' == $field['type'] ) {
+            } elseif ('checkbox' == $field['type']) {
 
-				printf( "\t<label data-for=\"%s\">%s%s</label>%s\n",
-					htmlspecialchars( $field['id'] ),
-					htmlspecialchars( $field['label'] ),
-					( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' ),
-					( !empty( $field['label_append'] ) ? $field['label_append'] : '' )
-				);
-				print '<div class="checkbox-choices">';
-				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
-					foreach( $field['choices'] as $key => $val ) {
-						printf( "\t<input class=\"form-control\" type=\"checkbox\" name=\"%s%s\" value=\"%s\"%s /> %s%s\n",
-							htmlspecialchars( $field['id'] ),
-							( sizeOf( $field['choices'] ) > 1 ? '[]' : '' ),
-							htmlspecialchars( $key ),
-							( !empty( $field['value'][$key] ) ? ' checked="checked"' : '' ),
-							htmlspecialchars( $val ),
-							( !empty( $field['choice_append'] ) ? $field['choice_append'] : '' )
-						);
-					}
-				}
-				print '</div>';
+                printf("\t<label data-for=\"%s\">%s%s</label>%s\n",
+                    htmlspecialchars($field['id']),
+                    htmlspecialchars($field['label']),
+                    (!empty($field['required']) ? ' <span class="required">*</span> ' : ''),
+                    (!empty($field['label_append']) ? $field['label_append'] : '')
+                );
+                print '<div class="checkbox-choices">';
+                if (!empty($field['choices']) && is_array($field['choices'])) {
+                    foreach ($field['choices'] as $key => $val) {
+                        printf("\t<input class=\"form-control\" type=\"checkbox\" name=\"%s%s\" value=\"%s\"%s /> %s%s\n",
+                            htmlspecialchars($field['id']),
+                            (sizeOf($field['choices']) > 1 ? '[]' : ''),
+                            htmlspecialchars($key),
+                            (!empty($field['value'][$key]) ? ' checked="checked"' : ''),
+                            htmlspecialchars($val),
+                            (!empty($field['choice_append']) ? $field['choice_append'] : '')
+                        );
+                    }
+                }
+                print '</div>';
 
-			} else if( 'radio' == $field['type'] ) {
+            } elseif ('radio' == $field['type']) {
 
-				printf( "\t<label data-for=\"%s\">%s%s</label>\n",
-					htmlspecialchars( $field['id'] ),
-					htmlspecialchars( $field['label'] ),
-					( !empty( $field['required'] ) ? ' <span class="required">*</span> ' : '' )
-				);
-				if( !empty( $field['choices'] ) && is_array( $field['choices'] ) ) {
-					foreach( $field['choices'] as $key => $val ) {
-						printf( "\t<input type=\"radio\" name=\"%s\" value=\"%s\"%s%s /> %s%s\n",
-							htmlspecialchars( $field['id'] ),
-							htmlspecialchars( $key ),
-							( !empty( $field['value'] ) && $key == $field['value'] ) ? ' checked="checked"' : '',
-							( !empty( $field['required'] ) ? ' required="required" ' : '' ),
-							htmlspecialchars( $val ),
-							( !empty( $field['choice_append'] ) ? $field['choice_append'] : '' )
-						);
-					}
-				}
+                printf("\t<label data-for=\"%s\">%s%s</label>\n",
+                    htmlspecialchars($field['id']),
+                    htmlspecialchars($field['label']),
+                    (!empty($field['required']) ? ' <span class="required">*</span> ' : '')
+                );
+                if (!empty($field['choices']) && is_array($field['choices'])) {
+                    foreach ($field['choices'] as $key => $val) {
+                        printf("\t<input type=\"radio\" name=\"%s\" value=\"%s\"%s%s /> %s%s\n",
+                            htmlspecialchars($field['id']),
+                            htmlspecialchars($key),
+                            (!empty($field['value']) && $key == $field['value']) ? ' checked="checked"' : '',
+                            (!empty($field['required']) ? ' required="required" ' : ''),
+                            htmlspecialchars($val),
+                            (!empty($field['choice_append']) ? $field['choice_append'] : '')
+                        );
+                    }
+                }
 
-			} else if( 'textarea' == $field['type'] ) {
+            } elseif ('textarea' == $field['type']) {
 
-				printf( "\t<label data-for=\"%s\">%s</label>\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlentities( $field['label'] )
-				);
-				printf( "\t<textarea class=\"form-control\" name=\"%s\" id=\"%s\"%s>%s</textarea>\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					( !empty( $field['required'] ) ? ' required' : '' ),
-					( !empty( $field['value'] ) ? htmlentities( $field['value'] ) : '' )
-				);
+                printf("\t<label data-for=\"%s\">%s</label>\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlentities($field['label'])
+                );
+                printf("\t<textarea class=\"form-control\" name=\"%s\" id=\"%s\"%s>%s</textarea>\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    (!empty($field['required']) ? ' required' : ''),
+                    (!empty($field['value']) ? htmlentities($field['value']) : '')
+                );
 
-			} else if( 'select' == $field['type'] ) {
+            } elseif ('select' == $field['type']) {
 
-				printf( "\t<label data-for=\"%s\">%s</label>\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlentities( $field['label'] )
-				);
-				printf( "\t<select class=\"form-control\" name=\"%s%s\" id=\"%s\"%s%s>\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					( !empty( $field['multiple'] ) ? '[]' : '' ),
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					( !empty( $field['readonly'] ) ? ' readonly' : '' ),
-					( !empty( $field['multiple'] ) ? ' multiple' : '' )
-				);
-				if( isset( $field['placeholder'] ) ) {
-					if( !empty( $field['placeholder'] ) ) {
-						printf( "\t\t<option disabled=\"disabled\"%s value=\"\">%s</option>\n",
-							empty( $field['value'] ) ? ' selected="selected"' : '',
-							htmlentities( $field['placeholder'] )
-						);
-					}
-				} else {
-					printf( "\t\t<option value=\"\"></option>\n" );
-				}
-				foreach( $field['choices'] as $key => $val ) {
-					if( is_array( $val ) ) {
-						printf( "\t\t<optgroup label=\"%s\">\n",
-							htmlentities( $key, ENT_QUOTES | ENT_HTML5 )
-						);
-						foreach( $val as $rec_key => $rec_val ) {
-							$selected = false;
-							if( isset( $field['value'] ) && is_array( $field['value'] ) ) {
-								if( array_key_exists( $rec_key, $field['value'] ) ) {
-									$selected = true;
-								}
-							} else if( isset( $field['value'] ) && $rec_key == $field['value'] ) {
-								$selected = true;
-							}
-							printf( "\t\t\t<option value=\"%s\"%s>%s</option>\n",
-								htmlentities( $rec_key, ENT_QUOTES | ENT_HTML5 ),
-								$selected ? ' selected="selected"' : '',
-								htmlentities( $rec_val, ENT_HTML5 )
-							);
-						}
-						print "\t\t</optgroup>\n";
-					} else {
-						$selected = false;
-						if( isset( $field['value'] ) && is_array( $field['value'] ) ) {
-							if( array_key_exists( $key, $field['value'] ) ) {
-								$selected = true;
-							}
-						} else if( isset( $field['value'] ) && $key == $field['value'] ) {
-							$selected = true;
-						}
-						printf( "\t\t<option value=\"%s\"%s>%s</option>\n",
-							htmlentities( $key, ENT_QUOTES | ENT_HTML5 ),
-							$selected ? ' selected="selected"' : '',
-							htmlentities( $val, ENT_HTML5 )
-						);
-					}
-				}
-				printf( "\t</select>\n" );
+                printf("\t<label data-for=\"%s\">%s</label>\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlentities($field['label'])
+                );
+                printf("\t<select class=\"form-control\" name=\"%s%s\" id=\"%s\"%s%s>\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    (!empty($field['multiple']) ? '[]' : ''),
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    (!empty($field['readonly']) ? ' readonly' : ''),
+                    (!empty($field['multiple']) ? ' multiple' : '')
+                );
+                if (isset($field['placeholder'])) {
+                    if (!empty($field['placeholder'])) {
+                        printf("\t\t<option disabled=\"disabled\"%s value=\"\">%s</option>\n",
+                            empty($field['value']) ? ' selected="selected"' : '',
+                            htmlentities($field['placeholder'])
+                        );
+                    }
+                } else {
+                    printf("\t\t<option value=\"\"></option>\n");
+                }
+                foreach ($field['choices'] as $key => $val) {
+                    if (is_array($val)) {
+                        printf("\t\t<optgroup label=\"%s\">\n",
+                            htmlentities($key, ENT_QUOTES | ENT_HTML5)
+                        );
+                        foreach ($val as $rec_key => $rec_val) {
+                            $selected = false;
+                            if (isset($field['value']) && is_array($field['value'])) {
+                                if (array_key_exists($rec_key, $field['value'])) {
+                                    $selected = true;
+                                }
+                            } elseif (isset($field['value']) && $rec_key == $field['value']) {
+                                $selected = true;
+                            }
+                            printf("\t\t\t<option value=\"%s\"%s>%s</option>\n",
+                                htmlentities($rec_key, ENT_QUOTES | ENT_HTML5),
+                                $selected ? ' selected="selected"' : '',
+                                htmlentities($rec_val, ENT_HTML5)
+                            );
+                        }
+                        print "\t\t</optgroup>\n";
+                    } else {
+                        $selected = false;
+                        if (isset($field['value']) && is_array($field['value'])) {
+                            if (array_key_exists($key, $field['value'])) {
+                                $selected = true;
+                            }
+                        } elseif (isset($field['value']) && $key == $field['value']) {
+                            $selected = true;
+                        }
+                        printf("\t\t<option value=\"%s\"%s>%s</option>\n",
+                            htmlentities($key, ENT_QUOTES | ENT_HTML5),
+                            $selected ? ' selected="selected"' : '',
+                            htmlentities($val, ENT_HTML5)
+                        );
+                    }
+                }
+                printf("\t</select>\n");
 
-			} else if( 'button' == $field['type'] ) {
+            } elseif ('button' == $field['type']) {
 
-				printf( "\t<input type=\"button\" value=\"%s\" />\n",
-					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
-				);
+                printf("\t<input type=\"button\" value=\"%s\" />\n",
+                    htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5)
+                );
 
-			} else if( 'hidden' == $field['type'] ) {
+            } elseif ('hidden' == $field['type']) {
 
-				printf( "\t<input type=\"hidden\" name=\"%s\" id=\"%s\" value=\"%s\" />\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 )
-				);
+                printf("\t<input type=\"hidden\" name=\"%s\" id=\"%s\" value=\"%s\" />\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5)
+                );
 
-			} else if( 'submit' == $field['type'] ) {
+            } elseif ('submit' == $field['type']) {
 
-				printf( "\t<label></label>\n" );
-				printf( "\t<input class=\"btn btn-primary\" type=\"submit\" value=\"%s\" />\n",
-					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
-				);
+                printf("\t<label></label>\n");
+                printf("\t<input class=\"btn btn-primary\" type=\"submit\" value=\"%s\" />\n",
+                    htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5)
+                );
 
-			} else if( '_divider' == $field['type'] ) {
+            } elseif ('_divider' == $field['type']) {
 
-				printf( "\t<hr class=\"divider\" />\n" );
+                printf("\t<hr class=\"divider\" />\n");
 
-			} else if( '_header' == $field['type'] ) {
+            } elseif ('_header' == $field['type']) {
 
-				printf( "\t<label></label>\n" );
-				printf( "\t<h3>%s</h3>\n",
-					htmlentities( $field['label'] )
-				);
+                printf("\t<label></label>\n");
+                printf("\t<h3>%s</h3>\n",
+                    htmlentities($field['label'])
+                );
 
-			} else if( '_toggle_start' == $field['type'] ) {
+            } elseif ('_toggle_start' == $field['type']) {
 
-				printf( "\t<button class=\"btn btn-xs btn-info\" type=\"button\" data-toggle=\"collapse\" data-target=\"#%s\" aria-expanded=\"false\" aria-controls=\"%s\">%s</button>\n",
-					htmlspecialchars( $field['id'] ),
-					htmlspecialchars( $field['id'] ),
-					htmlspecialchars( $field['value'] )
-				);
-				printf( "\t<div class=\"%s\" id=\"%s\">\n",
-					!empty( $field['collapsed'] ) ? 'collapse' : 'collapse in',
-					htmlspecialchars( $field['id'] )
-				);
+                printf("\t<button class=\"btn btn-xs btn-info\" type=\"button\" data-toggle=\"collapse\" data-target=\"#%s\" aria-expanded=\"false\" aria-controls=\"%s\">%s</button>\n",
+                    htmlspecialchars($field['id']),
+                    htmlspecialchars($field['id']),
+                    htmlspecialchars($field['value'])
+                );
+                printf("\t<div class=\"%s\" id=\"%s\">\n",
+                    !empty($field['collapsed']) ? 'collapse' : 'collapse in',
+                    htmlspecialchars($field['id'])
+                );
 
-			} else if( '_toggle_end' == $field['type'] ) {
+            } elseif ('_toggle_end' == $field['type']) {
 
-				printf( "\t</div>\n" );
+                printf("\t</div>\n");
 
-			} else if( '_html' == $field['type'] ) {
+            } elseif ('_html' == $field['type']) {
 
-				print $field['value'];
+                print $field['value'];
 
-			} else if( '_text' == $field['type'] ) {
+            } elseif ('_text' == $field['type']) {
 
-				printf( "\t<label data-for=\"%s\">%s</label>\n",
-					htmlspecialchars( $field['id'], ENT_QUOTES | ENT_HTML5 ),
-					htmlspecialchars( $field['label'], ENT_QUOTES | ENT_HTML5 )
-				);
-				printf( "\t<span>%s</span>\n", htmlspecialchars( $field['value'], ENT_QUOTES | ENT_HTML5 ) );
+                printf("\t<label data-for=\"%s\">%s</label>\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5)
+                );
+                printf("\t<span>%s</span>\n", htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5));
 
-			}
+            }
 
-			if( !in_array( $field['type'], array( '_toggle_start', '_toggle_end', '_html', '_text', 'hidden' ) ) ) {
-				printf( "\t</div>\n" );
-			}
+            if (!in_array($field['type'], array('_toggle_start', '_toggle_end', '_html', '_text', 'hidden'))) {
+                printf("\t</div>\n");
+            }
 
-		}
+        }
 
-		if( empty( $options['fieldOnly'] ) ) {
-			print "</form>\n";
-		}
-		print "</div>\n";
-	}
+        if (empty($options['fieldOnly'])) {
+            print "</form>\n";
+        }
+        print "</div>\n";
+    }
 
-	public static function displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd, $offline = false ) {
+    public static function displayDashboardRevenueTable($leads, $users, $statsStart, $statsEnd, $offline = false)
+    {
 
-		$today = new \DateTime();
-		$yesterday = new \DateTime();
-		try {
-			$yesterday->sub( new \DateInterval( 'P1D' ) );
-		} catch( \Exception $e ) {
-			// Do nothing
-		}
+        $today = new \DateTime();
+        $yesterday = new \DateTime();
+        try {
+            $yesterday->sub(new \DateInterval('P1D'));
+        } catch (\Exception $e) {
+            // Do nothing
+        }
 
-		// Check for invalid date inputs
-		try {
-			$statsStart = new \DateTime( $statsStart );
-		} catch( \Exception $e ) {
-			$statsStart = new \DateTime();
-		}
+        // Check for invalid date inputs
+        try {
+            $statsStart = new \DateTime($statsStart);
+        } catch (\Exception $e) {
+            $statsStart = new \DateTime();
+        }
 
-		try {
-			$statsEnd = new \DateTime( $statsEnd );
-		} catch( \Exception $e ) {
-			$statsEnd = new \DateTime();
-		}
+        try {
+            $statsEnd = new \DateTime($statsEnd);
+        } catch (\Exception $e) {
+            $statsEnd = new \DateTime();
+        }
 
-		// Ensure the end date after the start date
-		if( $statsEnd < $statsStart ) {
-			$statsEnd = $statsStart;
-		}
+        // Ensure the end date after the start date
+        if ($statsEnd < $statsStart) {
+            $statsEnd = $statsStart;
+        }
 
-		try {
-			$statsStartFOM = new DateTime( $statsStart->format( 'Y-m-01' ) );
-			$statsEndEOM = new DateTime( $statsEnd->format( 'Y-m-t' ) );
-		} catch( \Exception $e ) {
-			// Do nothing
-		}
+        try {
+            $statsStartFOM = new DateTime($statsStart->format('Y-m-01'));
+            $statsEndEOM = new DateTime($statsEnd->format('Y-m-t'));
+        } catch (\Exception $e) {
+            // Do nothing
+        }
 
 
-		if( !empty( $users ) && is_array( $users ) ) {
-			$totals = array(
-				'prevDay' => 0,
-				'today' => 0,
-				'existingAccrual' => 0,
-				'existingExpectation' => 0,
-				'existingProjected' => 0,
-				'newExpectation' => 0,
-				'newAccural' => 0,
-				'grossProfit' => 0,
-			);
+        if (!empty($users) && is_array($users)) {
+            $totals = array(
+                'prevDay' => 0,
+                'today' => 0,
+                'existingAccrual' => 0,
+                'existingExpectation' => 0,
+                'existingProjected' => 0,
+                'newExpectation' => 0,
+                'newAccural' => 0,
+                'grossProfit' => 0,
+            );
 
-			?>
+            ?>
 
 			<table class="table table-bordered table-condensed table-striped-custom table-small-font dashboard-forecasts">
 				<thead>
@@ -378,129 +384,156 @@ class Display
 				</tr>
 				</thead>
 				<tbody>
-				<?php
-				$diffRange = intval( $statsStartFOM->diff( $statsEnd )->format( "%a" ) );
-				$diffTotal = intval( $statsStartFOM->diff( $statsEndEOM )->format( "%a" ) ) + 1;
-				$forecastsToday = $leads->getForecasts( $today->format( 'Y-m-d' ), $today->format( 'Y-m-d' ), $offline );
-				$forecastsYesterday = $leads->getForecasts( $yesterday->format( 'Y-m-d' ), $yesterday->format( 'Y-m-d' ), $offline );
-				$forecastsMTD = $leads->getForecasts( $statsStartFOM->format( 'Y-m-d' ), $statsEndEOM->format( 'Y-m-d' ), $offline );
-				try {
-					$statsEndEOM->sub( new \DateInterval( 'P1D' ) );
-				} catch( \Exception $e ) {
-					// Do nothing
-				}
-				$forecastsProjected = $leads->getForecasts( $today->format( 'Y-m-01' ), $yesterday->format( 'Y-m-d' ), $offline );
-				foreach( $users as $userId => $fullName ) {
-					$amountToday = $amountYesterday = $existingRevenueMTD = $newRevenueMTD = $accuralCostMTD = $projectedRevenueMTD = 0;
-					if( !empty( $forecastsToday ) && is_array( $forecastsToday ) ) {
-						foreach( $forecastsToday as $forecastToday ) {
-							if( $userId == $forecastToday->idUser ) {
-								$amountToday = $forecastToday->existingRevenueMTD;
-							}
-						}
-					}
-					if( !empty( $forecastsYesterday ) && is_array( $forecastsYesterday ) ) {
-						foreach( $forecastsYesterday as $forecastYesterday ) {
-							if( $userId == $forecastYesterday->idUser ) {
-								$amountYesterday = $forecastYesterday->existingRevenueMTD;
-							}
-						}
-					}
-					if( !empty( $forecastsMTD ) && is_array( $forecastsMTD ) ) {
-						foreach( $forecastsMTD as $forecastMTD ) {
-							if( $userId == $forecastMTD->idUser ) {
-								$existingRevenueMTD = $forecastMTD->existingRevenueMTD;
-								$accuralCostMTD = $forecastMTD->accuralCostMTD;
-								$newRevenueMTD = $forecastMTD->newRevenueMTD;
-							}
-						}
-					}
-					if( !empty( $forecastsProjected ) && is_array( $forecastsProjected ) ) {
-						foreach( $forecastsProjected as $forecastProjected ) {
-							if( $userId == $forecastProjected->idUser ) {
-								$projectedRevenueMTD = $forecastProjected->existingRevenueMTD;
-							}
-						}
-					}
+                <?php
+                $diffRange = intval($statsStartFOM->diff($statsEnd)->format("%a"));
+                $diffTotal = intval($statsStartFOM->diff($statsEndEOM)->format("%a")) + 1;
+                $forecastsToday = $leads->getForecasts($today->format('Y-m-d'), $today->format('Y-m-d'), $offline);
+                $forecastsYesterday = $leads->getForecasts($yesterday->format('Y-m-d'), $yesterday->format('Y-m-d'), $offline);
+                $forecastsMTD = $leads->getForecasts($statsStartFOM->format('Y-m-d'), $statsEndEOM->format('Y-m-d'), $offline);
+                try {
+                    $statsEndEOM->sub(new \DateInterval('P1D'));
+                } catch (\Exception $e) {
+                    // Do nothing
+                }
+                $forecastsProjected = $leads->getForecasts($today->format('Y-m-01'), $yesterday->format('Y-m-d'), $offline);
+                foreach ($users as $userId => $fullName) {
+                    $amountToday = $amountYesterday = $existingRevenueMTD = $newRevenueMTD = $accuralCostMTD = $projectedRevenueMTD = 0;
+                    if (!empty($forecastsToday) && is_array($forecastsToday)) {
+                        foreach ($forecastsToday as $forecastToday) {
+                            if ($userId == $forecastToday->idUser) {
+                                $amountToday = $forecastToday->existingRevenueMTD;
+                            }
+                        }
+                    }
+                    if (!empty($forecastsYesterday) && is_array($forecastsYesterday)) {
+                        foreach ($forecastsYesterday as $forecastYesterday) {
+                            if ($userId == $forecastYesterday->idUser) {
+                                $amountYesterday = $forecastYesterday->existingRevenueMTD;
+                            }
+                        }
+                    }
+                    if (!empty($forecastsMTD) && is_array($forecastsMTD)) {
+                        foreach ($forecastsMTD as $forecastMTD) {
+                            if ($userId == $forecastMTD->idUser) {
+                                $existingRevenueMTD = $forecastMTD->existingRevenueMTD;
+                                $accuralCostMTD = $forecastMTD->accuralCostMTD;
+                                $newRevenueMTD = $forecastMTD->newRevenueMTD;
+                            }
+                        }
+                    }
+                    if (!empty($forecastsProjected) && is_array($forecastsProjected)) {
+                        foreach ($forecastsProjected as $forecastProjected) {
+                            if ($userId == $forecastProjected->idUser) {
+                                $projectedRevenueMTD = $forecastProjected->existingRevenueMTD;
+                            }
+                        }
+                    }
 
-					$expectationValues = $leads->getExpectationValues( $userId, $statsStartFOM->format( 'Y-m-' ) );
-					$projected = $diffRange > 0 ? ( ( $projectedRevenueMTD * $diffTotal ) / $diffRange ) : 0;
+                    $expectationValues = $leads->getExpectationValues($userId, $statsStartFOM->format('Y-m-'));
+                    $projected = $diffRange > 0 ? (($projectedRevenueMTD * $diffTotal) / $diffRange) : 0;
 
-					$totals['prevDay'] += round( $amountYesterday );
-					$totals['today'] += round( $amountToday );
-					$totals['existingAccrual'] += round( $existingRevenueMTD + $newRevenueMTD );
-					$totals['existingExpectation'] += round( $expectationValues->existingBusinessAmount ?? 0 );
-					$totals['existingProjected'] += round( $projected );
-					$totals['newExpectation'] += round( $newRevenueMTD );
-					$totals['newAccural'] += round( $expectationValues->newBusinessAmount ?? 0 );
-					$totals['grossProfit'] += round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD );
+                    $totals['prevDay'] += round($amountYesterday);
+                    $totals['today'] += round($amountToday);
+                    $totals['existingAccrual'] += round($existingRevenueMTD + $newRevenueMTD);
+                    $totals['existingExpectation'] += round($expectationValues->existingBusinessAmount ?? 0);
+                    $totals['existingProjected'] += round($projected);
+                    $totals['newExpectation'] += round($newRevenueMTD);
+                    $totals['newAccural'] += round($expectationValues->newBusinessAmount ?? 0);
+                    $totals['grossProfit'] += round(($existingRevenueMTD + $newRevenueMTD) - $accuralCostMTD);
 
-					?>
+                    ?>
 					<tr>
-						<td><?php echo htmlentities( $fullName ); ?></td>
-						<td class="text-right">$<?php echo number_format( round( $amountYesterday ), 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( round( $amountToday ), 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( round( $existingRevenueMTD + $newRevenueMTD ), 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( round( $expectationValues->existingBusinessAmount ?? 0 ), 0 ); ?></td>
-						<td class="text-right<?php echo ( $expectationValues->existingBusinessAmount ?? 0 ) > $projected ? ' bg-danger' : ''; ?>">$<?php echo number_format( round( $projected ), 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( round( $newRevenueMTD ), 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( round( $expectationValues->newBusinessAmount ?? 0 ), 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( round( ( $existingRevenueMTD + $newRevenueMTD ) - $accuralCostMTD ), 0 ); ?></td>
+						<td><?php echo htmlentities($fullName); ?></td>
+						<td class="text-right">$<?php echo number_format(round($amountYesterday), 0); ?></td>
+						<td class="text-right">$<?php echo number_format(round($amountToday), 0); ?></td>
+						<td class="text-right">$<?php echo number_format(round($existingRevenueMTD + $newRevenueMTD), 0); ?></td>
+						<td class="text-right">$<?php echo number_format(round($expectationValues->existingBusinessAmount ?? 0), 0); ?></td>
+						<td class="text-right<?php echo ($expectationValues->existingBusinessAmount ?? 0) > $projected ? ' bg-danger' : ''; ?>">$<?php echo number_format(round($projected), 0); ?></td>
+						<td class="text-right">$<?php echo number_format(round($newRevenueMTD), 0); ?></td>
+						<td class="text-right">$<?php echo number_format(round($expectationValues->newBusinessAmount ?? 0), 0); ?></td>
+						<td class="text-right">$<?php echo number_format(round(($existingRevenueMTD + $newRevenueMTD) - $accuralCostMTD), 0); ?></td>
 					</tr>
-					<?php
-				}
-				?>
+                    <?php
+                }
+                ?>
 				</tbody>
-				<?php
-				if( sizeOf( $users ) > 1 ) {
-					?>
+                <?php
+                if (sizeOf($users) > 1) {
+                    ?>
 					<tfoot>
 					<tr>
 						<td>TOTAL</td>
-						<td class="text-right">$<?php echo number_format( $totals['prevDay'], 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( $totals['today'], 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( $totals['existingAccrual'], 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( $totals['existingExpectation'], 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( $totals['existingProjected'], 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( $totals['newExpectation'], 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( $totals['newAccural'], 0 ); ?></td>
-						<td class="text-right">$<?php echo number_format( $totals['grossProfit'], 0 ); ?></td>
+						<td class="text-right">$<?php echo number_format($totals['prevDay'], 0); ?></td>
+						<td class="text-right">$<?php echo number_format($totals['today'], 0); ?></td>
+						<td class="text-right">$<?php echo number_format($totals['existingAccrual'], 0); ?></td>
+						<td class="text-right">$<?php echo number_format($totals['existingExpectation'], 0); ?></td>
+						<td class="text-right">$<?php echo number_format($totals['existingProjected'], 0); ?></td>
+						<td class="text-right">$<?php echo number_format($totals['newExpectation'], 0); ?></td>
+						<td class="text-right">$<?php echo number_format($totals['newAccural'], 0); ?></td>
+						<td class="text-right">$<?php echo number_format($totals['grossProfit'], 0); ?></td>
 					</tr>
 					</tfoot>
 
-					<?php
-				}
-				?>
+                    <?php
+                }
+                ?>
 			</table>
 
-			<?php
-		}
-	}
+            <?php
+        }
+    }
 
-	public static function escHtml( $html, $flags = ENT_HTML5 | ENT_QUOTES ) {
-		return htmlspecialchars( $html, $flags, 'UTF-8' );
-	}
+    public static function escHtml($html, $flags = ENT_HTML5 | ENT_QUOTES)
+    {
+        return htmlspecialchars($html, $flags, 'UTF-8');
+    }
 
-	public static function decryptValue( $data ) {
+    public static function decryptValue($data)
+    {
 
-		try {
-			$data = \Cryptor::Decrypt( $data, ENCRYPTION_KEY );
-		} catch( \Exception $e ) {
-			// Do nothing
-		}
+        try {
+            $data = \Cryptor::Decrypt($data, ENCRYPTION_KEY);
+        } catch (\Exception $e) {
+            // Do nothing
+        }
 
-		return $data;
-	}
+        return $data;
+    }
 
-	public static function encryptValue( $data ) {
+    public static function encryptValue($data)
+    {
 
-		try {
-			$data = \Cryptor::Encrypt( $data, ENCRYPTION_KEY );
-		} catch( \Exception $e ) {
-			// Do nothing
-		}
+        try {
+            $data = \Cryptor::Encrypt($data, ENCRYPTION_KEY);
+        } catch (\Exception $e) {
+            // Do nothing
+        }
 
-		return $data;
-	}
+        return $data;
+    }
+
+    public static function findFilesRecurse($dir)
+    {
+        $values = array();
+
+        if (!file_exists($dir)) {
+            return $values;
+        }
+
+        $files = scandir($dir);
+        foreach ($files as $file) {
+
+            // Skip directories with dots
+            if (!in_array($file, array('.', '..'))) {
+                if (is_dir($dir . DIRECTORY_SEPARATOR . $file)) {
+                    $values = array_merge(Display::findFilesRecurse($dir . DIRECTORY_SEPARATOR . $file), $values);
+                } else {
+                    $values[] = $dir . DIRECTORY_SEPARATOR . $file;
+                }
+            }
+        }
+
+        return $values;
+    }
 
 }

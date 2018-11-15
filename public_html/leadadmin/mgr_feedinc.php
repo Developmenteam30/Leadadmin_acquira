@@ -1162,7 +1162,10 @@ if( isset( $_REQUEST['d'] ) ) {
 						},
 						multiple: false,
 						request: {
-							endpoint: '/leadadmin/ajax/fileUpload.php'
+							endpoint: '/leadadmin/ajax/fileUpload.php',
+							params: {
+								'type': 'feedinc',
+							},
 						},
 						retry: {
 							enableAuto: true
