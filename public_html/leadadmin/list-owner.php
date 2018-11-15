@@ -191,7 +191,13 @@ if( isset( $_REQUEST['a'] ) ) {
 				$message .= COMPANY_ADDRESS_1 . "\r\n";
 				$message .= COMPANY_ADDRESS_2 . "\r\n";
 
-				if( mail( $company->acct_email, "Invoice #" . $_REQUEST['invoiceNumber'] . " PAID | " . CONFIG_COMPANY_NAME, $message, "From: \"" . CONFIG_COMPANY_NAME . "\" <" . PAYMENT_EMAIL . ">\r\nBCC: " . PAYMENT_EMAIL, '-f' . PAYMENT_EMAIL ) ) {
+                // #1891: Add account manager to the payment notification emails.
+                $BCCText = "BCC: " . PAYMENT_EMAIL . "\r\n";
+                if (!empty($company->accountManager) && !empty($user = $leads->getUser($company->accountManager)) && !empty($user->email)) {
+                    $BCCText .= "BCC: {$user->email}\r\n";
+                }
+
+                if( mail( $company->acct_email, "Invoice #" . $_REQUEST['invoiceNumber'] . " PAID | " . CONFIG_COMPANY_NAME, $message, "From: \"" . CONFIG_COMPANY_NAME . "\" <" . PAYMENT_EMAIL . ">\r\n" . $BCCText, '-f' . PAYMENT_EMAIL ) ) {
 					$result['status'] = 1;
 					$result['error'] = 'Invoice number updated AND notification email sent.';
 					break;
