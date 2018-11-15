@@ -90,6 +90,8 @@ $pdf->SetAutoPageBreak(true);
 
 $pdf->AddPage();
 
+$pdf->Image(SITE_ROOT . '/public_html/leadadmin/images/logo.png', 83, null,50);
+
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 7, 'Lead Data', 0, 1, 'C');
 $pdf->Cell(0, 7, 'INSERTION ORDER', 0, 1, 'C');
