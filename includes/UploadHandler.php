@@ -117,7 +117,7 @@ class UploadHandler
 		*/
 
 		if( $this->isInaccessible( $uploadDirectory ) ) {
-			return array( 'error' => "Server error. Uploads directory isn't writable " .  getcwd() . $uploadDirectory );
+			return array( 'error' => "Server error. Uploads directory isn't writable " .  $uploadDirectory );
 		}
 
 		$type = $_SERVER['CONTENT_TYPE'];

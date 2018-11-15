@@ -112,6 +112,9 @@ switch ($_REQUEST['type']) {
 $uploadsDir = UPLOADS_DIR;
 if ('insertion-order-update' === $_REQUEST['type']) {
     $uploadsDir = FILES_DIR . 'insertion-orders' . DIRECTORY_SEPARATOR . $order->orderId;
+    if (!file_exists($uploadsDir)) {
+        mkdir($uploadsDir);
+    }
 }
 
 // Specify max file size in bytes.
