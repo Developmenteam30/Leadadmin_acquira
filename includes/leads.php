@@ -4445,7 +4445,7 @@ class Leads
         return $results;
     }
 
-    public function inboundRecordSearch($email, $phone, $url)
+    public function inboundRecordSearch($email, $phone, $url, $ip)
     {
         $params = array();
 
@@ -4468,6 +4468,10 @@ class Leads
         if (!empty($url)) {
             $baseSql .= "AND i.url = ? ";
             $params[] = $url;
+        }
+        if (!empty($ip)) {
+            $baseSql .= "AND i.ip = ? ";
+            $params[] = $ip;
         }
         if (!empty($phone)) {
             $baseSql .= "AND ( i.cellphone = ? OR i.landline = ? ) ";
@@ -4494,6 +4498,9 @@ class Leads
                 }
                 if (!empty($url)) {
                     $params[] = $url;
+                }
+                if (!empty($ip)) {
+                    $params[] = $ip;
                 }
                 if (!empty($phone)) {
                     $params[] = $phone;
@@ -6356,21 +6363,22 @@ SQL;
         $cnt = 0;
         $recordId = 0;
 
-        $startDate = new \DateTime('2014-06-01 00:00:00');
-        $endDate = new \DateTime('2014-05-01 00:00:00');
+        $startDate = new \DateTime('2018-08-01 00:00:00');
+        $endDate = new \DateTime('2014-06-01 00:00:00');
         $tableDate = clone $startDate;
 
         try {
 
             while ($tableDate >= $endDate) {
 
-                $table = $this->quoteIdentifier('data_outbound_' . $tableDate->format('Ym'));
+                $table = $this->quoteIdentifier('data_inbound_' . $tableDate->format('Ym'));
 
                 print date('c') . ' ' . $table . PHP_EOL;
 
                 //$query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD INDEX cellphone (cellphone) USING BTREE, ADD INDEX landline (landline) USING BTREE, ADD COLUMN custom1 VARCHAR(255), ADD COLUMN custom2 VARCHAR(255),ADD COLUMN custom3 VARCHAR(255),ADD COLUMN custom4 VARCHAR(255),ADD COLUMN custom5 VARCHAR(255),ADD COLUMN custom6 VARCHAR(255), ADD COLUMN leadId VARCHAR(255);" );
-                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1, ADD COLUMN isBillable TINYINT UNSIGNED DEFAULT 1, ADD COLUMN url VARCHAR(255)");
-                //$query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1" );
+                $query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD INDEX ip (ip) USING BTREE" );
+//                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1, ADD COLUMN isBillable TINYINT UNSIGNED DEFAULT 1, ADD COLUMN url VARCHAR(255)");
+//                $query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1" );
                 $query->execute();
 
                 $tableDate->sub(new \DateInterval(('P1M')));
