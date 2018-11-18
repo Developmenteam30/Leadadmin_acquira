@@ -5,5 +5,4 @@ require_once( INCLUDES . "leads.php" );
 
 $leads = Leads::getInstance();
 
-$leads->archiveErrors();
 $leads->alterArchiveTables();
