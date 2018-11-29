@@ -231,6 +231,7 @@ include(INCLUDES . "c_header.php");
 			<th>Name</th>
 			<th>Type</th>
 			<th>Description</th>
+			<th>Definition</th>
 			<th>Format</th>
 			<th>Options</th>
 		</tr>
@@ -243,6 +244,7 @@ include(INCLUDES . "c_header.php");
 				<td><?php echo Display::escHtml($field->fieldName); ?></td>
 				<td><?php echo Display::escHtml(ucfirst($field->fieldType)); ?></td>
 				<td><?php echo Display::escHtml($field->fieldDescription); ?></td>
+				<td><?php echo Display::escHtml($field->fieldDefinition); ?></td>
 				<td><?php echo Display::escHtml($field->fieldFormat); ?></td>
 				<td class="text-center">
 					<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editfield" data-field-id="<?php echo Display::escHtml($field->fieldId); ?>">Edit</button>
