@@ -1,65 +1,56 @@
 <?php
 
-include( "../../includes/c_config.php" );
+include("../../includes/c_config.php");
 
-require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD );
+require_once(INCLUDES . 'session.php');
+LeadsSession::requireAccess(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD);
 
-require_once( INCLUDES . 'leads.php' );
+require_once(INCLUDES . 'leads.php');
+require_once(INCLUDES . 'display.php');
 
-if( empty( $_REQUEST['idFeedIn'] ) ) {
-	die( 'ERROR: Please specify a feed id.' );
+if (empty($_REQUEST['idFeedIn'])) {
+    die('ERROR: Please specify a feed id.');
 }
 
 $leads = Leads::getInstance();
 // If this a client, ensure they have access for this feed
-if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
-	$idCompany = LeadsSession::getCompanyId();
-	if( empty( $idCompany ) ) {
-		$idCompany = -9999;
-	}
-	if( !$leads->checkInboundFeedAccess( $idCompany, $_REQUEST['idFeedIn'] ) ) {
-		die( 'Sorry, you do not have access to view this feed' );
-	}
+if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+    $idCompany = LeadsSession::getCompanyId();
+    if (empty($idCompany)) {
+        $idCompany = -9999;
+    }
+    if (!$leads->checkInboundFeedAccess($idCompany, $_REQUEST['idFeedIn'])) {
+        die('Sorry, you do not have access to view this feed');
+    }
 }
 
-$feed = $leads->getInboundFeed( $_REQUEST['idFeedIn'] );
-if( empty( $feed ) ) {
-	die( 'ERROR: Feed not found.' );
+$feed = $leads->getInboundFeed($_REQUEST['idFeedIn']);
+if (empty($feed)) {
+    die('ERROR: Feed not found.');
 }
 
-$company = $leads->getCompany( $feed->idCompany );
+$company = $leads->getCompany($feed->idCompany);
 
-$fields = array(
-	'pswd' => array( 'type' => 'varchar(16)', 'format' => '', 'notes' => $feed->password ),
-	'listcode' => array( 'type' => 'varchar(20)', 'format' => '', 'notes' => 'Campaign ID or List Descriptor' ),
-	'leadId' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Lead ID or List Descriptor' ),
-	'url' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Source of the lead' ),
-	'ip' => array( 'type' => 'varchar(16)', 'format' => '', 'notes' => 'IP Address' ),
-	'stamp' => array( 'type' => 'datetime', 'format' => 'YYYY-MM-DD hh:mm:ss', 'notes' => 'Lead action date' ),
-	'email' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Email address' ),
-	'fname' => array( 'type' => 'varchar(50)', 'format' => '', 'notes' => 'First name' ),
-	'lname' => array( 'type' => 'varchar(50)', 'format' => '', 'notes' => 'Last name' ),
-	'addr' => array( 'type' => 'varchar(150)', 'format' => '', 'notes' => 'Address line 1' ),
-	'addr2' => array( 'type' => 'varchar(150)', 'format' => '', 'notes' => 'Address line 2' ),
-	'city' => array( 'type' => 'varchar(75)', 'format' => '', 'notes' => 'City' ),
-	'state' => array( 'type' => 'varchar(25)', 'format' => 'XX', 'notes' => 'State/Province' ),
-	'zip' => array( 'type' => 'varchar(120)', 'format' => '#####', 'notes' => 'Zip or Postal code' ),
-	'country' => array( 'type' => 'char(2)', 'format' => 'XX', 'notes' => '2-letter ISO-3166 country code' ),
-	'dob' => array( 'type' => 'date', 'format' => 'YYYY-MM-DD', 'notes' => 'Date of birth' ),
-	'gender' => array( 'type' => 'char(1)', 'format' => 'M, F', 'notes' => 'Gender' ),
-	'landline' => array( 'type' => 'varchar(20)', 'format' => '##########', 'notes' => 'Default phone' ),
-	'cellphone' => array( 'type' => 'varchar(20)', 'format' => '##########', 'notes' => 'Alternate phone' ),
-	'custom1' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 1' . ( !empty( $feed->custom1Label ) ? ': ' . $feed->custom1Label : '' ) ),
-	'custom2' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 2' . ( !empty( $feed->custom2Label ) ? ': ' . $feed->custom2Label : '' ) ),
-	'custom3' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 3' . ( !empty( $feed->custom3Label ) ? ': ' . $feed->custom3Label : '' ) ),
-	'custom4' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 4' . ( !empty( $feed->custom4Label ) ? ': ' . $feed->custom4Label : '' ) ),
-	'custom5' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 5' . ( !empty( $feed->custom5Label ) ? ': ' . $feed->custom5Label : '' ) ),
-	'custom6' => array( 'type' => 'varchar(255)', 'format' => '', 'notes' => 'Custom Field 6' . ( !empty( $feed->custom6Label ) ? ': ' . $feed->custom6Label : '' ) ),
-);
+$fields = $leads->getInboundFields();
 
-$requiredArray = explode( ';', 'pswd;' . $feed->required );
-$allowedArray = explode( ';', 'pswd;' . $feed->allowedFields );
+function findField($feed, $fields, $field, $param)
+{
+    foreach ($fields as $key => $val) {
+        if (isset($val->fieldName) && $val->fieldName == $field && isset($val->$param)) {
+            if (preg_match('/^custom[1-6]$/', $field)) {
+                $label = $field . 'Label';
+                return $val->$param . (!empty($feed->$label) ? ': ' . $feed->$label : '');
+            } else {
+                return $val->$param;
+            }
+        }
+    }
+
+    return null;
+}
+
+$requiredArray = explode(';', 'pswd;' . $feed->required);
+$allowedArray = explode(';', 'pswd;' . $feed->allowedFields);
 
 ?>
 <!DOCTYPE html>
@@ -115,19 +106,19 @@ $allowedArray = explode( ';', 'pswd;' . $feed->allowedFields );
 	</tr>
 	</thead>
 	<tbody>
-	<?php
-	foreach( $allowedArray as $allowed ) {
-		?>
+    <?php
+    foreach ($allowedArray as $allowed) {
+        ?>
 		<tr>
-			<td><?php echo $allowed; ?></td>
-			<td><?php echo $fields[$allowed]['type']; ?></td>
-			<td><?php echo in_array( $allowed, $requiredArray ) ? 'Yes' : 'No'; ?></td>
-			<td><?php echo $fields[$allowed]['format']; ?></td>
-			<td><?php echo $fields[$allowed]['notes']; ?></td>
+			<td><?php echo Display::escHtml($allowed); ?></td>
+			<td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldDefinition')); ?></td>
+			<td><?php echo in_array($allowed, $requiredArray) ? 'Yes' : 'No'; ?></td>
+			<td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldFormat')); ?></td>
+			<td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldDescription')); ?></td>
 		</tr>
-		<?php
-	}
-	?>
+        <?php
+    }
+    ?>
 	</tbody>
 </table>
 
