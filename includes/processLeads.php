@@ -441,8 +441,8 @@ class ProcessLeads
         }
 
         // Explode custom fields from the database
-        if(!empty($row->customFields) && ($customFields = json_decode($row->customFields)) !== false && !empty($customFields)) {
-            foreach($customFields as $key => $val) {
+        if (!empty($row->customFields) && ($customFields = json_decode($row->customFields)) !== false && !empty($customFields)) {
+            foreach ($customFields as $key => $val) {
                 $row->{$key} = $val;
             }
         }
@@ -983,6 +983,13 @@ class ProcessLeads
             case 'custom5':
             case 'custom6':
                 if ($c && strlen($value) > 255) {
+                    $c = false;
+                    $result['reason'] = $fieldType . ' exceeds maximum allowed length of 255 characters.';
+                }
+                break;
+
+            default:
+                if ($c && strpos($fieldType, 'c_') === 0 && strlen($value) > 255) {
                     $c = false;
                     $result['reason'] = $fieldType . ' exceeds maximum allowed length of 255 characters.';
                 }
