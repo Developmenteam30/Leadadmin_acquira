@@ -292,12 +292,13 @@ class Display
 
             } elseif ('_text' == $field['type']) {
 
+            	print "<div>";
                 printf("\t<label data-for=\"%s\">%s</label>\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5)
                 );
-                printf("\t<span>%s</span>\n", htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5));
-
+                printf("\t<span>%s</span>", htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5));
+				print "</div>\n";
             }
 
             if (!in_array($field['type'], array('_toggle_start', '_toggle_end', '_html', '_text', 'hidden'))) {

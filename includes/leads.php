@@ -2447,6 +2447,120 @@ class Leads
         return $results;
     }
 
+    public function checkFieldName($fieldName, $fieldType = null, $fieldId = null)
+    {
+        $result = false;
+        $params = [];
+
+        try {
+            $sql = "SELECT 1 ";
+            $sql .= "FROM fields ";
+            $sql .= "WHERE fieldName = ? ";
+            $params[] = $fieldName;
+
+            if (!empty($fieldId)) {
+                $sql .= "AND fieldId != ? ";
+                $params[] = $fieldId;
+            }
+
+            if (!empty($fieldType)) {
+                $sql .= "AND fieldType = ? ";
+                $params[] = $fieldType;
+            }
+
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            if ('1' == $query->fetchColumn()) {
+                $result = true;
+            }
+        } catch (PDOException $e) {
+            $this->logError('Unable to check field name: ' . $e->getMessage());
+        }
+
+        return $result;
+    }
+
+    public function getField($fieldId)
+    {
+        $results = array();
+
+        try {
+            $query = $this->db->prepare("SELECT * FROM fields WHERE fieldId = ?");
+            $query->execute(array($fieldId));
+            $results = $query->fetch(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get field info: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function addField($fields)
+    {
+
+        $verticalId = null;
+
+        try {
+            $verticalId = $this->insertRow('fields', $fields);
+        } catch (Leads_PDOException $e) {
+            $pdoException = $e->getPrevious();
+            $this->logError('Unable to add field: ' . $pdoException->getMessage());
+            return null;
+        }
+
+        return $verticalId;
+    }
+
+    public function updateField($fieldId, $fields)
+    {
+
+        try {
+            $status = $this->update('fields', $fields, array(
+                'fieldId' => $fieldId,
+            ));
+            return $status;
+        } catch (Leads_PDOException $e) {
+            $pdoException = $e->getPrevious();
+            $this->logError('Unable to update field: ' . $pdoException->getMessage());
+            return null;
+        }
+    }
+
+    public function getFields($fieldType = null)
+    {
+        $results = array();
+
+        try {
+            if (!empty($fieldType)) {
+                $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType = ? ORDER BY REPLACE(fieldName,'c_','')");
+                $query->execute(array($fieldType));
+            } else {
+                $query = $this->db->prepare("SELECT * FROM fields ORDER BY REPLACE(fieldName,'c_','')");
+                $query->execute();
+            }
+            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get field list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function getInboundFields()
+    {
+        $results = array();
+
+        try {
+            $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom') ORDER BY REPLACE(fieldName,'c_','')");
+            $query->execute();
+            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get inbound field list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function getCountries($format = PDO::FETCH_KEY_PAIR)
     {
         $results = array();
@@ -2982,6 +3096,13 @@ class Leads
         $this->db->beginTransaction();
 
         try {
+            $customFields = [];
+            foreach ($fields as $key => $val) {
+                if (strpos($key, 'c_') === 0) {
+                    $customFields[$key] = $val;
+                }
+            }
+
             $idRecord = $this->insertRow('data_inbound', array(
                 'idFeedIn' => $idFeedIn,
                 'listcode' => empty($fields['listcode']) ? null : substr($fields['listcode'], 0, 20),
@@ -3010,7 +3131,8 @@ class Leads
                 'custom4' => empty($fields['custom4']) ? null : substr($fields['custom4'], 0, 255),
                 'custom5' => empty($fields['custom5']) ? null : substr($fields['custom5'], 0, 255),
                 'custom6' => empty($fields['custom6']) ? null : substr($fields['custom6'], 0, 255),
-                'timestamp' => empty($fields['timestampOverride']) ? null : gmdate('Y-m-d H:i:s', strtotime($fields['timestampOverride'])),
+                'timestamp' => empty($fields['timestampOverride']) ? gmdate('Y-m-d H:i:s') : gmdate('Y-m-d H:i:s', strtotime($fields['timestampOverride'])),
+                'customFields' => empty($customFields) ? null : json_encode($customFields),
             ));
         } catch (Leads_PDOException $e) {
             $this->db->rollBack();
@@ -3025,7 +3147,7 @@ class Leads
             } else {
                 $query = $this->db->prepare('INSERT INTO stats_inbound(idFeedIn,url,stamp,rejected) VALUES(?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1');
             }
-            $query->execute(array($idFeedIn, $this->parseUrl($fields['url']), $statsDay));
+            $query->execute(array($idFeedIn, $this->parseUrl($fields['url'] ?? null), $statsDay));
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to insert stats_inbound record: ' . $e->getMessage());

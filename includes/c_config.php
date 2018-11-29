@@ -15,7 +15,7 @@ if ('development' == APPLICATION_ENV) {
 }
 //Database Connection Configuration, Production Environment
 define("DATABASE_NAME", 'dnrdmktg');
-define("DATABASE_HOST", 'qmleads.cxkrvmxyvmna.us-east-1.rds.amazonaws.com');
+define("DATABASE_HOST", 'qmleads57.cxkrvmxyvmna.us-east-1.rds.amazonaws.com');
 define("ENVIRONMENT", 'prod');
 define("MIGRATING", false);
 define("DATABASE_HOST_MIGRATION", '');
