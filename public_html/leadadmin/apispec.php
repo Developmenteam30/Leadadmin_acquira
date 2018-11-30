@@ -40,6 +40,8 @@ function findField($feed, $fields, $field, $param)
             if (preg_match('/^custom[1-6]$/', $field)) {
                 $label = $field . 'Label';
                 return $val->$param . (!empty($feed->$label) ? ': ' . $feed->$label : '');
+            } elseif ('pswd' === $field && 'fieldDescription' === $param) {
+                return $feed->password;
             } else {
                 return $val->$param;
             }
