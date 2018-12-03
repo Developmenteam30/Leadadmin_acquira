@@ -193,6 +193,26 @@ class Leads
         return $results;
     }
 
+    public function beginTransaction()
+    {
+        return $this->db->beginTransaction();
+    }
+
+    public function commit()
+    {
+        return $this->db->inTransaction() ? $this->db->commit() : false;
+    }
+
+    public function inTransaction()
+    {
+        return $this->db->inTransaction();
+    }
+
+    public function rollBack()
+    {
+        return $this->db->inTransaction() ? $this->db->rollBack() : false;
+    }
+
     public function getConfiguration($config_key)
     {
         $value = null;
@@ -4102,6 +4122,53 @@ class Leads
         return null;
     }
 
+    public function getJobsTimestamp()
+    {
+        try {
+            $params = array();
+            $sql = "SELECT j.jobId,j.type,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username ";
+            $sql .= "FROM jobs j ";
+            $sql .= "LEFT JOIN users u ON j.idUser = u.idUser ";
+            $sql .= "LEFT JOIN feedinc f ON j.destination = f.idFeedIn ";
+            $sql .= "WHERE timestamp >= '2018-10-01' ";
+            $sql .= "AND type = 'feedinc' ";
+            $sql .= "ORDER BY j.jobId DESC LIMIT 100";
+
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            return $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get jobs: ' . $e->getMessage());
+            return null;
+        }
+
+        return null;
+    }
+
+    public function fixInboundJobTimestamp($jobId, $timestamp)
+    {
+        try {
+            $query = $this->db->prepare('UPDATE data_inbound SET timestamp = ? WHERE timestamp IS NULL AND jobId = ?');
+            $query->execute(array($timestamp, $jobId));
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            $this->logError('Unable to update data_inbound job timestamp: ' . $e->getMessage());
+            return;
+        }
+    }
+
+    public function fixInboundRecordTimestamp($idRecord, $timestamp)
+    {
+        try {
+            $query = $this->db->prepare('UPDATE data_inbound SET timestamp = ? WHERE timestamp IS NULL AND idRecord = ?');
+            $query->execute(array($timestamp, $idRecord));
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            $this->logError('Unable to update data_inbound record timestamp: ' . $e->getMessage());
+            return;
+        }
+    }
+
     public function getPendingJob()
     {
         try {
@@ -6498,7 +6565,7 @@ SQL;
                 print date('c') . ' ' . $table . PHP_EOL;
 
                 //$query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD INDEX cellphone (cellphone) USING BTREE, ADD INDEX landline (landline) USING BTREE, ADD COLUMN custom1 VARCHAR(255), ADD COLUMN custom2 VARCHAR(255),ADD COLUMN custom3 VARCHAR(255),ADD COLUMN custom4 VARCHAR(255),ADD COLUMN custom5 VARCHAR(255),ADD COLUMN custom6 VARCHAR(255), ADD COLUMN leadId VARCHAR(255);" );
-                $query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD INDEX ip (ip) USING BTREE" );
+                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD customFields json NULL");
 //                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1, ADD COLUMN isBillable TINYINT UNSIGNED DEFAULT 1, ADD COLUMN url VARCHAR(255)");
 //                $query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1" );
                 $query->execute();
