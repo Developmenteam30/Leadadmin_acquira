@@ -1101,8 +1101,26 @@ if (isset($_REQUEST['d'])) {
 						<tr>
 							<td>Queue Split</p></td>
 							<td>
-								<p>If you want this upload to be split and siphoned out over the course of X days, enter the number of days below. For normal uploads, you'll leave this blank. <strong>NOTE: Timestamps will be altered when using this option.</strong></p><br/>
-								<input type="number" name="splitDelay" min="0" value=""/>
+								<p>If you want this upload to be split and siphoned out over the course of X days, enter the number of days below. For normal uploads, you'll leave this blank. <strong>NOTE: The original lead timestamps will be altered when using this option.</strong></p>
+								<p><input type="number" name="splitDelay" min="0" value=""/></p>
+								<p>In order for this feature to work propertly, the outbound feeds accepting this data must be setup with a feed delay of 1 minute or greater.
+                                    <?php
+                                    $feeds = $leads->getInboundPopulationSettings($idFeedIn, true);
+                                    if (empty($feeds)) {
+                                        print 'There are currently <strong>NO</strong> feeds setup to receive this data. If you setup a population for this data in the future, please add a feed delay of 1 minute or greater on the outbound side.</p>';
+                                    } else {
+                                        print 'The following feeds are setup to receive this data:</p><ul>';
+                                        foreach ($feeds as $feed) {
+                                            printf('<li>%s: %s (%s) - Feed Delay: %s</li>' . PHP_EOL,
+                                                Display::escHtml($feed->idFeedOut),
+                                                Display::escHtml($feed->label),
+                                                Display::escHtml($feed->description),
+                                                empty($feed->delay) ? '<span style="color:red; font-weight:bold">ERROR: NO DELAY SET</span>' : ('<span style="color:green; font-weight:bold"> ' . Display::escHtml(($feed->delay % (60 * 24)) == 0 ? ($feed->delay / (60 * 24) . ' Days') : ($feed->delay . ' Minutes')) . '</span>')
+                                            );
+                                        }
+                                        print '</ul>';
+                                    }
+                                    ?>
 							</td>
 						</tr>
 					</table>
