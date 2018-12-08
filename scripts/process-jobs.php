@@ -395,9 +395,10 @@ if ('clear-outbound-queue' === $job->type) {
                 }
             }
 
-            // Combine our fake date with the original time to provide randomness
-            $data['stamp'] = $splitTimestamp->format('Y-m-d') . ' ' . date('H:i:s', strtotime($data['stamp']));
-            $data['timestampOverride'] = $splitTimestamp->format('Y-m-d') . ' ' . date('H:i:s', strtotime($data['stamp']));
+            // Combine our fake date with a random hour plus the original minutes and seconds
+            $timestampOverride = $splitTimestamp->format('Y-m-d') . ' ' . rand(6, 23) . date(':i:s', strtotime($data['stamp']));
+            $data['stamp'] = $timestampOverride;
+            $data['timestampOverride'] = $timestampOverride;
         }
 
         $result = ProcessLeads::validateIncomingData($feedParams, $data);
