@@ -1026,6 +1026,18 @@ if (isset($_REQUEST['d'])) {
                 ),
             );
 
+            $fieldMap = explode(";", $feedOut->fieldMap);
+            foreach ($fieldMap as $field) {
+                if (preg_match('/^c_.+/', $field)) {
+                    $fields[] = array(
+                        'id' => $field,
+                        'label' => $field,
+                        'type' => 'text',
+                        'value' => $_REQUEST[$field] ?? '',
+                    );
+                }
+            }
+
             Display::displayForm('testrecord', $fields);
 
             if (empty($_REQUEST['submit'])) {
@@ -1062,6 +1074,14 @@ if (isset($_REQUEST['d'])) {
                 'idRecord' => trim($_REQUEST['idRecord'] ?? ''),
                 'testRecord' => 1,
             );
+
+            // Add custom fields back into the data
+            for ($i = 0; $i <= sizeOf($fieldMap); $i++) {
+                if (isset($fieldMap[$i]) && isset($_REQUEST[$fieldMap[$i]])) {
+                    $leaddata->{$fieldMap[$i]} = $_REQUEST[$fieldMap[$i]] ?? '';
+                }
+            }
+
             $errors = array();
 
             if (!empty($leaddata->stamp) && !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $leaddata->stamp)) {
@@ -1120,7 +1140,7 @@ if (isset($_REQUEST['d'])) {
 
                 print "<p><strong>Query String:</strong> " . nl2br(htmlspecialchars($response['querystring'], ENT_QUOTES | ENT_HTML5)) . "</p>";
 
-                print "<p><strong>Status:</strong> " . (true === $response['status'] ? '<span class="success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>') . "</p>";
+                print "<p><strong>Status:</strong> " . (true === $response['status'] ? '<span class="lead-success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>') . "</p>";
 
                 print "<p><strong>Response:</strong> " . htmlspecialchars($response['text'], ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE) . "</p>";
 
