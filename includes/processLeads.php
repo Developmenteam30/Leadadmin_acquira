@@ -525,6 +525,10 @@ class ProcessLeads
                         ProcessLeads::assignValue($varFields[$count], date("m-d-Y", strtotime($row->dob)), $requestdata, $xmldata);
                         break;
 
+                    case 'dob_slashes':
+                        ProcessLeads::assignValue($varFields[$count], date("m/d/Y", strtotime($row->dob)), $requestdata, $xmldata);
+                        break;
+
                     case 'gender_full':
                         ProcessLeads::assignValue($varFields[$count], $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata);
                         break;
