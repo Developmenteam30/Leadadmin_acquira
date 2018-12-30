@@ -4169,6 +4169,21 @@ class Leads
         }
     }
 
+    public function getInboundMissingTimestamps()
+    {
+        $results = array();
+
+        try {
+            $query = $this->db->prepare("SELECT idRecord FROM dnrdmktg.data_inbound WHERE timestamp IS NULL");
+            $query->execute();
+            $results = $query->fetchAll();
+        } catch (PDOException $e) {
+            $this->logError('Unable to get inbound missing timestamps: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function getPendingJob()
     {
         try {

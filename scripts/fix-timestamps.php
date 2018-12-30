@@ -1,5 +1,7 @@
 <?php
 
+die('UNUSED');
+
 require('../includes/c_config.php');
 require_once(INCLUDES . 'leads.php');
 
@@ -17,6 +19,22 @@ pcntl_signal(SIGHUP, 'signalHandler'); // Terminal log-out
 pcntl_signal(SIGINT, 'signalHandler'); // Interrupted (Ctrl-C is pressed)
 
 $leads = Leads::getInstance();
+
+
+$records = $leads->getInboundMissingTimestamps();
+foreach ($records as $record) {
+    $seconds = (($record['idRecord'] - 1000425601) * 1125273) / 9247643;
+
+    $date = new \DateTime('2018-11-15 18:17:09', new \DateTimeZone('UTC'));
+    $date->modify("+" . round($seconds) . " seconds");
+
+    echo $record['idRecord'] . ' ' . round($seconds) . ' ' . $date->format('c') . PHP_EOL;
+
+    $leads->fixInboundRecordTimestamp($record['idRecord'], $date->format('Y-m-d H:i:s'));
+}
+
+
+die();
 
 $date = new \DateTime('2018-11-17 12:36:14', new \DateTimeZone('UTC'));
 
@@ -43,27 +61,3 @@ for ($i = 1001678945; $i <= 1009679665; $i++) {
 print "Final commit ...\n";
 $leads->commit();
 
-/*
-
-$jobs = $leads->getJobsTimestamp();
-foreach ($jobs as $job) {
-    print $job->jobId . ' ' . $job->timestamp . PHP_EOL;
-    $leads->fixInboundJobTimestamp($job->jobId, $job->timestamp);
-}
-
-$leads->fixWaterfallStats( 855 );
-$leads->fixLiveStats( 664 );
-$leads->fixLiveStats( 690 );
-$leads->fixLiveStats( 731 );
-$leads->fixLiveStats( 732 );
-$leads->fixLiveStats( 815 );
-$leads->fixLiveStats( 859 );
-$leads->fixLiveStats( 863 );
-$leads->fixLiveStats( 864 );
-$leads->fixLiveStats( 632 );
-$leads->fixLiveStats( 631 );
-$leads->fixLiveStats( 642 );
-$leads->fixLiveStats( 801 );
-$leads->fixLiveStats( 843 );
-
-*/
