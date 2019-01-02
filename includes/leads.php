@@ -3113,6 +3113,7 @@ class Leads
 
     public function inboundAdd($idFeedIn, $fields, $statsDay, $error = null, $jobId = null)
     {
+        $this->db->query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
         $this->db->beginTransaction();
 
         try {
@@ -5270,7 +5271,7 @@ class Leads
 
         $startDate = new \DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
         try {
-            $startDate->sub(new \DateInterval('P3M'));
+            $startDate->sub(new \DateInterval('P4M'));
             $startDate->modify('first day of this month')->setTime(0, 0, 0);
             $endDate = clone $startDate;
             $endDate->modify('last day of this month')->setTime(23, 59, 59);
@@ -5300,22 +5301,23 @@ class Leads
             $queryDelete = $this->db->prepare("DELETE FROM data_inbound WHERE idRecord = :idRecord");
             $queryDelete->bindParam(':idRecord', $recordId, \PDO::PARAM_INT);
 
+            $this->beginTransaction();
+
             do {
                 $querySelect->execute();
                 $row = $querySelect->fetch(\PDO::FETCH_BOUND);
 
                 if (true === $row) {
                     if ($cnt % 1000 === 0) {
+                        $this->db->commit();
                         print date('c') . " Archiving inbound {$recordId}\n";
+                        $this->beginTransaction();
                     }
-
-                    $this->db->beginTransaction();
 
                     $queryInsert->execute();
 
                     $queryDelete->execute();
 
-                    $this->db->commit();
                 }
 
                 $cnt++;
@@ -5324,8 +5326,11 @@ class Leads
 
             } while (!empty($row));
 
+            $this->commit();
+
         } catch (PDOException $e) {
             $this->logError('Unable to archive inbound accepted: ' . $e->getMessage());
+            $this->rollBack();
         }
         return $cnt;
     }
@@ -6567,7 +6572,7 @@ SQL;
         $cnt = 0;
         $recordId = 0;
 
-        $startDate = new \DateTime('2018-08-01 00:00:00');
+        $startDate = new \DateTime('2017-09-01 00:00:00');
         $endDate = new \DateTime('2014-06-01 00:00:00');
         $tableDate = clone $startDate;
 
