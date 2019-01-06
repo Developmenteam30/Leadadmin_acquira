@@ -35,15 +35,6 @@ require_once(INCLUDES . 'leads.php');
 require_once(INCLUDES . 'processLeads.php');
 $leads = Leads::getInstance();
 
-$pidFile = sprintf('/tmp/pushlead-%d-%d', intval($idFeedOut), getmypid());
-$fh = fopen($pidFile, 'w');
-if (!$fh) {
-    print "Unable to write PID file\n";
-    die();
-}
-fwrite($fh, $idFeedOut);
-fclose($fh);
-
 declare(ticks = 1);
 
 pcntl_signal(SIGTERM, 'signalHandler');// Termination ('kill' was called)
@@ -54,7 +45,6 @@ $feedOut = $leads->getOutboundFeed($idFeedOut);
 
 if (empty($feedOut)) {
     print "Feed {$idFeedOut} does not exist!\n";
-    @unlink($pidFile);
     die();
 }
 
@@ -120,5 +110,3 @@ while ($running) {
 }
 
 print "Finished!\n";
-
-@unlink($pidFile);
