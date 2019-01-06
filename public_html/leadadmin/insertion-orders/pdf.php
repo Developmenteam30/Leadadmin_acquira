@@ -201,7 +201,7 @@ setDarkOnLight($pdf);
 $pdf->SetFont('Arial', '', 10);
 
 $fields = [
-    $order->costPerLead,
+    $order->costPerLead . ' / ' . $order->costPerLeadUOM,
     $order->deliveryMethod,
     $order->qty,
     $order->did,

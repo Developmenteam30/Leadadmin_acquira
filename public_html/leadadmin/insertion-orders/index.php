@@ -78,6 +78,11 @@ if (isset($_REQUEST['a'])) {
                 break;
             }
 
+            if (empty($_REQUEST['costPerLeadUOM'])) {
+                $result['error'] = 'Please enter the cost per lead UOM.';
+                break;
+            }
+
             if (empty($_REQUEST['deliveryMethod'])) {
                 $result['error'] = 'Please enter the delivery method.';
                 break;
@@ -118,6 +123,7 @@ if (isset($_REQUEST['a'])) {
                 'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
                 'callReporting' => empty($_REQUEST['callReporting']) ? null : $_REQUEST['callReporting'],
                 'costPerLead' => empty($_REQUEST['costPerLead']) ? null : $_REQUEST['costPerLead'],
+                'costPerLeadUOM' => empty($_REQUEST['costPerLeadUOM']) ? null : $_REQUEST['costPerLeadUOM'],
                 'deliveryMethod' => empty($_REQUEST['deliveryMethod']) ? null : $_REQUEST['deliveryMethod'],
                 'qty' => empty($_REQUEST['qty']) ? null : $_REQUEST['qty'],
                 'did' => empty($_REQUEST['did']) ? null : $_REQUEST['did'],
@@ -215,6 +221,11 @@ if (isset($_REQUEST['a'])) {
                 break;
             }
 
+            if (empty($_REQUEST['costPerLeadUOM'])) {
+                $result['error'] = 'Please enter the cost per lead UOM.';
+                break;
+            }
+
             if (empty($_REQUEST['deliveryMethod'])) {
                 $result['error'] = 'Please enter the delivery method.';
                 break;
@@ -255,6 +266,7 @@ if (isset($_REQUEST['a'])) {
                 'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
                 'callReporting' => empty($_REQUEST['callReporting']) ? null : $_REQUEST['callReporting'],
                 'costPerLead' => empty($_REQUEST['costPerLead']) ? null : $_REQUEST['costPerLead'],
+                'costPerLeadUOM' => empty($_REQUEST['costPerLeadUOM']) ? null : $_REQUEST['costPerLeadUOM'],
                 'deliveryMethod' => empty($_REQUEST['deliveryMethod']) ? null : $_REQUEST['deliveryMethod'],
                 'qty' => empty($_REQUEST['qty']) ? null : $_REQUEST['qty'],
                 'did' => empty($_REQUEST['did']) ? null : $_REQUEST['did'],
@@ -375,9 +387,20 @@ if (isset($_REQUEST['d'])) {
                 ),
                 array(
                     'id' => 'costPerLead',
-                    'label' => 'Cost Per Lead',
+                    'label' => 'CPL Amount',
                     'type' => 'text',
                     'required' => true,
+                ),
+                array(
+                    'id' => 'costPerLeadUOM',
+                    'label' => 'CPL Per',
+                    'type' => 'select',
+                    'required' => true,
+                    'choices' => array(
+                        'lead' => 'Lead',
+                        'hour' => 'Hour',
+                        'call' => 'Call',
+                    ),
                 ),
                 array(
                     'id' => 'deliveryMethod',
@@ -656,11 +679,22 @@ if (isset($_REQUEST['d'])) {
                 ),
                 array(
                     'id' => 'costPerLead',
-                    'label' => 'Cost Per Lead',
+                    'label' => 'CPL Amount',
                     'type' => 'text',
                     'required' => true,
                     'value' => $order->costPerLead,
-
+                ),
+                array(
+                    'id' => 'costPerLeadUOM',
+                    'label' => 'CPL Per',
+                    'type' => 'select',
+                    'required' => true,
+                    'choices' => array(
+                        'lead' => 'Lead',
+                        'hour' => 'Hour',
+                        'call' => 'Call',
+                    ),
+                    'value' => $order->costPerLeadUOM,
                 ),
                 array(
                     'id' => 'deliveryMethod',
