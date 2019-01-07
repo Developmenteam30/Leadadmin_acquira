@@ -1023,6 +1023,7 @@ if (isset($_REQUEST['d'])) {
                 ),
             );
 
+            // Add custom fields to the form for editing
             foreach ($varFields as $key => $val) {
                 if (preg_match('/^c_.+/', $val)) {
                     $fields[] = array(
