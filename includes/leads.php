@@ -3018,8 +3018,8 @@ class Leads
             $query->execute();
             while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
 
-                $staticFieldsJSON = [];
-                $varFieldsJSON = [];
+                $staticFieldsJSON = new stdClass();
+                $varFieldsJSON = new stdClass();
 
                 if (!empty($row->staticFields)) {
                     $staticFields = explode(";", $row->staticFields);
@@ -3027,7 +3027,7 @@ class Leads
                         if (!empty($sF)) {
                             $fieldValuePair = explode("=", $sF);
                             if (isset($fieldValuePair[0], $fieldValuePair[1])) {
-                                $staticFieldsJSON[$fieldValuePair[0]] = $fieldValuePair[1];
+                                $staticFieldsJSON->{$fieldValuePair[0]} = $fieldValuePair[1];
                             } else {
                                 print "EMPTY FIELD {$row->idFeedOut}\n";
                                 var_dump([
@@ -3044,7 +3044,7 @@ class Leads
                     $fieldMap = explode(";", $row->fieldMap);
                     for ($count = 0; $count < count($varFields); $count++) {
                         if (isset($varFields[$count], $fieldMap[$count])) {
-                            $varFieldsJSON[$varFields[$count]] = $fieldMap[$count];
+                            $varFieldsJSON->{$varFields[$count]} = $fieldMap[$count];
                         } else {
                             print "EMPTY FIELD {$row->idFeedOut}\n";
                             var_dump([
