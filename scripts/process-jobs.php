@@ -411,12 +411,13 @@ if ('clear-outbound-queue' === $job->type) {
                 $counts['failures']++;
             } else {
 
-                if (($pushError = ProcessLeads::pushIncomingData($feedParams, $data, $inboundId)) === null) {
-                    print " - VALID\n";
-                    $counts['success']++;
-                } else {
+                $pushResponse = ProcessLeads::pushIncomingData($feedParams, $data, $inboundId);
+                if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
                     print " - ERROR\n";
                     $counts['invalid']++;
+                } else {
+                    print " - VALID\n";
+                    $counts['success']++;
                 }
             }
 
@@ -572,12 +573,13 @@ if ('clear-outbound-queue' === $job->type) {
                 $counts['failures']++;
             } else {
 
-                if (($pushError = ProcessLeads::pushIncomingData($feedParams, $data, $inboundId, $job->destination)) === null) {
-                    print " - VALID\n";
-                    $counts['success']++;
-                } else {
+                $pushResponse = ProcessLeads::pushIncomingData($feedParams, $data, $inboundId, $job->destination);
+                if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
                     print " - ERROR\n";
                     $counts['invalid']++;
+                } else {
+                    print " - VALID\n";
+                    $counts['success']++;
                 }
             }
 
@@ -688,16 +690,16 @@ if ('clear-outbound-queue' === $job->type) {
             while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
 
                 print "Record: {$row['idRecord']} {$row['idFeedIn']}\n";
-
-                if (($pushError = ProcessLeads::pushIncomingData($feedParams, $row, $row['idRecord'], $job->destination)) === null) {
+                $pushResponse = ProcessLeads::pushIncomingData($feedParams, $row, $row['idRecord'], $job->destination);
+                if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
+                    echo "\t{$pushError}\n";
+                } else {
                     echo "\tSUCCESS\n";
                     $cnt++;
 
                     $leads->updateJob($job->jobId, array(
                         'records' => $cnt,
                     ));
-                } else {
-                    echo "\t{$pushError}\n";
                 }
             }
         }
