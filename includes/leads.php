@@ -3007,6 +3007,51 @@ class Leads
         return $results;
     }
 
+    public function convertFields()
+    {
+        $results = array();
+
+        $sql = "SELECT idFeedOut,staticFields,varFields,fieldMap FROM feedout";
+
+        try {
+            $query = $this->db->prepare($sql);
+            $query->execute();
+            while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+
+                $staticFieldsJSON = [];
+                $varFieldsJSON = [];
+                $staticFields = explode(";", $row->staticFields);
+                $varFields = explode(";", $row->varFields);
+                $fieldMap = explode(";", $row->fieldMap);
+
+                foreach ($staticFields as $sF) {
+                    if (!empty($sF)) {
+                        $fieldValuePair = explode("=", $sF);
+                        $staticFieldsJSON[$fieldValuePair[0]] = $fieldValuePair[1];
+                    }
+                }
+
+                for ($count = 0; $count < count($varFields); $count++) {
+                    if (!empty($varFields[$count])) {
+                        $varFieldsJSON[$varFields[$count]] = $fieldMap[$count];
+                    }
+                }
+
+                $fields = [
+                    'staticFieldsJSON' => json_encode($staticFieldsJSON),
+                    'varFieldsJSON' => json_encode($varFieldsJSON),
+                ];
+
+                var_dump($fields);
+                $this->updateOutboundFeed($row->idFeedOut, $fields);
+            }
+        } catch (PDOException $e) {
+            $this->logError('Unable to get outbound feed list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function getOutboundFeedsCron($mod = null)
     {
 

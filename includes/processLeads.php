@@ -425,9 +425,8 @@ class ProcessLeads
             'text' => 'Unknown error.',
         );
 
-        $staticFields = explode(";", $feedOut->staticFields);
-        $varFields = explode(";", $feedOut->varFields);
-        $fieldMap = explode(";", $feedOut->fieldMap);
+        $staticFields = !empty($feedOut->staticFieldsJSON) ? json_decode($feedOut->staticFieldsJSON, true) : array();
+        $varFields = !empty($feedOut->varFieldsJSON) ? json_decode($feedOut->varFieldsJSON, true) : array();
         $valueMap = !empty($feedOut->valueMap) ? json_decode($feedOut->valueMap, true) : array();
 
         // Override the outbound URL
@@ -484,11 +483,8 @@ class ProcessLeads
 
         $requestdata = array();
         $xmldata = array();
-        foreach ($staticFields as $sF) { //Compile Static Fields into the post array.
-            if (!empty($sF)) {
-                $fieldValuePair = explode("=", $sF);
-                ProcessLeads::assignValue($fieldValuePair[0], $fieldValuePair[1], $requestdata, $xmldata);
-            }
+        foreach ($staticFields as $key => $val) { //Compile Static Fields into the post array.
+            ProcessLeads::assignValue($key, $val, $requestdata, $xmldata);
         }
 
         $genderMap = array(
@@ -496,112 +492,110 @@ class ProcessLeads
             'F' => 'Female',
         );
 
-        for ($count = 0; $count < count($varFields); $count++) { //Compile mapped fields into the post array.
-            if (!empty($varFields[$count])) {
-                switch ($fieldMap[$count]) {
-                    case 'urlAssign':
-                        $urlassignments = explode(";", $feedOut->urlassignments);
-                        $urlassignment = '';
-                        foreach ($urlassignments as $instructions) {
-                            if (!empty($instructions)) {
-                                $fieldValuePair = explode("=", $instructions);
-                                if (stripos($row->url, $fieldValuePair[0]) !== false) {
-                                    if ($debug) {
-                                        echo "\tMatched assignment: " . $fieldValuePair[0] . "\n";
-                                    }
-                                    $urlassignment = $fieldValuePair[1];
-                                    break;
+        foreach ($varFields as $key => $val) {
+            switch ($val) {
+                case 'urlAssign':
+                    $urlassignments = explode(";", $feedOut->urlassignments);
+                    $urlassignment = '';
+                    foreach ($urlassignments as $instructions) {
+                        if (!empty($instructions)) {
+                            $fieldValuePair = explode("=", $instructions);
+                            if (stripos($row->url, $fieldValuePair[0]) !== false) {
+                                if ($debug) {
+                                    echo "\tMatched assignment: " . $fieldValuePair[0] . "\n";
                                 }
+                                $urlassignment = $fieldValuePair[1];
+                                break;
                             }
                         }
-                        ProcessLeads::assignValue($varFields[$count], $urlassignment, $requestdata, $xmldata);
-                        break;
+                    }
+                    ProcessLeads::assignValue($key, $urlassignment, $requestdata, $xmldata);
+                    break;
 
-                    case 'recordId':
-                        ProcessLeads::assignValue($varFields[$count], $row->idRecord ?? '', $requestdata, $xmldata);
-                        break;
+                case 'recordId':
+                    ProcessLeads::assignValue($key, $row->idRecord ?? '', $requestdata, $xmldata);
+                    break;
 
-                    case 'dobUS':
-                        ProcessLeads::assignValue($varFields[$count], date("m-d-Y", strtotime($row->dob)), $requestdata, $xmldata);
-                        break;
+                case 'dobUS':
+                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->dob)), $requestdata, $xmldata);
+                    break;
 
-                    case 'dob_slashes':
-                        ProcessLeads::assignValue($varFields[$count], date("m/d/Y", strtotime($row->dob)), $requestdata, $xmldata);
-                        break;
+                case 'dob_slashes':
+                    ProcessLeads::assignValue($key, date("m/d/Y", strtotime($row->dob)), $requestdata, $xmldata);
+                    break;
 
-                    case 'gender_full':
-                        ProcessLeads::assignValue($varFields[$count], $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata);
-                        break;
+                case 'gender_full':
+                    ProcessLeads::assignValue($key, $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata);
+                    break;
 
-                    case 'stampUS':
-                        ProcessLeads::assignValue($varFields[$count], date("m-d-Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata);
-                        break;
+                case 'stampUS':
+                    ProcessLeads::assignValue($key, date("m-d-Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata);
+                    break;
 
-                    case 'stampUS_dateOnly':
-                        ProcessLeads::assignValue($varFields[$count], date("m-d-Y", strtotime($row->stamp)), $requestdata, $xmldata);
-                        break;
+                case 'stampUS_dateOnly':
+                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->stamp)), $requestdata, $xmldata);
+                    break;
 
-                    case 'stamp_YYYYmmdd':
-                        ProcessLeads::assignValue($varFields[$count], date("Ymd", strtotime($row->stamp)), $requestdata, $xmldata);
-                        break;
+                case 'stamp_YYYYmmdd':
+                    ProcessLeads::assignValue($key, date("Ymd", strtotime($row->stamp)), $requestdata, $xmldata);
+                    break;
 
-                    case 'stamp_YYYY-mm-dd':
-                        ProcessLeads::assignValue($varFields[$count], date("Y-m-d", strtotime($row->stamp)), $requestdata, $xmldata);
-                        break;
+                case 'stamp_YYYY-mm-dd':
+                    ProcessLeads::assignValue($key, date("Y-m-d", strtotime($row->stamp)), $requestdata, $xmldata);
+                    break;
 
-                    case 'stampUSAMPM':
-                        ProcessLeads::assignValue($varFields[$count], date("m-d-Y h:i:sA", strtotime($row->stamp)), $requestdata, $xmldata);
-                        break;
+                case 'stampUSAMPM':
+                    ProcessLeads::assignValue($key, date("m-d-Y h:i:sA", strtotime($row->stamp)), $requestdata, $xmldata);
+                    break;
 
-                    case 'stampUS+AMPM':
-                        ProcessLeads::assignValue($varFields[$count], date("m-d-Y h:i:s A", strtotime($row->stamp)), $requestdata, $xmldata);
-                        break;
+                case 'stampUS+AMPM':
+                    ProcessLeads::assignValue($key, date("m-d-Y h:i:s A", strtotime($row->stamp)), $requestdata, $xmldata);
+                    break;
 
-                    case 'stampUS_slashes':
-                        ProcessLeads::assignValue($varFields[$count], date("m/d/Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata);
-                        break;
+                case 'stampUS_slashes':
+                    ProcessLeads::assignValue($key, date("m/d/Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata);
+                    break;
 
-                    case 'stamp_ISO8601':
-                        ProcessLeads::assignValue($varFields[$count], date('c', strtotime($row->stamp)), $requestdata, $xmldata);
-                        break;
+                case 'stamp_ISO8601':
+                    ProcessLeads::assignValue($key, date('c', strtotime($row->stamp)), $requestdata, $xmldata);
+                    break;
 
-                    case 'landline_areacode':
-                        ProcessLeads::assignValue($varFields[$count], 10 == strlen($row->landline) ? substr($row->landline, 0, 3) : '', $requestdata, $xmldata);
-                        break;
+                case 'landline_areacode':
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 0, 3) : '', $requestdata, $xmldata);
+                    break;
 
-                    case 'landline_NXX':
-                        ProcessLeads::assignValue($varFields[$count], 10 == strlen($row->landline) ? substr($row->landline, 3, 3) : '', $requestdata, $xmldata);
-                        break;
+                case 'landline_NXX':
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 3) : '', $requestdata, $xmldata);
+                    break;
 
-                    case 'landline_XXXX':
-                        ProcessLeads::assignValue($varFields[$count], 10 == strlen($row->landline) ? substr($row->landline, 6, 4) : '', $requestdata, $xmldata);
-                        break;
+                case 'landline_XXXX':
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 6, 4) : '', $requestdata, $xmldata);
+                    break;
 
-                    case 'landline_NXX+XXXX':
-                        ProcessLeads::assignValue($varFields[$count], 10 == strlen($row->landline) ? substr($row->landline, 3, 7) : '', $requestdata, $xmldata);
-                        break;
+                case 'landline_NXX+XXXX':
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 7) : '', $requestdata, $xmldata);
+                    break;
 
-                    case 'cellphone_areacode':
-                        ProcessLeads::assignValue($varFields[$count], 10 == strlen($row->cellphone) ? substr($row->cellphone, 0, 3) : '', $requestdata, $xmldata);
-                        break;
+                case 'cellphone_areacode':
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 0, 3) : '', $requestdata, $xmldata);
+                    break;
 
-                    case 'cellphone_NXX':
-                        ProcessLeads::assignValue($varFields[$count], 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 3) : '', $requestdata, $xmldata);
-                        break;
+                case 'cellphone_NXX':
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 3) : '', $requestdata, $xmldata);
+                    break;
 
-                    case 'cellphone_XXXX':
-                        ProcessLeads::assignValue($varFields[$count], 10 == strlen($row->cellphone) ? substr($row->cellphone, 6, 4) : '', $requestdata, $xmldata);
-                        break;
+                case 'cellphone_XXXX':
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 6, 4) : '', $requestdata, $xmldata);
+                    break;
 
-                    case 'cellphone_NXX+XXXX':
-                        ProcessLeads::assignValue($varFields[$count], 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 7) : '', $requestdata, $xmldata);
-                        break;
+                case 'cellphone_NXX+XXXX':
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 7) : '', $requestdata, $xmldata);
+                    break;
 
-                    default:
-                        ProcessLeads::assignValue($varFields[$count], $row->{$fieldMap[$count]}, $requestdata, $xmldata);
-                        break;
+                default:
+                    ProcessLeads::assignValue($key, $row->{$val} ?? '', $requestdata, $xmldata);
+                    break;
 
-                }
             }
         }
 

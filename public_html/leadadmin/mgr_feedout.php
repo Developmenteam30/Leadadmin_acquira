@@ -52,31 +52,28 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Please provide a post URL.';
             }
 
-            $staticFields = '';
+            $staticFields = [];
             if (!empty($_REQUEST['staticFields_field']) && is_array($_REQUEST['staticFields_field'])) {
                 $_REQUEST['staticFields_field'] = array_map('trim', $_REQUEST['staticFields_field']);
                 $_REQUEST['staticFields_value'] = array_map('trim', $_REQUEST['staticFields_value']);
                 $temp = array();
                 for ($i = 0; $i < sizeOf($_REQUEST['staticFields_field']); $i++) {
-                    // Strip our field delimiters of = and ; out of the input
-                    $temp[] = sprintf('%s=%s',
-                        str_replace(array('=', ';'), '', $_REQUEST['staticFields_field'][$i]),
-                        !empty($_REQUEST['staticFields_value'][$i]) ? str_replace(array('=', ';'), '', $_REQUEST['staticFields_value'][$i]) : ''
-                    );
+                    if (isset($_REQUEST['staticFields_field'][$i])) {
+                        $staticFields[$_REQUEST['staticFields_field'][$i]] = $_REQUEST['staticFields_value'][$i] ?? '';
+                    }
                 }
-                $staticFields = implode(';', $temp);
             }
 
-            $varFields = '';
+            $varFields = [];
             if (!empty($_REQUEST['varFields']) && is_array($_REQUEST['varFields'])) {
                 $_REQUEST['varFields'] = array_map('trim', $_REQUEST['varFields']);
-                $varFields = implode(';', $_REQUEST['varFields']);
-            }
-
-            $fieldMap = '';
-            if (!empty($_REQUEST['fieldMap']) && is_array($_REQUEST['fieldMap'])) {
                 $_REQUEST['fieldMap'] = array_map('trim', $_REQUEST['fieldMap']);
-                $fieldMap = implode(';', $_REQUEST['fieldMap']);
+                $temp = array();
+                for ($i = 0; $i < sizeOf($_REQUEST['varFields']); $i++) {
+                    if (isset($_REQUEST['varFields'][$i])) {
+                        $varFields[$_REQUEST['varFields'][$i]] = $_REQUEST['fieldMap'][$i] ?? '';
+                    }
+                }
             }
 
             $valueMap = array();
@@ -187,9 +184,8 @@ if (isset($_REQUEST['a'])) {
                         'idCompany' => $_REQUEST['idCompany'],
                         'feedType' => empty($_REQUEST['feedType']) ? 'curlPOST' : $_REQUEST['feedType'],
                         'postUrl' => empty($_REQUEST['postUrl']) ? null : $_REQUEST['postUrl'],
-                        'staticFields' => empty($staticFields) ? null : $staticFields,
-                        'varFields' => empty($varFields) ? null : $varFields,
-                        'fieldMap' => empty($fieldMap) ? null : $fieldMap,
+                        'staticFieldsJSON' => empty($staticFields) ? null : json_encode($staticFields),
+                        'varFieldsJSON' => empty($varFields) ? null : json_encode($varFields),
                         'valueMap' => empty($valueMap) ? null : json_encode($valueMap),
                         'cron' => 1,
                         'cronTiming' => 1,
@@ -279,9 +275,8 @@ if (isset($_REQUEST['a'])) {
                         'idCompany' => $_REQUEST['idCompany'],
                         'feedType' => empty($_REQUEST['feedType']) ? 'curlPOST' : $_REQUEST['feedType'],
                         'postUrl' => empty($_REQUEST['postUrl']) ? null : $_REQUEST['postUrl'],
-                        'staticFields' => empty($staticFields) ? null : $staticFields,
-                        'varFields' => empty($varFields) ? null : $varFields,
-                        'fieldMap' => empty($fieldMap) ? null : $fieldMap,
+                        'staticFieldsJSON' => empty($staticFields) ? null : json_encode($staticFields),
+                        'varFieldsJSON' => empty($varFields) ? null : json_encode($varFields),
                         'valueMap' => empty($valueMap) ? null : json_encode($valueMap),
                         'successString' => empty($_REQUEST['successString']) ? null : $_REQUEST['successString'],
                         'urlassignments' => empty($urlAssign) ? null : $urlAssign,
@@ -850,6 +845,8 @@ if (isset($_REQUEST['d'])) {
                 break;
             }
 
+            $varFields = !empty($feedOut->varFieldsJSON) ? json_decode($feedOut->varFieldsJSON, true) : array();
+
             $_REQUEST['gender'] = strtoupper($_REQUEST['gender'] ?? 'M');
             $_REQUEST['country'] = strtoupper($_REQUEST['country'] ?? 'US');
             $_REQUEST['cellphone'] = preg_replace('/[^0-9]/', '', ($_REQUEST['cellphone'] ?? '2125551818'));
@@ -1026,14 +1023,13 @@ if (isset($_REQUEST['d'])) {
                 ),
             );
 
-            $fieldMap = explode(";", $feedOut->fieldMap);
-            foreach ($fieldMap as $field) {
-                if (preg_match('/^c_.+/', $field)) {
+            foreach ($varFields as $key => $val) {
+                if (preg_match('/^c_.+/', $val)) {
                     $fields[] = array(
-                        'id' => $field,
-                        'label' => $field,
+                        'id' => $val,
+                        'label' => $val,
                         'type' => 'text',
-                        'value' => $_REQUEST[$field] ?? '',
+                        'value' => $_REQUEST[$val] ?? '',
                     );
                 }
             }
@@ -1076,9 +1072,9 @@ if (isset($_REQUEST['d'])) {
             );
 
             // Add custom fields back into the data
-            for ($i = 0; $i <= sizeOf($fieldMap); $i++) {
-                if (isset($fieldMap[$i]) && isset($_REQUEST[$fieldMap[$i]])) {
-                    $leaddata->{$fieldMap[$i]} = $_REQUEST[$fieldMap[$i]] ?? '';
+            foreach ($varFields as $key => $val) {
+                if (isset($val) && isset($_REQUEST[$val])) {
+                    $leaddata->{$val} = $_REQUEST[$val] ?? '';
                 }
             }
 
@@ -1203,11 +1199,8 @@ if (isset($_REQUEST['d'])) {
                 exit;
             }
 
-            if (!is_null($feed->staticFields) && $feed->staticFields != '') {
-                $staticFields = explode(";", $feed->staticFields);
-            }
-            $varFields = explode(";", $feed->varFields);
-            $fieldMap = explode(";", $feed->fieldMap);
+            $feed->staticFields = !empty($feed->staticFieldsJSON) ? json_decode($feed->staticFieldsJSON, true) : array();
+            $feed->varFields = !empty($feed->varFieldsJSON) ? json_decode($feed->varFieldsJSON, true) : array();
             $valueMap = !empty($feed->valueMap) ? json_decode($feed->valueMap, true) : array();
             $selectedNotifyThresholdDays = !empty($feed->notifyThresholdDays) ? explode(",", $feed->notifyThresholdDays) : array();
 
@@ -1227,11 +1220,8 @@ if (isset($_REQUEST['d'])) {
                 if (!empty($feed)) {
                     $feed->label = '';
                     $feed->description = '';
-                    if (!empty($feed->staticFields)) {
-                        $staticFields = explode(";", $feed->staticFields);
-                    }
-                    $varFields = explode(";", $feed->varFields);
-                    $fieldMap = explode(";", $feed->fieldMap);
+                    $feed->staticFields = !empty($feed->staticFieldsJSON) ? json_decode($feed->staticFieldsJSON, true) : array();
+                    $feed->varFields = !empty($feed->varFieldsJSON) ? json_decode($feed->varFieldsJSON, true) : array();
                     $valueMap = !empty($feed->valueMap) ? json_decode($feed->valueMap, true) : array();
                 }
             }
@@ -1261,6 +1251,8 @@ if (isset($_REQUEST['d'])) {
                 'salesperson',
                 'xmlDTD',
                 'processingSchedule',
+                'staticFields',
+                'varFields',
             );
             foreach ($feedProps as $feedProp) {
                 if (isset($feed)) {
@@ -1273,9 +1265,6 @@ if (isset($_REQUEST['d'])) {
             }
 
             $explodableProperties = array(
-                'staticFields',
-                'varFields',
-                'fieldMap',
                 'urlassignments',
             );
             foreach ($explodableProperties as $eP) {
@@ -1403,16 +1392,15 @@ if (isset($_REQUEST['d'])) {
 							</p>
 							<div>
 								<div id='staticFields_container'>
-                                    <?php foreach ($feed_staticFields as $sF) {
-                                        $valuePair = explode("=", $sF);
+                                    <?php foreach ($feed_staticFields as $key => $val) {
                                         ?>
 										<div>
 											<input type='text'
 											       name='staticFields_field[]'
-											       value='<?php echo $valuePair[0]; ?>'
+											       value='<?php echo Display::escHtml($key); ?>'
 											/> = <input type='text'
 											            name='staticFields_value[]'
-											            value='<?php echo $valuePair[1]; ?>'
+											            value='<?php echo Display::escHtml($val); ?>'
 											/>
 											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
 										</div>
@@ -1435,14 +1423,14 @@ if (isset($_REQUEST['d'])) {
 								<div id='varFields_container'>
                                     <?php
                                     $sFCount = 0;
-                                    foreach ($feed_varFields as $vF) {
+                                    foreach ($feed_varFields as $key => $val) {
                                         ?>
 										<div>
-											API Field: <input type='text' name='varFields[]' value='<?php echo $vF; ?>'/>
+											API Field: <input type='text' name='varFields[]' value='<?php echo Display::escHtml($key); ?>'/>
 											Mapped To: <select name='fieldMap[]'>
                                                 <?php
                                                 foreach ($allAvailableFields as $rF) { ?>
-													<option value='<?php echo Display::escHtml($rF->fieldName, ENT_QUOTES); ?>' <?php if ($feed_fieldMap[$sFCount] == $rF->fieldName) {
+													<option value='<?php echo Display::escHtml($rF->fieldName, ENT_QUOTES); ?>' <?php if ($val == $rF->fieldName) {
                                                         echo "selected='selected'";
                                                     } ?>><?php echo Display::escHtml($rF->fieldName); ?></option>
                                                 <?php } ?>
