@@ -603,7 +603,7 @@ class ProcessLeads
                         break;
 
                     default:
-                        ProcessLeads::assignValue($varFields[$count], $row->{$fieldMap[$count]}, $requestdata, $xmldata);
+                        ProcessLeads::assignValue($varFields[$count], $row->{$fieldMap[$count]} ?? '', $requestdata, $xmldata);
                         break;
 
                 }
