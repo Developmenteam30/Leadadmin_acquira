@@ -3020,20 +3020,38 @@ class Leads
 
                 $staticFieldsJSON = [];
                 $varFieldsJSON = [];
-                $staticFields = explode(";", $row->staticFields);
-                $varFields = explode(";", $row->varFields);
-                $fieldMap = explode(";", $row->fieldMap);
 
-                foreach ($staticFields as $sF) {
-                    if (!empty($sF)) {
-                        $fieldValuePair = explode("=", $sF);
-                        $staticFieldsJSON[$fieldValuePair[0]] = $fieldValuePair[1];
+                if (!empty($row->staticFields)) {
+                    $staticFields = explode(";", $row->staticFields);
+                    foreach ($staticFields as $sF) {
+                        if (!empty($sF)) {
+                            $fieldValuePair = explode("=", $sF);
+                            if (isset($fieldValuePair[0], $fieldValuePair[1])) {
+                                $staticFieldsJSON[$fieldValuePair[0]] = $fieldValuePair[1];
+                            } else {
+                                print "EMPTY FIELD {$row->idFeedOut}\n";
+                                var_dump([
+                                    $fieldValuePair[0] ?? null,
+                                    $fieldValuePair[1] ?? null,
+                                ]);
+                            }
+                        }
                     }
                 }
 
-                for ($count = 0; $count < count($varFields); $count++) {
-                    if (!empty($varFields[$count])) {
-                        $varFieldsJSON[$varFields[$count]] = $fieldMap[$count];
+                if (!empty($row->varFields) && !empty($row->fieldMap)) {
+                    $varFields = explode(";", $row->varFields);
+                    $fieldMap = explode(";", $row->fieldMap);
+                    for ($count = 0; $count < count($varFields); $count++) {
+                        if (isset($varFields[$count], $fieldMap[$count])) {
+                            $varFieldsJSON[$varFields[$count]] = $fieldMap[$count];
+                        } else {
+                            print "EMPTY FIELD {$row->idFeedOut}\n";
+                            var_dump([
+                                $varFields[$count] ?? null,
+                                $fieldMap[$count] ?? null,
+                            ]);
+                        }
                     }
                 }
 
@@ -3042,7 +3060,7 @@ class Leads
                     'varFieldsJSON' => json_encode($varFieldsJSON),
                 ];
 
-                var_dump($fields);
+                //var_dump($fields);
                 $this->updateOutboundFeed($row->idFeedOut, $fields);
             }
         } catch (PDOException $e) {
