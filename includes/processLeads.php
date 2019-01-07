@@ -161,9 +161,11 @@ class ProcessLeads
 
     public static function pushIncomingData($feedParams, $data, $idRecord, $idFeedOut = null)
     {
-
         $leads = Leads::getInstance();
-        $reason = null;
+        $result = [
+            'reason' => null,
+            'fields' => [],
+        ];
         $debug = false;
 
         if (!empty($data['url']) && !empty($feedParams->notifications)) {
@@ -375,6 +377,7 @@ class ProcessLeads
 
                             $liveData['accepted'] = true;
                             $liveData['anyProcessed'] = true;
+                            $liveData['fields'] = $status['fields'] ?? [];
                         }
                     }
                 } elseif ($debug) {
@@ -395,23 +398,25 @@ class ProcessLeads
 
             if (!$liveData['anyProcessed']) {
                 // We did not attempt to send any records, probably because we were outside of feed processing hours.
-                $reason = 'No suitable buyers found.';
-                $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $reason);
+                $result['reason'] = 'No suitable buyers found.';
+                $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $result['reason']);
             } elseif (!$liveData['accepted'] || (!empty($feedParams->chokePercent) && $randomChoke <= $feedParams->chokePercent)) {
                 // All attempts failed, so send the last failure message or randomly choke the record.
                 if (!$liveData['accepted']) {
-                    $reason = $liveData['reason'];
-                    $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $reason);
+                    $result['reason'] = $liveData['reason'];
+                    $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $result['reason']);
                 } else {
-                    $reason = sprintf('Third-party rejection [Reason: Duplicate record] [Code: I%s1]',
+                    $result['reason'] = sprintf('Third-party rejection [Reason: Duplicate record] [Code: I%s1]',
                         $feedParams->idFeedIn
                     );
-                    $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $reason);
+                    $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $result['reason']);
                 }
+            } else {
+                $result['fields'] = $liveData['fields'] ?? [];
             }
         }
 
-        return $reason;
+        return $result;
     }
 
     public static function pushOutboundData($feedOut, $row)
@@ -736,6 +741,10 @@ class ProcessLeads
             $sucstr = str_replace('%', '', $feedOut->successString); // Remove mysql wildcards
             if (stripos($result['text'], $sucstr) !== false) {
                 $result['status'] = true;
+                if (921 == $feedOut->idFeedOut && ($json = json_decode($result['text'])) !== null && isset($json->{'patient_id'})) {
+                    $result['fields']['patientId'] = $json->patient_id;
+                }
+
             } else {
                 $result['status'] = false;
             }
