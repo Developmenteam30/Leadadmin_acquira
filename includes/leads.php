@@ -6570,8 +6570,8 @@ class Leads
 
             foreach ($feeds as $feed) {
                 print "Resetting queue stats for feed: {$feed->idFeedOut}\n";
-                $this->lockTables("feedout WRITE, data_outbound WRITE");
-                $query = $this->db->prepare("UPDATE feedout SET queued = ( SELECT COUNT(*) AS cnt FROM data_outbound WHERE processed = 0 AND idFeedOut = ? ) WHERE idFeedOut = ?");
+                $this->lockTables("feedout WRITE, data_outbound AS o WRITE, data_inbound AS i READ");
+                $query = $this->db->prepare("UPDATE feedout SET queued = ( SELECT COUNT(o.idRecord) AS cnt FROM data_outbound o JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? ) WHERE idFeedOut = ?");
                 $query->execute(array($feed->idFeedOut, $feed->idFeedOut));
                 $this->unlockTables();
                 sleep(2);
