@@ -5334,7 +5334,7 @@ class Leads
 
         $startDate = new \DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
         try {
-            $startDate->sub(new \DateInterval('P4M'));
+            $startDate->sub(new \DateInterval('P3M'));
             $startDate->modify('first day of this month')->setTime(0, 0, 0);
             $endDate = clone $startDate;
             $endDate->modify('last day of this month')->setTime(23, 59, 59);
