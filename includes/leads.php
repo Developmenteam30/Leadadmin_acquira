@@ -6117,6 +6117,24 @@ class Leads
         return null;
     }
 
+    public function getOutboundQueuePreview($idFeedOut)
+    {
+        try {
+            $sql = "SELECT LEFT(CONVERT_TZ(i.timestamp,?,?),10) AS date,COUNT(*) AS cnt ";
+            $sql .= "FROM data_outbound o ";
+            $sql .= "JOIN data_inbound i ON i.idRecord = o.idRecord ";
+            $sql .= "WHERE idFeedOut = ? ";
+            $sql .= "AND processed = 0 ";
+            $sql .= "GROUP BY 1";
+            $query = $this->db->prepare($sql);
+            $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut));
+            return $query->fetchAll(\PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get outbound queue preview: ' . $e->getMessage());
+            return [];
+        }
+    }
+
     public function getOutboundQueueRecord($idFeedOut)
     {
 

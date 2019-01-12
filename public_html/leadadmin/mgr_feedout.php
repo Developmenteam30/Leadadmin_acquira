@@ -1148,6 +1148,57 @@ if (isset($_REQUEST['d'])) {
 
             break;
 
+        case 'dialog_queue-preview':
+            $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
+
+            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+                $idCompany = LeadsSession::getCompanyId();
+                if (empty($idCompany)) {
+                    $idCompany = -9999;
+                }
+                if (!$leads->checkOutboundFeedAccess($idCompany, $idFeedOut)) {
+                    die('Sorry, you do not have access to this feed.');
+                }
+            }
+
+            $stats = $leads->getOutboundQueuePreview($idFeedOut);
+            if (empty($stats)) {
+                print '<p>We could not find any queued records.</p>';
+                break;
+            }
+
+            ?>
+
+			<table class="table table-bordered table-condensed table-striped">
+				<thead>
+				<tr>
+					<th>Inbound Date</th>
+					<th>Count</th>
+				</tr>
+				</thead>
+				<tbody>
+                <?php
+                $cnt = 0;
+                foreach ($stats as $stat) {
+                    print '<tr>';
+                    printf("<td>%s</td>", $stat->date);
+                    printf("<td class='text-right'>%s</td>", number_format($stat->cnt, 0));
+                    print '</tr>';
+                    $cnt += $stat->cnt;
+                }
+                ?>
+				</tbody>
+				<tfoot>
+				<tr>
+					<td>GRAND TOTAL</td>
+					<td class="text-right"><?php echo number_format($cnt, 0); ?></td>
+				</tr>
+				</tfoot>
+			</table>
+
+            <?php
+            break;
+
         case 'dialog_clearqueue':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
@@ -3127,6 +3178,7 @@ include(INCLUDES . "c_header.php");
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-showpop" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Show populations</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#newfeed" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Duplicate feed</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-testrecord" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Send test record</a></li>
+										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-queue-preview" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Queue preview</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-clearqueue" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Clear queue</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">URL report</a></li>
 										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Import data</a></li>
@@ -3196,6 +3248,22 @@ include(INCLUDES . "c_header.php");
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					<h4 class="modal-title" id="showpop_title">Population Settings</h4>
+				</div>
+				<div class="modal-body">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="modal-queue-preview" tabindex="-1" role="dialog" aria-labelledby="queue-preview_title">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="queue-preview_title">Queue Preview</h4>
 				</div>
 				<div class="modal-body">
 				</div>
@@ -3438,6 +3506,25 @@ include(INCLUDES . "c_header.php");
 				url: 'mgr_feedout.php',
 				data: {
 					'd': 'dialog_editpopulation',
+					'idFeedOut': idFeedOut
+				},
+				success: function (data) {
+					modal.find('.modal-body').html(data);
+				}
+			});
+		});
+
+		$('#modal-queue-preview').on('show.bs.modal', function (e) {
+			var modal = $(this);
+			var idFeedOut = $(e.relatedTarget).data('feed-id');
+			$(modal).find('.modal-body').html('Loading ...');
+
+			$.ajax({
+				cache: false,
+				type: 'POST',
+				url: 'mgr_feedout.php',
+				data: {
+					'd': 'dialog_queue-preview',
 					'idFeedOut': idFeedOut
 				},
 				success: function (data) {
