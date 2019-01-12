@@ -16,6 +16,8 @@ ini_set("auto_detect_line_endings", true);
 set_time_limit(0);
 
 $leads = Leads::getInstance();
+$leads->setNetTimeouts(3600);
+
 $job = $leads->getPendingJob();
 if ($job === null) {
     print "No pending jobs";
@@ -650,6 +652,7 @@ if ('clear-outbound-queue' === $job->type) {
         }
 
         $leads_export = new Leads(false);
+        $leads_export->setNetTimeouts(3600);
 
         $feedParams = $leads->getInboundFeed($population->idFeedIn);
         if (empty($feedParams)) {
@@ -692,7 +695,7 @@ if ('clear-outbound-queue' === $job->type) {
                 print "Record: {$row['idRecord']} {$row['idFeedIn']}\n";
                 $pushResponse = ProcessLeads::pushIncomingData($feedParams, $row, $row['idRecord'], $job->destination);
                 if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
-                    echo "\t{$pushError}\n";
+                    echo "\t{$pushResponse['reason']}\n";
                 } else {
                     echo "\tSUCCESS\n";
                     $cnt++;
