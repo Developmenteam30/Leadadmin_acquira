@@ -117,7 +117,7 @@ if ('clear-outbound-queue' === $job->type) {
             if ('Unknown error.' == $status) {
                 $leads->updateJob($job->jobId, array(
                     'status' => 'finished',
-                    'records' => $statusCnt,
+                    'records' => $cnt,
                 ));
                 $status = "Successful";
             }
