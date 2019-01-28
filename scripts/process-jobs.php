@@ -102,7 +102,7 @@ if ('clear-outbound-queue' === $job->type) {
 
             while ($date <= $dateEnd) {
                 print "Trying date: " . $date->format(' Y-m-d') . PHP_EOL;
-                $statusCnt = $leads->retryOutboundRejections($job->destination, $date->format(' Y-m-d'));
+                $statusCnt = $leads->retryOutboundRejections($job->destination, $date->format('Y-m-d'));
                 if ($statusCnt === null) {
                     $leads->updateJob($job->jobId, array(
                         'status' => 'error',
@@ -117,6 +117,7 @@ if ('clear-outbound-queue' === $job->type) {
             if ('Unknown error.' == $status) {
                 $leads->updateJob($job->jobId, array(
                     'status' => 'finished',
+                    'records' => $statusCnt,
                 ));
                 $status = "Successful";
             }

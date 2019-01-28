@@ -4336,6 +4336,8 @@ class Leads
     {
         $count = 0;
 
+        $localDate = new \DateTime($date, new DateTimeZone(LOCAL_TIMEZONE));
+
         // Timestamps in data_outbound may need to be converted to a different timezone
         $utcStart = new DateTime($date . ' 00:00:00', new DateTimeZone(LOCAL_TIMEZONE));
         $utcStart->setTimeZone(new DateTimeZone(DB_TIMEZONE));
@@ -4346,33 +4348,42 @@ class Leads
         $this->db->beginTransaction();
 
         try {
-            $query = $this->db->prepare("UPDATE data_outbound SET timestamp = NULL, processed = 0, result = NULL WHERE accepted = 0 AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?");
+            $query = $this->db->prepare("INSERT IGNORE INTO data_outbound(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted) SELECT idRecord, idFeedIn, idFeedOut, NULL, NULL, idRecordLegacy, 0, 0, url, 0 FROM archive.data_outbound_" . $localDate->format('Ym') . " WHERE accepted = 0 AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?");
             $query->execute(array($idFeedOut, $utcStart->format('c'), $utcEnd->format('c')));
-
             $count = $query->rowCount();
-
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to retry outbound rejections (1): ' . $e->getMessage());
             return null;
         }
 
-        try {
-            $query = $this->db->prepare("UPDATE feedout SET queued = queued + ? WHERE idFeedOut = ?");
-            $query->execute(array($count, $idFeedOut));
-        } catch (PDOException $e) {
-            $this->db->rollBack();
-            $this->logError('Unable to retry outbound rejections (2): ' . $e->getMessage());
-            return null;
-        }
+        if ($count > 0) {
+            try {
+                $query = $this->db->prepare("DELETE FROM archive.data_outbound_" . $localDate->format('Ym') . " WHERE accepted = 0 AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?");
+                $query->execute(array($idFeedOut, $utcStart->format('c'), $utcEnd->format('c')));
+            } catch (PDOException $e) {
+                $this->db->rollBack();
+                $this->logError('Unable to retry outbound rejections (2): ' . $e->getMessage());
+                return null;
+            }
 
-        try {
-            $query = $this->db->prepare("UPDATE stats_outbound SET rejected = 0 WHERE idFeedOut = ? AND stamp = ?");
-            $query->execute(array($idFeedOut, $date));
-        } catch (PDOException $e) {
-            $this->db->rollBack();
-            $this->logError('Unable to retry outbound rejections (3): ' . $e->getMessage());
-            return null;
+            try {
+                $query = $this->db->prepare("UPDATE feedout SET queued = queued + ? WHERE idFeedOut = ?");
+                $query->execute(array($count, $idFeedOut));
+            } catch (PDOException $e) {
+                $this->db->rollBack();
+                $this->logError('Unable to retry outbound rejections (3): ' . $e->getMessage());
+                return null;
+            }
+
+            try {
+                $query = $this->db->prepare("UPDATE stats_outbound SET rejected = 0 WHERE idFeedOut = ? AND stamp = ?");
+                $query->execute(array($idFeedOut, $date));
+            } catch (PDOException $e) {
+                $this->db->rollBack();
+                $this->logError('Unable to retry outbound rejections (4): ' . $e->getMessage());
+                return null;
+            }
         }
 
         $this->db->commit();
