@@ -6,7 +6,7 @@ require_once(INCLUDES . 'f_site.php');
 
 class ProcessLeads
 {
-    public static function assignValue($key, $value, &$requestdata, &$xmldata)
+    public static function assignValue($key, $value, &$requestdata, &$xmldata, &$headerdata)
     {
 
         if (strpos($key, '|') !== false) {
@@ -31,6 +31,10 @@ class ProcessLeads
             // Assign this as XML data
             $key = str_replace('~', '', $key);
             $xmldata[$key] = $value;
+        } elseif (strpos($key, '@') === 0) {
+            // Assign this as header data
+            $key = str_replace('@', '', $key);
+            $headerdata[] = $key . ': ' . $value;
         } else {
             $requestdata[$key] = $value;
         }
@@ -488,8 +492,9 @@ class ProcessLeads
 
         $requestdata = array();
         $xmldata = array();
+        $headerdata = array();
         foreach ($staticFields as $key => $val) { //Compile Static Fields into the post array.
-            ProcessLeads::assignValue($key, $val, $requestdata, $xmldata);
+            ProcessLeads::assignValue($key, $val, $requestdata, $xmldata, $headerdata);
         }
 
         $genderMap = array(
@@ -514,91 +519,91 @@ class ProcessLeads
                             }
                         }
                     }
-                    ProcessLeads::assignValue($key, $urlassignment, $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, $urlassignment, $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'recordId':
-                    ProcessLeads::assignValue($key, $row->idRecord ?? '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, $row->idRecord ?? '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'dobUS':
-                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->dob)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'dob_slashes':
-                    ProcessLeads::assignValue($key, date("m/d/Y", strtotime($row->dob)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("m/d/Y", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'gender_full':
-                    ProcessLeads::assignValue($key, $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUS':
-                    ProcessLeads::assignValue($key, date("m-d-Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("m-d-Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUS_dateOnly':
-                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->stamp)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stamp_YYYYmmdd':
-                    ProcessLeads::assignValue($key, date("Ymd", strtotime($row->stamp)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("Ymd", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stamp_YYYY-mm-dd':
-                    ProcessLeads::assignValue($key, date("Y-m-d", strtotime($row->stamp)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("Y-m-d", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUSAMPM':
-                    ProcessLeads::assignValue($key, date("m-d-Y h:i:sA", strtotime($row->stamp)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("m-d-Y h:i:sA", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUS+AMPM':
-                    ProcessLeads::assignValue($key, date("m-d-Y h:i:s A", strtotime($row->stamp)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("m-d-Y h:i:s A", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUS_slashes':
-                    ProcessLeads::assignValue($key, date("m/d/Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date("m/d/Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stamp_ISO8601':
-                    ProcessLeads::assignValue($key, date('c', strtotime($row->stamp)), $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, date('c', strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'landline_areacode':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 0, 3) : '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 0, 3) : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'landline_NXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 3) : '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 3) : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'landline_XXXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 6, 4) : '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 6, 4) : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'landline_NXX+XXXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 7) : '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 7) : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'cellphone_areacode':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 0, 3) : '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 0, 3) : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'cellphone_NXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 3) : '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 3) : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'cellphone_XXXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 6, 4) : '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 6, 4) : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'cellphone_NXX+XXXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 7) : '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 7) : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 default:
-                    ProcessLeads::assignValue($key, $row->{$val} ?? '', $requestdata, $xmldata);
+                    ProcessLeads::assignValue($key, $row->{$val} ?? '', $requestdata, $xmldata, $headerdata);
                     break;
 
             }
@@ -621,7 +626,11 @@ class ProcessLeads
             $result['text'] = ProcessLeads::curlLead(
                 "",
                 $geturl,
-                false
+                false,
+                false,
+                true,
+                false,
+                $headerdata
             );
 
         } elseif ($feedOut->feedType == 'curlPOST-urlencoded') { // Method is POST
@@ -632,7 +641,11 @@ class ProcessLeads
             $result['text'] = ProcessLeads::curlLead(
                 http_build_query($requestdata),
                 $feedOut->postUrl,
-                true
+                true,
+                false,
+                true,
+                false,
+                $headerdata
             );
 
             $geturl = $feedOut->postUrl . "\n\nPOST BODY (application/x-www-form-urlencoded): " . http_build_query($requestdata);
@@ -653,7 +666,7 @@ class ProcessLeads
                 echo "\t" . $geturl . "\n";
                 echo "\tPosting data.\n";
             }
-            $result['text'] = ProcessLeads::curlLead("", $geturl, false);
+            $result['text'] = ProcessLeads::curlLead("", $geturl, false, false, true, false, $headerdata);
 
         } elseif ('JSON' == $feedOut->feedType) { // Method is JSON
 
@@ -662,6 +675,7 @@ class ProcessLeads
             }
 
             $geturl = $feedOut->postUrl . ' JSON BODY: ' . json_encode($requestdata);
+            $headerdata[] = 'Content-Type: application/json';
 
             $result['text'] = ProcessLeads::curlLead(
                 json_encode($requestdata),
@@ -670,7 +684,7 @@ class ProcessLeads
                 false,
                 true,
                 false,
-                array('Content-Type: application/json')
+                $headerdata
             );
 
         } elseif ('soapPOST' == $feedOut->feedType) { // Method is JSON
@@ -706,7 +720,11 @@ class ProcessLeads
             $result['text'] = ProcessLeads::curlLead(
                 $xml,
                 $geturl,
-                true
+                true,
+                false,
+                true,
+                false,
+                $headerdata
             );
 
             $geturl = $geturl . ' XML BODY: ' . $xml;
@@ -719,7 +737,11 @@ class ProcessLeads
             $result['text'] = ProcessLeads::curlLead(
                 $requestdata,
                 $feedOut->postUrl,
-                true
+                true,
+                false,
+                true,
+                false,
+                $headerdata
             );
 
             $geturl = $feedOut->postUrl . "\n\nPOST BODY (multipart/form-data): " . http_build_query($requestdata);
@@ -759,6 +781,7 @@ class ProcessLeads
         }
 
         $result['querystring'] = $geturl;
+        $result['headers'] = $headerdata;
 
         return $result;
     }

@@ -1135,6 +1135,17 @@ if (isset($_REQUEST['d'])) {
                 // Manually increment the queue counter because the pushOutboundData function will decrement the queue, resulting in a mismatch
                 //$leads->incrementOutboundQueue( $idFeedOut );
 
+                if (!empty($response['headers'])) {
+                    print "<p><strong>Headers:</strong></p>";
+                    print "<ul>";
+                    foreach ($response['headers'] as $header) {
+                        printf("<li>%s</li>",
+                            Display::escHtml($header)
+                        );
+                    }
+                    print "</ul>";
+                }
+
                 print "<p><strong>Query String:</strong> " . nl2br(htmlspecialchars($response['querystring'], ENT_QUOTES | ENT_HTML5)) . "</p>";
 
                 print "<p><strong>Status:</strong> " . (true === $response['status'] ? '<span class="lead-success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>') . "</p>";
