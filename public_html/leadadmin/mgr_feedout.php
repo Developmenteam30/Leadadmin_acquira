@@ -59,6 +59,11 @@ if (isset($_REQUEST['a'])) {
                 $temp = array();
                 for ($i = 0; $i < sizeOf($_REQUEST['staticFields_field']); $i++) {
                     if (isset($_REQUEST['staticFields_field'][$i])) {
+                    	// Check for multibyte characters.
+                        if (isset($_REQUEST['staticFields_value'][$i]) && strlen($_REQUEST['staticFields_value'][$i]) != strlen(utf8_decode($_REQUEST['staticFields_value'][$i]))) {
+                        	$c = false;
+                            $result['error'] = 'Invalid characters detected in the value for static field: ' . $_REQUEST['staticFields_field'][$i];
+                        }
                         $staticFields[$_REQUEST['staticFields_field'][$i]] = $_REQUEST['staticFields_value'][$i] ?? '';
                     }
                 }
