@@ -534,6 +534,18 @@ class ProcessLeads
                     ProcessLeads::assignValue($key, date("m/d/Y", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
                     break;
 
+                case 'dob_YYYY':
+                    ProcessLeads::assignValue($key, date("Y", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
+                    break;
+
+                case 'dob_MM':
+                    ProcessLeads::assignValue($key, date("m", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
+                    break;
+
+                case 'dob_DD':
+                    ProcessLeads::assignValue($key, date("d", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
+                    break;
+
                 case 'gender_full':
                     ProcessLeads::assignValue($key, $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata, $headerdata);
                     break;
