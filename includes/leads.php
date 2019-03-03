@@ -332,14 +332,20 @@ class Leads
         return $results;
     }
 
-    public function getStaffUsers($format = \PDO::FETCH_KEY_PAIR, $forceAll = false)
+    public function getStaffUsers($format = \PDO::FETCH_KEY_PAIR, $forceAll = false, $idUser = null)
     {
         $results = null;
 
         try {
             if ($forceAll || LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
-                $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE level >= ? AND level < ? ORDER BY username");
-                $query->execute(array(LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_ADMIN));
+                if (!empty($idUser)) {
+                    // Sometimes we have a former employee set who would no longer show up in the user list. Force them to show if the value is currently set to their userId.
+                    $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE ( level >= ? AND level < ? ) OR idUser = ? ORDER BY username");
+                    $query->execute(array(LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_ADMIN, $idUser));
+                } else {
+                    $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE level >= ? AND level < ? ORDER BY username");
+                    $query->execute(array(LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_ADMIN));
+                }
             } else {
                 $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE idUser = ?");
                 $query->execute(array(LeadsSession::getUserId()));
@@ -713,7 +719,7 @@ class Leads
             $params[] = $startDate;
             $params[] = $endDate;
             $sql .= "AND fo.feedCategory = 'phone' ";
-            if(!empty($idUser)) {
+            if (!empty($idUser)) {
                 $sql .= "AND ( ( ( fo.salesperson IS NULL AND co.salesperson = ? ) OR ( fo.salesperson IS NOT NULL and fo.salesperson = ? ) ) OR ( ( fi.salesperson IS NULL AND ci.salesperson = ? ) OR ( fi.salesperson IS NOT NULL and fi.salesperson = ? ) ) ) ";
                 $params[] = $idUser;
                 $params[] = $idUser;
@@ -754,14 +760,14 @@ class Leads
             $params[] = $startDate;
             $params[] = $endDate;
             $sql .= "AND fo.feedCategory = 'phone' ";
-            if(!empty($idFeedOut)) {
+            if (!empty($idFeedOut)) {
                 $sql .= "AND sc.idFeedOut = ? ";
                 $params[] = $idFeedOut;
             } else {
                 $sql .= "AND co.idCompany = ? ";
                 $params[] = $idCompany;
             }
-            if(!empty($idFeedIn)) {
+            if (!empty($idFeedIn)) {
                 $sql .= "AND sc.idFeedIn = ? ";
                 $params[] = $idFeedIn;
             }
@@ -782,14 +788,14 @@ class Leads
             $params[] = $startDate;
             $params[] = $endDate;
             $sql .= "AND fi.feedCategory = 'phone' ";
-            if(!empty($idFeedOut)) {
+            if (!empty($idFeedOut)) {
                 $sql .= "AND sc.idFeedOut = ? ";
                 $params[] = $idFeedOut;
             } else {
                 $sql .= "AND co.idCompany = ? ";
                 $params[] = $idCompany;
             }
-            if(!empty($idFeedIn)) {
+            if (!empty($idFeedIn)) {
                 $sql .= "AND sc.idFeedIn = ? ";
                 $params[] = $idFeedIn;
             }

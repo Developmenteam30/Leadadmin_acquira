@@ -1646,7 +1646,7 @@ if (isset($_REQUEST['d'])) {
 								<select name="salesperson">
 									<option></option>
                                     <?php
-                                    $users = $leads->getStaffUsers(\PDO::FETCH_KEY_PAIR, true);
+                                    $users = $leads->getStaffUsers(\PDO::FETCH_KEY_PAIR, true, $feed_salesperson);
                                     foreach ($users as $idUser => $fullName) {
                                         printf('<option value="%s"%s>%s</option>' . PHP_EOL,
                                             Display::escHtml($idUser),
