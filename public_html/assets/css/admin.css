@@ -182,6 +182,10 @@ table tr.bg-gray {
 	font-family: Verdana, Helvetica, sans-serif;
 }
 
+select {
+	height: 26px;
+}
+
 .form-input input[type='email'],
 .form-input input[type='url'],
 .form-input input[type='text'] {

@@ -38,9 +38,50 @@ include(INCLUDES . "c_header.php");
     $dateEnd = !empty($_REQUEST['dateEnd']) ? $_REQUEST['dateEnd'] : date('Y-m-d');
     $companyId = !empty($_REQUEST['companyId']) ? $_REQUEST['companyId'] : null;
     $userId = !empty($_REQUEST['userId']) ? $_REQUEST['userId'] : null;
+    $statsQuick = $_REQUEST['statsQuick'] ?? '';
     ?>
 
 	<form class="form-inline">
+        <?php
+        print 'Quick Jump: <select id="statsQuick" name="statsQuick">' . PHP_EOL;
+        print '<option value=""></option>' . PHP_EOL;
+        $years = array();
+        $quarters = array();
+        $startDate = new \DateTime();
+        $endDate = new DateTime((date('Y') - 3) . '-01-01');
+        do {
+            $year = $startDate->format('Y');
+            $quarter = $year . '-Q' . ceil($startDate->format('m') / 3);
+            if (empty($years[$year])) {
+                $value = $year . '-01-01' . '|' . $year . '-12-31';
+                printf('<option value="%s"%s>%s</option>' . PHP_EOL,
+                    $value,
+                    $statsQuick == $value ? ' selected="selected"' : '',
+                    htmlentities($year . ' Year')
+                );
+                $years[$year] = true;
+            }
+            if (empty($quarters[$quarter])) {
+                $value = Display::getQuarterStart($year, ceil($startDate->format('m') / 3)) . '|' . Display::getQuarterEnd($year, ceil($startDate->format('m') / 3));
+                printf('<option value="%s"%s>%s</option>' . PHP_EOL,
+                    $value,
+                    $statsQuick == $value ? ' selected="selected"' : '',
+                    htmlentities(str_replace('-Q', ' Qtr ', $quarter))
+                );
+                $quarters[$quarter] = true;
+            }
+
+            $value = $startDate->format('Y-m-01') . '|' . $startDate->format('Y-m-t');
+            printf('<option value="%s"%s>%s</option>' . PHP_EOL,
+                $value,
+                $statsQuick == $value ? ' selected="selected"' : '',
+                htmlentities($startDate->format('Y-m'))
+            );
+            $startDate->sub(new \DateInterval('P1M'));
+        } while ($startDate >= $endDate);
+        print '</select>' . PHP_EOL;
+        ?>
+		Set Dates:
 		<input type="text" name="dateStart" class="dateSelector" value="<?php echo Display::escHtml($dateStart, ENT_QUOTES | ENT_HTML5); ?>"/>
 		to
 		<input type="text" name="dateEnd" class="dateSelector" value="<?php echo Display::escHtml($dateEnd, ENT_QUOTES | ENT_HTML5); ?>"/>
@@ -309,6 +350,17 @@ include(INCLUDES . "c_header.php");
     ?>
 
 </div>
+
+<script>
+	$('#statsQuick').on('change', function (e) {
+		let myValue = $(this).val() || '';
+		if (myValue !== '') {
+			let dates = myValue.split('|', 2);
+			$('input[name="dateStart"]').val(dates[0]);
+			$('input[name="dateEnd"]').val(dates[1]);
+		}
+	});
+</script>
 
 </body>
 </html>
