@@ -696,6 +696,182 @@ class Leads
         return $results;
     }
 
+    public function getRevenueStatsCompany($startDate, $endDate, $idUser = null)
+    {
+        $results = null;
+        $params = array();
+
+        try {
+
+            $sql = "SELECT co.idCompany,co.name,SUM(sc.accepted) AS accepted,SUM(sc.revenuePerLead*sc.billable) AS revenue,SUM(sc.costPerLead*sc.billable) AS expense ";
+            $sql .= "FROM stats_correlated AS sc ";
+            $sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+            $sql .= "JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn ";
+            $sql .= "LEFT JOIN companies co ON co.idCompany = fo.idCompany ";
+            $sql .= "LEFT JOIN companies ci ON ci.idCompany = fi.idCompany ";
+            $sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+            $params[] = $startDate;
+            $params[] = $endDate;
+            $sql .= "AND fo.feedCategory = 'phone' ";
+            if(!empty($idUser)) {
+                $sql .= "AND ( ( ( fo.salesperson IS NULL AND co.salesperson = ? ) OR ( fo.salesperson IS NOT NULL and fo.salesperson = ? ) ) OR ( ( fi.salesperson IS NULL AND ci.salesperson = ? ) OR ( fi.salesperson IS NOT NULL and fi.salesperson = ? ) ) ) ";
+                $params[] = $idUser;
+                $params[] = $idUser;
+                $params[] = $idUser;
+                $params[] = $idUser;
+            }
+            $sql .= "GROUP BY co.idCompany ";
+            $sql .= "HAVING (SUM(sc.revenuePerLead*sc.billable) > 0 OR SUM(sc.costPerLead*sc.billable) > 0 ) ";
+            $sql .= "ORDER BY co.name ";
+
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get revenue stats company: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function getRevenueStatsUser($startDate, $endDate, $idCompany, $idUser, $idFeedOut = null, $idFeedIn = null)
+    {
+        $results = null;
+        $params = array();
+
+        try {
+
+            $sql = "SELECT SUM(revenue-expense) AS gross ";
+            $sql .= "FROM ( ";
+
+            $sql .= "SELECT SUM(sc.accepted) AS accepted,SUM(sc.revenuePerLead*sc.billable*0.5) AS revenue,SUM(sc.costPerLead*sc.billable*0.5) AS expense ";
+            $sql .= "FROM stats_correlated AS sc ";
+            $sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+            $sql .= "JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn ";
+            $sql .= "LEFT JOIN companies co ON co.idCompany = fo.idCompany ";
+            $sql .= "LEFT JOIN companies ci ON ci.idCompany = fi.idCompany ";
+            $sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+            $params[] = $startDate;
+            $params[] = $endDate;
+            $sql .= "AND fo.feedCategory = 'phone' ";
+            if(!empty($idFeedOut)) {
+                $sql .= "AND sc.idFeedOut = ? ";
+                $params[] = $idFeedOut;
+            } else {
+                $sql .= "AND co.idCompany = ? ";
+                $params[] = $idCompany;
+            }
+            if(!empty($idFeedIn)) {
+                $sql .= "AND sc.idFeedIn = ? ";
+                $params[] = $idFeedIn;
+            }
+            $sql .= "AND ( ( fo.salesperson IS NULL AND co.salesperson = ? ) OR ( fo.salesperson IS NOT NULL and fo.salesperson = ? ) ) ";
+            $params[] = $idUser;
+            $params[] = $idUser;
+            $sql .= "GROUP BY co.idCompany ";
+
+            $sql .= "UNION ALL ";
+
+            $sql .= "SELECT SUM(sc.accepted) AS accepted,SUM(sc.revenuePerLead*sc.billable*0.5) AS revenue,SUM(sc.costPerLead*sc.billable*0.5) AS expense ";
+            $sql .= "FROM stats_correlated AS sc ";
+            $sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+            $sql .= "JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn ";
+            $sql .= "LEFT JOIN companies co ON co.idCompany = fo.idCompany ";
+            $sql .= "LEFT JOIN companies ci ON ci.idCompany = fi.idCompany ";
+            $sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+            $params[] = $startDate;
+            $params[] = $endDate;
+            $sql .= "AND fi.feedCategory = 'phone' ";
+            if(!empty($idFeedOut)) {
+                $sql .= "AND sc.idFeedOut = ? ";
+                $params[] = $idFeedOut;
+            } else {
+                $sql .= "AND co.idCompany = ? ";
+                $params[] = $idCompany;
+            }
+            if(!empty($idFeedIn)) {
+                $sql .= "AND sc.idFeedIn = ? ";
+                $params[] = $idFeedIn;
+            }
+            $sql .= "AND ( ( fi.salesperson IS NULL AND ci.salesperson = ? ) OR ( fi.salesperson IS NOT NULL and fi.salesperson = ? ) ) ";
+            $params[] = $idUser;
+            $params[] = $idUser;
+            $sql .= "GROUP BY ci.idCompany ";
+
+            $sql .= ") AS aggstats ";
+
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            $results = $query->fetchColumn();
+        } catch (PDOException $e) {
+            $this->logError('Unable to get revenue stats user: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function getRevenueStatsOutbound($idCompany, $startDate, $endDate)
+    {
+        $results = null;
+        $params = array();
+
+        try {
+
+            $sql = "SELECT fo.idFeedOut,fo.label,fo.description,SUM(sc.accepted) AS accepted,SUM(sc.revenuePerLead*sc.billable) AS revenue,SUM(sc.costPerLead*sc.billable) AS expense ";
+            $sql .= "FROM stats_correlated AS sc ";
+            $sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+            $sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
+            $sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+            $params[] = $startDate;
+            $params[] = $endDate;
+            $sql .= "AND fo.feedCategory = 'phone' ";
+            $sql .= "AND c.idCompany = ? ";
+            $params[] = $idCompany;
+            $sql .= "GROUP BY sc.idFeedOut ";
+            $sql .= "HAVING (SUM(sc.revenuePerLead*sc.billable) > 0 OR SUM(sc.costPerLead*sc.billable) > 0 ) ";
+            $sql .= "ORDER BY fo.idFeedOut ";
+
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get revenue stats outbound: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function getRevenueStatsInbound($idFeedOut, $startDate, $endDate)
+    {
+        $results = null;
+        $params = array();
+
+        try {
+
+            $sql = "SELECT c.name,fi.idFeedIn,fi.label,fi.description,SUM(sc.accepted) AS accepted,SUM(sc.revenuePerLead*sc.billable) AS revenue,SUM(sc.costPerLead*sc.billable) AS expense ";
+            $sql .= "FROM stats_correlated AS sc ";
+            $sql .= "JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn ";
+            $sql .= "LEFT JOIN companies c ON c.idCompany = fi.idCompany ";
+            $sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+            $params[] = $startDate;
+            $params[] = $endDate;
+            $sql .= "AND fi.feedCategory = 'phone' ";
+            $sql .= "AND sc.idFeedOut = ? ";
+            $params[] = $idFeedOut;
+            $sql .= "GROUP BY sc.idFeedIn ";
+            $sql .= "HAVING (SUM(sc.revenuePerLead*sc.billable) > 0 OR SUM(sc.costPerLead*sc.billable) > 0 ) ";
+            $sql .= "ORDER BY fi.idFeedIn ";
+
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get revenue stats inbound: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function checkCompanyName($name, $idCompany = null)
     {
         $result = false;
