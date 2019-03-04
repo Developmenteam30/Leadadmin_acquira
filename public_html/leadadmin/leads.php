@@ -521,7 +521,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'orderDate',
 					'label' => 'Order Date',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'qty',
@@ -549,7 +549,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'paymentDate',
 					'label' => 'Date Paid',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'paymentMethod',
@@ -600,7 +600,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'loPaymentDate' . $i,
 					'label' => 'Date Paid',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 				);
 				$fields[] = array(
 					'id' => 'loPaymentMethod' . $i,
@@ -638,7 +638,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'id' => 'commissionDate1',
 				'label' => 'Commission Date 1',
 				'type' => 'text',
-                'autocomplete' => 'new-password',
+                'autocomplete' => 'off',
 			);
 			$fields[] = array(
 				'id' => 'commissionAmount 1',
@@ -670,7 +670,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'id' => 'commissionDate2',
 				'label' => 'Commission Date 2',
 				'type' => 'text',
-                'autocomplete' => 'new-password',
+                'autocomplete' => 'off',
 			);
 			$fields[] = array(
 				'id' => 'commissionAmount2',
@@ -702,7 +702,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'id' => 'commissionDate3',
 				'label' => 'Commission Date 3',
 				'type' => 'text',
-                'autocomplete' => 'new-password',
+                'autocomplete' => 'off',
 			);
 			$fields[] = array(
 				'id' => 'commissionAmount3',
@@ -1053,7 +1053,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'orderDate',
 						'label' => 'Order Date',
 						'type' => 'text',
-                        'autocomplete' => 'new-password',
+                        'autocomplete' => 'off',
 						'value' => $entry->orderDate,
 					),
 					array(
@@ -1086,7 +1086,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'paymentDate',
 						'label' => 'Date Paid',
 						'type' => 'text',
-                        'autocomplete' => 'new-password',
+                        'autocomplete' => 'off',
 						'value' => $entry->paymentDate,
 					),
 					array(
@@ -1138,7 +1138,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'loPaymentDate' . $i,
 						'label' => 'Date Paid',
 						'type' => 'text',
-                        'autocomplete' => 'new-password',
+                        'autocomplete' => 'off',
 						'value' => $entry->{'loPaymentDate' . $i},
 					);
 					$fields[] = array(
@@ -1181,7 +1181,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate1',
 					'label' => 'Commission Date 1',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 					'value' => $entry->commissionDate1,
 				);
 				$fields[] = array(
@@ -1218,7 +1218,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate2',
 					'label' => 'Commission Date 2',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 					'value' => $entry->commissionDate2,
 				);
 				$fields[] = array(
@@ -1255,7 +1255,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate3',
 					'label' => 'Commission Date 3',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 					'value' => $entry->commissionDate3,
 				);
 				$fields[] = array(

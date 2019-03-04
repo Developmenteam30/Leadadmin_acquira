@@ -1694,7 +1694,7 @@ if (isset($_REQUEST['d'])) {
 						<td>
 							<p>
                                 <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) { ?>
-									<input type='text' name='launchDate' value='<?php echo Display::escHtml($feed_launchDate); ?>' autocomplete="new-password" />
+									<input type='text' name='launchDate' value='<?php echo Display::escHtml($feed_launchDate); ?>' autocomplete="off" />
                                 <?php } else { ?>
                                     <?php echo Display::escHtml($feed_launchDate); ?>
                                 <?php } ?>

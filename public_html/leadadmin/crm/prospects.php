@@ -377,7 +377,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'expectedClose',
 					'label' => 'Expected Close Date',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'userId',
@@ -408,7 +408,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'followUpDate',
 					'label' => 'Follow Up Date',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'nextSteps',
@@ -539,7 +539,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'expectedClose',
 					'label' => 'Expected Close Date',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 					'value' => $prospect->expectedClose,
 				),
 				array(
@@ -626,7 +626,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'followUpDate',
 					'label' => 'Follow Up Date',
 					'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'nextSteps',

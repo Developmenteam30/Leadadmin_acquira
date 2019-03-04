@@ -352,13 +352,13 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'startDate',
                     'label' => 'Start Date',
                     'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
                 ),
                 array(
                     'id' => 'endDate',
                     'label' => 'End Date',
                     'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
                 ),
                 array(
                     'id' => 'paymentTerms',
@@ -641,14 +641,14 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'startDate',
                     'label' => 'Start Date',
                     'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
                     'value' => $order->startDate,
                 ),
                 array(
                     'id' => 'endDate',
                     'label' => 'End Date',
                     'type' => 'text',
-                    'autocomplete' => 'new-password',
+                    'autocomplete' => 'off',
                     'value' => $order->endDate,
                 ),
                 array(
