@@ -105,6 +105,11 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Please limit custom6 label to 255 characters or less.';
             }
 
+            if ($c && empty($_REQUEST['timezone'])) {
+                $c = false;
+                $result['error'] = 'Please select the feed timezone from the list.';
+            }
+
             if ($c && !empty($_REQUEST['dailyLimit']) && is_numeric($_REQUEST['dailyLimit']) === false) {
                 $c = false;
                 $result['error'] = 'Please enter a numeric value for the daily limit.';
@@ -208,6 +213,7 @@ if (isset($_REQUEST['a'])) {
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                         'pauseMessage' => empty($_REQUEST['pauseMessage']) ? null : trim($_REQUEST['pauseMessage']),
                         'filterTypeDNCScrub' => json_encode($dncScrub),
+                        'timezone' => $_REQUEST['timezone'],
                     ));
 
                     if (null === $idFeedIn) {
@@ -255,6 +261,11 @@ if (isset($_REQUEST['a'])) {
                             $result['error'] = 'Label is already in use.';
                         }
                     }
+                }
+
+                if ($c && empty($_REQUEST['timezone'])) {
+                    $c = false;
+                    $result['error'] = 'Please select the feed timezone from the list.';
                 }
 
                 if ($c && !empty($_REQUEST['dailyLimit']) && is_numeric($_REQUEST['dailyLimit']) === false) {
@@ -335,6 +346,7 @@ if (isset($_REQUEST['a'])) {
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                         'pauseMessage' => empty($_REQUEST['pauseMessage']) ? null : trim($_REQUEST['pauseMessage']),
                         'filterTypeDNCScrub' => json_encode($dncScrub),
+                        'timezone' => $_REQUEST['timezone'],
                     ));
 
                     if (null === $status) {
@@ -531,6 +543,7 @@ if (isset($_REQUEST['d'])) {
                 'salesperson',
                 'pauseMessage',
                 'filterTypeDNCScrub',
+                'timezone',
             );
             foreach ($feedProps as $feedProp) {
                 if (isset($feed)) {
@@ -544,6 +557,8 @@ if (isset($_REQUEST['d'])) {
                         ${"feed_" . $feedProp} = '1';
                     } elseif (in_array($feedProp, array('rejectOldLeadsMaxAge'))) {
                         ${"feed_" . $feedProp} = '7 Days Ago';
+                    } elseif ('timezone' == $feedProp) {
+                        ${"feed_" . $feedProp} = 'America/New_York';
                     } else {
                         ${"feed_" . $feedProp} = '';
                     }
@@ -647,6 +662,26 @@ if (isset($_REQUEST['d'])) {
 								<input type="radio" name="feedCategory" value="ppc"<?php if ('ppc' == $feed_feedCategory) {
                                     print ' checked="checked"';
                                 } ?> /> PPC<br/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Timezone</p></td>
+						<td>
+							<p>Specify what timezone the incoming leads are being sent as. Please confirm with the vendor, as this may throw off the timestamps that are being sent to the client if incorrect.</p>
+							<p>
+								<select name="timezone">
+                                    <?php
+                                    $timezones = DateTimeZone::listIdentifiers();
+                                    foreach ($timezones as $timezone) {
+                                        printf('<option value="%s"%s>%s</option>' . PHP_EOL,
+                                            Display::escHtml($timezone),
+                                            $feed_timezone == $timezone ? ' selected="selected"' : '',
+                                            Display::escHtml($timezone)
+                                        );
+                                    }
+                                    ?>
+								</select>
 							</p>
 						</td>
 					</tr>
@@ -1887,6 +1922,10 @@ include(INCLUDES . "c_header.php");
 		});
 	});
 
+	$('#newfeedinc').on('shown.bs.modal', function(e) {
+		$("#newfeedinc select[name='timezone']").select2();
+	});
+
 	$('#modal-save-editfeedinc').click(function (event) {
 		event.preventDefault();
 
@@ -1921,6 +1960,10 @@ include(INCLUDES . "c_header.php");
 				modal.find('.modal-body').html(data);
 			}
 		});
+	});
+
+	$('#editfeedinc').on('shown.bs.modal', function(e) {
+		$("#editfeedinc select[name='timezone']").select2();
 	});
 
 	$('#modal-import').on('show.bs.modal', function (e) {

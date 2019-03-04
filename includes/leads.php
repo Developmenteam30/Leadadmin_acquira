@@ -3373,7 +3373,7 @@ class Leads
                 'idFeedIn' => $idFeedIn,
                 'listcode' => empty($fields['listcode']) ? null : substr($fields['listcode'], 0, 20),
                 'leadId' => empty($fields['leadId']) ? null : substr($fields['leadId'], 0, 255),
-                'leadstamp' => empty($fields['stamp']) ? null : gmdate('Y-m-d H:i:s', strtotime($fields['stamp'])),
+                'leadstamp' => empty($fields['stamp']) ? null : $fields['stamp'], // Already converted to UTC and formatted by ProcessLeads::validateField
                 'url' => empty($fields['url']) ? null : substr($this->parseUrl($fields['url']), 0, 255),
                 'ip' => empty($fields['ip']) ? null : substr($fields['ip'], 0, 45),
                 'email' => empty($fields['email']) ? null : substr($fields['email'], 0, 255),

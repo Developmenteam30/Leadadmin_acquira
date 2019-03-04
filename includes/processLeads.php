@@ -502,6 +502,17 @@ class ProcessLeads
             'F' => 'Female',
         );
 
+        if (!empty($row->stamp)) {
+            try {
+                // Convert from the DB timezone of UTC to whatever this feed is expecting us to send.
+                $date = new DateTime($row->stamp, new DateTimeZone('UTC'));
+                $date->setTimezone(new DateTimeZone($feedOut->timezone));
+                $row->stamp = $date->format('Y-m-d H:i:s');
+            } catch (\Exception $e) {
+                // This should never happen since it's coming from the DB in a standard format.
+            }
+        }
+
         foreach ($varFields as $key => $val) {
             switch ($val) {
                 case 'urlAssign':
@@ -551,35 +562,35 @@ class ProcessLeads
                     break;
 
                 case 'stampUS':
-                    ProcessLeads::assignValue($key, date("m-d-Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y H:i:s") : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUS_dateOnly':
-                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y") : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stamp_YYYYmmdd':
-                    ProcessLeads::assignValue($key, date("Ymd", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("Ymd") : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stamp_YYYY-mm-dd':
-                    ProcessLeads::assignValue($key, date("Y-m-d", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("Y-m-d") : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUSAMPM':
-                    ProcessLeads::assignValue($key, date("m-d-Y h:i:sA", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y h:i:sA") : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUS+AMPM':
-                    ProcessLeads::assignValue($key, date("m-d-Y h:i:s A", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y h:i:s A") : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stampUS_slashes':
-                    ProcessLeads::assignValue($key, date("m/d/Y H:i:s", strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m/d/Y H:i:s") : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'stamp_ISO8601':
-                    ProcessLeads::assignValue($key, date('c', strtotime($row->stamp)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format('c') : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'landline_areacode':
@@ -798,7 +809,7 @@ class ProcessLeads
         return $result;
     }
 
-    public static function validateField($fieldType, $value, $feedParams)
+    public static function validateField($fieldType, &$value, $feedParams)
     {
         $result = array(
             'valid' => false,
@@ -849,9 +860,16 @@ class ProcessLeads
                 break;
 
             case 'stamp':
-                if ($c && strtotime($value) === false) {
-                    $c = false;
-                    $result['reason'] = 'Action Date (stamp) is invalid.';
+                if ($c) {
+                    try {
+                        // Convert from whatever timezone the feed is sending over to UTC before saving in the DB.
+                        $date = new DateTime($value, new DateTimeZone($feedParams->timezone));
+                        $date->setTimezone(new DateTimeZone('UTC'));
+                        $value = $date->format('Y-m-d H:i:s');
+                    } catch (\Exception $e) {
+                        $c = false;
+                        $result['reason'] = 'Action Date (stamp) is invalid.';
+                    }
                 }
                 if ($c
                     && $feedParams->rejectOldLeads

@@ -47,6 +47,11 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Please select a feed type from the list.';
             }
 
+            if ($c && empty($_REQUEST['timezone'])) {
+                $c = false;
+                $result['error'] = 'Please select the feed timezone from the list.';
+            }
+
             if ($c && empty($_REQUEST['postUrl'])) {
                 $c = false;
                 $result['error'] = 'Please provide a post URL.';
@@ -211,6 +216,7 @@ if (isset($_REQUEST['a'])) {
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                         'xmlDTD' => empty($_REQUEST['xmlDTD']) ? null : $_REQUEST['xmlDTD'],
                         'processingSchedule' => $processingSchedule,
+                        'timezone' => $_REQUEST['timezone'],
                     );
 
                     if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
@@ -298,6 +304,7 @@ if (isset($_REQUEST['a'])) {
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                         'xmlDTD' => empty($_REQUEST['xmlDTD']) ? null : $_REQUEST['xmlDTD'],
                         'processingSchedule' => $processingSchedule,
+                        'timezone' => $_REQUEST['timezone'],
                     );
 
                     if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
@@ -1321,12 +1328,15 @@ if (isset($_REQUEST['d'])) {
                 'processingSchedule',
                 'staticFields',
                 'varFields',
+                'timezone',
             );
             foreach ($feedProps as $feedProp) {
                 if (isset($feed)) {
                     ${"feed_" . $feedProp} = $feed->$feedProp;
                 } elseif (isset($_REQUEST[$feedProp])) {
                     ${"feed_" . $feedProp} = $_REQUEST[$feedProp];
+                } elseif ('timezone' == $feedProp) {
+                    ${"feed_" . $feedProp} = 'America/New_York';
                 } else {
                     ${"feed_" . $feedProp} = '';
                 }
@@ -1420,6 +1430,26 @@ if (isset($_REQUEST['d'])) {
 								<input type="radio" name="feedCategory" value="ppc"<?php if ('ppc' == $feed_feedCategory) {
                                     print ' checked="checked"';
                                 } ?> /> PPC<br/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Timezone</p></td>
+						<td>
+							<p>Specify what timezone the to send the outgoing leads as. Please reference the posting docs or confirm with the client, as this may throw off their acceptance rates.</p>
+							<p>
+								<select name="timezone">
+                                    <?php
+                                    $timezones = DateTimeZone::listIdentifiers();
+                                    foreach ($timezones as $timezone) {
+                                        printf('<option value="%s"%s>%s</option>' . PHP_EOL,
+                                            Display::escHtml($timezone),
+                                            $feed_timezone == $timezone ? ' selected="selected"' : '',
+                                            Display::escHtml($timezone)
+                                        );
+                                    }
+                                    ?>
+								</select>
 							</p>
 						</td>
 					</tr>
@@ -3476,6 +3506,10 @@ include(INCLUDES . "c_header.php");
 			});
 		});
 
+		$('#newfeed').on('shown.bs.modal', function(e) {
+			$("#newfeed select[name='timezone']").select2();
+		});
+
 		$('#modal-save-editfeed').click(function (event) {
 			event.preventDefault();
 
@@ -3510,6 +3544,10 @@ include(INCLUDES . "c_header.php");
 					modal.find('.modal-body').html(data);
 				}
 			});
+		});
+
+		$('#editfeed').on('shown.bs.modal', function(e) {
+			$("#editfeed select[name='timezone']").select2();
 		});
 
 		$('#modal-showpop').on('show.bs.modal', function (e) {
