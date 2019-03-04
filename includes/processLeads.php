@@ -511,6 +511,15 @@ class ProcessLeads
             } catch (\Exception $e) {
                 // This should never happen since it's coming from the DB in a standard format.
             }
+        } else {
+            try {
+                // Convert from the DB timezone of UTC to whatever this feed is expecting us to send.
+                $date = new DateTime("now", new DateTimeZone('UTC'));
+                $date->setTimezone(new DateTimeZone($feedOut->timezone));
+                $row->stamp = $date->format('Y-m-d H:i:s');
+            } catch (\Exception $e) {
+                // This should never happen since it's coming from the DB in a standard format.
+            }
         }
 
         foreach ($varFields as $key => $val) {
