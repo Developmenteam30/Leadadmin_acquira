@@ -352,11 +352,13 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'startDate',
                     'label' => 'Start Date',
                     'type' => 'text',
+                    'autocomplete' => 'new-password',
                 ),
                 array(
                     'id' => 'endDate',
                     'label' => 'End Date',
                     'type' => 'text',
+                    'autocomplete' => 'new-password',
                 ),
                 array(
                     'id' => 'paymentTerms',
@@ -639,12 +641,14 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'startDate',
                     'label' => 'Start Date',
                     'type' => 'text',
+                    'autocomplete' => 'new-password',
                     'value' => $order->startDate,
                 ),
                 array(
                     'id' => 'endDate',
                     'label' => 'End Date',
                     'type' => 'text',
+                    'autocomplete' => 'new-password',
                     'value' => $order->endDate,
                 ),
                 array(
@@ -671,7 +675,6 @@ if (isset($_REQUEST['d'])) {
                         'publisher' => 'Provided by Publisher',
                         'advertiser' => 'Provided by Advertiser',
                     ),
-                    'value' => 'publisher',
                     'choice_append' => '&nbsp;&nbsp;',
                     'required' => true,
                     'value' => $order->callReporting,

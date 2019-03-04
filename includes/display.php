@@ -96,11 +96,12 @@ class Display
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlentities($field['label'])
                 );
-                printf("\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s />\n",
+                printf("\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s%s />\n",
                     htmlspecialchars($field['type'], ENT_QUOTES | ENT_HTML5),
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     (!empty($field['value']) ? htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5) : ''),
+                    (!empty($field['autocomplete']) ? (' autocomplete="' . Display::escHtml($field['autocomplete']) . '"') : ''),
                     ('number' == $field['type'] ? ' pattern="[0-9]*"' : ''),
                     (!empty($field['required']) ? ' required' : ''),
                     (!empty($field['readonly']) ? ' readonly' : '')
@@ -292,13 +293,13 @@ class Display
 
             } elseif ('_text' == $field['type']) {
 
-            	print "<div>";
+                print "<div>";
                 printf("\t<label data-for=\"%s\">%s</label>\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5)
                 );
                 printf("\t<span>%s</span>", htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5));
-				print "</div>\n";
+                print "</div>\n";
             }
 
             if (!in_array($field['type'], array('_toggle_start', '_toggle_end', '_html', '_text', 'hidden'))) {

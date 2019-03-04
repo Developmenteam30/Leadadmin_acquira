@@ -382,6 +382,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'paymentDate',
 					'label' => 'Payment Date',
 					'type' => 'text',
+                    'autocomplete' => 'new-password',
 					'value' => $paymentDate,
 					'required' => true,
 				),
