@@ -95,7 +95,7 @@ $leads = Leads::getInstance();
                 <?php foreach ($records as $record) { ?>
 					<tr>
                         <?php if ('outbound' == $type) { ?>
-	                        <td><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-postparams" data-feed-id="<?php echo intval($id); ?>" data-record-id="<?php echo intval($record['idRecord']); ?>" data-accepted="<?php echo intval($record['accepted']); ?>" data-result="<?php echo Display::escHtml($record['result']); ?>"><?php echo Display::escHtml($record['timestampConverted']); ?></td>
+	                        <td><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-postparams" data-feed-id="<?php echo intval($id); ?>" data-record-id="<?php echo intval($record['idRecord']); ?>" data-accepted="<?php echo intval($record['accepted']); ?>" data-result="<?php echo Display::escHtml($record['result']); ?>"><?php echo Display::escHtml($record['timestampConverted']); ?></a></td>
                         <?php } else { ?>
 	                        <td><?php echo Display::escHtml($record['timestampConverted']); ?></td>
                         <?php } ?>
