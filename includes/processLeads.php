@@ -655,30 +655,34 @@ class ProcessLeads
                 echo "\t" . $geturl . "\n";
                 echo "\tPosting data.\n";
             }
-            $result['text'] = ProcessLeads::curlLead(
-                "",
-                $geturl,
-                false,
-                false,
-                true,
-                false,
-                $headerdata
-            );
+            if(empty($row->simulateMode)) {
+                $result['text'] = ProcessLeads::curlLead(
+                    "",
+                    $geturl,
+                    false,
+                    false,
+                    true,
+                    false,
+                    $headerdata
+                );
+            }
 
         } elseif ($feedOut->feedType == 'curlPOST-urlencoded') { // Method is POST
 
             if ($debug) {
                 echo "\tPosting data.\n";
             }
-            $result['text'] = ProcessLeads::curlLead(
-                http_build_query($requestdata),
-                $feedOut->postUrl,
-                true,
-                false,
-                true,
-                false,
-                $headerdata
-            );
+            if(empty($row->simulateMode)) {
+                $result['text'] = ProcessLeads::curlLead(
+                    http_build_query($requestdata),
+                    $feedOut->postUrl,
+                    true,
+                    false,
+                    true,
+                    false,
+                    $headerdata
+                );
+            }
 
             $geturl = $feedOut->postUrl . "\n\nPOST BODY (application/x-www-form-urlencoded): " . http_build_query($requestdata);
 
@@ -698,7 +702,9 @@ class ProcessLeads
                 echo "\t" . $geturl . "\n";
                 echo "\tPosting data.\n";
             }
-            $result['text'] = ProcessLeads::curlLead("", $geturl, false, false, true, false, $headerdata);
+            if(empty($row->simulateMode)) {
+                $result['text'] = ProcessLeads::curlLead("", $geturl, false, false, true, false, $headerdata);
+            }
 
         } elseif ('JSON' == $feedOut->feedType) { // Method is JSON
 
@@ -709,15 +715,17 @@ class ProcessLeads
             $geturl = $feedOut->postUrl . ' JSON BODY: ' . json_encode($requestdata);
             $headerdata[] = 'Content-Type: application/json';
 
-            $result['text'] = ProcessLeads::curlLead(
-                json_encode($requestdata),
-                $feedOut->postUrl,
-                true,
-                false,
-                true,
-                false,
-                $headerdata
-            );
+            if(empty($row->simulateMode)) {
+                $result['text'] = ProcessLeads::curlLead(
+                    json_encode($requestdata),
+                    $feedOut->postUrl,
+                    true,
+                    false,
+                    true,
+                    false,
+                    $headerdata
+                );
+            }
 
         } elseif ('soapPOST' == $feedOut->feedType) { // Method is JSON
 
@@ -733,9 +741,11 @@ class ProcessLeads
 
             $geturl = $feedOut->postUrl . ' SOAP BODY: ' . $xml;
 
-            $client = new SoapClient($feedOut->postUrl, array('trace' => true));
-            $response = $client->AddLeadsUsingXMLString(array('xmlstring' => $xml));
-            $result['text'] = $client->__getLastResponse();
+            if(empty($row->simulateMode)) {
+                $client = new SoapClient($feedOut->postUrl, array('trace' => true));
+                $response = $client->AddLeadsUsingXMLString(array('xmlstring' => $xml));
+                $result['text'] = $client->__getLastResponse();
+            }
 
         } elseif ('xmlPOST' == $feedOut->feedType) { // Method is XML
 
@@ -749,15 +759,17 @@ class ProcessLeads
                 $xml = str_replace('##' . $key . '##', htmlspecialchars($val, ENT_COMPAT | ENT_XML1), $xml);
             }
 
-            $result['text'] = ProcessLeads::curlLead(
-                $xml,
-                $geturl,
-                true,
-                false,
-                true,
-                false,
-                $headerdata
-            );
+            if(empty($row->simulateMode)) {
+                $result['text'] = ProcessLeads::curlLead(
+                    $xml,
+                    $geturl,
+                    true,
+                    false,
+                    true,
+                    false,
+                    $headerdata
+                );
+            }
 
             $geturl = $geturl . ' XML BODY: ' . $xml;
 
@@ -766,15 +778,17 @@ class ProcessLeads
             if ($debug) {
                 echo "\tPosting data.\n";
             }
-            $result['text'] = ProcessLeads::curlLead(
-                $requestdata,
-                $feedOut->postUrl,
-                true,
-                false,
-                true,
-                false,
-                $headerdata
-            );
+            if(empty($row->simulateMode)) {
+                $result['text'] = ProcessLeads::curlLead(
+                    $requestdata,
+                    $feedOut->postUrl,
+                    true,
+                    false,
+                    true,
+                    false,
+                    $headerdata
+                );
+            }
 
             $geturl = $feedOut->postUrl . "\n\nPOST BODY (multipart/form-data): " . http_build_query($requestdata);
         }

@@ -64,9 +64,9 @@ if (isset($_REQUEST['a'])) {
                 $temp = array();
                 for ($i = 0; $i < sizeOf($_REQUEST['staticFields_field']); $i++) {
                     if (isset($_REQUEST['staticFields_field'][$i])) {
-                    	// Check for multibyte characters.
+                        // Check for multibyte characters.
                         if (isset($_REQUEST['staticFields_value'][$i]) && strlen($_REQUEST['staticFields_value'][$i]) != strlen(utf8_decode($_REQUEST['staticFields_value'][$i]))) {
-                        	$c = false;
+                            $c = false;
                             $result['error'] = 'Invalid characters detected in the value for static field: ' . $_REQUEST['staticFields_field'][$i];
                         }
                         $staticFields[$_REQUEST['staticFields_field'][$i]] = $_REQUEST['staticFields_value'][$i] ?? '';
@@ -1171,6 +1171,63 @@ if (isset($_REQUEST['d'])) {
 
             break;
 
+        case 'dialog_postparams':
+            $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
+            $idRecord = !empty($_REQUEST['idRecord']) ? $_REQUEST['idRecord'] : 0;
+
+            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+                $idCompany = LeadsSession::getCompanyId();
+                if (empty($idCompany)) {
+                    $idCompany = -9999;
+                }
+                if (!$leads->checkOutboundFeedAccess($idCompany, $idFeedOut)) {
+                    die('Sorry, you do not have access to this feed.');
+                }
+            }
+
+            $feedOut = $leads->getOutboundFeed($idFeedOut);
+            if (empty($feedOut)) {
+                print '<p>Sorry, the feed you specified does not exist.</p>';
+                break;
+            }
+
+            $leaddata = $leads->getInboundRecord($idRecord);
+            if (empty($leaddata)) {
+                print '<p>Sorry, the feed you record does not exist.</p>';
+                break;
+            }
+            $leaddata->simulateMode = true;
+
+            printf('<p><strong>Outbound Feed ID</strong>: %s</p>' . PHP_EOL,
+                Display::escHtml($feedOut->idFeedOut)
+            );
+            printf('<p><strong>Record ID</strong>: %s</p>' . PHP_EOL,
+                Display::escHtml($leaddata->idRecord)
+            );
+
+            print "<p><strong>HTTP Method:</strong> " . $feedOut->feedType . "</p>";
+
+            $response = ProcessLeads::pushOutboundData($feedOut, $leaddata);
+
+            if (!empty($response['headers'])) {
+                print "<p><strong>Headers:</strong></p>";
+                print "<ul>";
+                foreach ($response['headers'] as $header) {
+                    printf("<li>%s</li>",
+                        Display::escHtml($header)
+                    );
+                }
+                print "</ul>";
+            }
+
+            print "<p><strong>Query String:</strong> " . nl2br(htmlspecialchars($response['querystring'], ENT_QUOTES | ENT_HTML5)) . "</p>";
+
+            print "<p><strong>Status:</strong> " . (!empty($_REQUEST['accepted']) ? '<span class="lead-success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>') . "</p>";
+
+            print "<p><strong>Response:</strong> " . Display::escHtml($_REQUEST['result'] ?? '') . "</p>";
+
+            break;
+
         case 'dialog_queue-preview':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
@@ -1694,7 +1751,7 @@ if (isset($_REQUEST['d'])) {
 						<td>
 							<p>
                                 <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) { ?>
-									<input type='text' name='launchDate' value='<?php echo Display::escHtml($feed_launchDate); ?>' autocomplete="off" />
+									<input type='text' name='launchDate' value='<?php echo Display::escHtml($feed_launchDate); ?>' autocomplete="off"/>
                                 <?php } else { ?>
                                     <?php echo Display::escHtml($feed_launchDate); ?>
                                 <?php } ?>
@@ -3506,7 +3563,7 @@ include(INCLUDES . "c_header.php");
 			});
 		});
 
-		$('#newfeed').on('shown.bs.modal', function(e) {
+		$('#newfeed').on('shown.bs.modal', function (e) {
 			$("#newfeed select[name='timezone']").select2();
 		});
 
@@ -3546,7 +3603,7 @@ include(INCLUDES . "c_header.php");
 			});
 		});
 
-		$('#editfeed').on('shown.bs.modal', function(e) {
+		$('#editfeed').on('shown.bs.modal', function (e) {
 			$("#editfeed select[name='timezone']").select2();
 		});
 
