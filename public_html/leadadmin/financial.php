@@ -42,8 +42,6 @@ include(INCLUDES . "c_header.php");
 
 	<p><a href="/leadadmin/profit-loss.php">*Profit &amp; Loss Report</a></p>
 
-	<p><a href="/leadadmin/revenue/phones/">*Phone Revenue Report</a></p>
-
 </div>
 
 </body>
