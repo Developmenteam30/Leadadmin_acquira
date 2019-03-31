@@ -214,6 +214,7 @@ if (isset($_REQUEST['a'])) {
                         'pauseMessage' => empty($_REQUEST['pauseMessage']) ? null : trim($_REQUEST['pauseMessage']),
                         'filterTypeDNCScrub' => json_encode($dncScrub),
                         'timezone' => $_REQUEST['timezone'],
+                        'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                     ));
 
                     if (null === $idFeedIn) {
@@ -347,6 +348,7 @@ if (isset($_REQUEST['a'])) {
                         'pauseMessage' => empty($_REQUEST['pauseMessage']) ? null : trim($_REQUEST['pauseMessage']),
                         'filterTypeDNCScrub' => json_encode($dncScrub),
                         'timezone' => $_REQUEST['timezone'],
+                        'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                     ));
 
                     if (null === $status) {
@@ -544,6 +546,7 @@ if (isset($_REQUEST['d'])) {
                 'pauseMessage',
                 'filterTypeDNCScrub',
                 'timezone',
+	            'timeskew',
             );
             foreach ($feedProps as $feedProp) {
                 if (isset($feed)) {
@@ -605,7 +608,7 @@ if (isset($_REQUEST['d'])) {
                             <?php if (!empty($idFeedIn) && $idFeedIn < 123) { ?>
 								<input type="hidden" name="label" id="label" value="<?php echo Display::escHtml($feed_label); ?>"/><?php echo Display::escHtml($feed_label); ?><br/>(Cannot modify incoming feed labels created before 5/24/18)
                             <?php } else { ?>
-								<input class="input-long" type="text" name="label" id="label" value="<?php echo htmlentities($feed_label); ?>"<?php if (!empty($idFeedIn) && $idFeedIn < 123) {
+								<input class="input-long" type="text" name="label" id="label" value="<?php echo Display::escHtml($feed_label); ?>"<?php if (!empty($idFeedIn) && $idFeedIn < 123) {
                                     print " readonly='readonly'";
                                 } ?>/>
                             <?php } ?>
@@ -705,12 +708,12 @@ if (isset($_REQUEST['d'])) {
 						<td>Legacy Custom Fields</td>
 						<td>
 							<p>Use this section to store notes about what each custom field is being used for. <strong>These notes will be shown to the vendor in the API posting specs, so don't include anything proprietary.</strong></p>
-							custom1 = <input class="input-long" type="text" name="custom1Label" value="<?php echo htmlentities($feed_custom1Label); ?>"/><br/>
-							custom2 = <input class="input-long" type="text" name="custom2Label" value="<?php echo htmlentities($feed_custom2Label); ?>"/><br/>
-							custom3 = <input class="input-long" type="text" name="custom3Label" value="<?php echo htmlentities($feed_custom3Label); ?>"/><br/>
-							custom4 = <input class="input-long" type="text" name="custom4Label" value="<?php echo htmlentities($feed_custom4Label); ?>"/><br/>
-							custom5 = <input class="input-long" type="text" name="custom5Label" value="<?php echo htmlentities($feed_custom5Label); ?>"/><br/>
-							custom6 = <input class="input-long" type="text" name="custom6Label" value="<?php echo htmlentities($feed_custom6Label); ?>"/>
+							custom1 = <input class="input-long" type="text" name="custom1Label" value="<?php echo Display::escHtml($feed_custom1Label); ?>"/><br/>
+							custom2 = <input class="input-long" type="text" name="custom2Label" value="<?php echo Display::escHtml($feed_custom2Label); ?>"/><br/>
+							custom3 = <input class="input-long" type="text" name="custom3Label" value="<?php echo Display::escHtml($feed_custom3Label); ?>"/><br/>
+							custom4 = <input class="input-long" type="text" name="custom4Label" value="<?php echo Display::escHtml($feed_custom4Label); ?>"/><br/>
+							custom5 = <input class="input-long" type="text" name="custom5Label" value="<?php echo Display::escHtml($feed_custom5Label); ?>"/><br/>
+							custom6 = <input class="input-long" type="text" name="custom6Label" value="<?php echo Display::escHtml($feed_custom6Label); ?>"/>
 						</td>
 					</tr>
 					<tr>
@@ -897,7 +900,7 @@ if (isset($_REQUEST['d'])) {
 						<td>
 							<p>How old are leads allowed to be before we reject them? This should be a text string like "7 Days Ago" or "30 Days Ago". Do not enter just a number. A blank value disables this feature.</p>
 							<p>
-								<input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge' value='<?php echo $feed_rejectOldLeadsMaxAge; ?>' class='input-long'/>
+								<input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge' value='<?php echo Display::escHtml($feed_rejectOldLeadsMaxAge); ?>' class='input-long'/>
 							</p>
 						</td>
 					</tr>
@@ -907,7 +910,7 @@ if (isset($_REQUEST['d'])) {
 							<p>Leave blank for no limit (default). If a value is supplied here, the feed will stop accepting records after the daily limit is reached.</p>
 							<p>Note: If a choke percentage is defined below, then we will silently accept that percentage of leads over and above this daily limit. So if the choke is set at 25% and the feed limit is set at 750, we will accept approximately 1,000 leads before hitting the daily limit (but still only show 750 were accepted to the vendor).</p>
 							<p>
-								<input type="text" name="dailyLimit" value="<?php echo $feed_dailyLimit; ?>"/>
+								<input type="text" name="dailyLimit" value="<?php echo Display::escHtml($feed_dailyLimit); ?>"/>
 							</p>
                             <?php if (!empty($feed_chokePercent)) { ?>
 								<p>Effective daily limit with choke: <?php echo round($feed_dailyLimit / ((100 - $feed_chokePercent) * .01)); ?></p>
@@ -919,7 +922,7 @@ if (isset($_REQUEST['d'])) {
 						<td>
 							<p>The percentage of leads that will randomly be rejected. For example, entering a value of "20" means that approximately 20% of all leads coming in will be rejected. This feature ONLY applies to feeds that are setup as "live" or "waterfall" on the outgoing population side. Normally this value is zero.</p>
 							<p>
-								<input type="text" name="chokePercent" id="chokePercent" value="<?php echo $feed_chokePercent; ?>"/>
+								<input type="text" name="chokePercent" id="chokePercent" value="<?php echo Display::escHtml($feed_chokePercent); ?>"/>
 							</p>
 						</td>
 					</tr>
@@ -927,7 +930,7 @@ if (isset($_REQUEST['d'])) {
 						<td><p>Cost Per Lead</p></td>
 						<td>
 							<p>
-								<input type="text" name="costPerLead" value="<?php echo htmlentities($feed_costPerLead); ?>"/>
+								<input type="text" name="costPerLead" value="<?php echo Display::escHtml($feed_costPerLead); ?>"/>
 							</p>
 						</td>
 					</tr>
@@ -978,7 +981,16 @@ if (isset($_REQUEST['d'])) {
 						<td>
 							<p>If the feed is paused, send this rejection message to the vendor. If nothing is set here, the default message is "Lead rejected".</p>
 							<p>
-								<input type="text" name="pauseMessage" value="<?php echo $feed_pauseMessage; ?>" class="input-long"/>
+								<input type="text" name="pauseMessage" value="<?php echo Display::escHtml($feed_pauseMessage); ?>" class="input-long"/>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<td><p>Time Skew</p></td>
+						<td>
+							<p>If inbound timestamps on the feed should be manipulated before being saved to the DB, enter the amount of the skew below. This feature is not normally used. Examples: "-14 days", "+5 hours", etc. Use the timezone feature to adjust for timezones.</p>
+							<p>
+								<input type="text" name="timeskew" value="<?php echo Display::escHtml($feed_timeskew); ?>" class="input-long"/>
 							</p>
 						</td>
 					</tr>

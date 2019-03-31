@@ -888,6 +888,11 @@ class ProcessLeads
                         // Convert from whatever timezone the feed is sending over to UTC before saving in the DB.
                         $date = new DateTime($value, new DateTimeZone($feedParams->timezone));
                         $date->setTimezone(new DateTimeZone('UTC'));
+                        // Apply a time skew if set in the database.
+                        if ( ! empty($feedParams->timeskew)) {
+                            $interval = DateInterval::createFromDateString($feedParams->timeskew);
+                            $date->add($interval);
+                        }
                         $value = $date->format('Y-m-d H:i:s');
                     } catch (\Exception $e) {
                         $c = false;
