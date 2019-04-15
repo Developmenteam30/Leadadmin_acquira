@@ -2029,7 +2029,9 @@ if (isset($_REQUEST['d'])) {
 									Rejects</p>
 								</td>
 								<td>
-									<p><input type="checkbox" name="includeRejects" value="1" checked="checked"/> Include live feed rejections and choked records in the import.</p>
+									<p><input type="checkbox" name="includeLiveRejects" value="1" checked="checked"/> Include live feed rejections in the import.</p>
+									<p><input type="checkbox" name="includeChokeRejects" value="1" checked="checked"/> Include choked records in the import.</p>
+									<p><input type="checkbox" name="includeStandardRejects" value="1"/> Include standard inbound rejections in the import.</p>
 								</td>
 							</tr>
 						</table>

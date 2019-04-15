@@ -678,11 +678,17 @@ if ('clear-outbound-queue' === $job->type) {
         $params[] = $fields['dateEnd'] . ' 23:59:59';
         $params[] = LOCAL_TIMEZONE;
         $params[] = DB_TIMEZONE;
-        if (!empty($fields['includeRejects'])) {
-            $sql .= "AND ( result IS NULL OR result LIKE 'Third-party rejection [%' ) ";
-        } else {
-            $sql .= "AND result IS NULL ";
+        $sql .= "AND ( result IS NULL ";
+        if (!empty($fields['includeLiveRejects'])) {
+            $sql .= "OR result LIKE 'Third-party rejection [%0]' ";
         }
+        if (!empty($fields['includeChokeRejects'])) {
+            $sql .= "OR result LIKE 'Third-party rejection [%1]' ";
+        }
+        if (!empty($fields['includeStandardRejects'])) {
+            $sql .= "OR result NOT LIKE 'Third-party rejection [%' ";
+        }
+        $sql .= ") ";
         if (!empty(intval($fields['limit']))) {
             $sql .= "LIMIT " . intval($fields['limit']);
         }
