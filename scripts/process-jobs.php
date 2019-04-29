@@ -512,6 +512,7 @@ if ('clear-outbound-queue' === $job->type) {
     $feedParams->dedupeCellphone = null;
     $feedParams->rejectOldLeads = false;
     $feedParams->feedCategory = $feedOut->feedCategory;
+    $feedParams->timezone = 'UTC';
 
     $allowedFields = explode(";", $feedParams->allowedFields);
     $fields = unserialize($job->fields);
