@@ -348,8 +348,8 @@ include( INCLUDES . "c_header.php" );
 											<tr>
 												<td class="dashboard-incoming-col-large"><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</td>
 												<td class="text-center dashboard-incoming-col-small"><a class="btn btn-primary btn-xs nonLink" href="#" id="link_feedinc_<?php echo $feed->idFeedIn; ?>" onclick="displayToggle('feedinc', { 'sub':'<?php echo $feed->idFeedIn; ?>', 'idFeedIn':'<?php echo $feed->idFeedIn; ?>', 'hiddenText': 'Show URLs', 'shownText': 'Close' } );">Show URLs</a></td>
-												<td class="text-right dashboard-incoming-col-small"><?php echo number_format( $feed->dailyCount, 0 ); ?></td>
-												<td class="text-right dashboard-incoming-col-small"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo number_format( $feed->dailyCountInvalid, 0 ); ?></a></td>
+												<td class="text-right dashboard-incoming-col-small"><?php echo number_format( $grandTotalAccepted, 0 ); ?></td>
+												<td class="text-right dashboard-incoming-col-small"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo number_format( $grandTotalRejected, 0 ); ?></a></td>
 											</tr>
 											<tr>
 												<td class="hidden-custom" id="feedinc_<?php echo $feed->idFeedIn; ?>" colspan="4"></td>
