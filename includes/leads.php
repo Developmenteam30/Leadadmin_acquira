@@ -4618,6 +4618,21 @@ class Leads
         return $results;
     }
 
+    public function getInboundURLStatsRange($idFeedIn, $stampStart, $stampEnd)
+    {
+        $results = array();
+
+        try {
+            $query = $this->db->prepare("SELECT url,IFNULL(SUM(accepted),0) accepted,IFNULL(SUM(rejected),0) rejected FROM stats_inbound WHERE stamp >= ? AND stamp <= ? AND idFeedIn = ? GROUP BY url");
+            $query->execute(array($stampStart, $stampEnd, $idFeedIn));
+            $results = $query->fetchAll();
+        } catch (PDOException $e) {
+            $this->logError('Unable to get inbound URL stats: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function getInboundURLDates($idFeedIn)
     {
         $results = array();
