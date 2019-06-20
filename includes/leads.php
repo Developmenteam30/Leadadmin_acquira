@@ -4247,7 +4247,7 @@ class Leads
     {
 
         try {
-            $mappings = $this->getRevenueInboundMappings($fromDate, $idCompany, null, null);
+            $mappings = $this->getRevenueInboundMappings($toDate, $idCompany, null, null);
             if ($mappings && is_array($mappings)) {
                 foreach ($mappings as $mapping) {
                     $query = $this->db->prepare("REPLACE INTO revenue( date, idFeedIn, idFeedOut, url, value ) SELECT ?,idFeedIn,idFeedOut,url,value FROM revenue WHERE date = ? AND idFeedIn = ? AND idFeedOut = ? AND url = ?");
