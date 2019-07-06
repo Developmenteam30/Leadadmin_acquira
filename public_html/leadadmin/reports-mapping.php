@@ -56,7 +56,7 @@ include( INCLUDES . "c_header.php" );
 					><?php echo $company->name; ?></option>
 				<?php } ?>
 			</select>
-			<label for="idCompany_out">Outgoing Company:</label> <select name="idCompany_out" id="idCompany_out">
+			&nbsp; <label for="idCompany_out">Outgoing Company:</label> <select name="idCompany_out" id="idCompany_out">
 				<option value=""<?php if ($idCompany_out == '') echo ' selected="selected"'; ?>>Select an Outgoing Company</option>
 				<?php foreach ($companies as $company) { ?>
 					<option value='<?php echo $company->idCompany; ?>'
