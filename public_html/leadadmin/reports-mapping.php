@@ -34,73 +34,113 @@ include( INCLUDES . "c_header.php" );
 
 	<h2>URL Mapping Report</h2>
 
-	<?php
+	<!-- ADD FILTER (DZ) -->
+	<?php $idCompany_in = isset($_REQUEST['idCompany_in']) ? $_REQUEST['idCompany_in'] : '';
+	$idCompany_out = isset($_REQUEST['idCompany_out']) ? $_REQUEST['idCompany_out'] : '';
 
-	$mappings = $leads->getUrlMappings();
-	if( $mappings ) {
-		print "<table id=\"mapping_report\" class=\"table table-bordered table-condensed table-striped\">\n";
-		print "\t<thead>\n";
-		print "\t<tr class=\"bgGray\">\n";
-		print "\t\t<th>Incoming Company</th>\n";
-		print "\t\t<th>Incoming Feed</th>\n";
-		print "\t\t<th>Incoming URL</th>\n";
-		print "\t\t<th>Outgoing Company</th>\n";
-		print "\t\t<th>Outgoing Feed</th>\n";
-		print "\t\t<th>Active</th>\n";
-		print "\t</tr>\n";
-		print "\t</thead>\n";
-		print "\t<tbody>\n";
-		foreach( $mappings as $mapping ) {
+	$companies = $leads->getCompanies('active'); ?>
+
+	<?php if ($companies === false) { ?>
+		Database failure - could not fetch company list
+	<?php } elseif (!is_object($companies) && $companies == 0) { ?>
+		There are no companies in the database. Please create a company before
+		creating a report.
+	<?php } else { ?>
+		<form id="urlreport" method="POST" action="#">
+			<label for="idCompany_in">Incoming Company:</label> <select name="idCompany_in" id="idCompany_in">
+				<option value=""<?php if ($idCompany_in == '') echo ' selected="selected"'; ?>>Select an Incoming Company</option>
+				<?php foreach ($companies as $company) { ?>
+					<option value='<?php echo $company->idCompany; ?>'
+							<?php if ($company->idCompany == $idCompany_in){
+							?>selected='selected'<?php } ?>
+					><?php echo $company->name; ?></option>
+				<?php } ?>
+			</select>
+			<label for="idCompany_out">Outgoing Company:</label> <select name="idCompany_out" id="idCompany_out">
+				<option value=""<?php if ($idCompany_out == '') echo ' selected="selected"'; ?>>Select an Outgoing Company</option>
+				<?php foreach ($companies as $company) { ?>
+					<option value='<?php echo $company->idCompany; ?>'
+							<?php if ($company->idCompany == $idCompany_out){
+							?>selected='selected'<?php } ?>
+					><?php echo $company->name; ?></option>
+				<?php } ?>
+			</select>
+			<input type="submit" value="Generate Report">
+		</form>
+	<?php } ?>
+
+	<?php if ( !empty( $idCompany_in ) || !empty( $idCompany_out ) ) { ?>
+
+		<?php $mappings = $leads->getUrlMappings($idCompany_in, $idCompany_out);
+		if( $mappings ) {
+			print "<table id=\"mapping_report\" class=\"table table-bordered table-condensed table-striped\">\n";
+			print "\t<thead>\n";
 			print "\t<tr class=\"bgGray\">\n";
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
-			if( '1' == $mapping['active'] ) {
-				print "\t\t<td>Y</td>\n";
-			} else {
-				print "\t\t<td>N</td>\n";
-			}
+			print "\t\t<th>Incoming Company</th>\n";
+			print "\t\t<th>Incoming Feed</th>\n";
+			print "\t\t<th>Incoming URL</th>\n";
+			print "\t\t<th>Outgoing Company</th>\n";
+			print "\t\t<th>Outgoing Feed</th>\n";
+			print "\t\t<th>Active</th>\n";
 			print "\t</tr>\n";
+			print "\t</thead>\n";
+			print "\t<tbody>\n";
+			foreach( $mappings as $mapping ) {
+				print "\t<tr class=\"bgGray\">\n";
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
+				if( '1' == $mapping['active'] ) {
+					print "\t\t<td>Y</td>\n";
+				} else {
+					print "\t\t<td>N</td>\n";
+				}
+				print "\t</tr>\n";
 
-		}
-		print "\t</tbody>\n";
-		print "</table>\n";
-		?>
+			}
+			print "\t</tbody>\n";
+			print "</table>\n";
+			?>
 
-		<script type="text/javascript">
-			/*
-				var tf = new TableFilter(document.querySelector('#mapping_report'), {
-					base_path: '/leadadmin/libraries/tablefilter/',
-					filters_row_index: 1,
-					sort: true,
-					sort_config: {
-						sort_types:['String','String','String','String','String','String']
-					},
-					remember_grid_values: true,
-					alternate_rows: true,
-					btn_reset: true,
-					btn_reset_text: "Clear",
-					btn_text: " > ",
-					loader: true,
-					loader_text: "Filtering data...",
-					col_0: "select",
-					col_1: "select",
-					col_2: "select",
-					col_3: "select",
-					col_4: "select",
-					col_5: "select",
-					display_all_text: "< Show all >"
-				});
-				tf.init();
-			*/
-		</script>
-		<?php
-	} else {
-		print "Cannot load list of incoming feeds.";
-	}
-	?>
+			<script type="text/javascript">
+				/*
+					var tf = new TableFilter(document.querySelector('#mapping_report'), {
+						base_path: '/leadadmin/libraries/tablefilter/',
+						filters_row_index: 1,
+						sort: true,
+						sort_config: {
+							sort_types:['String','String','String','String','String','String']
+						},
+						remember_grid_values: true,
+						alternate_rows: true,
+						btn_reset: true,
+						btn_reset_text: "Clear",
+						btn_text: " > ",
+						loader: true,
+						loader_text: "Filtering data...",
+						col_0: "select",
+						col_1: "select",
+						col_2: "select",
+						col_3: "select",
+						col_4: "select",
+						col_5: "select",
+						display_all_text: "< Show all >"
+					});
+					tf.init();
+				*/
+			</script>
+			<?php
+		} else {
+			print "Cannot load list of incoming feeds.";
+		} ?>
+
+	<?php } else { ?>
+
+		<h4 style="padding-top: 25px;">Choose an incoming and/or outgoing company to view report.</h4>
+
+	<?php } ?>
 
 </div>
 

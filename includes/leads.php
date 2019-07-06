@@ -3821,7 +3821,7 @@ class Leads
         return true;
     }
 
-    public function getUrlMappings()
+    public function getUrlMappings(int $companyIn, int $companyOut)
     {
         $results = array();
 
@@ -3830,17 +3830,36 @@ class Leads
         $query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
         $query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
         $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
-        $query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ) ";
+        $query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
+        
+        if ( $companyIn != 0 ) {
+            $query .= "WHERE ci.idCompany = $companyIn ";
+        }
+        if ( $companyOut != 0 ) {
+            if ( $companyIn == 0 ) $query .= "WHERE ";
+            else $query .= "AND ";
 
-        $query .= "UNION ALL ";
+            $query .= "co.idCompany = $companyOut ";
+        }
 
-        $query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
-        $query .= "FROM stats_inbound s ";
-        $query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
-        $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
-        $query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
-        $query .= "WHERE m.url IS NULL ";
-        $query .= "GROUP BY 4 ) ";
+        $query .= " ) ";
+
+        if ( $companyIn != 0 && $companyOut == 0 ) {
+
+            $query .= "UNION ALL ";
+
+            $query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
+            $query .= "FROM stats_inbound s ";
+            $query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
+            $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+            $query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
+            $query .= "WHERE m.url IS NULL ";
+
+            $query .= "AND ci.idCompany = $companyIn ";
+
+            $query .= "GROUP BY 4 ) ";
+
+        }
 
         $query .= "ORDER BY 1,2,4,5,6 ";
 
