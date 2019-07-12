@@ -186,6 +186,7 @@ select {
 	height: 26px;
 }
 
+.modal-dialog select,
 .modal-dialog .select2-container {
 	max-width: 375px;
 }
