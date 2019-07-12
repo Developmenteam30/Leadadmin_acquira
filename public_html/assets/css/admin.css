@@ -186,6 +186,10 @@ select {
 	height: 26px;
 }
 
+.modal-dialog .select2-container {
+	max-width: 375px;
+}
+
 .form-input input[type='email'],
 .form-input input[type='url'],
 .form-input input[type='text'] {
