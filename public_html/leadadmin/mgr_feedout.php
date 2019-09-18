@@ -2129,10 +2129,11 @@ if (isset($_REQUEST['d'])) {
 				<p><strong>Feed:</strong> <?php echo Display::escHtml($feed->label); ?> (#<?php echo $feed->idFeedOut; ?>)</p>
 
 				<form enctype="multipart/form-data" id="form-upload" action="mgr_import.php" method="post" target="_blank">
-					<input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>"/>
 					<input type="hidden" name="destination" value="<?php echo intval($idFeedOut); ?>"/>
 					<input type="hidden" name="type" value="upload-outbound"/>
 					<input type="hidden" name="a" value="import"/>
+					<input type="hidden" name="filename" value=""/>
+					<input type="hidden" name="uuid" value=""/>
 
 					<table class="table table-bordered table-condensed table-striped">
 						<tr>
@@ -2147,7 +2148,7 @@ if (isset($_REQUEST['d'])) {
 							<td>
                                 <?php
                                 $allowedFields = $recordFields;
-                                $requiredFields = array();
+                                $requiredFields = array('url', 'ip', 'stamp', 'email');
 
                                 // Add a separate time field in case the file uses separate columns
                                 if (($key = array_search('stamp', $allowedFields)) !== false) {
@@ -2180,8 +2181,8 @@ if (isset($_REQUEST['d'])) {
 						callbacks: {
 							onComplete: function (id, name, responseJSON) {
 								if (responseJSON.success) {
-									$("#form-import input[name='filename']").val(importUploader.getName(id));
-									$("#form-import input[name='uuid']").val(importUploader.getUuid(id));
+									$("#form-upload input[name='filename']").val(importUploader.getName(id));
+									$("#form-upload input[name='uuid']").val(importUploader.getUuid(id));
 								}
 							},
 						},
@@ -2203,7 +2204,7 @@ if (isset($_REQUEST['d'])) {
 						request: {
 							endpoint: '/leadadmin/ajax/fileUpload.php',
 							params: {
-								'type': 'feedinc',
+								'type': 'upload-outbound',
 							},
 						},
 						retry: {
@@ -3554,8 +3555,7 @@ include(INCLUDES . "c_header.php");
 
 	<div class="modal fade" id="modal-upload" tabindex="-1" role="dialog" aria-labelledby="upload_title">
 		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
+			<div class="modal-content">				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					<h4 class="modal-title" id="upload_title">Upload Legacy Data</h4>
 				</div>
@@ -3896,7 +3896,37 @@ include(INCLUDES . "c_header.php");
 
 		$('#modal-save-upload').click(function (event) {
 			event.preventDefault();
-			$('#form-upload').submit();
+			if ($("#form-upload select[name='field_url']").val() === '--') {
+				alert('Please select the URL column.');
+			} else if ($("#form-upload select[name='field_ip']").val() === '--') {
+				alert('Please select the IP column.');
+			} else if ($("#form-upload select[name='field_stamp']").val() === '--') {
+				alert('Please select the stamp column.');
+			} else if ($("#form-upload select[name='field_email']").val() === '--') {
+				alert('Please select the email column.');
+			} else if (importUploader.getInProgress()) {
+				alert('Please wait until your file has finished uploading before submitting this job.');
+			} else if (importUploader.getNetUploads() === 0 || $("#form-upload input[name='filename']").val() === '' || $("#form-upload input[name='uuid']").val() === '') {
+				alert('Please upload a file.');
+			} else {
+
+				var modal = $(this);
+
+				var response = $.ajax({
+					url: "/leadadmin/ajax/submitJob.php",
+					type: "POST",
+					async: true,
+					data: $("#form-upload").serialize()
+				}).done(function (result) {
+					if (result.success === true) {
+						if (result.link) {
+							window.location = result.link;
+						}
+					} else {
+						alert("Error: " + (result.error || 'Unknown'));
+					}
+				});
+			}
 		});
 
 		$('#modal-export').on('show.bs.modal', function (e) {

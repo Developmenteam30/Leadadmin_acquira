@@ -95,7 +95,8 @@ require_once(INCLUDES . "UploadHandler.php");
 $uploader = new UploadHandler();
 
 switch ($_REQUEST['type']) {
-    case 'feedinc':
+	case 'feedinc':
+	case 'upload-outbound':
         $uploader->allowedExtensions = array('csv', 'txt');
         break;
 
