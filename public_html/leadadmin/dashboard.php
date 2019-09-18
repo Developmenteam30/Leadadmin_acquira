@@ -87,7 +87,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				}
 			}
 
-			$urls = $leads->getInboundURLStats( $idFeedIn );
+			$urls = $leads->getInboundURLStatsRange( $idFeedIn, date( 'Y-m-d', strtotime( $statsStart ) ), date( 'Y-m-d', strtotime( $statsEnd ) ) );
 			?>
 			<?php
 			if( empty( $urls ) ) {

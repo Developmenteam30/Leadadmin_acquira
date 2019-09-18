@@ -1,13 +1,5 @@
 <?php
 
-if (extension_loaded('newrelic')) {
-    newrelic_set_appname('Qatalyst Scripts');
-}
-
-if (extension_loaded('newrelic')) {
-    newrelic_ignore_transaction();
-}
-
 //pcntl_fork();
 set_time_limit(0);
 
@@ -94,18 +86,9 @@ while ($running) {
 
     foreach ($rows as $row) {
 
-        if (extension_loaded('newrelic')) {
-            newrelic_start_transaction('Qatalyst Scripts');
-        }
-
         print "\n\n\nRecord: {$row->idRecord} (" . getmypid() . ")\n";
 
         ProcessLeads::pushOutboundData($feedOut, $row);
-
-        if (extension_loaded('newrelic')) {
-            newrelic_end_transaction();
-        }
-
     }
 }
 
