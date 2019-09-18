@@ -9,268 +9,260 @@ LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
 
-$filterStatus = !empty( $_REQUEST['filterStatus'] ) ? $_REQUEST['filterStatus'] : null;
-$filterUserId = !empty( $_REQUEST['filterUserId'] ) ? $_REQUEST['filterUserId'] : null;
+$filterStatus = ! empty( $_REQUEST['filterStatus'] ) ? $_REQUEST['filterStatus'] : null;
+$filterUserId = ! empty( $_REQUEST['filterUserId'] ) ? $_REQUEST['filterUserId'] : null;
 
-$staffUsers = array(
+$staffUsers           = array(
 	'47' => 'Bobby Lindsey',
-	'3' => 'Chris Meehan',
+	'3'  => 'Chris Meehan',
 	'65' => 'Diana DiDiego',
 	'63' => 'Naomi Barbeau',
 );
 
 require_once( INCLUDES . 'display.php' );
 
-if( isset( $_REQUEST['a'] ) ) {
+if ( isset( $_REQUEST['a'] ) ) {
 	Header( 'Content-Type: application/json' );
 
 	$result = array(
 		'status' => 0,
-		'error' => 'Action does not exist.',
+		'error'  => 'Action does not exist.',
 	);
-	switch( $_REQUEST['a'] ) {
+	switch ( $_REQUEST['a'] ) {
 		case "addNewNote":
-			$c = true;
+			$c               = true;
 			$result['error'] = 'Failed when trying to add a new prospect note.';
 
-			if( $c && empty( $_REQUEST['prospectId'] ) ) {
+			if ( $c && empty( $_REQUEST['prospectId'] ) ) {
 				$result['error'] = 'Please supply an prospect ID.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c ) {
+			if ( $c ) {
 				$entry = $leads->getProspect( $_REQUEST['prospectId'] );
-				if( empty( $entry ) ) {
+				if ( empty( $entry ) ) {
 					$result['error'] = 'There is no prospect that exists by that ID.';
 					break;
 				}
 			}
 
-			if( $c && empty( $_REQUEST['actionType'] ) ) {
+			if ( $c && empty( $_REQUEST['actionType'] ) ) {
 				$result['error'] = 'Please select the action type.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c && empty( $_REQUEST['note'] ) ) {
+			if ( $c && empty( $_REQUEST['note'] ) ) {
 				$result['error'] = 'Please type your note.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c && strlen( $_REQUEST['note'] ) > 65535 ) {
+			if ( $c && strlen( $_REQUEST['note'] ) > 65535 ) {
 				$result['error'] = 'Please limit your note to 65,535 characters or less.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c && !empty( $_REQUEST['followUpDate'] ) ) {
+			if ( $c && ! empty( $_REQUEST['followUpDate'] ) ) {
 				try {
 					$followUpDate = new DateTime( $_REQUEST['followUpDate'] );
-				} catch( Exception $e ) {
+				} catch ( Exception $e ) {
 					$result['error'] = 'Please enter a valid follow-up date.';
-					$c = false;
+					$c               = false;
 				}
 			}
 
-			if( $c && strlen( $_REQUEST['nextSteps'] ) > 65535 ) {
+			if ( $c && strlen( $_REQUEST['nextSteps'] ) > 65535 ) {
 				$result['error'] = 'Please limit your next steps note to 65,535 characters or less.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c ) {
+			if ( $c ) {
 				$noteId = $leads->addProspectNote( array(
-					'prospectId' => $_REQUEST['prospectId'],
-					'userId' => LeadsSession::getUserId(),
-					'timestamp' => date( 'Y-m-d H:i:s' ),
-					'note' => trim( $_REQUEST['note'] ),
-					'actionType' => trim( $_REQUEST['actionType'] ),
-					'nextSteps' => trim( $_REQUEST['nextSteps'] ),
-					'followUpDate' => !isset( $followUpDate ) ? null : $followUpDate->format( 'Y-m-d' ),
+					'prospectId'   => $_REQUEST['prospectId'],
+					'userId'       => LeadsSession::getUserId(),
+					'timestamp'    => date( 'Y-m-d H:i:s' ),
+					'note'         => trim( $_REQUEST['note'] ),
+					'actionType'   => trim( $_REQUEST['actionType'] ),
+					'nextSteps'    => trim( $_REQUEST['nextSteps'] ),
+					'followUpDate' => ! isset( $followUpDate ) ? null : $followUpDate->format( 'Y-m-d' ),
 				) );
-				if( null === $noteId ) {
-					$c = false;
+				if ( null === $noteId ) {
+					$c               = false;
 					$result['error'] = 'Error adding this prospect note to the database.';
 				}
 			}
 
-			if( $c ) {
+			if ( $c ) {
 				$result['status'] = 1;
-				$result['error'] = 'Successfully added new prospect note.';
+				$result['error']  = 'Successfully added new prospect note.';
 			}
 			break;
 
 		case "addNewProspect":
-			$c = true;
+			$c               = true;
 			$result['error'] = 'Failed when trying to add a new prospect';
 
-			if( $c && empty( $_REQUEST['company'] ) ) {
+			if ( $c && empty( $_REQUEST['company'] ) ) {
 				$result['error'] = 'Please type in a company name.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c && empty( $_REQUEST['note'] ) ) {
+			if ( $c && empty( $_REQUEST['note'] ) ) {
 				$result['error'] = 'Please type an initial note about this prospect.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( !empty( $_REQUEST['expectedClose'] ) ) {
+			if ( ! empty( $_REQUEST['expectedClose'] ) ) {
 				try {
 					$expectedClose = new DateTime( $_REQUEST['expectedClose'] );
-				} catch( Exception $e ) {
+				} catch ( Exception $e ) {
 					$result['error'] = 'Please enter a valid expected close date.';
 					break;
 				}
 			}
 
-			$userId = LeadsSession::getUserId();
-			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
-				if( $c && empty( $_REQUEST['userId'] ) ) {
-					$result['error'] = 'Please select a salesperson from the list.';
-					$c = false;
-				}
-				$userId = empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'];
+			if ( $c && empty( $_REQUEST['userId'] ) ) {
+				$result['error'] = 'Please select a salesperson from the list.';
+				$c               = false;
 			}
 
-			if( $c && strlen( $_REQUEST['note'] ) > 65535 ) {
+			if ( $c && strlen( $_REQUEST['note'] ) > 65535 ) {
 				$result['error'] = 'Please limit your note to 65,535 characters or less.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c && !empty( $_REQUEST['followUpDate'] ) ) {
+			if ( $c && ! empty( $_REQUEST['followUpDate'] ) ) {
 				try {
 					$followUpDate = new DateTime( $_REQUEST['followUpDate'] );
-				} catch( Exception $e ) {
+				} catch ( Exception $e ) {
 					$result['error'] = 'Please enter a valid follow-up date.';
-					$c = false;
+					$c               = false;
 				}
 			}
 
-			if( $c && strlen( $_REQUEST['nextSteps'] ) > 65535 ) {
+			if ( $c && strlen( $_REQUEST['nextSteps'] ) > 65535 ) {
 				$result['error'] = 'Please limit your next steps note to 65,535 characters or less.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c ) {
-				$isPublisher = false;
+			if ( $c ) {
+				$isPublisher  = false;
 				$isAdvertiser = false;
-				if( !empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
-					foreach( $_REQUEST['companyType'] as $key => $val ) {
-						if( 'isPublisher' === $val ) {
+				if ( ! empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
+					foreach ( $_REQUEST['companyType'] as $key => $val ) {
+						if ( 'isPublisher' === $val ) {
 							$isPublisher = true;
-						} else if( 'isAdvertiser' === $val ) {
+						} elseif ( 'isAdvertiser' === $val ) {
 							$isAdvertiser = true;
 						}
 					}
 				}
 
 				$prospectId = $leads->addProspect( array(
-					'company' => $_REQUEST['company'],
-					'name' => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
-					'opportunity' => empty( $_REQUEST['opportunity'] ) ? null : $_REQUEST['opportunity'],
-					'phone' => empty( $_REQUEST['phone'] ) ? null : $_REQUEST['phone'],
-					'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
-					'userId' => $userId,
-					'divisions' => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
-					'verticals' => empty( $_REQUEST['verticals'] ) ? null : implode( ',', $_REQUEST['verticals'] ),
-					'percentage' => intval( $_REQUEST['percentage'] ),
-					'expectedClose' => !isset( $expectedClose ) ? null : $expectedClose->format( 'Y-m-d' ),
-					'isPublisher' => $isPublisher ? 1 : 0,
-					'isAdvertiser' => $isAdvertiser ? 1 : 0,
+					'company'       => $_REQUEST['company'],
+					'name'          => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
+					'opportunity'   => empty( $_REQUEST['opportunity'] ) ? null : $_REQUEST['opportunity'],
+					'phone'         => empty( $_REQUEST['phone'] ) ? null : $_REQUEST['phone'],
+					'email'         => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
+					'userId'        => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
+					'divisions'     => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
+					'verticals'     => empty( $_REQUEST['verticals'] ) ? null : implode( ',', $_REQUEST['verticals'] ),
+					'percentage'    => intval( $_REQUEST['percentage'] ),
+					'expectedClose' => ! isset( $expectedClose ) ? null : $expectedClose->format( 'Y-m-d' ),
+					'isPublisher'   => $isPublisher ? 1 : 0,
+					'isAdvertiser'  => $isAdvertiser ? 1 : 0,
 				) );
-				if( null === $prospectId ) {
-					$c = false;
+				if ( null === $prospectId ) {
+					$c               = false;
 					$result['error'] = 'Error adding this prospect to the database.';
 				} else {
 					$leads->auditLog( 'PROSPECT:ADD', $prospectId );
-					if( !empty( $_REQUEST['note'] ) ) {
+					if ( ! empty( $_REQUEST['note'] ) ) {
 						$leads->addProspectNote( array(
-							'prospectId' => $prospectId,
-							'userId' => LeadsSession::getUserId(),
-							'timestamp' => date( 'Y-m-d H:i:s' ),
-							'note' => trim( $_REQUEST['note'] ),
-							'actionType' => trim( $_REQUEST['actionType'] ),
-							'nextSteps' => trim( $_REQUEST['nextSteps'] ),
-							'followUpDate' => !isset( $followUpDate ) ? null : $followUpDate->format( 'Y-m-d' ),
+							'prospectId'   => $prospectId,
+							'userId'       => LeadsSession::getUserId(),
+							'timestamp'    => date( 'Y-m-d H:i:s' ),
+							'note'         => trim( $_REQUEST['note'] ),
+							'actionType'   => trim( $_REQUEST['actionType'] ),
+							'nextSteps'    => trim( $_REQUEST['nextSteps'] ),
+							'followUpDate' => ! isset( $followUpDate ) ? null : $followUpDate->format( 'Y-m-d' ),
 						) );
 					}
 				}
 			}
 
-			if( $c ) {
+			if ( $c ) {
 				$result['status'] = 1;
-				$result['error'] = 'Successfully added new prospect.';
+				$result['error']  = 'Successfully added new prospect.';
 			}
 			break;
 
 		case "alterProspect":
-			$c = true;
+			$c               = true;
 			$result['error'] = 'Failed when trying to edit an prospect.';
 
-			if( $c && empty( $_REQUEST['prospectId'] ) ) {
+			if ( $c && empty( $_REQUEST['prospectId'] ) ) {
 				$result['error'] = 'Please supply an prospect ID.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( $c ) {
+			if ( $c ) {
 				$entry = $leads->getProspect( $_REQUEST['prospectId'] );
-				if( empty( $entry ) ) {
+				if ( empty( $entry ) ) {
 					$result['error'] = 'There is no prospect that exists by that ID.';
 					break;
 				}
 			}
 
-			if( $c && empty( $_REQUEST['company'] ) ) {
+			if ( $c && empty( $_REQUEST['company'] ) ) {
 				$result['error'] = 'Please type in a company name.';
-				$c = false;
+				$c               = false;
 			}
 
-			if( !empty( $_REQUEST['expectedClose'] ) ) {
+			if ( ! empty( $_REQUEST['expectedClose'] ) ) {
 				try {
 					$expectedClose = new DateTime( $_REQUEST['expectedClose'] );
-				} catch( Exception $e ) {
+				} catch ( Exception $e ) {
 					$result['error'] = 'Please enter a valid expected close date.';
 					break;
 				}
 			}
 
-			$userId = LeadsSession::getUserId();
-			if( LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ) {
-				if( $c && empty( $_REQUEST['userId'] ) ) {
-					$result['error'] = 'Please select a salesperson from the list.';
-					$c = false;
-				}
-				$userId = empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'];
+			if ( $c && empty( $_REQUEST['userId'] ) ) {
+				$result['error'] = 'Please select a salesperson from the list.';
+				$c               = false;
 			}
 
-			if( $c ) {
-				$isPublisher = false;
+			if ( $c ) {
+				$isPublisher  = false;
 				$isAdvertiser = false;
-				if( !empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
-					foreach( $_REQUEST['companyType'] as $key => $val ) {
-						if( 'isPublisher' === $val ) {
+				if ( ! empty( $_REQUEST['companyType'] ) && is_array( $_REQUEST['companyType'] ) ) {
+					foreach ( $_REQUEST['companyType'] as $key => $val ) {
+						if ( 'isPublisher' === $val ) {
 							$isPublisher = true;
-						} else if( 'isAdvertiser' === $val ) {
+						} elseif ( 'isAdvertiser' === $val ) {
 							$isAdvertiser = true;
 						}
 					}
 				}
 
 				$alterProspectResult = $leads->updateProspect( $_REQUEST['prospectId'], array(
-					'company' => $_REQUEST['company'],
-					'name' => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
-					'opportunity' => empty( $_REQUEST['opportunity'] ) ? null : $_REQUEST['opportunity'],
-					'phone' => empty( $_REQUEST['phone'] ) ? null : $_REQUEST['phone'],
-					'email' => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
-					'userId' => $userId,
-					'divisions' => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
-					'verticals' => empty( $_REQUEST['verticals'] ) ? null : implode( ',', $_REQUEST['verticals'] ),
-					'percentage' => intval( $_REQUEST['percentage'] ),
-					'isArchived' => !empty( $_REQUEST['isArchived'] ) ? 1 : 0,
-					'expectedClose' => !isset( $expectedClose ) ? null : $expectedClose->format( 'Y-m-d' ),
-					'isPublisher' => $isPublisher ? 1 : 0,
-					'isAdvertiser' => $isAdvertiser ? 1 : 0,
+					'company'       => $_REQUEST['company'],
+					'name'          => empty( $_REQUEST['name'] ) ? null : $_REQUEST['name'],
+					'opportunity'   => empty( $_REQUEST['opportunity'] ) ? null : $_REQUEST['opportunity'],
+					'phone'         => empty( $_REQUEST['phone'] ) ? null : $_REQUEST['phone'],
+					'email'         => empty( $_REQUEST['email'] ) ? null : $_REQUEST['email'],
+					'userId'        => empty( $_REQUEST['userId'] ) ? null : $_REQUEST['userId'],
+					'divisions'     => empty( $_REQUEST['divisions'] ) ? null : implode( ',', $_REQUEST['divisions'] ),
+					'verticals'     => empty( $_REQUEST['verticals'] ) ? null : implode( ',', $_REQUEST['verticals'] ),
+					'percentage'    => intval( $_REQUEST['percentage'] ),
+					'isArchived'    => ! empty( $_REQUEST['isArchived'] ) ? 1 : 0,
+					'expectedClose' => ! isset( $expectedClose ) ? null : $expectedClose->format( 'Y-m-d' ),
+					'isPublisher'   => $isPublisher ? 1 : 0,
+					'isAdvertiser'  => $isAdvertiser ? 1 : 0,
 				) );
 
-				if( $alterProspectResult === false ) {
-					$c = false;
+				if ( $alterProspectResult === false ) {
+					$c               = false;
 					$result['error'] = 'Database failure, could not alter prospect.';
 				} else {
 					$leads->auditLog( 'PROSPECT:EDIT', $_REQUEST['prospectId'] );
@@ -278,9 +270,9 @@ if( isset( $_REQUEST['a'] ) ) {
 
 			}
 
-			if( $c ) {
+			if ( $c ) {
 				$result['status'] = 1;
-				$result['error'] = 'Successfully altered existing prospect.';
+				$result['error']  = 'Successfully altered existing prospect.';
 			}
 			break;
 	}
@@ -288,8 +280,8 @@ if( isset( $_REQUEST['a'] ) ) {
 	exit;
 }
 
-if( isset( $_REQUEST['d'] ) ) {
-	switch( $_REQUEST['d'] ) {
+if ( isset( $_REQUEST['d'] ) ) {
+	switch ( $_REQUEST['d'] ) {
 		case 'errorCount':
 			Display::errorCount();
 			break;
@@ -302,122 +294,121 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			$divisions = $leads->getDivisions();
 			$verticals = array();
-			foreach( $divisions as $key => $val ) {
-				$db_verticals = $leads->getDivisionVerticals( $key );
-				$verticals[$val] = $db_verticals;
+			foreach ( $divisions as $key => $val ) {
+				$db_verticals      = $leads->getDivisionVerticals( $key );
+				$verticals[ $val ] = $db_verticals;
 			}
 
 			$fields = array(
 				array(
-					'id' => 'company',
-					'label' => 'Company',
-					'type' => 'text',
+					'id'       => 'company',
+					'label'    => 'Company',
+					'type'     => 'text',
 					'required' => true,
 				),
 				array(
-					'id' => 'name',
+					'id'    => 'name',
 					'label' => 'Contact Name',
-					'type' => 'text',
+					'type'  => 'text',
 				),
 				array(
-					'id' => 'opportunity',
+					'id'    => 'opportunity',
 					'label' => 'Opportunity Description',
-					'type' => 'text',
+					'type'  => 'text',
 				),
 				array(
-					'id' => 'phone',
+					'id'    => 'phone',
 					'label' => 'Contact Phone',
-					'type' => 'text',
+					'type'  => 'text',
 				),
 				array(
-					'id' => 'email',
+					'id'    => 'email',
 					'label' => 'Contact Email',
-					'type' => 'text',
+					'type'  => 'text',
 				),
 				array(
-					'id' => 'companyType',
-					'label' => 'Company Type',
-					'type' => 'checkbox',
-					'choices' => array(
-						'isPublisher' => 'Publisher / Affiliate',
+					'id'            => 'companyType',
+					'label'         => 'Company Type',
+					'type'          => 'checkbox',
+					'choices'       => array(
+						'isPublisher'  => 'Publisher / Affiliate',
 						'isAdvertiser' => 'Advertiser',
 					),
 					'choice_append' => '<br/>',
 				),
 				array(
-					'id' => 'divisions',
-					'label' => 'Division(s)',
-					'type' => 'checkbox',
-					'choices' => $divisions,
+					'id'            => 'divisions',
+					'label'         => 'Division(s)',
+					'type'          => 'checkbox',
+					'choices'       => $divisions,
 					'choice_append' => '<br/>',
 				),
 				array(
-					'id' => 'verticals',
-					'label' => 'Verticals',
-					'type' => 'select',
-					'multiple' => true,
-					'placeholder' => false,
-					'choices' => $verticals,
+					'id'            => 'verticals',
+					'label'         => 'Verticals',
+					'type'          => 'select',
+					'multiple'      => true,
+					'placeholder'   => false,
+					'choices'       => $verticals,
 					'choice_append' => '<br/>',
 				),
 				array(
-					'id' => 'percentage',
-					'label' => 'Pct Complete',
-					'type' => 'select',
+					'id'          => 'percentage',
+					'label'       => 'Pct Complete',
+					'type'        => 'select',
 					'placeholder' => 'Select a progress',
-					'choices' => array(
-						'0' => 'New Lead (0%)',
-						'25' => 'Initial Contact Made (25%)',
-						'50' => 'Opportunity Defined (50%)',
-						'75' => 'Agreement/IO Pending (75%)',
+					'choices'     => array(
+						'0'   => 'New Lead (0%)',
+						'25'  => 'Initial Contact Made (25%)',
+						'50'  => 'Opportunity Defined (50%)',
+						'75'  => 'Agreement/IO Pending (75%)',
 						'100' => 'Closed (100%)',
 					),
 				),
 				array(
-					'id' => 'expectedClose',
-					'label' => 'Expected Close Date',
-					'type' => 'text',
-                    'autocomplete' => 'off',
+					'id'           => 'expectedClose',
+					'label'        => 'Expected Close Date',
+					'type'         => 'text',
+					'autocomplete' => 'off',
 				),
 				array(
-					'id' => 'userId',
-					'label' => 'Salesperson',
-					'type' => 'select',
+					'id'          => 'userId',
+					'label'       => 'Salesperson',
+					'type'        => 'select',
 					'placeholder' => 'Select a salesperson',
-					'choices' => $leads->getStaffUsers(),
-					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ? true : false,
+					'choices'     => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
 				),
 				array(
-					'id' => 'actionType',
-					'label' => 'Action Type',
-					'type' => 'select',
+					'id'      => 'actionType',
+					'label'   => 'Action Type',
+					'type'    => 'select',
 					'choices' => array(
-						'phone' => 'Phone',
-						'email' => 'Email',
-						'text' => 'Text Message',
-						'skype' => 'Skype',
+						'phone'    => 'Phone',
+						'email'    => 'Email',
+						'text'     => 'Text Message',
+						'skype'    => 'Skype',
 						'inperson' => 'In Person',
 					),
 				),
 				array(
-					'id' => 'note',
+					'id'    => 'note',
 					'label' => 'Initial Note',
-					'type' => 'textarea',
+					'type'  => 'textarea',
 				),
 				array(
-					'id' => 'followUpDate',
-					'label' => 'Follow Up Date',
-					'type' => 'text',
-                    'autocomplete' => 'off',
+					'id'           => 'followUpDate',
+					'label'        => 'Follow Up Date',
+					'type'         => 'text',
+					'autocomplete' => 'off',
 				),
 				array(
-					'id' => 'nextSteps',
+					'id'    => 'nextSteps',
 					'label' => 'Next Steps',
-					'type' => 'textarea',
+					'type'  => 'textarea',
 				),
 				array(
-					'id' => 'a',
-					'type' => 'hidden',
+					'id'    => 'a',
+					'type'  => 'hidden',
 					'value' => 'addNewProspect',
 				),
 			);
@@ -427,10 +418,10 @@ if( isset( $_REQUEST['d'] ) ) {
 			break;
 
 		case "dialog_editprospect":
-			$prospectId = !empty( $_REQUEST['prospectId'] ) ? $_REQUEST['prospectId'] : '';
+			$prospectId = ! empty( $_REQUEST['prospectId'] ) ? $_REQUEST['prospectId'] : '';
 			$prospect = $leads->getProspect( $prospectId );
 
-			if( empty( $prospect ) ) {
+			if ( empty( $prospect ) ) {
 				?>
 				<p>There is no prospect that exists by that ID.</p>
 				<?php
@@ -439,137 +430,136 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			}
 
-			$divisions = $leads->getDivisions();
+			$divisions          = $leads->getDivisions();
 			$divisions_selected = array();
-			if( !empty( $prospect->divisions ) ) {
+			if ( ! empty( $prospect->divisions ) ) {
 				$tmp = explode( ',', $prospect->divisions );
-				foreach( $tmp as $key => $val ) {
-					$divisions_selected[$val] = 1;
+				foreach ( $tmp as $key => $val ) {
+					$divisions_selected[ $val ] = 1;
 				}
 			}
-			$verticals = array();
+			$verticals          = array();
 			$verticals_selected = array();
-			foreach( $divisions as $key => $val ) {
-				$db_verticals = $leads->getDivisionVerticals( $key );
-				$verticals[$val] = $db_verticals;
+			foreach ( $divisions as $key => $val ) {
+				$db_verticals      = $leads->getDivisionVerticals( $key );
+				$verticals[ $val ] = $db_verticals;
 			}
-			if( !empty( $prospect->verticals ) ) {
+			if ( ! empty( $prospect->verticals ) ) {
 				$tmp = explode( ',', $prospect->verticals );
-				foreach( $tmp as $key => $val ) {
-					$verticals_selected[$val] = 1;
+				foreach ( $tmp as $key => $val ) {
+					$verticals_selected[ $val ] = 1;
 				}
 			}
 
 
 			$fields = array(
 				array(
-					'id' => 'company',
-					'label' => 'Company',
-					'type' => 'text',
+					'id'       => 'company',
+					'label'    => 'Company',
+					'type'     => 'text',
 					'required' => true,
-					'value' => $prospect->company,
+					'value'    => $prospect->company,
 				),
 				array(
-					'id' => 'name',
+					'id'    => 'name',
 					'label' => 'Contact Name',
-					'type' => 'text',
+					'type'  => 'text',
 					'value' => $prospect->name,
 				),
 				array(
-					'id' => 'opportunity',
+					'id'    => 'opportunity',
 					'label' => 'Opportunity Description',
-					'type' => 'text',
+					'type'  => 'text',
 					'value' => $prospect->opportunity,
 				),
 				array(
-					'id' => 'phone',
+					'id'    => 'phone',
 					'label' => 'Contact Phone',
-					'type' => 'text',
+					'type'  => 'text',
 					'value' => $prospect->phone,
 				),
 				array(
-					'id' => 'email',
+					'id'    => 'email',
 					'label' => 'Contact Email',
-					'type' => 'text',
+					'type'  => 'text',
 					'value' => $prospect->email,
 				),
 				array(
-					'id' => 'companyType',
-					'label' => 'Company Type',
-					'type' => 'checkbox',
-					'choices' => array(
-						'isPublisher' => 'Publisher / Affiliate',
+					'id'            => 'companyType',
+					'label'         => 'Company Type',
+					'type'          => 'checkbox',
+					'choices'       => array(
+						'isPublisher'  => 'Publisher / Affiliate',
 						'isAdvertiser' => 'Advertiser',
 					),
 					'choice_append' => '<br/>',
 				),
 				array(
-					'id' => 'divisions',
-					'label' => 'Division(s)',
-					'type' => 'checkbox',
-					'choices' => $divisions,
+					'id'            => 'divisions',
+					'label'         => 'Division(s)',
+					'type'          => 'checkbox',
+					'choices'       => $divisions,
 					'choice_append' => '<br/>',
-					'value' => $divisions_selected,
+					'value'         => $divisions_selected,
 				),
 				array(
-					'id' => 'verticals',
-					'label' => 'Verticals',
-					'type' => 'select',
-					'multiple' => true,
-					'placeholder' => false,
-					'choices' => $verticals,
+					'id'            => 'verticals',
+					'label'         => 'Verticals',
+					'type'          => 'select',
+					'multiple'      => true,
+					'placeholder'   => false,
+					'choices'       => $verticals,
 					'choice_append' => '<br/>',
-					'value' => $verticals_selected,
+					'value'         => $verticals_selected,
 				),
 				array(
-					'id' => 'percentage',
-					'label' => 'Pct Complete',
-					'type' => 'select',
+					'id'          => 'percentage',
+					'label'       => 'Pct Complete',
+					'type'        => 'select',
 					'placeholder' => 'Select a progress',
-					'choices' => array(
-						'0' => 'New Lead (0%)',
-						'25' => 'Initial Contact Made (25%)',
-						'50' => 'Opportunity Defined (50%)',
-						'75' => 'Agreement/IO Pending (75%)',
+					'choices'     => array(
+						'0'   => 'New Lead (0%)',
+						'25'  => 'Initial Contact Made (25%)',
+						'50'  => 'Opportunity Defined (50%)',
+						'75'  => 'Agreement/IO Pending (75%)',
 						'100' => 'Closed (100%)',
 					),
-					'value' => $prospect->percentage,
+					'value'       => $prospect->percentage,
 				),
 				array(
-					'id' => 'expectedClose',
-					'label' => 'Expected Close Date',
-					'type' => 'text',
-                    'autocomplete' => 'off',
-					'value' => $prospect->expectedClose,
+					'id'           => 'expectedClose',
+					'label'        => 'Expected Close Date',
+					'type'         => 'text',
+					'autocomplete' => 'off',
+					'value'        => $prospect->expectedClose,
 				),
 				array(
-					'id' => 'userId',
-					'label' => 'Salesperson',
-					'type' => 'select',
+					'id'          => 'userId',
+					'label'       => 'Salesperson',
+					'type'        => 'select',
 					'placeholder' => 'Select a salesperson',
-					'choices' => $leads->getStaffUsers(),
-					'value' => $prospect->userId,
-					'active' => LeadsSession::isValid( LEADS_SESSION_LEVEL_MANAGER ) ? true : false,
+					'choices'     => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+					'value'       => $prospect->userId,
 				),
 				array(
-					'id' => 'isArchived',
-					'label' => 'Archived',
-					'type' => 'checkbox',
+					'id'      => 'isArchived',
+					'label'   => 'Archived',
+					'type'    => 'checkbox',
 					'choices' => array(
 						'1' => 'Archive/Hide this record',
 					),
-					'value' => array(
-						'1' => !empty( $prospect->isArchived ) ? 1 : 0,
+					'value'   => array(
+						'1' => ! empty( $prospect->isArchived ) ? 1 : 0,
 					),
 				),
 				array(
-					'id' => 'prospectId',
-					'type' => 'hidden',
+					'id'    => 'prospectId',
+					'type'  => 'hidden',
 					'value' => $prospect->prospectId,
 				),
 				array(
-					'id' => 'a',
-					'type' => 'hidden',
+					'id'    => 'a',
+					'type'  => 'hidden',
 					'value' => 'alterProspect',
 				),
 			);
@@ -580,10 +570,10 @@ if( isset( $_REQUEST['d'] ) ) {
 
 
 		case "dialog_prospectnotes":
-			$prospectId = !empty( $_REQUEST['prospectId'] ) ? $_REQUEST['prospectId'] : '';
+			$prospectId = ! empty( $_REQUEST['prospectId'] ) ? $_REQUEST['prospectId'] : '';
 			$prospect = $leads->getProspect( $prospectId );
 
-			if( empty( $prospect ) ) {
+			if ( empty( $prospect ) ) {
 				?>
 				<p>There is no prospect that exists by that ID.</p>
 				<?php
@@ -594,59 +584,59 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			$fields = array(
 				array(
-					'id' => 'html_start',
-					'type' => '_html',
-					'value' => '<div class="col-md-6">',
+					'id'     => 'html_start',
+					'type'   => '_html',
+					'value'  => '<div class="col-md-6">',
 					'active' => false,
 				),
 				array(
-					'id' => 'actionType',
-					'label' => 'Action Type',
-					'type' => 'select',
+					'id'      => 'actionType',
+					'label'   => 'Action Type',
+					'type'    => 'select',
 					'choices' => array(
-						'phone' => 'Phone',
-						'email' => 'Email',
-						'text' => 'Text Message',
-						'skype' => 'Skype',
+						'phone'    => 'Phone',
+						'email'    => 'Email',
+						'text'     => 'Text Message',
+						'skype'    => 'Skype',
 						'inperson' => 'In Person',
 					),
 				),
 				array(
-					'id' => 'note',
+					'id'    => 'note',
 					'label' => 'Add a Note',
-					'type' => 'textarea',
+					'type'  => 'textarea',
 				),
 				array(
-					'id' => 'html_start',
-					'type' => '_html',
-					'value' => '</div><div class="col-md-6">',
+					'id'     => 'html_start',
+					'type'   => '_html',
+					'value'  => '</div><div class="col-md-6">',
 					'active' => false,
 				),
 				array(
-					'id' => 'followUpDate',
-					'label' => 'Follow Up Date',
-					'type' => 'text',
-                    'autocomplete' => 'off',
+					'id'           => 'followUpDate',
+					'label'        => 'Follow Up Date',
+					'type'         => 'text',
+					'autocomplete' => 'off',
 				),
 				array(
-					'id' => 'nextSteps',
+					'id'    => 'nextSteps',
 					'label' => 'Next Steps',
-					'type' => 'textarea',
+					'type'  => 'textarea',
 				),
 				array(
-					'id' => 'prospectId',
-					'type' => 'hidden',
+					'id'    => 'prospectId',
+					'type'  => 'hidden',
 					'value' => $prospect->prospectId,
 				),
 				array(
-					'id' => 'html_start',
-					'type' => '_html',
-					'value' => '</div>',
+					'id'     => 'html_start',
+					'type'   => '_html',
+					'value'  => '</div>',
 					'active' => false,
 				),
 				array(
-					'id' => 'a',
-					'type' => 'hidden',
+					'id'    => 'a',
+					'type'  => 'hidden',
 					'value' => 'addNewNote',
 				),
 			);
@@ -654,18 +644,18 @@ if( isset( $_REQUEST['d'] ) ) {
 			Display::displayForm( 'note_prospect', $fields );
 
 			$notes = $leads->getProspectNotes( $prospect->prospectId );
-			if( empty( $notes ) || !is_array( $notes ) ) {
+			if ( empty( $notes ) || ! is_array( $notes ) ) {
 				print '<p>There are no notes on file for this prospect.</p>' . PHP_EOL;
 			} else {
-				foreach( $notes as $note ) {
+				foreach ( $notes as $note ) {
 					printf( '<hr/><p>On <strong>%s</strong> at %s, <strong>%s</strong> wrote:</p>%s%s%s%s' . PHP_EOL,
 						date( 'D, M jS, Y', strtotime( $note->timestamp ) ),
 						date( 'g:ia', strtotime( $note->timestamp ) ),
 						Display::escHtml( $note->fullName ),
-						!empty( $note->actionType ) ? ( '<p><strong>Action Taken:</strong> ' . nl2br( Display::escHtml( $note->actionType ) ) . '</p>' ) : '',
-						!empty( $note->note ) ? ( '<p><strong>Notes:</strong> ' . nl2br( Display::escHtml( $note->note ) ) . '</p>' ) : '',
-						!empty( $note->followUpDate ) ? ( '<p><strong>Follow-Up Date:</strong> ' . nl2br( Display::escHtml( $note->followUpDate ) ) . '</p>' ) : '',
-						!empty( $note->nextSteps ) ? ( '<p><strong>Next Steps:</strong> ' . nl2br( Display::escHtml( $note->nextSteps ) ) . '</p>' ) : ''
+						! empty( $note->actionType ) ? ( '<p><strong>Action Taken:</strong> ' . nl2br( Display::escHtml( $note->actionType ) ) . '</p>' ) : '',
+						! empty( $note->note ) ? ( '<p><strong>Notes:</strong> ' . nl2br( Display::escHtml( $note->note ) ) . '</p>' ) : '',
+						! empty( $note->followUpDate ) ? ( '<p><strong>Follow-Up Date:</strong> ' . nl2br( Display::escHtml( $note->followUpDate ) ) . '</p>' ) : '',
+						! empty( $note->nextSteps ) ? ( '<p><strong>Next Steps:</strong> ' . nl2br( Display::escHtml( $note->nextSteps ) ) . '</p>' ) : ''
 					);
 				}
 			}
@@ -695,122 +685,124 @@ include( INCLUDES . "c_header.php" );
 
 	$divisions = $leads->getDivisions();
 	$verticals = array();
-	foreach( $divisions as $key => $val ) {
-		$db_verticals = $leads->getDivisionVerticals( $key );
-		$verticals[$val] = $db_verticals;
+	foreach ( $divisions as $key => $val ) {
+		$db_verticals      = $leads->getDivisionVerticals( $key );
+		$verticals[ $val ] = $db_verticals;
 	}
 
 	$fields = array(
 		array(
-			'id' => 'html_start',
-			'type' => '_html',
+			'id'    => 'html_start',
+			'type'  => '_html',
 			'value' => '<div class="row"><div class="col-md-4">',
 		),
 		array(
-			'id' => 'searchText',
+			'id'    => 'searchText',
 			'label' => 'Text Search',
-			'type' => 'text',
+			'type'  => 'text',
 			'value' => $_REQUEST['searchText'] ?? '',
 		),
 		array(
-			'id' => 'searchSalesperson',
-			'label' => 'Sales Person',
-			'type' => 'select',
+			'id'      => 'searchSalesperson',
+			'label'   => 'Sales Person',
+			'type'    => 'select',
 			'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
-			'value' => $_REQUEST['searchSalesperson'] ?? '',
+			'value'   => $_REQUEST['searchSalesperson'] ?? '',
 		),
 		array(
-			'id' => 'searchDivisions',
-			'label' => 'Division(s)',
-			'choices' => $divisions,
+			'id'            => 'searchDivisions',
+			'label'         => 'Division(s)',
+			'choices'       => $divisions,
 			'choice_append' => '<br/>',
-			'type' => 'select',
-			'multiple' => true,
-			'placeholder' => false,
-			'value' => !empty( $_REQUEST['searchDivisions'] ) && is_array( $_REQUEST['searchDivisions'] ) ? array_combine( $_REQUEST['searchDivisions'], $_REQUEST['searchDivisions'] ) : array(),
+			'type'          => 'select',
+			'multiple'      => true,
+			'placeholder'   => false,
+			'value'         => ! empty( $_REQUEST['searchDivisions'] ) && is_array( $_REQUEST['searchDivisions'] ) ? array_combine( $_REQUEST['searchDivisions'], $_REQUEST['searchDivisions'] )
+				: array(),
 		),
 		array(
-			'id' => 'html_start',
-			'type' => '_html',
+			'id'    => 'html_start',
+			'type'  => '_html',
 			'value' => '</div><div class="col-md-4">',
 		),
 		array(
-			'id' => 'searchIsArchived',
-			'label' => 'Status',
-			'type' => 'select',
+			'id'      => 'searchIsArchived',
+			'label'   => 'Status',
+			'type'    => 'select',
 			'choices' => array(
 				'0' => 'Active prospects',
 				'1' => 'Archived prospects',
 			),
-			'value' => isset( $_REQUEST['searchIsArchived'] ) && strlen( $_REQUEST['searchIsArchived'] ) > 0 ? $_REQUEST['searchIsArchived'] : null,
+			'value'   => isset( $_REQUEST['searchIsArchived'] ) && strlen( $_REQUEST['searchIsArchived'] ) > 0 ? $_REQUEST['searchIsArchived'] : null,
 		),
 		array(
-			'id' => 'searchPercentage',
-			'label' => 'Pct Complete',
-			'type' => 'select',
+			'id'      => 'searchPercentage',
+			'label'   => 'Pct Complete',
+			'type'    => 'select',
 			'choices' => array(
-				'0' => 'New Lead (0%)',
-				'25' => 'Initial Contact Made (25%)',
-				'50' => 'Opportunity Defined (50%)',
-				'75' => 'Agreement/IO Pending (75%)',
+				'0'   => 'New Lead (0%)',
+				'25'  => 'Initial Contact Made (25%)',
+				'50'  => 'Opportunity Defined (50%)',
+				'75'  => 'Agreement/IO Pending (75%)',
 				'100' => 'Closed (100%)',
 			),
-			'value' => isset( $_REQUEST['searchPercentage'] ) && strlen( $_REQUEST['searchPercentage'] ) > 0 ? $_REQUEST['searchPercentage'] : null,
+			'value'   => isset( $_REQUEST['searchPercentage'] ) && strlen( $_REQUEST['searchPercentage'] ) > 0 ? $_REQUEST['searchPercentage'] : null,
 		),
 		array(
-			'id' => 'searchVerticals',
-			'label' => 'Verticals',
-			'type' => 'select',
-			'multiple' => true,
-			'placeholder' => false,
-			'choices' => $verticals,
+			'id'            => 'searchVerticals',
+			'label'         => 'Verticals',
+			'type'          => 'select',
+			'multiple'      => true,
+			'placeholder'   => false,
+			'choices'       => $verticals,
 			'choice_append' => '<br/>',
-			'value' => !empty( $_REQUEST['searchVerticals'] ) && is_array( $_REQUEST['searchVerticals'] ) ? array_combine( $_REQUEST['searchVerticals'], $_REQUEST['searchVerticals'] ) : array(),
+			'value'         => ! empty( $_REQUEST['searchVerticals'] ) && is_array( $_REQUEST['searchVerticals'] ) ? array_combine( $_REQUEST['searchVerticals'], $_REQUEST['searchVerticals'] )
+				: array(),
 		),
 		array(
-			'id' => 'html_start',
-			'type' => '_html',
+			'id'    => 'html_start',
+			'type'  => '_html',
 			'value' => '</div><div class="col-md-4">',
 		),
 		array(
-			'id' => 'searchCompanyType',
-			'label' => 'Company Type',
-			'type' => 'select',
+			'id'      => 'searchCompanyType',
+			'label'   => 'Company Type',
+			'type'    => 'select',
 			'choices' => array(
-				'isPublisher' => 'Publisher / Affiliate',
+				'isPublisher'  => 'Publisher / Affiliate',
 				'isAdvertiser' => 'Advertiser',
 			),
-			'value' => $_REQUEST['searchCompanyType'] ?? '',
+			'value'   => $_REQUEST['searchCompanyType'] ?? '',
 		),
 		array(
-			'id' => 'submit',
+			'id'    => 'submit',
 			'label' => 'Search',
-			'type' => 'submit',
+			'type'  => 'submit',
 			'class' => 'btn btn-primary',
 		),
 		array(
-			'id' => 'html_start',
-			'type' => '_html',
+			'id'    => 'html_start',
+			'type'  => '_html',
 			'value' => '</div></div>',
 		),
 	);
 
 	Display::displayForm( 'crm_search', $fields, '' );
 
-	if( !empty( $filterUserId ) && !array_key_exists( $filterUserId, $staffUsers ) ) {
+	if ( ! empty( $filterUserId ) && ! array_key_exists( $filterUserId, $staffUsers ) ) {
 		$filterUserId = LeadsSession::getUserId();
 	}
 
 	$prospects = $leads->searchProspects( array(
-		'isArchived' => isset( $_REQUEST['searchIsArchived'] ) && strlen( $_REQUEST['searchIsArchived'] ) > 0 ? $_REQUEST['searchIsArchived'] : null,
-		'text' => $_REQUEST['searchText'] ?? null,
+		'isArchived'  => isset( $_REQUEST['searchIsArchived'] ) && strlen( $_REQUEST['searchIsArchived'] ) > 0 ? $_REQUEST['searchIsArchived'] : null,
+		'text'        => $_REQUEST['searchText'] ?? null,
 		'salesperson' => $_REQUEST['searchSalesperson'] ?? null,
-		'divisions' => $_REQUEST['searchDivisions'] ?? null,
-		'verticals' => $_REQUEST['searchVerticals'] ?? null,
+		'divisions'   => $_REQUEST['searchDivisions'] ?? null,
+		'verticals'   => $_REQUEST['searchVerticals'] ?? null,
 		'companyType' => $_REQUEST['searchCompanyType'] ?? null,
-		'percentage' => isset( $_REQUEST['searchPercentage'] ) && strlen( $_REQUEST['searchPercentage'] ) > 0 ? $_REQUEST['searchPercentage'] : null,
+		'percentage'  => isset( $_REQUEST['searchPercentage'] ) && strlen( $_REQUEST['searchPercentage'] ) > 0 ? $_REQUEST['searchPercentage'] : null,
 	) );
-	if( empty( $prospects ) ) {
+	if ( empty( $prospects ) ) {
 
 		print '<p>No prospects exist in the database.</p>';
 
@@ -836,22 +828,22 @@ include( INCLUDES . "c_header.php" );
 			<tbody>
 			<?php
 			$divisions = $leads->getDivisions();
-			foreach( $prospects as $prospect ) {
+			foreach ( $prospects as $prospect ) {
 				$divisions_selected = '';
-				$tmp = explode( ',', $prospect->divisions );
-				foreach( $tmp as $key => $val ) {
-					if( isset( $divisions[$val] ) ) {
-						if( !empty( $divisions_selected ) ) {
+				$tmp                = explode( ',', $prospect->divisions );
+				foreach ( $tmp as $key => $val ) {
+					if ( isset( $divisions[ $val ] ) ) {
+						if ( ! empty( $divisions_selected ) ) {
 							$divisions_selected .= '<br/>';
 						}
-						$divisions_selected .= $divisions[$val];
+						$divisions_selected .= $divisions[ $val ];
 					}
 				}
 
 				$progressClass = 'progress-bar-success';
-				if( $prospect->percentage < 75 ) {
+				if ( $prospect->percentage < 75 ) {
 					$progressClass = 'progress-bar-danger';
-				} else if( $prospect->percentage < 100 ) {
+				} elseif ( $prospect->percentage < 100 ) {
 					$progressClass = 'progress-bar-warning';
 				}
 				?>
@@ -864,18 +856,23 @@ include( INCLUDES . "c_header.php" );
 					<td class="pnt-nowrap"><?php echo $divisions_selected; ?></td>
 					<td data-tf-sortKey="<?php echo intval( $prospect->percentage ); ?>">
 						<div class="progress">
-							<div class="progress-bar <?php echo $progressClass; ?>" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2.5em; width: <?php echo intval( $prospect->percentage ); ?>%">
+							<div class="progress-bar <?php echo $progressClass; ?>" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+							     style="min-width: 2.5em; width: <?php echo intval( $prospect->percentage ); ?>%">
 								<?php echo intval( $prospect->percentage ); ?>%
 							</div>
 						</div>
-						<?php echo !empty( $prospect->expectedClose ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->expectedClose ) ) : '&nbsp;'; ?>
+						<?php echo ! empty( $prospect->expectedClose ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->expectedClose ) ) : '&nbsp;'; ?>
 					</td>
 					<td class="hidden-md hidden-sm hidden-xs"><?php echo Display::escHtml( $prospect->fullName ); ?></td>
-					<td data-tf-sortKey="<?php echo Display::escHtml( $prospect->followUpDate ); ?>"><?php echo !empty( $prospect->followUpDate ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->followUpDate ) ) : ''; ?></td>
-					<td class="hidden-md hidden-sm hidden-xs" data-tf-sortKey="<?php echo Display::escHtml( $prospect->timestamp ); ?>"><?php echo !empty( $prospect->timestamp ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->timestamp ) ) : ''; ?></td>
+					<td data-tf-sortKey="<?php echo Display::escHtml( $prospect->followUpDate ); ?>"><?php echo ! empty( $prospect->followUpDate ) ? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y',
+							strtotime( $prospect->followUpDate ) ) : ''; ?></td>
+					<td class="hidden-md hidden-sm hidden-xs" data-tf-sortKey="<?php echo Display::escHtml( $prospect->timestamp ); ?>"><?php echo ! empty( $prospect->timestamp )
+							? date( 'M\&\n\b\s\p\;j,\&\n\b\s\p\;Y', strtotime( $prospect->timestamp ) ) : ''; ?></td>
 					<td class="text-center" style="min-width:75px;">
 						<div class="btn-group">
-							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editprospect" data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit</button>
+							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editprospect"
+							        data-prospect-id="<?php echo $prospect->prospectId; ?>">Edit
+							</button>
 							<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 								<span class="caret"></span>
 								<span class="sr-only">Toggle Dropdown</span>
