@@ -3821,58 +3821,60 @@ class Leads
         return true;
     }
 
-    public function getUrlMappings(int $companyIn, int $companyOut)
-    {
-        $results = array();
+	public function getUrlMappings( $companyIn, $companyOut ) {
+		$results = array();
+		$params  = [];
 
-        $query = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
-        $query .= "FROM url_mapping m ";
-        $query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
-        $query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
-        $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
-        $query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
-        
-        if ( $companyIn != 0 ) {
-            $query .= "WHERE ci.idCompany = $companyIn ";
-        }
-        if ( $companyOut != 0 ) {
-            if ( $companyIn == 0 ) $query .= "WHERE ";
-            else $query .= "AND ";
+		$query
+			   = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
+		$query .= "WHERE 1=1 ";
 
-            $query .= "co.idCompany = $companyOut ";
-        }
+		if ( ! empty( $companyIn ) ) {
+			$query    .= "AND ci.idCompany = ? ";
+			$params[] = $companyIn;
+		}
+		if ( ! empty( $companyOut ) ) {
+			$query    .= "AND co.idCompany = ? ";
+			$params[] = $companyOut;
+		}
 
-        $query .= " ) ";
+		$query .= " ) ";
 
-        if ( $companyIn != 0 && $companyOut == 0 ) {
+		if ( ! empty( $companyIn ) && empty( $companyOut ) ) {
 
-            $query .= "UNION ALL ";
+			$query .= "UNION ALL ";
 
-            $query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
-            $query .= "FROM stats_inbound s ";
-            $query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
-            $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
-            $query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
-            $query .= "WHERE m.url IS NULL ";
+			$query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
+			$query .= "FROM stats_inbound s ";
+			$query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
+			$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+			$query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
+			$query .= "WHERE m.url IS NULL ";
 
-            $query .= "AND ci.idCompany = $companyIn ";
+			$query    .= "AND ci.idCompany = ? ";
+			$params[] = $companyIn;
 
-            $query .= "GROUP BY 4 ) ";
+			$query .= "GROUP BY 4 ) ";
 
-        }
+		}
 
-        $query .= "ORDER BY 1,2,4,5,6 ";
+		$query .= "ORDER BY 1,2,4,5,6 ";
 
-        try {
-            $query = $this->db->prepare($query);
-            $query->execute();
-            $results = $query->fetchAll();
-        } catch (PDOException $e) {
-            $this->logError('Unable to get URL mappings: ' . $e->getMessage());
-        }
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( $params );
+			$results = $query->fetchAll();
+		} catch ( PDOException $e ) {
+			$this->logError( 'Unable to get URL mappings: ' . $e->getMessage() );
+		}
 
-        return $results;
-    }
+		return $results;
+	}
 
     public function getInvoiceDetails($date, $idCompany)
     {
