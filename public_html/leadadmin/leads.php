@@ -194,7 +194,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
 				'commissionDate1' => !isset( $commissionDate1 ) ? null : $commissionDate1->format( 'Y-m-d' ),
 				'commissionAmount1' => empty( $_REQUEST['commissionAmount1'] ) ? null : $_REQUEST['commissionAmount1'],
-				'userId1' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
+				'userId1' => empty( $_REQUEST['userId1'] ) ? null : $_REQUEST['userId1'],
 				'commissionRevenue1' => empty( $_REQUEST['commissionRevenue1'] ) ? null : $_REQUEST['commissionRevenue1'],
 				'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
 				'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
