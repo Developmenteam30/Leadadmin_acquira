@@ -86,21 +86,18 @@ include( INCLUDES . "c_header.php" );
 			$populations = $leads->getInboundPopulationSettings( $incomingFeed->idFeedIn );
 			if( $populations ) {
 				foreach( $populations as $population ) {
-					if( empty( $population->cron ) ) {
-						continue;
-					}
 					if( !$shownPopulation ) {
 						printf( "<p>%s - %s (%s: %s)%s%s</p>",
 							htmlentities( $incomingFeed->name ),
 							$incomingFeed->idFeedIn,
 							htmlentities( $incomingFeed->label ),
 							htmlentities( $incomingFeed->description ),
-							( !empty( $incomingFeed->dailyLimit ) ? ' [<span style="color:orange;font-weight:bold;">Limit: ' . $incomingFeed->dailyLimit . '</span>]' : '' ),
+							( !empty( $incomingFeed->dailyLimit ) && !empty( $incomingFeed->chokePercent ) ) ? ( ' [<span style="color:brown;font-weight:bold;">Limit: ' . $incomingFeed->dailyLimit . ' Eff: ' . round( $incomingFeed->dailyLimit / ( ( 100 - $incomingFeed->chokePercent ) * .01 ) ) . '</span>]' ) : ( !empty( $incomingFeed->dailyLimit ) ? ' [<span style="color:brown;font-weight:bold;">Limit: ' . $incomingFeed->dailyLimit . '</span>]' : '' ),
 							( !empty( $incomingFeed->chokePercent ) ? ' [<span style="color:red;font-weight:bold;">Choke: ' . $incomingFeed->chokePercent . '%</span>]' : '' )
 						);
 						$shownPopulation = true;
 					}
-					printf( "<p style=\"margin-left:40px;\">%s - %s (%s: %s) CPL: $%s RPL: $%s%s%s%s</p>" . PHP_EOL,
+					printf( "<p style=\"margin-left:40px;\">%s - %s (%s: %s) CPL: $%s RPL: $%s%s%s%s%s</p>" . PHP_EOL,
 						htmlentities( $population->name ),
 						$population->idFeedOut,
 						htmlentities( $population->label ),
@@ -112,8 +109,9 @@ include( INCLUDES . "c_header.php" );
 								( $population->queueType == 'waterfallLimit' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL LIMIT - Priority: ' . $population->waterfallPriority . '</span>]' ) :
 									( $population->queueType == 'waterfallLimitLive' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL LIMIT LIVE - Priority: ' . $population->waterfallPriority . '</span>]' ) :
 										'' ) ) ),
-						( !empty( $population->dailyLimit ) ? ' [<span style="color:orange;font-weight:bold;">Limit: ' . $population->dailyLimit . '</span>]' : '' ),
-						( !empty( $population->delay ) ? ( ' [<span style="color:green;font-weight:bold;">Delay ' . ( !empty( $population->delayDump ) ? ' Dump' : '' ) . ': ' . ( ( $population->delay % ( 60 * 24 ) ) == 0 ? ( $population->delay / ( 60 * 24 ) . ' Days' ) : ( $population->delay . ' Minutes' ) ) . '</span>]' ) : '' )
+                        ( !empty( $population->dailyLimit ) ? ' [<span style="color:brown;font-weight:bold;">Limit: ' . $population->dailyLimit . '</span>]' : '' ),
+						( !empty( $population->delay ) ? ( ' [<span style="color:green;font-weight:bold;">Delay ' . ( !empty( $population->delayDump ) ? ' Dump' : '' ) . ': ' . ( ( $population->delay % ( 60 * 24 ) ) == 0 ? ( $population->delay / ( 60 * 24 ) . ' Days' ) : ( $population->delay . ' Minutes' ) ) . '</span>]' ) : '' ),
+                        ( empty( $population->cron ) ? ' [<span style="color:orange;font-weight:bold;">PAUSED</span>]' : '' )
 					);
 				}
 			}

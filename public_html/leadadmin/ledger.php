@@ -99,6 +99,44 @@ if( isset( $_REQUEST['a'] ) ) {
 				$c = false;
 			}
 
+			if( 1 == $type ) {
+				for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+					if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && is_numeric( $_REQUEST['loInvoiceAmount' . $i] ) === false ) {
+						$result['error'] = 'LO #' . $i . ' invoice amount must be a numeric value.';
+						$c = false;
+						break;
+					}
+
+					if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && floatval( $_REQUEST['loInvoiceAmount' . $i] ) < 0 ) {
+						$result['error'] = 'LO #' . $i . ' invoice amount cannot be less than zero.';
+						$c = false;
+						break;
+					}
+
+					if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && is_numeric( $_REQUEST['loPaymentAmount' . $i] ) === false ) {
+						$result['error'] = 'LO #' . $i . ' payment amount must be a numeric value.';
+						$c = false;
+						break;
+					}
+
+					if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && floatval( $_REQUEST['loPaymentAmount' . $i] ) < 0 ) {
+						$result['error'] = 'LO #' . $i . ' payment amount cannot be less than zero.';
+						$c = false;
+						break;
+					}
+
+					if( !empty( $_REQUEST['loPaymentDate' . $i] ) ) {
+						try {
+							${'loPaymentDate' . $i} = new DateTime( $_REQUEST['loPaymentDate' . $i] );
+						} catch( Exception $e ) {
+							$result['error'] = 'Please enter a valid LO #' . $i . ' payment date.';
+							$c = false;
+							break;
+						}
+					}
+				}
+			}
+
 			if( $c && !empty( $_REQUEST['commissionDate1'] ) ) {
 				try {
 					$commissionDate1 = new DateTime( $_REQUEST['commissionDate1'] );
@@ -160,7 +198,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 				$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
 
-				$ledgerId = $leads->addLedger( array(
+				$fields = array(
 					'divisionId' => empty( $_REQUEST['divisionId'] ) ? null : $_REQUEST['divisionId'],
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
@@ -183,14 +221,34 @@ if( isset( $_REQUEST['a'] ) ) {
 					'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
 					'userId3' => empty( $_REQUEST['userId3'] ) ? null : $_REQUEST['userId3'],
 					'type' => $type,
-					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId'] ) ? null : $_REQUEST['vendorCompanyId'],
-				) );
+				);
+
+				if( 0 == $type ) {
+					$fields['vendorCompanyId'] = empty( $_REQUEST['vendorCompanyId'] ) ? null : $_REQUEST['vendorCompanyId'];
+				}
+
+				$ledgerId = $leads->addLedger( $fields );
 
 				if( null === $ledgerId ) {
 					$c = false;
 					$result['error'] = 'Unable to add entry to the database';
 				} else {
 					$leads->auditLog( 'LEDGER:ADD', $ledgerId );
+
+					if( 1 == $type ) {
+						for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+							$leads->replaceLedgerVendor( array(
+								'ledgerId' => $ledgerId,
+								'indexId' => $i,
+								'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId' . $i] ) ? null : $_REQUEST['vendorCompanyId' . $i],
+								'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum' . $i] ) ? null : $_REQUEST['loInvoiceNum' . $i],
+								'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount' . $i] ) ? null : $_REQUEST['loInvoiceAmount' . $i],
+								'loPaymentDate' => !isset( ${'loPaymentDate' . $i} ) ? null : ${'loPaymentDate' . $i}->format( 'Y-m-d' ),
+								'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod' . $i] ) ? null : $_REQUEST['loPaymentMethod' . $i],
+								'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount' . $i] ) ? null : $_REQUEST['loPaymentAmount' . $i],
+							) );
+						}
+					}
 				}
 			}
 
@@ -301,6 +359,44 @@ if( isset( $_REQUEST['a'] ) ) {
 				$c = false;
 			}
 
+			if( 1 == $type ) {
+				for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+					if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && is_numeric( $_REQUEST['loInvoiceAmount' . $i] ) === false ) {
+						$result['error'] = 'LO #' . $i . ' invoice amount must be a numeric value.';
+						$c = false;
+						break;
+					}
+
+					if( !empty( $_REQUEST['loInvoiceAmount' . $i] ) && floatval( $_REQUEST['loInvoiceAmount' . $i] ) < 0 ) {
+						$result['error'] = 'LO #' . $i . ' invoice amount cannot be less than zero.';
+						$c = false;
+						break;
+					}
+
+					if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && is_numeric( $_REQUEST['loPaymentAmount' . $i] ) === false ) {
+						$result['error'] = 'LO #' . $i . ' payment amount must be a numeric value.';
+						$c = false;
+						break;
+					}
+
+					if( !empty( $_REQUEST['loPaymentAmount' . $i] ) && floatval( $_REQUEST['loPaymentAmount' . $i] ) < 0 ) {
+						$result['error'] = 'LO #' . $i . ' payment amount cannot be less than zero.';
+						$c = false;
+						break;
+					}
+
+					if( !empty( $_REQUEST['loPaymentDate' . $i] ) ) {
+						try {
+							${'loPaymentDate' . $i} = new DateTime( $_REQUEST['loPaymentDate' . $i] );
+						} catch( Exception $e ) {
+							$result['error'] = 'Please enter a valid LO #' . $i . ' payment date.';
+							$c = false;
+							break;
+						}
+					}
+				}
+			}
+
 			if( $c && !empty( $_REQUEST['commissionDate1'] ) ) {
 				try {
 					$commissionDate1 = new DateTime( $_REQUEST['commissionDate1'] );
@@ -362,7 +458,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 				$ledgerMonth = new DateTime( $_REQUEST['ledgerMonth'] . '01' );
 
-				$ledgerId = $leads->updateLedger( $_REQUEST['ledgerId'], array(
+				$fields = array(
 					'divisionId' => empty( $_REQUEST['divisionId'] ) ? null : $_REQUEST['divisionId'],
 					'companyId' => empty( $_REQUEST['companyId'] ) ? null : $_REQUEST['companyId'],
 					'verticalId' => empty( $_REQUEST['verticalId'] ) ? null : $_REQUEST['verticalId'],
@@ -384,14 +480,34 @@ if( isset( $_REQUEST['a'] ) ) {
 					'commissionAmount3' => empty( $_REQUEST['commissionAmount3'] ) ? null : $_REQUEST['commissionAmount3'],
 					'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
 					'userId3' => empty( $_REQUEST['userId3'] ) ? null : $_REQUEST['userId3'],
-					'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId'] ) ? null : $_REQUEST['vendorCompanyId'],
-				) );
+				);
+
+				if( 0 == $type ) {
+					$fields['vendorCompanyId'] = empty( $_REQUEST['vendorCompanyId'] ) ? null : $_REQUEST['vendorCompanyId'];
+				}
+
+				$ledgerId = $leads->updateLedger( $_REQUEST['ledgerId'], $fields );
 
 				if( null === $ledgerId ) {
 					$c = false;
 					$result['error'] = 'Unable to updated ledger entry.';
 				} else {
 					$leads->auditLog( 'LEDGER:EDIT', $_REQUEST['ledgerId'] );
+
+					if( 1 == $type ) {
+						for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+							$leads->replaceLedgerVendor( array(
+								'ledgerId' => $_REQUEST['ledgerId'],
+								'indexId' => $i,
+								'vendorCompanyId' => empty( $_REQUEST['vendorCompanyId' . $i] ) ? null : $_REQUEST['vendorCompanyId' . $i],
+								'loInvoiceNum' => empty( $_REQUEST['loInvoiceNum' . $i] ) ? null : $_REQUEST['loInvoiceNum' . $i],
+								'loInvoiceAmount' => empty( $_REQUEST['loInvoiceAmount' . $i] ) ? null : $_REQUEST['loInvoiceAmount' . $i],
+								'loPaymentDate' => !isset( ${'loPaymentDate' . $i} ) ? null : ${'loPaymentDate' . $i}->format( 'Y-m-d' ),
+								'loPaymentMethod' => empty( $_REQUEST['loPaymentMethod' . $i] ) ? null : $_REQUEST['loPaymentMethod' . $i],
+								'loPaymentAmount' => empty( $_REQUEST['loPaymentAmount' . $i] ) ? null : $_REQUEST['loPaymentAmount' . $i],
+							) );
+						}
+					}
 				}
 
 			}
@@ -489,11 +605,13 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'select',
 					'placeholder' => 'Select a vendor',
 					'choices' => array(),
+					'active' => 0 == $type,
 				),
 				array(
 					'id' => 'paymentDate',
 					'label' => 'Date Paid',
 					'type' => 'text',
+					'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'paymentMethod',
@@ -505,6 +623,76 @@ if( isset( $_REQUEST['d'] ) ) {
 					'label' => 'Payment Amount',
 					'type' => 'currency',
 					'required' => true,
+				),
+			);
+
+			if( 1 == $type ) {
+
+				$fields[] = array(
+					'type' => '_divider',
+				);
+
+				for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+
+					$fields = array_merge( $fields, array(
+						array(
+							'type' => '_toggle_start',
+							'value' => 'Vendor #' . $i,
+							'id' => 'vendor_collapse_' . $i,
+							'collapsed' => $i > 1 ? true : false,
+						),
+
+						array(
+							'id' => 'vendorCompanyId' . $i,
+							'label' => 'Vendor #' . $i,
+							'type' => 'select',
+							'required' => true,
+							'placeholder' => 'Select a vendor',
+							'choices' => array(),
+						),
+						array(
+							'id' => 'loInvoiceNum' . $i,
+							'label' => 'LO Invoice #',
+							'type' => 'text',
+						),
+						array(
+							'id' => 'loInvoiceAmount' . $i,
+							'label' => 'LO Amount',
+							'type' => 'currency',
+							'required' => true,
+						),
+						array(
+							'id' => 'loPaymentDate' . $i,
+							'label' => 'Date Paid',
+							'type' => 'text',
+                            'autocomplete' => 'off',
+						),
+						array(
+							'id' => 'loPaymentMethod' . $i,
+							'label' => 'Payment Method',
+							'type' => 'text',
+						),
+						array(
+							'id' => 'loPaymentAmount' . $i,
+							'label' => 'Payment Amount',
+							'type' => 'currency',
+							'required' => true,
+						),
+
+						array(
+							'type' => '_divider',
+						),
+
+						array(
+							'type' => '_toggle_end',
+						),
+					) );
+				}
+			}
+
+			$fields = array_merge( $fields, array(
+				array(
+					'type' => '_divider',
 				),
 				array(
 					'id' => 'userId1',
@@ -518,6 +706,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate1',
 					'label' => 'Commission Date 1',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'commissionAmount1',
@@ -534,6 +723,9 @@ if( isset( $_REQUEST['d'] ) ) {
 					),
 				),
 				array(
+					'type' => '_divider',
+				),
+				array(
 					'id' => 'userId2',
 					'label' => 'Salesperson 2',
 					'type' => 'select',
@@ -545,6 +737,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate2',
 					'label' => 'Commission Date 2',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'commissionAmount2',
@@ -561,6 +754,9 @@ if( isset( $_REQUEST['d'] ) ) {
 					),
 				),
 				array(
+					'type' => '_divider',
+				),
+				array(
 					'id' => 'userId3',
 					'label' => 'Salesperson 3',
 					'type' => 'select',
@@ -572,6 +768,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate3',
 					'label' => 'Commission Date 3',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'commissionAmount3',
@@ -597,7 +794,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'type' => 'hidden',
 					'value' => $type,
 				),
-			);
+			) );
 
 			Display::displayForm( 'new_ledger', $fields );
 
@@ -625,10 +822,12 @@ if( isset( $_REQUEST['d'] ) ) {
 					allowClear: true
 				});
 
-				$("#new_ledger select[name='vendorCompanyId']").select2({
-					placeholder: "Select a vendor",
-					allowClear: true
+				<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+				$("#new_ledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
+					// Consistent format with the HTML5 picker
+					dateFormat: 'yy-mm-dd'
 				});
+				<?php } ?>
 
 				$("#new_ledger select[name='ledgerMonth']").select2({
 					placeholder: "Select the ledger month",
@@ -650,7 +849,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						},
 						dataType: "json",
 						success: function (data) {
-							var companyId = $("#new_ledger select[name='companyId']")
+							var companyId = $("#new_ledger select[name='companyId']");
 							if (companyId) {
 								companyId.empty();
 								companyId.append('<option></option>');
@@ -663,7 +862,10 @@ if( isset( $_REQUEST['d'] ) ) {
 								});
 							}
 
-							var vendorCompanyId = $("#new_ledger select[name='vendorCompanyId']")
+							let vendorCompanyId = '';
+							<?php if( 1 == $type ) { ?>
+							<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+							vendorCompanyId = $("#new_ledger select[name='vendorCompanyId<?php echo $i;?>']");
 							if (vendorCompanyId) {
 								vendorCompanyId.empty();
 								vendorCompanyId.append('<option></option>');
@@ -675,6 +877,21 @@ if( isset( $_REQUEST['d'] ) ) {
 									allowClear: true
 								});
 							}
+							<?php } ?>
+							<?php } else { ?>
+							vendorCompanyId = $("#new_ledger select[name='vendorCompanyId']");
+							if (vendorCompanyId) {
+								vendorCompanyId.empty();
+								vendorCompanyId.append('<option></option>');
+								$.each(data, function (i, obj) {
+									vendorCompanyId.append('<option value="' + obj.idCompany + '">' + obj.name + '</option>');
+								});
+								vendorCompanyId.select2({
+									placeholder: "Select a vendor",
+									allowClear: true
+								});
+							}
+							<?php } ?>
 						}
 					}); //close $.ajax()
 
@@ -687,7 +904,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						},
 						dataType: "json",
 						success: function (data) {
-							var verticalId = $("#new_ledger select[name='verticalId']")
+							var verticalId = $("#new_ledger select[name='verticalId']");
 							if (verticalId) {
 								verticalId.empty();
 								verticalId.append('<option></option>');
@@ -788,6 +1005,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'choices' => $leads->getDivisionCompanies( $entry->divisionId, $entry->vendorCompanyId ),
 						'value' => $entry->vendorCompanyId,
 						'readonly' => true,
+						'active' => 0 == $entry->type,
 					),
 					array(
 						'id' => 'paymentDate',
@@ -1003,11 +1221,13 @@ if( isset( $_REQUEST['d'] ) ) {
 						'placeholder' => 'Select a vendor',
 						'choices' => $leads->getDivisionCompanies( $entry->divisionId, $entry->vendorCompanyId ),
 						'value' => $entry->vendorCompanyId,
+						'active' => 0 == $entry->type,
 					),
 					array(
 						'id' => 'paymentDate',
 						'label' => 'Date Paid',
 						'type' => 'text',
+                        'autocomplete' => 'off',
 						'value' => $entry->paymentDate,
 					),
 					array(
@@ -1022,6 +1242,82 @@ if( isset( $_REQUEST['d'] ) ) {
 						'type' => 'currency',
 						'value' => $entry->paymentAmount,
 					),
+				);
+
+				if( 1 == $entry->type ) {
+					$fields[] = array(
+						'type' => '_divider',
+					);
+
+					for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) {
+
+						$fields = array_merge( $fields, array(
+							array(
+								'type' => '_toggle_start',
+								'value' => 'Vendor #' . $i,
+								'id' => 'vendor_collapse_' . $i,
+								'collapsed' => empty( $entry->{'vendorCompanyId' . $i} ) ? true : false,
+							),
+
+							array(
+								'id' => 'vendorCompanyId' . $i,
+								'label' => 'Vendor #' . $i,
+								'type' => 'select',
+								'required' => true,
+								'placeholder' => 'Select a vendor',
+								'choices' => $leads->getDivisionCompanies( $entry->divisionId, $entry->{'vendorCompanyId' . $i} ),
+								'value' => $entry->{'vendorCompanyId' . $i},
+							),
+							array(
+								'id' => 'loInvoiceNum' . $i,
+								'label' => 'LO Invoice #',
+								'type' => 'text',
+								'value' => $entry->{'loInvoiceNum' . $i},
+							),
+							array(
+								'id' => 'loInvoiceAmount' . $i,
+								'label' => 'LO Amount',
+								'type' => 'currency',
+								'required' => true,
+								'value' => $entry->{'loInvoiceAmount' . $i},
+							),
+							array(
+								'id' => 'loPaymentDate' . $i,
+								'label' => 'Date Paid',
+								'type' => 'text',
+                                'autocomplete' => 'off',
+								'value' => $entry->{'loPaymentDate' . $i},
+							),
+							array(
+								'id' => 'loPaymentMethod' . $i,
+								'label' => 'Payment Method',
+								'type' => 'text',
+								'value' => $entry->{'loPaymentMethod' . $i},
+							),
+							array(
+								'id' => 'loPaymentAmount' . $i,
+								'label' => 'Payment Amount',
+								'type' => 'currency',
+								'required' => true,
+								'value' => $entry->{'loPaymentAmount' . $i},
+							),
+
+							array(
+								'type' => '_divider',
+							),
+
+							array(
+								'type' => '_toggle_end',
+							),
+						) );
+					}
+				}
+
+				$fields = array_merge( $fields, array(
+					array(
+						'type' => '_divider',
+					),
+
 					array(
 						'id' => 'userId1',
 						'label' => 'Salesperson 1',
@@ -1035,6 +1331,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'commissionDate1',
 						'label' => 'Commission Date 1',
 						'type' => 'text',
+                        'autocomplete' => 'off',
 						'value' => $entry->commissionDate1,
 					),
 					array(
@@ -1053,6 +1350,11 @@ if( isset( $_REQUEST['d'] ) ) {
 						),
 						'value' => $entry->commissionRevenue1,
 					),
+
+					array(
+						'type' => '_divider',
+					),
+
 					array(
 						'id' => 'userId2',
 						'label' => 'Salesperson 2',
@@ -1066,6 +1368,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'commissionDate2',
 						'label' => 'Commission Date 2',
 						'type' => 'text',
+                        'autocomplete' => 'off',
 						'value' => $entry->commissionDate2,
 					),
 					array(
@@ -1084,6 +1387,11 @@ if( isset( $_REQUEST['d'] ) ) {
 						),
 						'value' => $entry->commissionRevenue2,
 					),
+
+					array(
+						'type' => '_divider',
+					),
+
 					array(
 						'id' => 'userId3',
 						'label' => 'Salesperson 3',
@@ -1097,6 +1405,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'commissionDate3',
 						'label' => 'Commission Date 3',
 						'type' => 'text',
+                        'autocomplete' => 'off',
 						'value' => $entry->commissionDate3,
 					),
 					array(
@@ -1121,18 +1430,31 @@ if( isset( $_REQUEST['d'] ) ) {
 						'value' => 'editLedger',
 					),
 					array(
+						'id' => 'type',
+						'type' => 'hidden',
+						'value' => $entry->type,
+					),
+					array(
 						'id' => 'ledgerId',
 						'type' => 'hidden',
 						'value' => $ledgerId,
 					),
-				);
+				) );
 
 				Display::displayForm( 'edit_ledger', $fields );
 				?>
 
 				<script type="text/javascript">
+					$('#editledger').on('shown.bs.collapse', function (e) {
+						<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+						$("#edit_ledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
+							placeholder: "Select a vendor",
+							allowClear: true
+						});
+						<?php } ?>
+					});
+
 					$('#editledger').on('shown.bs.modal', function (e) {
-						console.log('test');
 						$('#editledger input[name=paymentDate], #editledger input[name=commissionDate1], #editledger input[name=commissionDate2], #editledger input[name=commissionDate3]').datepicker({
 							// Consistent format with the HTML5 picker
 							dateFormat: 'yy-mm-dd'
@@ -1153,10 +1475,23 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 
-						$("#editledger select[name='vendorCompanyId']").select2({
+						<?php if( 1 == $entry->type ) { ?>
+						<?php for( $i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++ ) { ?>
+						$("#edit_ledger input[name=loPaymentDate<?php echo $i; ?>]").datepicker({
+							// Consistent format with the HTML5 picker
+							dateFormat: 'yy-mm-dd'
+						});
+						$("#edit_ledger select[name='vendorCompanyId<?php echo $i;?>']").select2({
 							placeholder: "Select a vendor",
 							allowClear: true
 						});
+						<?php } ?>
+						<?php } else { ?>
+						$("#edit_ledger select[name='vendorCompanyId']").select2({
+							placeholder: "Select a vendor",
+							allowClear: true
+						});
+						<?php } ?>
 
 						$("#editledger select[name='ledgerMonth']").select2({
 							placeholder: "Select the ledger month",
@@ -1324,7 +1659,7 @@ include( INCLUDES . "c_header.php" );
 								<td data-tf-sortKey="<?php echo number_format( $entry->invoiceAmount, 2 ); ?>">$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
 								<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 								<td><?php echo $entry->paymentDate; ?></td>
-								<td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>
+								<td><?php echo htmlentities( $entry->vendorCompanyName1 ); ?></td>
 								<td data-tf-sortKey="<?php echo number_format( $entry->paymentAmount, 2 ); ?>">$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 								<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
 								<td><?php echo htmlentities( $entry->fullName1 ); ?><br/><?php echo htmlentities( $entry->fullName2 ); ?></td>

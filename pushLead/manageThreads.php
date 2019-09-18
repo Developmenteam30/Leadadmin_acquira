@@ -1,13 +1,4 @@
 <?php
-
-if( extension_loaded( 'newrelic' ) ) {
-	newrelic_set_appname( 'Qatalyst Scripts' );
-}
-
-if( extension_loaded( 'newrelic' ) ) {
-	newrelic_ignore_transaction();
-}
-
 require_once( "../includes/c_config.php" );
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -20,23 +11,6 @@ function countProcesses( $idFeedOut ) {
 	exec( sprintf( "ps auxwww|grep '[p]ushLeads.php %d$'", intval( $idFeedOut ) ), $output );
 	return !empty( $output ) && is_array( $output ) ? sizeOf( $output ) : 0;
 
-	/*
-	$count = 0;
-	$files = scandir( '/tmp' );
-	foreach( $files as $file ) {
-
-		// Skip directories with dots
-		if( in_array( $file, array( '.', '..' ) ) ) {
-			continue;
-		}
-
-		if( preg_match( '/^pushlead-' . $idFeedOut . '-[0-9]+$/', $file ) ) {
-			$count++;
-		}
-	}
-
-	return $count;
-	*/
 }
 
 while( true ) {

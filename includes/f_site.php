@@ -29,6 +29,7 @@ $recordFields = array(
 	'custom5',
 	'custom6',
 );
+
 $additionalMapFields = array(
 	'urlAssign',
 	'dobUS',
@@ -51,6 +52,10 @@ $additionalMapFields = array(
 	'cellphone_NXX+XXXX',
 	'recordId',
 );
+
+$sortedFields = array_merge( $recordFields, $additionalMapFields );
+asort( $sortedFields );
+
 $incomingAdditionalRequirementSettings = array(
 	'phone',
 );

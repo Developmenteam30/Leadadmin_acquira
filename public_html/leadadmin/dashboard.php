@@ -13,6 +13,7 @@ require_once( INCLUDES . 'f_site.php' );
 
 $statsStart = !empty( $_REQUEST['statsStart'] ) ? $_REQUEST['statsStart'] : date( 'Y-m-d' );
 $statsEnd = !empty( $_REQUEST['statsEnd'] ) ? $_REQUEST['statsEnd'] : date( 'Y-m-d' );
+$statsQuick = $_REQUEST['statsQuick'] ?? '';
 
 if( isset( $_REQUEST['a'] ) ) {
 	Header( 'Content-Type: application/json' );
@@ -86,7 +87,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				}
 			}
 
-			$urls = $leads->getInboundURLStats( $idFeedIn );
+			$urls = $leads->getInboundURLStatsRange( $idFeedIn, date( 'Y-m-d', strtotime( $statsStart ) ), date( 'Y-m-d', strtotime( $statsEnd ) ) );
 			?>
 			<?php
 			if( empty( $urls ) ) {
@@ -214,7 +215,47 @@ include( INCLUDES . "c_header.php" );
 <div class="container-fluid">
 
 	<form method="get">
-		<p><input type="text" name="statsStart" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsStart ) ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsEnd ) ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
+		<p>
+			<?php
+			print 'Quick Jump: <select id="statsQuick" name="statsQuick">' . PHP_EOL;
+			print '<option value=""></option>' . PHP_EOL;
+			$years = array();
+			$quarters = array();
+			$startDate = new \DateTime();
+			$endDate = new DateTime( ( date( 'Y' ) - 3 ) . '-01-01' );
+			do {
+				$year = $startDate->format( 'Y' );
+				$quarter = $year . '-Q' . ceil( $startDate->format( 'm' ) / 3 );
+				if( empty( $years[$year] ) ) {
+					$value = $year . '-01-01' . '|' . $year . '-12-31';
+					printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+						$value,
+						$statsQuick == $value ? ' selected="selected"' : '',
+						htmlentities( $year . ' Year' )
+					);
+					$years[$year] = true;
+				}
+				if( empty( $quarters[$quarter] ) ) {
+					$value = Display::getQuarterStart( $year, ceil( $startDate->format( 'm' ) / 3 ) ) . '|' . Display::getQuarterEnd( $year, ceil( $startDate->format( 'm' ) / 3 ) );
+					printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+						$value,
+						$statsQuick == $value ? ' selected="selected"' : '',
+						htmlentities( str_replace( '-Q', ' Qtr ', $quarter ) )
+					);
+					$quarters[$quarter] = true;
+				}
+
+				$value = $startDate->format( 'Y-m-01' ) . '|' . $startDate->format( 'Y-m-t' );
+				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+					$value,
+					$statsQuick == $value ? ' selected="selected"' : '',
+					htmlentities( $startDate->format( 'Y-m' ) )
+				);
+				$startDate->sub( new \DateInterval( 'P1M' ) );
+			} while( $startDate >= $endDate );
+			print '</select>' . PHP_EOL;
+			?>
+			Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsStart ) ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsEnd ) ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
 	</form>
 
 	<?php
@@ -306,7 +347,7 @@ include( INCLUDES . "c_header.php" );
 											?>
 											<tr>
 												<td class="dashboard-incoming-col-large"><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo $feed->description; ?>)</td>
-												<td class="text-center dashboard-incoming-col-small"><a class="btn btn-primary btn-xs nonLink" href="#" id="link_feedinc_<?php echo $feed->idFeedIn; ?>" onclick="display('feedinc', { 'sub':'<?php echo $feed->idFeedIn; ?>', 'idFeedIn':'<?php echo $feed->idFeedIn; ?>', 'hiddenText': 'Show URLs', 'shownText': 'Close' } );">Show URLs</a></td>
+												<td class="text-center dashboard-incoming-col-small"><a class="btn btn-primary btn-xs nonLink" href="#" id="link_feedinc_<?php echo $feed->idFeedIn; ?>" onclick="displayToggle('feedinc', { 'sub':'<?php echo $feed->idFeedIn; ?>', 'idFeedIn':'<?php echo $feed->idFeedIn; ?>', 'hiddenText': 'Show URLs', 'shownText': 'Close' } );">Show URLs</a></td>
 												<td class="text-right dashboard-incoming-col-small"><?php echo number_format( $feed->dailyCount, 0 ); ?></td>
 												<td class="text-right dashboard-incoming-col-small"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode( $feed->idFeedIn ); ?>&amp;label=<?php echo urlencode( $feed->label ); ?>" target="_blank"><?php echo number_format( $feed->dailyCountInvalid, 0 ); ?></a></td>
 											</tr>
@@ -486,10 +527,20 @@ include( INCLUDES . "c_header.php" );
 </div>
 
 <script>
+	var refreshTimeout;
 	$(document).ready(function () {
-		setTimeout(function () {
+		refreshTimeout = setTimeout(function () {
 			location.reload();
 		}, 120000);
+	});
+
+	$('#statsQuick').on('change', function (e) {
+		let myValue = $(this).val() || '';
+		if (myValue !== '') {
+			let dates = myValue.split('|', 2);
+			$('input[name="statsStart"]').val(dates[0]);
+			$('input[name="statsEnd"]').val(dates[1]);
+		}
 	});
 
 	$('input[name="statsStart"], input[name="statsEnd"]').datepicker({
@@ -518,6 +569,10 @@ include( INCLUDES . "c_header.php" );
 		var modal = $(this);
 		var companyId = $(e.relatedTarget).data('company-id');
 
+		if(refreshTimeout) {
+			clearTimeout(refreshTimeout);
+		}
+
 		$.ajax({
 			cache: false,
 			type: 'POST',
@@ -534,6 +589,9 @@ include( INCLUDES . "c_header.php" );
 
 	$('#companynotes').on('hide.bs.modal', function (e) {
 		$(this).find('.modal-body').html('');
+		refreshTimeout = setTimeout(function () {
+			location.reload();
+		}, 120000);
 	});
 </script>
 

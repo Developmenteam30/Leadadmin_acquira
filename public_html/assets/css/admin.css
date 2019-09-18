@@ -122,6 +122,12 @@ table.TF th,
 	background-color: #f9f9f9;
 }
 
+.table-striped-triple tbody tr:nth-child(6n+4),
+.table-striped-triple tbody tr:nth-child(6n+5),
+.table-striped-triple tbody tr:nth-child(6n+6) {
+	background-color: #f9f9f9;
+}
+
 table tr.bg-gray {
 	background: #dadada;
 }
@@ -174,6 +180,15 @@ table tr.bg-gray {
 .form-input input[type='text'],
 .form-input select {
 	font-family: Verdana, Helvetica, sans-serif;
+}
+
+select {
+	height: 26px;
+}
+
+.modal-dialog select,
+.modal-dialog .select2-container {
+	max-width: 375px;
 }
 
 .form-input input[type='email'],
@@ -347,7 +362,7 @@ div.headerRow.client {
 	color: #ff0000;
 }
 
-.success {
+.lead-success {
 	color: #33cc33;
 }
 
@@ -385,6 +400,7 @@ div.logoContainer {
 	font-weight: bold;
 }
 
+.form-inline button,
 .pnt-form-row {
 	margin-bottom: 0.5em;
 }

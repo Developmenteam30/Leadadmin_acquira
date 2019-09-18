@@ -69,10 +69,11 @@ foreach( $feeds as $feed ) {
 
 			print date( 'c' ) . " - \t\tRecord: {$row['idRecord']} {$row['idFeedIn']}\n";
 
-			if( ( $pushError = ProcessLeads::pushIncomingData( $feedParams, $row, $row['idRecord'], $feed->idFeedOut ) ) === null ) {
-				echo date( 'c' ) . " - \t\t\tSUCCESS\n";
+            $pushResponse = ProcessLeads::pushIncomingData( $feedParams, $row, $row['idRecord'], $feed->idFeedOut );
+            if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
+                echo date( 'c' ) . " - \t{$pushError}\n";
 			} else {
-				echo date( 'c' ) . " - \t{$pushError}\n";
+                echo date( 'c' ) . " - \t\t\tSUCCESS\n";
 			}
 		}
 	}

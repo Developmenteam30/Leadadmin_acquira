@@ -194,12 +194,12 @@ if( isset( $_REQUEST['a'] ) ) {
 				'paymentAmount' => empty( $_REQUEST['paymentAmount'] ) ? null : $_REQUEST['paymentAmount'],
 				'commissionDate1' => !isset( $commissionDate1 ) ? null : $commissionDate1->format( 'Y-m-d' ),
 				'commissionAmount1' => empty( $_REQUEST['commissionAmount1'] ) ? null : $_REQUEST['commissionAmount1'],
-				'userId1' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
+				'userId1' => empty( $_REQUEST['userId1'] ) ? null : $_REQUEST['userId1'],
 				'commissionRevenue1' => empty( $_REQUEST['commissionRevenue1'] ) ? null : $_REQUEST['commissionRevenue1'],
 				'commissionDate2' => !isset( $commissionDate2 ) ? null : $commissionDate2->format( 'Y-m-d' ),
 				'commissionAmount2' => empty( $_REQUEST['commissionAmount2'] ) ? null : $_REQUEST['commissionAmount2'],
 				'userId2' => empty( $_REQUEST['userId2'] ) ? null : $_REQUEST['userId2'],
-				'commissionRevenue3' => empty( $_REQUEST['commissionRevenue3'] ) ? null : $_REQUEST['commissionRevenue3'],
+				'commissionRevenue2' => empty( $_REQUEST['commissionRevenue2'] ) ? null : $_REQUEST['commissionRevenue2'],
 				'commissionDate3' => !isset( $commissionDate3 ) ? null : $commissionDate3->format( 'Y-m-d' ),
 				'commissionAmount3' => empty( $_REQUEST['commissionAmount3'] ) ? null : $_REQUEST['commissionAmount3'],
 				'userId3' => empty( $_REQUEST['userId3'] ) ? null : $_REQUEST['userId3'],
@@ -521,6 +521,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'orderDate',
 					'label' => 'Order Date',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'qty',
@@ -548,6 +549,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'paymentDate',
 					'label' => 'Date Paid',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 				),
 				array(
 					'id' => 'paymentMethod',
@@ -598,6 +600,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'loPaymentDate' . $i,
 					'label' => 'Date Paid',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 				);
 				$fields[] = array(
 					'id' => 'loPaymentMethod' . $i,
@@ -635,6 +638,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'id' => 'commissionDate1',
 				'label' => 'Commission Date 1',
 				'type' => 'text',
+                'autocomplete' => 'off',
 			);
 			$fields[] = array(
 				'id' => 'commissionAmount 1',
@@ -666,6 +670,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'id' => 'commissionDate2',
 				'label' => 'Commission Date 2',
 				'type' => 'text',
+                'autocomplete' => 'off',
 			);
 			$fields[] = array(
 				'id' => 'commissionAmount2',
@@ -697,6 +702,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				'id' => 'commissionDate3',
 				'label' => 'Commission Date 3',
 				'type' => 'text',
+                'autocomplete' => 'off',
 			);
 			$fields[] = array(
 				'id' => 'commissionAmount3',
@@ -1047,6 +1053,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'orderDate',
 						'label' => 'Order Date',
 						'type' => 'text',
+                        'autocomplete' => 'off',
 						'value' => $entry->orderDate,
 					),
 					array(
@@ -1079,6 +1086,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'paymentDate',
 						'label' => 'Date Paid',
 						'type' => 'text',
+                        'autocomplete' => 'off',
 						'value' => $entry->paymentDate,
 					),
 					array(
@@ -1130,6 +1138,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'id' => 'loPaymentDate' . $i,
 						'label' => 'Date Paid',
 						'type' => 'text',
+                        'autocomplete' => 'off',
 						'value' => $entry->{'loPaymentDate' . $i},
 					);
 					$fields[] = array(
@@ -1172,6 +1181,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate1',
 					'label' => 'Commission Date 1',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 					'value' => $entry->commissionDate1,
 				);
 				$fields[] = array(
@@ -1208,6 +1218,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate2',
 					'label' => 'Commission Date 2',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 					'value' => $entry->commissionDate2,
 				);
 				$fields[] = array(
@@ -1244,6 +1255,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'commissionDate3',
 					'label' => 'Commission Date 3',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 					'value' => $entry->commissionDate3,
 				);
 				$fields[] = array(
@@ -1286,7 +1298,6 @@ if( isset( $_REQUEST['d'] ) ) {
 							allowClear: true
 						});
 						<?php } ?>
-                        console.log('firing');
 					});
 					$('#editphoneledger').on('shown.bs.modal', function (e) {
 						$("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2], #edit_phoneledger input[name=commissionDate3]").datepicker({

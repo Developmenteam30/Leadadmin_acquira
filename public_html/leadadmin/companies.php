@@ -697,7 +697,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'label' => 'Account Manager',
 						'type' => 'select',
 						'placeholder' => 'Select an account manager',
-						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true, $company->accountManager ),
 						'value' => $company->accountManager,
 					),
 					array(
@@ -705,7 +705,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'label' => 'Account Opener',
 						'type' => 'select',
 						'placeholder' => 'Select an account opener',
-						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true, $company->accountOpener ),
 						'value' => $company->accountOpener,
 					),
 					array(
@@ -713,7 +713,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						'label' => 'Sales Person',
 						'type' => 'select',
 						'placeholder' => 'Select a sales person',
-						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+						'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true, $company->salesperson ),
 						'value' => $company->salesperson,
 					),
 					array(

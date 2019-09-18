@@ -89,8 +89,8 @@ if( isset( $_REQUEST['a'] ) ) {
 
 				if( $c ) {
 
-					$BCCText = '';
 					$BCCText = "BCC: " . PAYMENT_EMAIL . "\r\n";
+					/* Disabled per #1590.
 					if( !empty( $_REQUEST['commissionBCC'] ) ) {
 						$BCCs = explode( ',', $_REQUEST['commissionBCC'] );
 						foreach( $BCCs as $BCC ) {
@@ -100,6 +100,12 @@ if( isset( $_REQUEST['a'] ) ) {
 							}
 						}
 					}
+					*/
+
+					// #1891: Add account manager to the payment notification emails.
+                    if (!empty($company->accountManager) && !empty($user = $leads->getUser($company->accountManager)) && !empty($user->email)) {
+                        $BCCText .= "BCC: {$user->email}\r\n";
+                    }
 
 					$date = date( 'F Y', strtotime( $_REQUEST['ledgerMonth'] . '01' ) );
 					list( $first, $garbage ) = explode( ' ', $company->acct_name, 2 );
@@ -205,6 +211,23 @@ if( isset( $_REQUEST['d'] ) ) {
 					} else if( 'L' === $divisionId ) {
 						list( $ledgerId, $indexId ) = explode( '|', $ledgerId );
 						$entry = $leads->getPhoneLedgerByIdIndex( $ledgerId, $indexId );
+						if( !empty( $entry ) ) {
+							$ledgerMonth = new DateTime( $entry->ledgerMonth );
+							$entries[] = array(
+								'invoiceNum' => $entry->loInvoiceNum,
+								'paymentAmount' => $entry->loPaymentAmount,
+								'paymentMethod' => $entry->loPaymentMethod,
+								'paymentDate' => $entry->loPaymentDate,
+								'ledgerMonth' => $ledgerMonth->format( 'Ym' ),
+								'companyId' => $entry->vendorCompanyId,
+								'userId1' => $entry->userId1,
+								'userId2' => $entry->userId2,
+								'userId3' => $entry->userId3,
+							);
+						}
+					} else if( 'V' === $divisionId ) {
+						list( $ledgerId, $indexId ) = explode( '|', $ledgerId );
+						$entry = $leads->getLedgerByIdIndex( $ledgerId, $indexId );
 						if( !empty( $entry ) ) {
 							$ledgerMonth = new DateTime( $entry->ledgerMonth );
 							$entries[] = array(
@@ -359,6 +382,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					'id' => 'paymentDate',
 					'label' => 'Payment Date',
 					'type' => 'text',
+                    'autocomplete' => 'off',
 					'value' => $paymentDate,
 					'required' => true,
 				),
@@ -394,7 +418,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						},
 						dataType: "json",
 						success: function (data) {
-							var companyId = $("#email_form select[name='companyId']")
+							var companyId = $("#email_form select[name='companyId']");
 							if (companyId) {
 								companyId.empty();
 								companyId.append('<option></option>');
@@ -545,7 +569,7 @@ include( INCLUDES . "c_header.php" );
 							<tr>
 								<td><?php echo htmlentities( $entry->entryId ); ?></td>
 								<td><?php echo htmlentities( $entry->divisionName ); ?></td>
-								<td><?php echo htmlentities( $entry->companyName ); ?></td>
+								<td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>
 								<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
 								<td><?php echo $entry->fullName1; ?>&nbsp;<br/><?php echo $entry->fullName2; ?>&nbsp;</td>
 								<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
@@ -556,6 +580,8 @@ include( INCLUDES . "c_header.php" );
 										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'E|' . $entry->ledgerId . '|' . $entry->companyId; ?>"/>
 									<?php } else if( 'ledger_phones' === $entry->source ) { ?>
 										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'L|' . $entry->ledgerId . '|' . $entry->indexId; ?>"/>
+									<?php } else if( 'ledger_vendors' === $entry->source ) { ?>
+										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'V|' . $entry->ledgerId . '|' . $entry->indexId; ?>"/>
 									<?php } else { ?>
 										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>"/>
 									<?php } ?>

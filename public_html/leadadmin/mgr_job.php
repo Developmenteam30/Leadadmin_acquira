@@ -250,12 +250,12 @@ if( !empty( $_REQUEST['jobId'] ) ) {
 ?>
 	<tr class="<?php echo $class; ?>">
 		<td><a href="/leadadmin/mgr_job.php?jobId=<?php echo $job->jobId; ?>&amp;count=<?php echo $job->records; ?>"><?php echo $job->jobId; ?></a></td>
-		<td><?php echo $job->type; ?></td>
+		<td><?php echo Display::escHtml( $job->type ); ?></td>
 		<td><?php echo $timestamp->format( 'Y-m-d H:i:s' ); ?></td>
-		<td><?php echo $job->status; ?></td>
-		<td><?php echo $job->label; ?></td>
-		<td><?php echo $job->records; ?></td>
-		<td><?php echo $job->username; ?></td>
+		<td><?php echo Display::escHtml( $job->status ); ?></td>
+		<td><?php echo Display::escHtml( $job->label ); ?></td>
+		<td><?php echo Display::escHtml( $job->records ); ?></td>
+		<td><?php echo Display::escHtml( $job->username ); ?></td>
 	</tr>
 <?php
 		}

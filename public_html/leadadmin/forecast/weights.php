@@ -191,7 +191,7 @@ include( INCLUDES . "c_header.php" );
 				?>
 			</select> <select name="idFeedOut">
 				<?php
-				$feeds = $leads->getOutboundFeeds( null, 'active' );
+				$feeds = $leads->getOutboundFeeds( null, 'active', 'phone' );
 				if( $feeds ) {
 					foreach( $feeds as $feed ) {
 						printf( '<option value="%s">%s - %s(%s)</option>' . PHP_EOL,
