@@ -10,6 +10,9 @@ $leads = Leads::getInstance();
 
 require_once( INCLUDES . 'display.php' );
 
+// PHPSPREADSHEET
+include( "../../includes/vendor/autoload.php" );
+
 if( isset( $_REQUEST['a'] ) ) {
 	$result = array(
 		'status' => 0
@@ -408,7 +411,8 @@ if( isset( $_REQUEST['d'] ) ) {
 							<input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>"/>
 							<input type="hidden" name="type" value="suppression"/>
 							<input type="hidden" name="destination" value="0"/>
-							File: <input type="file" name="import_file" multiple="false" accept="text/csv"/>
+							<!-- File: <input type="file" name="import_file" multiple="false" accept="text/csv"/> -->
+							File: <input type="file" name="import_file" multiple="false" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
 							to Suppression List
 							<select id="suppress_list" name="list" onchange="checkIfMulti();">
 								<option value="global">Global Suppression</option>

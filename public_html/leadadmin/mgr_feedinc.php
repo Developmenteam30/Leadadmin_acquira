@@ -1214,7 +1214,7 @@ if (isset($_REQUEST['d'])) {
 							}
 						},
 						validation: {
-							allowedExtensions: ['csv', 'txt'],
+							allowedExtensions: ['csv', 'txt', 'xlsx', 'xls'],
 							itemLimit: 1
 						}
 					});

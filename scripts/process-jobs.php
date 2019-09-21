@@ -12,6 +12,9 @@ require_once(INCLUDES . 'processLeads.php');
 $mysqlErrorSource = 'Process Jobs';
 require_once(INCLUDES . "f_site.php");
 
+// PHPSPREADSHEET
+include( "../../includes/vendor/autoload.php" );
+
 ini_set("auto_detect_line_endings", true);
 set_time_limit(0);
 
@@ -306,14 +309,37 @@ if ('clear-outbound-queue' === $job->type) {
 
 } elseif ('feedinc' === $job->type) {
 
-    $handle = @fopen($job->filename, "r");
-    if (!$handle) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'error',
-            'message' => 'Cannot open uploaded file for reading',
-        ));
-        print 'ERROR: Cannot open uploaded file for reading';
-        exit;
+    $ext = pathinfo($job->filename, PATHINFO_EXTENSION);
+
+    if ( $ext == 'xls' || 'xlsx' ) {
+
+        $spreadsheet = PhpSpreadsheet\IOFactory::load( 'myfile.wherever' );
+        $worksheet = $spreadsheet->getActiveSheet();
+        $raw_data = [];
+        foreach ($worksheet->getRowIterator() AS $row) {
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(FALSE); // Loops through all cells
+            $cells = [];
+            foreach ($cellIterator as $cell) {
+                $cells[] = $cell->getValue();
+            }
+            $raw_data[] = $cells;
+        }
+
+    } else {
+
+        $handle = @fopen($job->filename, "r");
+        if (!$handle) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Cannot open uploaded file for reading',
+            ));
+            print 'ERROR: Cannot open uploaded file for reading';
+            exit;
+        }
+        $raw_data = fgetcsv($handle, 1000, ',');
+        fclose($handle);
+
     }
 
     print "Importing legacy records from: {$job->filename}\n";
@@ -345,7 +371,7 @@ if ('clear-outbound-queue' === $job->type) {
     }
 
     $cnt = 0;
-    while (($raw_data = fgetcsv($handle, 1000, ',')) !== false) {
+    while ($raw_data !== false) {
 
         $data = array();
 
@@ -487,14 +513,37 @@ if ('clear-outbound-queue' === $job->type) {
         exit;
     }
 
-    $handle = @fopen($job->filename, "r");
-    if (!$handle) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'error',
-            'message' => 'Cannot open uploaded file for reading',
-        ));
-        print 'ERROR: Cannot open uploaded file for reading';
-        exit;
+    $ext = pathinfo($job->filename, PATHINFO_EXTENSION);
+
+    if ( $ext == 'xls' || 'xlsx' ) {
+
+        $spreadsheet = PhpSpreadsheet\IOFactory::load( 'myfile.wherever' );
+        $worksheet = $spreadsheet->getActiveSheet();
+        $raw_data = [];
+        foreach ($worksheet->getRowIterator() AS $row) {
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(FALSE); // Loops through all cells
+            $cells = [];
+            foreach ($cellIterator as $cell) {
+                $cells[] = $cell->getValue();
+            }
+            $raw_data[] = $cells;
+        }
+
+    } else {
+
+        $handle = @fopen($job->filename, "r");
+        if (!$handle) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Cannot open uploaded file for reading',
+            ));
+            print 'ERROR: Cannot open uploaded file for reading';
+            exit;
+        }
+        $raw_data = fgetcsv($handle, 1000, ',');
+        fclose($handle);
+
     }
 
     print "Importing legacy records from: {$job->filename}\n";
@@ -525,7 +574,7 @@ if ('clear-outbound-queue' === $job->type) {
     );
 
     $cnt = 0;
-    while (($raw_data = fgetcsv($handle, 1000, ',')) !== false) {
+    while ($raw_data !== false) {
 
         $data = array();
 
@@ -726,14 +775,37 @@ if ('clear-outbound-queue' === $job->type) {
 
 } elseif ('suppression' === $job->type) {
 
-    $handle = @fopen($job->filename, "r");
-    if (!$handle) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'error',
-            'message' => 'Cannot open uploaded file for reading',
-        ));
-        print 'ERROR: Cannot open uploaded file for reading';
-        exit;
+    $ext = pathinfo($job->filename, PATHINFO_EXTENSION);
+
+    if ( $ext == 'xls' || 'xlsx' ) {
+
+        $spreadsheet = PhpSpreadsheet\IOFactory::load( 'myfile.wherever' );
+        $worksheet = $spreadsheet->getActiveSheet();
+        $raw_data = [];
+        foreach ($worksheet->getRowIterator() AS $row) {
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(FALSE); // Loops through all cells
+            $cells = [];
+            foreach ($cellIterator as $cell) {
+                $cells[] = $cell->getValue();
+            }
+            $raw_data[] = $cells;
+        }
+
+    } else {
+
+        $handle = @fopen($job->filename, "r");
+        if (!$handle) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Cannot open uploaded file for reading',
+            ));
+            print 'ERROR: Cannot open uploaded file for reading';
+            exit;
+        }
+        $raw_data = fgetcsv($handle, 1000, ',');
+        fclose($handle);
+
     }
 
     print "Importing suppression records from: {$job->filename}\n";
@@ -777,7 +849,7 @@ if ('clear-outbound-queue' === $job->type) {
     );
 
     $cnt = 0;
-    while (($raw_data = fgetcsv($handle, 1000, ',')) !== false) {
+    while ($raw_data !== false) {
 
         $raw_data = trim($raw_data[0]);
 

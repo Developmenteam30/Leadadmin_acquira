@@ -10,6 +10,9 @@ $leads = Leads::getInstance();
 
 require_once( INCLUDES . 'display.php' );
 
+// PHPSPREADSHEET
+include( "../../includes/vendor/autoload.php" );
+
 function dieError( $error ) {
 	print "<p>{$error}</p>";
 	print "\t</div>\n";
