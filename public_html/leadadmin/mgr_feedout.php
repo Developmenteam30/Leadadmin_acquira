@@ -365,8 +365,18 @@ if (isset($_REQUEST['a'])) {
             }
 
             // Validate inputs
-            if (empty($_REQUEST['idFeedIn'])) {
+            if (!isset($_REQUEST['populationType'])) {
+                $result['error'] = 'Please select an Incoming Feed type';
+                break;
+            }
+
+            if ($_REQUEST['populationType'] == 'individual' && empty($_REQUEST['idFeedIn'])) {
                 $result['error'] = 'Please select an incoming feed from the list.';
+                break;
+            }
+
+            if ($_REQUEST['populationType'] == 'category' && !isset($_REQUEST['feedCategory'])) {
+                $result['error'] = 'Please select an incoming feed type category.';
                 break;
             }
 
@@ -462,7 +472,9 @@ if (isset($_REQUEST['a'])) {
             if ($action == 'new') {
 
                 $idAssoc = $leads->addPopulation(array(
+                    'populationType' => $_REQUEST['populationType'],
                     'idFeedIn' => $_REQUEST['idFeedIn'],
+                    'feedCategory' => $_REQUEST['feedCategory'],
                     'idFeedOut' => $_REQUEST['idFeedOut'],
                     'enabled' => 1,
                     'filterTypeUrl' => !empty($_REQUEST['filterTypeUrl']) ? $_REQUEST['filterTypeUrl'] : null,
@@ -492,7 +504,9 @@ if (isset($_REQUEST['a'])) {
             } else {
 
                 $dbResult = $leads->updatePopulation($_REQUEST['idAssoc'], array(
+                    'populationType' => $_REQUEST['populationType'],
                     'idFeedIn' => $_REQUEST['idFeedIn'],
+                    'feedCategory' => $_REQUEST['feedCategory'],
                     'idFeedOut' => $_REQUEST['idFeedOut'],
                     'filterTypeUrl' => !empty($_REQUEST['filterTypeUrl']) ? $_REQUEST['filterTypeUrl'] : null,
                     'filterUrl' => !empty($filterUrl) ? $filterUrl : null,
@@ -2543,6 +2557,8 @@ if (isset($_REQUEST['d'])) {
                 'idAssoc',
                 'idFeedOut',
                 'idFeedIn',
+                'populationType',
+                'feedCategory',
                 'filterTypeUrl',
                 'filterTypeEmail',
                 'filterTypeListcode',
@@ -2608,7 +2624,17 @@ if (isset($_REQUEST['d'])) {
 					<tr>
 						<td><p>Incoming Feed (To Populate From)</p></td>
 						<td>
-							<p>
+                            <p>
+                                <input id="popIndividual" type="radio" name="populationType" value="individual"
+                                    <?php if ($popset_populationType != 'category') {
+                                        echo " checked";
+                                } ?>> Individual Feed Population<br>
+                                <input id="popCategory" type="radio" name="populationType" value="category"
+                                    <?php if ($popset_populationType == 'category') {
+                                        echo " checked";
+                                } ?>> Feed Category Population
+                            </p>
+							<p id="selectIndividual">
 								<select name="idFeedIn">
 									<option></option>
                                     <?php
@@ -2635,6 +2661,20 @@ if (isset($_REQUEST['d'])) {
                                     ?>
 								</select>
 							</p>
+                            <p id="selectCategory">
+                                <input type="radio" name="feedCategory" value="email"
+                                    <?php if ($popset_feedCategory == 'email') {
+                                        echo " checked";
+                                } ?>> Email<br>
+                                <input type="radio" name="feedCategory" value="phone"
+                                    <?php if ($popset_feedCategory == 'phone') {
+                                        echo " checked";
+                                } ?>> Phone<br>
+                                <input type="radio" name="feedCategory" value="ppc"
+                                    <?php if ($popset_feedCategory == 'ppc') {
+                                        echo " checked";
+                                } ?>> PPC<br>
+                            </p>
 						</td>
 					</tr>
 					<tr>
@@ -2969,6 +3009,26 @@ if (isset($_REQUEST['d'])) {
 					dateFormat: 'yy-mm-dd'
 				});
 
+                var popVal = $('input[type="radio"][name="populationType"]:checked').val();
+                if ( popVal == 'category' ) {
+                    $('#selectCategory').show();
+                    $('#selectIndividual').hide();
+                } else {
+                    $('#selectCategory').hide();
+                    $('#selectIndividual').show();
+                }
+
+                $('input[type="radio"][name="populationType"]').change(function(){
+                    var selectedPopVal = $('input[type="radio"][name="populationType"]:checked').val();
+                    if ( selectedPopVal == 'category' ) {
+                        $('#selectCategory').show();
+                        $('#selectIndividual').hide();
+                    } else {
+                        $('#selectCategory').hide();
+                        $('#selectIndividual').show();
+                    }
+                });
+
 			</script>
             <?php
             break;
@@ -3149,7 +3209,8 @@ if (isset($_REQUEST['d'])) {
 								<p>
 									(<?php echo $popSet->idFeedIn; ?>)
                                     <?php echo $cacheFeedIn[$popSet->idFeedIn]->label; ?>
-								</p>
+								</p>    
+                                <p><p>Population type: <?php echo $popSet->populationType; ?></p></p>
 							</td>
 							<td valign='top' class="text-center">
 								<input class="population-toggle" <?php if (!empty($popSet->enabled)) {
