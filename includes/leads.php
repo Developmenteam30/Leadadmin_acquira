@@ -2933,14 +2933,14 @@ class Leads
             $sql .= "FROM feedPopulation fp ";
             $sql .= "LEFT JOIN feedout fo ON fp.idFeedOut = fo.idFeedOut ";
             $sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
-            $sql .= "WHERE fp.idFeedIn = ? ";
+            $sql .= "WHERE ((fp.populationType = 'individual' AND fp.idFeedIn = ?) OR (fp.populationType = 'category' AND fp.feedCategory = (SELECT feedCategory FROM feedinc WHERE idFeedIn = ?))) ";
             if ($enabled) {
                 $sql .= " AND fp.enabled = '1' ";
             }
             $sql .= "ORDER BY fp.waterfallPriority " . ($descending ? "DESC" : "ASC") . ",FIELD(fp.queueType,'livedata','waterfallLimitLive','waterfall','waterfallLimit','queue')";
 //			$sql .= "ORDER BY fp.waterfallPriority DESC";
             $query = $this->db->prepare($sql);
-            $query->execute(array($idFeedIn));
+            $query->execute(array($idFeedIn,$idFeedIn));
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound population settings: ' . $e->getMessage());

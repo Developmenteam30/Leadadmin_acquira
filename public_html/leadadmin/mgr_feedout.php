@@ -106,7 +106,8 @@ if (isset($_REQUEST['a'])) {
                     // Strip our field delimiters of = and ; out of the input
                     $temp[] = sprintf('%s=%s',
                         str_replace(array('=', ';'), '', $_REQUEST['urlassignments_url'][$i]),
-                        !empty($_REQUEST['urlassignments_id'][$i]) ? str_replace(array('=', ';'), '', $_REQUEST['urlassignments_id'][$i]) : ''
+                        !empty($_REQUEST['urlassignments_id'][$i]) ? str_replace(array('=', ';'), '',
+                            $_REQUEST['urlassignments_id'][$i]) : ''
                     );
                 }
                 $urlAssign = implode(';', $temp);
@@ -118,7 +119,8 @@ if (isset($_REQUEST['a'])) {
             }
 
             if ($c && !empty($_REQUEST['notifyThresholdTime'])) {
-                $notifyThresholdTime = DateTime::createFromFormat('Y-m-d g:iA', (date('Y-m-d') . ' ' . $_REQUEST['notifyThresholdTime']));
+                $notifyThresholdTime = DateTime::createFromFormat('Y-m-d g:iA',
+                    (date('Y-m-d') . ' ' . $_REQUEST['notifyThresholdTime']));
                 if (empty($notifyThresholdTime)) {
                     $result['error'] = 'Please enter a valid notification threshold time in the format hh:mmAM or hh:mmPM.';
                     $c = false;
@@ -146,14 +148,21 @@ if (isset($_REQUEST['a'])) {
                 $schedule_array = array('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat');
                 foreach ($schedule_array as $id => $day) {
                     if (!empty($_REQUEST[$day . '_schedule'])) {
-                        if ((empty($_REQUEST[$day . '_start']) && !empty($_REQUEST[$day . '_end']) || (!empty($_REQUEST[$day . '_start']) && empty($_REQUEST[$day . '_end'])))) {
+                        if ((empty($_REQUEST[$day . '_start']) && !empty($_REQUEST[$day . '_end'])
+                            || (!empty($_REQUEST[$day . '_start'])
+                                && empty($_REQUEST[$day . '_end'])))
+                        ) {
                             $c = false;
                             $result['error'] = 'Please enter both a start time and an end time for all days where times are used.';
                             break;
                         }
 
 
-                        if ((!empty($_REQUEST[$day . '_start']) && !preg_match('/([01]?[0-9]|2[0-3]):[0-5][0-9]/', $_REQUEST[$day . '_start'])) || (!empty($_REQUEST[$day . '_end']) && !preg_match('/([01]?[0-9]|2[0-3]):[0-5][0-9]/', $_REQUEST[$day . '_end']))) {
+                        if ((!empty($_REQUEST[$day . '_start']) && !preg_match('/([01]?[0-9]|2[0-3]):[0-5][0-9]/',
+                                    $_REQUEST[$day . '_start']))
+                            || (!empty($_REQUEST[$day . '_end'])
+                                && !preg_match('/([01]?[0-9]|2[0-3]):[0-5][0-9]/', $_REQUEST[$day . '_end']))
+                        ) {
                             $c = false;
                             $result['error'] = 'Please enter valid start and end times in the 24-hour format of HH:MM.';
                             break;
@@ -210,7 +219,8 @@ if (isset($_REQUEST['a'])) {
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'notifyThresholdCount' => empty($_REQUEST['notifyThresholdCount']) ? 0 : $_REQUEST['notifyThresholdCount'],
                         'notifyThresholdTime' => !empty($notifyThresholdTime) ? $notifyThresholdTime->format('H:i:s') : null,
-                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',', $_REQUEST['notifyThresholdDays']),
+                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',',
+                            $_REQUEST['notifyThresholdDays']),
                         'revenuePerLead' => !empty($_REQUEST['revenuePerLead']) ? $_REQUEST['revenuePerLead'] : 0.00,
                         'costPerLeadOverride' => '' === trim($_REQUEST['costPerLeadOverride']) ? null : $_REQUEST['costPerLeadOverride'],
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
@@ -298,7 +308,8 @@ if (isset($_REQUEST['a'])) {
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'notifyThresholdCount' => empty($_REQUEST['notifyThresholdCount']) ? 0 : $_REQUEST['notifyThresholdCount'],
                         'notifyThresholdTime' => !empty($notifyThresholdTime) ? $notifyThresholdTime->format('H:i:s') : null,
-                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',', $_REQUEST['notifyThresholdDays']),
+                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',',
+                            $_REQUEST['notifyThresholdDays']),
                         'revenuePerLead' => !empty($_REQUEST['revenuePerLead']) ? $_REQUEST['revenuePerLead'] : 0.00,
                         'costPerLeadOverride' => '' === trim($_REQUEST['costPerLeadOverride']) ? null : $_REQUEST['costPerLeadOverride'],
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
@@ -438,7 +449,8 @@ if (isset($_REQUEST['a'])) {
                         // Strip our field delimiters of = and ; out of the input
                         $temp[] = sprintf('%s=%s',
                             str_replace(array('=', ';'), '', $_REQUEST['forceUrlList_original'][$i]),
-                            !empty($_REQUEST['forceUrlList_altered'][$i]) ? str_replace(array('=', ';'), '', $_REQUEST['forceUrlList_altered'][$i]) : ''
+                            !empty($_REQUEST['forceUrlList_altered'][$i]) ? str_replace(array('=', ';'), '',
+                                $_REQUEST['forceUrlList_altered'][$i]) : ''
                         );
                     }
                 }
@@ -473,8 +485,8 @@ if (isset($_REQUEST['a'])) {
 
                 $idAssoc = $leads->addPopulation(array(
                     'populationType' => $_REQUEST['populationType'],
-                    'idFeedIn' => $_REQUEST['idFeedIn'],
-                    'feedCategory' => $_REQUEST['feedCategory'],
+                    'idFeedIn' => 'individual' === $_REQUEST['populationType'] ? $_REQUEST['idFeedIn'] : null,
+                    'feedCategory' => 'category' === $_REQUEST['populationType'] ? $_REQUEST['feedCategory'] : null,
                     'idFeedOut' => $_REQUEST['idFeedOut'],
                     'enabled' => 1,
                     'filterTypeUrl' => !empty($_REQUEST['filterTypeUrl']) ? $_REQUEST['filterTypeUrl'] : null,
@@ -505,8 +517,8 @@ if (isset($_REQUEST['a'])) {
 
                 $dbResult = $leads->updatePopulation($_REQUEST['idAssoc'], array(
                     'populationType' => $_REQUEST['populationType'],
-                    'idFeedIn' => $_REQUEST['idFeedIn'],
-                    'feedCategory' => $_REQUEST['feedCategory'],
+                    'idFeedIn' => 'individual' === $_REQUEST['populationType'] ? $_REQUEST['idFeedIn'] : null,
+                    'feedCategory' => 'category' === $_REQUEST['populationType'] ? $_REQUEST['feedCategory'] : null,
                     'idFeedOut' => $_REQUEST['idFeedOut'],
                     'filterTypeUrl' => !empty($_REQUEST['filterTypeUrl']) ? $_REQUEST['filterTypeUrl'] : null,
                     'filterUrl' => !empty($filterUrl) ? $filterUrl : null,
@@ -559,7 +571,8 @@ if (isset($_REQUEST['a'])) {
                             $c = false;
                             $result['error'] = 'Unable to update population.';
                         } else {
-                            $leads->auditLog('FEEDOUT:POP:STATE', $popSet->idAssoc . ':' . ($enabled ? 'ENABLED' : 'DISABLED'));
+                            $leads->auditLog('FEEDOUT:POP:STATE',
+                                $popSet->idAssoc . ':' . ($enabled ? 'ENABLED' : 'DISABLED'));
                         }
                     }
                     if ($c) {
@@ -612,7 +625,8 @@ if (isset($_REQUEST['a'])) {
                                     $c = false;
                                     $result['error'] = 'Unable to update the database.';
                                 } else {
-                                    $leads->auditLog('FEEDOUT:CRON', $feed->idFeedOut . ':' . ($cron ? 'RUNNING' : 'PAUSED'));
+                                    $leads->auditLog('FEEDOUT:CRON',
+                                        $feed->idFeedOut . ':' . ($cron ? 'RUNNING' : 'PAUSED'));
                                 }
                                 break;
                             default:
@@ -1172,11 +1186,13 @@ if (isset($_REQUEST['d'])) {
                     print "</ul>";
                 }
 
-                print "<p><strong>Query String:</strong> " . nl2br(htmlspecialchars($response['querystring'], ENT_QUOTES | ENT_HTML5)) . "</p>";
+                print "<p><strong>Query String:</strong> " . nl2br(htmlspecialchars($response['querystring'],
+                        ENT_QUOTES | ENT_HTML5)) . "</p>";
 
                 print "<p><strong>Status:</strong> " . (true === $response['status'] ? '<span class="lead-success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>') . "</p>";
 
-                print "<p><strong>Response:</strong> " . htmlspecialchars($response['text'], ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE) . "</p>";
+                print "<p><strong>Response:</strong> " . htmlspecialchars($response['text'],
+                        ENT_QUOTES | ENT_HTML5 | ENT_SUBSTITUTE) . "</p>";
 
                 $leads->auditLog('FEEDOUT:TEST-RECORD', $idFeedOut);
 
@@ -1234,7 +1250,8 @@ if (isset($_REQUEST['d'])) {
                 print "</ul>";
             }
 
-            print "<p><strong>Query String:</strong> " . nl2br(htmlspecialchars($response['querystring'], ENT_QUOTES | ENT_HTML5)) . "</p>";
+            print "<p><strong>Query String:</strong> " . nl2br(htmlspecialchars($response['querystring'],
+                    ENT_QUOTES | ENT_HTML5)) . "</p>";
 
             print "<p><strong>Status:</strong> " . (!empty($_REQUEST['accepted']) ? '<span class="lead-success">ACCEPTED</span>' : '<span class="errors">REJECTED</span>') . "</p>";
 
@@ -1263,14 +1280,14 @@ if (isset($_REQUEST['d'])) {
 
             ?>
 
-			<table class="table table-bordered table-condensed table-striped">
-				<thead>
-				<tr>
-					<th>Inbound Date</th>
-					<th>Count</th>
-				</tr>
-				</thead>
-				<tbody>
+            <table class="table table-bordered table-condensed table-striped">
+                <thead>
+                <tr>
+                    <th>Inbound Date</th>
+                    <th>Count</th>
+                </tr>
+                </thead>
+                <tbody>
                 <?php
                 $cnt = 0;
                 foreach ($stats as $stat) {
@@ -1281,14 +1298,14 @@ if (isset($_REQUEST['d'])) {
                     $cnt += $stat->cnt;
                 }
                 ?>
-				</tbody>
-				<tfoot>
-				<tr>
-					<td>GRAND TOTAL</td>
-					<td class="text-right"><?php echo number_format($cnt, 0); ?></td>
-				</tr>
-				</tfoot>
-			</table>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td>GRAND TOTAL</td>
+                    <td class="text-right"><?php echo number_format($cnt, 0); ?></td>
+                </tr>
+                </tfoot>
+            </table>
 
             <?php
             break;
@@ -1312,12 +1329,14 @@ if (isset($_REQUEST['d'])) {
                 break;
             }
 
-            $jobId = $leads->addJob('clear-outbound-queue', $idFeedOut, serialize(array('label' => $feed->label)), '', 0);
+            $jobId = $leads->addJob('clear-outbound-queue', $idFeedOut, serialize(array('label' => $feed->label)), '',
+                0);
             if (null === $jobId) {
                 print '<p>ERROR: Cannot add job to database.</p>';
             } else {
                 $leads->auditLog('FEEDOUT:CLEAR-QUEUE', $jobId);
-                printf('<p>Clear outbound queue job submitted.</p><p><a class="btn btn-primary" href="/leadadmin/mgr_job.php?jobId=%d&amp;count=0">View results</a></p>', $jobId);
+                printf('<p>Clear outbound queue job submitted.</p><p><a class="btn btn-primary" href="/leadadmin/mgr_job.php?jobId=%d&amp;count=0">View results</a></p>',
+                    $jobId);
             }
 
             break;
@@ -1340,15 +1359,17 @@ if (isset($_REQUEST['d'])) {
             $feed = $leads->getOutboundFeed($idFeedOut);
             if (empty($feed)) {
                 ?>
-				<p>Database failure - could not fetch requested feed information.</p>
+                <p>Database failure - could not fetch requested feed information.</p>
                 <?php
                 exit;
             }
 
-            $feed->staticFields = !empty($feed->staticFieldsJSON) ? json_decode($feed->staticFieldsJSON, true) : array();
+            $feed->staticFields = !empty($feed->staticFieldsJSON) ? json_decode($feed->staticFieldsJSON,
+                true) : array();
             $feed->varFields = !empty($feed->varFieldsJSON) ? json_decode($feed->varFieldsJSON, true) : array();
             $valueMap = !empty($feed->valueMap) ? json_decode($feed->valueMap, true) : array();
-            $selectedNotifyThresholdDays = !empty($feed->notifyThresholdDays) ? explode(",", $feed->notifyThresholdDays) : array();
+            $selectedNotifyThresholdDays = !empty($feed->notifyThresholdDays) ? explode(",",
+                $feed->notifyThresholdDays) : array();
 
         case 'dialog_newfeed':
             if (empty($idFeedOut)) {
@@ -1366,7 +1387,8 @@ if (isset($_REQUEST['d'])) {
                 if (!empty($feed)) {
                     $feed->label = '';
                     $feed->description = '';
-                    $feed->staticFields = !empty($feed->staticFieldsJSON) ? json_decode($feed->staticFieldsJSON, true) : array();
+                    $feed->staticFields = !empty($feed->staticFieldsJSON) ? json_decode($feed->staticFieldsJSON,
+                        true) : array();
                     $feed->varFields = !empty($feed->varFieldsJSON) ? json_decode($feed->varFieldsJSON, true) : array();
                     $valueMap = !empty($feed->valueMap) ? json_decode($feed->valueMap, true) : array();
                 }
@@ -1442,74 +1464,79 @@ if (isset($_REQUEST['d'])) {
                 $companies = $leads->getCompanies();
             }
             ?>
-			<form id="<?php echo $id; ?>">
-				<input type='hidden' name='idFeedOut' value='<?php echo $feed_idFeedOut; ?>'/>
-				<input type="hidden" name="a" value="manageFeed"/>
-				<input type="hidden" name="action" value="<?php echo $mode; ?>"/>
-				<table class="table table-bordered table-condensed table-striped">
-					<tr>
-						<td><p>Feed Label</p></td>
-						<td>
-							<p>
-								<input type='text' name='label' value='<?php echo $feed_label; ?>'
-								/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Description</p></td>
-						<td>
-							<p>
-								<input type='text' name='description' value='<?php echo Display::escHtml($feed_description); ?>' class='long'/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Company</p></td>
-						<td>
-							<p>
+            <form id="<?php echo $id; ?>">
+                <input type='hidden' name='idFeedOut' value='<?php echo $feed_idFeedOut; ?>'/>
+                <input type="hidden" name="a" value="manageFeed"/>
+                <input type="hidden" name="action" value="<?php echo $mode; ?>"/>
+                <table class="table table-bordered table-condensed table-striped">
+                    <tr>
+                        <td><p>Feed Label</p></td>
+                        <td>
+                            <p>
+                                <input type='text' name='label' value='<?php echo $feed_label; ?>'
+                                />
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Description</p></td>
+                        <td>
+                            <p>
+                                <input type='text' name='description'
+                                       value='<?php echo Display::escHtml($feed_description); ?>' class='long'/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Company</p></td>
+                        <td>
+                            <p>
                                 <?php if ($companies === false) { ?>
-									Database failure - could not fetch company list
+                                    Database failure - could not fetch company list
                                 <?php } elseif (!is_object($companies) && $companies == 0) { ?>
-									There are no companies in the database. Please create a company before
-									creating a feed.
+                                    There are no companies in the database. Please create a company before
+                                    creating a feed.
                                 <?php } else { ?>
-									<select name='idCompany'>
-										<option></option>
+                                    <select name='idCompany'>
+                                        <option></option>
                                         <?php foreach ($companies as $company) { ?>
-											<option value='<?php echo $company->idCompany; ?>'
+                                            <option value='<?php echo $company->idCompany; ?>'
                                                     <?php if ($company->idCompany == $feed_idCompany){
                                                     ?>selected='selected'<?php } ?>
-											><?php echo Display::escHtml($company->name); ?></option>
+                                            ><?php echo Display::escHtml($company->name); ?></option>
                                         <?php } ?>
-									</select>
+                                    </select>
                                 <?php } ?>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Feed Category</p></td>
-						<td>
-							<p>Determines which section this feed shows up under on the dashboard.</p>
-							<p>
-								<input type="radio" name="feedCategory" value="email"<?php if (empty($feed_feedCategory) || 'email' == $feed_feedCategory) {
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Feed Category</p></td>
+                        <td>
+                            <p>Determines which section this feed shows up under on the dashboard.</p>
+                            <p>
+                                <input type="radio" name="feedCategory"
+                                       value="email"<?php if (empty($feed_feedCategory) || 'email' == $feed_feedCategory) {
                                     print ' checked="checked"';
                                 } ?> /> Email<br/>
-								<input type="radio" name="feedCategory" value="phone"<?php if ('phone' == $feed_feedCategory) {
+                                <input type="radio" name="feedCategory"
+                                       value="phone"<?php if ('phone' == $feed_feedCategory) {
                                     print ' checked="checked"';
                                 } ?> /> Phone<br/>
-								<input type="radio" name="feedCategory" value="ppc"<?php if ('ppc' == $feed_feedCategory) {
+                                <input type="radio" name="feedCategory"
+                                       value="ppc"<?php if ('ppc' == $feed_feedCategory) {
                                     print ' checked="checked"';
                                 } ?> /> PPC<br/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Timezone</p></td>
-						<td>
-							<p>Specify what timezone the to send the outgoing leads as. Please reference the posting docs or confirm with the client, as this may throw off their acceptance rates.</p>
-							<p>
-								<select name="timezone">
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Timezone</p></td>
+                        <td>
+                            <p>Specify what timezone the to send the outgoing leads as. Please reference the posting
+                                docs or confirm with the client, as this may throw off their acceptance rates.</p>
+                            <p>
+                                <select name="timezone">
                                     <?php
                                     $timezones = DateTimeZone::listIdentifiers();
                                     foreach ($timezones as $timezone) {
@@ -1520,232 +1547,299 @@ if (isset($_REQUEST['d'])) {
                                         );
                                     }
                                     ?>
-								</select>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Feed Type</p></td>
-						<td>
-							<p>
-								<select name='feedType'>
-									<option value='curlGET' <?php if ($feed_feedType == 'curlGET'){ ?>selected='selected'<?php } ?>>HTTP GET</option>
-									<option value='curlPOST' <?php if ($feed_feedType == 'curlPOST'){ ?>selected='selected'<?php } ?>>HTTP POST (form-data)</option>
-									<option value='curlPOST-urlencoded' <?php if ($feed_feedType == 'curlPOST-urlencoded'){ ?>selected='selected'<?php } ?>>HTTP POST (urlencoded)</option>
-									<option value='JSON' <?php if ($feed_feedType == 'JSON'){ ?>selected='selected'<?php } ?>>JSON</option>
-									<option value='csvString' <?php if ($feed_feedType == 'csvString'){ ?>selected='selected'<?php } ?>>CSV string</option>
-									<option value='xmlPOST' <?php if ($feed_feedType == 'xmlPOST'){ ?>selected='selected'<?php } ?>>XML POST</option>
-									<option value='soapPOST' <?php if ($feed_feedType == 'soapPOST'){ ?>selected='selected'<?php } ?>>SOAP POST</option>
-								</select>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Post URL</p></td>
-						<td>
-							<p>
-								<input type='text' name='postUrl' value='<?php echo $feed_postUrl; ?>' style="width:100%"/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Static Fields</p></td>
-						<td>
-							<p>
-								These are fields that are assigned values specific to this feed, usually provided by the receiving
-								client.
-							</p>
-							<p>
-								<a href='#' class='nonLink' onclick='element("staticFields_container", "staticField", {});'
-								>Add New Static Field</a>
-							</p>
-							<div>
-								<div id='staticFields_container'>
+                                </select>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Feed Type</p></td>
+                        <td>
+                            <p>
+                                <select name='feedType'>
+                                    <option value='curlGET'
+                                            <?php if ($feed_feedType == 'curlGET'){ ?>selected='selected'<?php } ?>>HTTP
+                                        GET
+                                    </option>
+                                    <option value='curlPOST'
+                                            <?php if ($feed_feedType == 'curlPOST'){ ?>selected='selected'<?php } ?>>
+                                        HTTP POST (form-data)
+                                    </option>
+                                    <option value='curlPOST-urlencoded'
+                                            <?php if ($feed_feedType == 'curlPOST-urlencoded'){ ?>selected='selected'<?php } ?>>
+                                        HTTP POST (urlencoded)
+                                    </option>
+                                    <option value='JSON'
+                                            <?php if ($feed_feedType == 'JSON'){ ?>selected='selected'<?php } ?>>JSON
+                                    </option>
+                                    <option value='csvString'
+                                            <?php if ($feed_feedType == 'csvString'){ ?>selected='selected'<?php } ?>>
+                                        CSV string
+                                    </option>
+                                    <option value='xmlPOST'
+                                            <?php if ($feed_feedType == 'xmlPOST'){ ?>selected='selected'<?php } ?>>XML
+                                        POST
+                                    </option>
+                                    <option value='soapPOST'
+                                            <?php if ($feed_feedType == 'soapPOST'){ ?>selected='selected'<?php } ?>>
+                                        SOAP POST
+                                    </option>
+                                </select>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Post URL</p></td>
+                        <td>
+                            <p>
+                                <input type='text' name='postUrl' value='<?php echo $feed_postUrl; ?>'
+                                       style="width:100%"/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Static Fields</p></td>
+                        <td>
+                            <p>
+                                These are fields that are assigned values specific to this feed, usually provided by the
+                                receiving
+                                client.
+                            </p>
+                            <p>
+                                <a href='#' class='nonLink'
+                                   onclick='element("staticFields_container", "staticField", {});'
+                                >Add New Static Field</a>
+                            </p>
+                            <div>
+                                <div id='staticFields_container'>
                                     <?php foreach ($feed_staticFields as $key => $val) {
                                         ?>
-										<div>
-											<input type='text'
-											       name='staticFields_field[]'
-											       value='<?php echo Display::escHtml($key); ?>'
-											/> = <input type='text'
-											            name='staticFields_value[]'
-											            value='<?php echo Display::escHtml($val); ?>'
-											/>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
+                                        <div>
+                                            <input type='text'
+                                                   name='staticFields_field[]'
+                                                   value='<?php echo Display::escHtml($key); ?>'
+                                            /> = <input type='text'
+                                                        name='staticFields_value[]'
+                                                        value='<?php echo Display::escHtml($val); ?>'
+                                            />
+                                            <a href='#' class='nonLink'
+                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                        </div>
                                     <?php } ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Mapped Fields</p></td>
-						<td>
-							<p>These are fields that are assigned values for each lead. Enter the field name from the receiving
-								client's API spec, and select the lead value to be mapped from the drop-down.
-							</p>
-							<p>
-								<a href='#' class='nonLink' onclick='element("varFields_container", "varField", {});'
-								>Add New Mapped Field</a>
-							</p>
-							<div>
-								<div id='varFields_container'>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Mapped Fields</p></td>
+                        <td>
+                            <p>These are fields that are assigned values for each lead. Enter the field name from the
+                                receiving
+                                client's API spec, and select the lead value to be mapped from the drop-down.
+                            </p>
+                            <p>
+                                <a href='#' class='nonLink' onclick='element("varFields_container", "varField", {});'
+                                >Add New Mapped Field</a>
+                            </p>
+                            <div>
+                                <div id='varFields_container'>
                                     <?php
                                     $sFCount = 0;
                                     foreach ($feed_varFields as $key => $val) {
                                         ?>
-										<div>
-											API Field: <input type='text' name='varFields[]' value='<?php echo Display::escHtml($key); ?>'/>
-											Mapped To: <select name='fieldMap[]'>
+                                        <div>
+                                            API Field: <input type='text' name='varFields[]'
+                                                              value='<?php echo Display::escHtml($key); ?>'/>
+                                            Mapped To: <select name='fieldMap[]'>
                                                 <?php
                                                 foreach ($allAvailableFields as $rF) { ?>
-													<option value='<?php echo Display::escHtml($rF->fieldName, ENT_QUOTES); ?>' <?php if ($val == $rF->fieldName) {
+                                                    <option value='<?php echo Display::escHtml($rF->fieldName,
+                                                        ENT_QUOTES); ?>' <?php if ($val == $rF->fieldName) {
                                                         echo "selected='selected'";
                                                     } ?>><?php echo Display::escHtml($rF->fieldName); ?></option>
                                                 <?php } ?>
-											</select>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
+                                            </select>
+                                            <a href='#' class='nonLink'
+                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                        </div>
                                         <?php
                                         $sFCount++;
                                     }
                                     ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Field Value Translation</p></td>
-						<td>
-							<p>Send a different field value to the outgoing feed than was received on the inbound feed.
-							</p>
-							<p>
-								<a href='#' class='nonLink' onclick='element("varValues_container", "varValue", {});'>Add New Value Translation</a>
-							</p>
-							<div>
-								<div id='varValues_container'>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Field Value Translation</p></td>
+                        <td>
+                            <p>Send a different field value to the outgoing feed than was received on the inbound feed.
+                            </p>
+                            <p>
+                                <a href='#' class='nonLink' onclick='element("varValues_container", "varValue", {});'>Add
+                                    New Value Translation</a>
+                            </p>
+                            <div>
+                                <div id='varValues_container'>
                                     <?php
                                     foreach ($valueMap as $vF) {
                                         ?>
-										<div>
-											Field: <select name='valueMap[field][]'>
+                                        <div>
+                                            Field: <select name='valueMap[field][]'>
                                                 <?php foreach ($recordFields as $rF) { ?>
-													<option value='<?php echo Display::escHtml($rF, ENT_QUOTES); ?>' <?php if (isset($vF['field']) && $vF['field'] == $rF) {
+                                                    <option value='<?php echo Display::escHtml($rF,
+                                                        ENT_QUOTES); ?>' <?php if (isset($vF['field']) && $vF['field'] == $rF) {
                                                         echo "selected='selected'";
                                                     } ?>><?php echo Display::escHtml($rF); ?></option>
                                                 <?php } ?>
-											</select>
-											Incoming Value: <input type='text' name='valueMap[oldValue][]' value='<?php echo Display::escHtml($vF['oldValue'] ?? ''); ?>'/>
-											Outgoing Value: <input type='text' name='valueMap[newValue][]' value='<?php echo Display::escHtml($vF['newValue'] ?? ''); ?>'/>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
+                                            </select>
+                                            Incoming Value: <input type='text' name='valueMap[oldValue][]'
+                                                                   value='<?php echo Display::escHtml($vF['oldValue'] ?? ''); ?>'/>
+                                            Outgoing Value: <input type='text' name='valueMap[newValue][]'
+                                                                   value='<?php echo Display::escHtml($vF['newValue'] ?? ''); ?>'/>
+                                            <a href='#' class='nonLink'
+                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                        </div>
                                         <?php
                                     }
                                     ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>URL Assignments</p></td>
-						<td>
-							<p>
-								If you utilize the urlAssign mapped field, when the feed is processing it will populate the mapped
-								field with values according to what you set here, that way you can have multiple different
-								unique id's per url within the same feed.
-							</p>
-							<p>
-								<a href='#' class='nonLink' onclick='element("urlassignments_container", "urlassignment", {});'
-								>Add New URL Assignment</a>
-							</p>
-							<div>
-								<div id='urlassignments_container'>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>URL Assignments</p></td>
+                        <td>
+                            <p>
+                                If you utilize the urlAssign mapped field, when the feed is processing it will populate
+                                the mapped
+                                field with values according to what you set here, that way you can have multiple
+                                different
+                                unique id's per url within the same feed.
+                            </p>
+                            <p>
+                                <a href='#' class='nonLink'
+                                   onclick='element("urlassignments_container", "urlassignment", {});'
+                                >Add New URL Assignment</a>
+                            </p>
+                            <div>
+                                <div id='urlassignments_container'>
                                     <?php foreach ($feed_urlassignments as $uA) {
                                         $valuePair = explode("=", $uA);
                                         ?>
-										<div>
-											<input type='text'
-											       name='urlassignments_url[]'
-											       value='<?php echo $valuePair[0]; ?>'
-											/> = <input type='text'
-											            name='urlassignments_id[]'
-											            value='<?php echo $valuePair[1]; ?>'
-											/>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
+                                        <div>
+                                            <input type='text'
+                                                   name='urlassignments_url[]'
+                                                   value='<?php echo $valuePair[0]; ?>'
+                                            /> = <input type='text'
+                                                        name='urlassignments_id[]'
+                                                        value='<?php echo $valuePair[1]; ?>'
+                                            />
+                                            <a href='#' class='nonLink'
+                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                        </div>
                                     <?php } ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>XML DTD/Schema</p></td>
-						<td>
-							<p>This is only required for SOAP and XML feeds. Define the XML schema to be sent.</p>
-							<p>
-								<textarea name="xmlDTD" style="width:100%; height:300px;"><?php echo Display::escHtml($feed_xmlDTD); ?></textarea>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Success String</p></td>
-						<td>
-							<p>This is the smallest form of the success response from the receiving client's API spec.</p>
-							<p>
-								<input type='text' name='successString' value='<?php echo Display::escHtml($feed_successString); ?>' class='long'/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Daily Feed Limit</p></td>
-						<td>
-							<p>Leave blank for no limit (default). If a value is supplied here, the feed will stop sending records after the daily limit is reached.</p>
-							<p>
-								<input type='text' name='dailyLimit' value='<?php echo $feed_dailyLimit; ?>'/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Feed Delay</p></td>
-						<td>
-							<p>Leave blank for no delay (default). If a value is supplied here, records will sit in the queue for this number of minutes before being processed.</p>
-							<p>
-								<input type='text' name='delay' value='<?php echo $feed_delay; ?>'/> Minutes
-							</p>
-							<p>
-								<input type='radio' name='delayDump' value='0' <?php if (empty($feed_delayDump)) { ?>checked='checked'<?php } ?>/> Trickle dump delayed records based on actual timestamps (default)<br/>
-								<input type='radio' name='delayDump' value='1' <?php if (!empty($feed_delayDump)) { ?>checked='checked'<?php } ?>/> Mass dump all delayed records for the entire day
-							</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>XML DTD/Schema</p></td>
+                        <td>
+                            <p>This is only required for SOAP and XML feeds. Define the XML schema to be sent.</p>
+                            <p>
+                                <textarea name="xmlDTD"
+                                          style="width:100%; height:300px;"><?php echo Display::escHtml($feed_xmlDTD); ?></textarea>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Success String</p></td>
+                        <td>
+                            <p>This is the smallest form of the success response from the receiving client's API
+                                spec.</p>
+                            <p>
+                                <input type='text' name='successString'
+                                       value='<?php echo Display::escHtml($feed_successString); ?>' class='long'/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Daily Feed Limit</p></td>
+                        <td>
+                            <p>Leave blank for no limit (default). If a value is supplied here, the feed will stop
+                                sending records after the daily limit is reached.</p>
+                            <p>
+                                <input type='text' name='dailyLimit' value='<?php echo $feed_dailyLimit; ?>'/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Feed Delay</p></td>
+                        <td>
+                            <p>Leave blank for no delay (default). If a value is supplied here, records will sit in the
+                                queue for this number of minutes before being processed.</p>
+                            <p>
+                                <input type='text' name='delay' value='<?php echo $feed_delay; ?>'/> Minutes
+                            </p>
+                            <p>
+                                <input type='radio' name='delayDump' value='0'
+                                       <?php if (empty($feed_delayDump)) { ?>checked='checked'<?php } ?>/> Trickle dump
+                                delayed records based on actual
+                                timestamps (default)<br/>
+                                <input type='radio' name='delayDump' value='1'
+                                       <?php if (!empty($feed_delayDump)) { ?>checked='checked'<?php } ?>/> Mass dump
+                                all delayed records for the entire
+                                day
+                            </p>
 
-						</td>
-					</tr>
-					<tr>
-						<td>Threshold Notifications</p></td>
-						<td>
-							<p>Send an email notification if we have not sent <input type="text" name="notifyThresholdCount" value="<?php echo Display::escHtml($feed_notifyThresholdCount); ?>"/> leads by <input type="text" name="notifyThresholdTime" placeholder="Example: 10:00AM" value="<?php echo Display::escHtml($feed_notifyThresholdTimeFormatted); ?>"/> on<br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Threshold Notifications</p></td>
+                        <td>
+                            <p>Send an email notification if we have not sent <input type="text"
+                                                                                     name="notifyThresholdCount"
+                                                                                     value="<?php echo Display::escHtml($feed_notifyThresholdCount); ?>"/>
+                                leads by <input type="text" name="notifyThresholdTime" placeholder="Example: 10:00AM"
+                                                value="<?php echo Display::escHtml($feed_notifyThresholdTimeFormatted); ?>"/>
+                                on<br/>
                                 <?php for ($i = 0; $i <= 6; $i++) { ?>
-									<label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox" name="notifyThresholdDays[]" value="<?php echo $i; ?>" <?php if (in_array($i, $selectedNotifyThresholdDays)){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?></label>
+                                    <label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox"
+                                                                                                   name="notifyThresholdDays[]"
+                                                                                                   value="<?php echo $i; ?>"
+                                                                                                   <?php if (in_array($i,
+                                                                                                       $selectedNotifyThresholdDays)){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?>
+                                    </label>
                                 <?php } ?>
-							</p>
-							<p><strong>To disable notifications from being sent, set the lead count to zero or uncheck all day boxes.</strong></p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Revenue and Cost Per Lead</p></td>
-						<td>
-							<p>
-								RPL: <input type="text" name="revenuePerLead" value="<?php echo Display::escHtml($feed_revenuePerLead); ?>"/> CPL Override: <input type="text" name="costPerLeadOverride" value="<?php echo Display::escHtml($feed_costPerLeadOverride); ?>"/><br/>
-								If a value is set for CPL Override (including a 0.00 amount), this will override the CPL set on the incoming feed. To use the default CPL from the incoming feed, leave this field completely blank.
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Salesperson Override</p></td>
-						<td>
-							<p>By default, salesperson revenues are assigned at a company level. Only set this value if you are overriding the company-level salesperson with a feed-level salesperson.</p>
-							<p>
-								<select name="salesperson">
-									<option></option>
+                            </p>
+                            <p><strong>To disable notifications from being sent, set the lead count to zero or uncheck
+                                    all day boxes.</strong></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Revenue and Cost Per Lead</p></td>
+                        <td>
+                            <p>
+                                RPL: <input type="text" name="revenuePerLead"
+                                            value="<?php echo Display::escHtml($feed_revenuePerLead); ?>"/> CPL
+                                Override: <input type="text"
+                                                 name="costPerLeadOverride"
+                                                 value="<?php echo Display::escHtml($feed_costPerLeadOverride); ?>"/><br/>
+                                If a value is set for CPL Override (including a 0.00 amount), this will override the CPL
+                                set on the incoming feed. To use the default CPL from the incoming feed, leave
+                                this field completely blank.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Salesperson Override</p></td>
+                        <td>
+                            <p>By default, salesperson revenues are assigned at a company level. Only set this value if
+                                you are overriding the company-level salesperson with a feed-level
+                                salesperson.</p>
+                            <p>
+                                <select name="salesperson">
+                                    <option></option>
                                     <?php
                                     $users = $leads->getStaffUsers(\PDO::FETCH_KEY_PAIR, true, $feed_salesperson);
                                     foreach ($users as $idUser => $fullName) {
@@ -1756,99 +1850,111 @@ if (isset($_REQUEST['d'])) {
                                         );
                                     }
                                     ?>
-								</select>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Launch Date</p></td>
-						<td>
-							<p>
+                                </select>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Launch Date</p></td>
+                        <td>
+                            <p>
                                 <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) { ?>
-									<input type='text' name='launchDate' value='<?php echo Display::escHtml($feed_launchDate); ?>' autocomplete="off"/>
+                                    <input type='text' name='launchDate'
+                                           value='<?php echo Display::escHtml($feed_launchDate); ?>'
+                                           autocomplete="off"/>
                                 <?php } else { ?>
                                     <?php echo Display::escHtml($feed_launchDate); ?>
                                 <?php } ?>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Feed Status</p></td>
-						<td>
-							<p>
-								<input type='radio' name='status' value='active' <?php if (empty($feed_status) || 'active' == $feed_status) { ?>checked='checked'<?php } ?>/> Active (Visible)<br/>
-								<input type='radio' name='status' value='hidden' <?php if ('hidden' == $feed_status) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
-								<input type='radio' name='status' value='retired' <?php if ('retired' == $feed_status) { ?>checked='checked'<?php } ?>/> Retired
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Processing Schedule</p></td>
-						<td>
-							<p>By default, leads are passed to clients 24 hours a day, 7 days a week. To limit which days and/or times leads are passed, check off the days and input the times you would like leads to be passed. If you would like to pass leads for the entire day, you may leave both the start and end times blank, otherwise both must be filled in if restricted to certain times.</p>
-							<table>
-								<tr>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Feed Status</p></td>
+                        <td>
+                            <p>
+                                <input type='radio' name='status' value='active'
+                                       <?php if (empty($feed_status) || 'active' == $feed_status) { ?>checked='checked'<?php } ?>/>
+                                Active (Visible)<br/>
+                                <input type='radio' name='status' value='hidden'
+                                       <?php if ('hidden' == $feed_status) { ?>checked='checked'<?php } ?>/> Active
+                                (Hidden)<br/>
+                                <input type='radio' name='status' value='retired'
+                                       <?php if ('retired' == $feed_status) { ?>checked='checked'<?php } ?>/> Retired
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Processing Schedule</p></td>
+                        <td>
+                            <p>By default, leads are passed to clients 24 hours a day, 7 days a week. To limit which
+                                days and/or times leads are passed, check off the days and input the times you
+                                would like leads to be passed. If you would like to pass leads for the entire day, you
+                                may leave both the start and end times blank, otherwise both must be filled in if
+                                restricted to certain times.</p>
+                            <table>
+                                <tr>
                                     <?php
-                                    $processing_schedule = json_decode(!empty($feed_processingSchedule) ? $feed_processingSchedule : '{"sun":{"enabled":true,"startTime":"","endTime":""},"mon":{"enabled":true,"startTime":"","endTime":""},"tue":{"enabled":true,"startTime":"","endTime":""},"wed":{"enabled":true,"startTime":"","endTime":""},"thu":{"enabled":true,"startTime":"","endTime":""},"fri":{"enabled":true,"startTime":"","endTime":""},"sat":{"enabled":true,"startTime":"","endTime":""}}');
+                                    $processing_schedule = json_decode(!empty($feed_processingSchedule) ? $feed_processingSchedule
+                                        : '{"sun":{"enabled":true,"startTime":"","endTime":""},"mon":{"enabled":true,"startTime":"","endTime":""},"tue":{"enabled":true,"startTime":"","endTime":""},"wed":{"enabled":true,"startTime":"","endTime":""},"thu":{"enabled":true,"startTime":"","endTime":""},"fri":{"enabled":true,"startTime":"","endTime":""},"sat":{"enabled":true,"startTime":"","endTime":""}}');
                                     $schedule_array = array('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat');
                                     foreach ($schedule_array as $id => $day) { ?>
-										<td>
-											<p style="text-transform:capitalize;">
-												<input type="checkbox"
-												       id="<?php echo $day; ?>-times"
-												       name="<?php echo $day; ?>_schedule"
-												       value="enabled"
-												       onclick="enableTextBox('<?php echo $day; ?>-times')"
+                                        <td>
+                                            <p style="text-transform:capitalize;">
+                                                <input type="checkbox"
+                                                       id="<?php echo $day; ?>-times"
+                                                       name="<?php echo $day; ?>_schedule"
+                                                       value="enabled"
+                                                       onclick="enableTextBox('<?php echo $day; ?>-times')"
                                                     <?php echo !empty($processing_schedule->$day->enabled) ? ' checked="checked"' : ''; ?>> <?php echo $day; ?>
-											</p>
-											<p>
-												<input type="text"
-												       id="<?php echo $day; ?>_start"
-												       class="<?php echo $day; ?>-times"
-												       name="<?php echo $day; ?>_start"
-												       placeholder="Start Time"
-												       style="width: 100%"
-												       pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-												       value="<?php echo !empty($processing_schedule->$day->startTime) ? Display::escHtml($processing_schedule->$day->startTime) : ''; ?>"
+                                            </p>
+                                            <p>
+                                                <input type="text"
+                                                       id="<?php echo $day; ?>_start"
+                                                       class="<?php echo $day; ?>-times"
+                                                       name="<?php echo $day; ?>_start"
+                                                       placeholder="Start Time"
+                                                       style="width: 100%"
+                                                       pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
+                                                       value="<?php echo !empty($processing_schedule->$day->startTime) ? Display::escHtml($processing_schedule->$day->startTime) : ''; ?>"
                                                     <?php echo empty($processing_schedule->$day->enabled) ? ' disabled' : ''; ?>><br/>
-												<input type="text"
-												       id="<?php echo $day; ?>_end"
-												       class="<?php echo $day; ?>-times"
-												       name="<?php echo $day; ?>_end"
-												       placeholder="End Time"
-												       style="width: 100%"
-												       pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
-												       value="<?php echo !empty($processing_schedule->$day->endTime) ? Display::escHtml($processing_schedule->$day->endTime) : ''; ?>"
+                                                <input type="text"
+                                                       id="<?php echo $day; ?>_end"
+                                                       class="<?php echo $day; ?>-times"
+                                                       name="<?php echo $day; ?>_end"
+                                                       placeholder="End Time"
+                                                       style="width: 100%"
+                                                       pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]"
+                                                       value="<?php echo !empty($processing_schedule->$day->endTime) ? Display::escHtml($processing_schedule->$day->endTime) : ''; ?>"
                                                     <?php echo empty($processing_schedule->$day->enabled) ? ' disabled' : ''; ?>>
-											</p>
-										</td>
+                                            </p>
+                                        </td>
                                     <?php } ?>
-								</tr>
-							</table>
-							<p>Enter start/end time in 24 hour format (HH:MM).</p>
-						</td>
-					</tr>
-				</table>
-			</form>
-			<script type="text/javascript" language="javascript">
+                                </tr>
+                            </table>
+                            <p>Enter start/end time in 24 hour format (HH:MM).</p>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <script type="text/javascript" language="javascript">
 
-				function enableTextBox(classname) {
-					if (document.getElementById(classname).checked == true) {
-						var status = false;
-					} else {
-						var status = true;
-					}
-					var allItems = document.getElementsByClassName(classname);
-					for (var i = 0; i < allItems.length; i++) {
-						allItems[i].disabled = status;
-					}
-				}
+                function enableTextBox(classname) {
+                    if (document.getElementById(classname).checked == true) {
+                        var status = false;
+                    } else {
+                        var status = true;
+                    }
+                    var allItems = document.getElementsByClassName(classname);
+                    for (var i = 0; i < allItems.length; i++) {
+                        allItems[i].disabled = status;
+                    }
+                }
 
-				$('input[name=launchDate]').datepicker({
-					// Consistent format with the HTML5 picker
-					dateFormat: 'yy-mm-dd'
-				});
-			</script>
+                $('input[name=launchDate]').datepicker({
+                    // Consistent format with the HTML5 picker
+                    dateFormat: 'yy-mm-dd'
+                });
+            </script>
             <?php
             break;
 
@@ -1874,81 +1980,94 @@ if (isset($_REQUEST['d'])) {
             <?php
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch feed information.</p>
+                <p>Database failure - could not fetch feed information.</p>
                 <?php
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Error fetching feed information - feed does not exist.</p>
+                <p>Error fetching feed information - feed does not exist.</p>
                 <?php
             } else {
                 ?>
-				<p>Exporting Data from Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
-				<form id="form-export">
-					<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
-					<input type="hidden" name="a" value="exportData"/>
-					<input type="hidden" name="label" value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>
-					<table class="table table-bordered table-condensed table-striped">
-						<tr>
-							<td colspan='2'><p class='aCenter'>Export Settings</p></td>
-						</tr>
-						<tr>
-							<td>
-								Period
-							</td>
-							<td>
-								<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
-								<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date("Y-m-d"); ?>'/>
-									to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'/></p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								URLs
-							</td>
-							<td>
-								<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
-								<p><a href='#' class='nonLink' onclick='element("export_<?php echo $idFeedOut; ?>_urls", "urlField", {"idFeedOut": <?php echo $idFeedOut; ?>} );'>Add URL</a></p>
-								<div>
-									<div id='export_<?php echo $idFeedOut; ?>_urls'>
-									</div>
-								</div>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								Email domains
-							</td>
-							<td>
-								<p>Email domains to limit the selection by. Leave blank to select all records regardless of email address. Do not include the @ symbol.</p>
-								<p><a href='#' class='nonLink' onclick='element("export_<?php echo $idFeedOut; ?>_emails", "emailField", {"idFeedOut": <?php echo $idFeedOut; ?>} );'>Add email domain</a></p>
-								<div>
-									<div id='export_<?php echo $idFeedOut; ?>_emails'>
-									</div>
-								</div>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								Limit</p>
-							</td>
-							<td>
-								<p>Set a limit on the number of records that are returned. Leave blank to return ALL records.</p>
-								<p><input type="text" name="limit" value=""/></p>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								Rejects</p>
-							</td>
-							<td>
-								<p><input type="checkbox" name="includeRejects" value="1"/> Include rejected records in the export.</p>
-							</td>
-						</tr>
-					</table>
-				</form>
+                <p>Exporting Data from Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
+                <form id="form-export">
+                    <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+                    <input type="hidden" name="a" value="exportData"/>
+                    <input type="hidden" name="label"
+                           value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>
+                    <table class="table table-bordered table-condensed table-striped">
+                        <tr>
+                            <td colspan='2'><p class='aCenter'>Export Settings</p></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Period
+                            </td>
+                            <td>
+                                <p>Period goes from midnight of the first date to midnight of the second date. Leave
+                                    blank to select from all time records. (This could take a long time.)</p>
+                                <p><input type='text' name='dateStart' class='dateSelector'
+                                          value='<?php echo date("Y-m-d"); ?>'/>
+                                    to <input type='text' name='dateEnd' class='dateSelector'
+                                              value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'/></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                URLs
+                            </td>
+                            <td>
+                                <p>URLs to limit the selection by. Leave blank to select all records regardless of
+                                    URL.</p>
+                                <p><a href='#' class='nonLink'
+                                      onclick='element("export_<?php echo $idFeedOut; ?>_urls", "urlField", {"idFeedOut": <?php echo $idFeedOut; ?>} );'>Add
+                                        URL</a></p>
+                                <div>
+                                    <div id='export_<?php echo $idFeedOut; ?>_urls'>
+                                    </div>
+                                </div>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Email domains
+                            </td>
+                            <td>
+                                <p>Email domains to limit the selection by. Leave blank to select all records regardless
+                                    of email address. Do not include the @ symbol.</p>
+                                <p><a href='#' class='nonLink'
+                                      onclick='element("export_<?php echo $idFeedOut; ?>_emails", "emailField", {"idFeedOut": <?php echo $idFeedOut; ?>} );'>Add
+                                        email
+                                        domain</a></p>
+                                <div>
+                                    <div id='export_<?php echo $idFeedOut; ?>_emails'>
+                                    </div>
+                                </div>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Limit</p>
+                            </td>
+                            <td>
+                                <p>Set a limit on the number of records that are returned. Leave blank to return ALL
+                                    records.</p>
+                                <p><input type="text" name="limit" value=""/></p>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Rejects</p>
+                            </td>
+                            <td>
+                                <p><input type="checkbox" name="includeRejects" value="1"/> Include rejected records in
+                                    the export.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
                 <?php
             }
             break;
@@ -1975,11 +2094,11 @@ if (isset($_REQUEST['d'])) {
             <?php
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch feed information.</p>
+                <p>Database failure - could not fetch feed information.</p>
                 <?php
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Error fetching feed information - feed does not exist.</p>
+                <p>Error fetching feed information - feed does not exist.</p>
                 <?php
             } else {
 
@@ -1991,21 +2110,22 @@ if (isset($_REQUEST['d'])) {
                 } else {
 
                     ?>
-					<p>Importing Data into Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
-					<form id="form-import">
-						<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
-						<input type="hidden" name="a" value="import-legacy-data"/>
-						<input type="hidden" name="label" value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>
-						<table class="table table-bordered table-condensed table-striped">
-							<tr>
-								<td colspan='2'><p class='aCenter'>Import Settings</p></td>
-							</tr>
-							<tr>
-								<td>
-									Inbound population
-								</td>
-								<td>
-									<select name="idAssoc">
+                    <p>Importing Data into Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
+                    <form id="form-import">
+                        <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+                        <input type="hidden" name="a" value="import-legacy-data"/>
+                        <input type="hidden" name="label"
+                               value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>
+                        <table class="table table-bordered table-condensed table-striped">
+                            <tr>
+                                <td colspan='2'><p class='aCenter'>Import Settings</p></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Inbound population
+                                </td>
+                                <td>
+                                    <select name="idAssoc">
                                         <?php foreach ($populations as $population) {
                                             $feedIn = $leads->getInboundFeed($population->idFeedIn);
                                             printf('<option value="%s">Pop #%s - Feed In #%s (%s)</option>' . PHP_EOL,
@@ -2015,41 +2135,48 @@ if (isset($_REQUEST['d'])) {
                                                 htmlspecialchars($feedIn->label, ENT_QUOTES)
                                             );
                                         } ?>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Period
-								</td>
-								<td>
-									<p>Period goes from midnight of the first date to 11:59p of the second date. Maximum of 6 months in the past.</p>
-									<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date("Y-m-d"); ?>'/>
-										to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'/></p>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Limit</p>
-								</td>
-								<td>
-									<p>Set a limit on the number of records that are returned. Leave blank to return ALL records.</p>
-									<p><input type="text" name="limit" value=""/></p>
-									</p>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									Rejects</p>
-								</td>
-								<td>
-									<p><input type="checkbox" name="includeLiveRejects" value="1" checked="checked"/> Include live feed rejections in the import.</p>
-									<p><input type="checkbox" name="includeChokeRejects" value="1" checked="checked"/> Include choked records in the import.</p>
-									<p><input type="checkbox" name="includeStandardRejects" value="1"/> Include standard inbound rejections in the import.</p>
-								</td>
-							</tr>
-						</table>
-					</form>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Period
+                                </td>
+                                <td>
+                                    <p>Period goes from midnight of the first date to 11:59p of the second date. Maximum
+                                        of 6 months in the past.</p>
+                                    <p><input type='text' name='dateStart' class='dateSelector'
+                                              value='<?php echo date("Y-m-d"); ?>'/>
+                                        to <input type='text' name='dateEnd' class='dateSelector'
+                                                  value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'/></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Limit</p>
+                                </td>
+                                <td>
+                                    <p>Set a limit on the number of records that are returned. Leave blank to return ALL
+                                        records.</p>
+                                    <p><input type="text" name="limit" value=""/></p>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Rejects</p>
+                                </td>
+                                <td>
+                                    <p><input type="checkbox" name="includeLiveRejects" value="1" checked="checked"/>
+                                        Include live feed rejections in the import.</p>
+                                    <p><input type="checkbox" name="includeChokeRejects" value="1" checked="checked"/>
+                                        Include choked records in the import.</p>
+                                    <p><input type="checkbox" name="includeStandardRejects" value="1"/> Include standard
+                                        inbound rejections in the import.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
                     <?php
                 }
             }
@@ -2072,11 +2199,11 @@ if (isset($_REQUEST['d'])) {
 
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch feed information.</p>
+                <p>Database failure - could not fetch feed information.</p>
                 <?php
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Error fetching feed information - feed does not exist.</p>
+                <p>Error fetching feed information - feed does not exist.</p>
                 <?php
             } else {
 
@@ -2084,82 +2211,90 @@ if (isset($_REQUEST['d'])) {
 
                 ?>
                 <script type="text/template" id="qq-template">
-					<div class="qq-uploader-selector qq-uploader" qq-drop-area-text="Drop file here">
-						<div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">
-							<div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-total-progress-bar-selector qq-progress-bar qq-total-progress-bar"></div>
-						</div>
-						<div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
-							<span class="qq-upload-drop-area-text-selector"></span>
-						</div>
-						<div class="qq-upload-button-selector qq-upload-button">
-							<div>Upload a file</div>
-						</div>
-						<span class="qq-drop-processing-selector qq-drop-processing">
+                    <div class="qq-uploader-selector qq-uploader" qq-drop-area-text="Drop file here">
+                        <div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">
+                            <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                                 class="qq-total-progress-bar-selector qq-progress-bar qq-total-progress-bar"></div>
+                        </div>
+                        <div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
+                            <span class="qq-upload-drop-area-text-selector"></span>
+                        </div>
+                        <div class="qq-upload-button-selector qq-upload-button">
+                            <div>Upload a file</div>
+                        </div>
+                        <span class="qq-drop-processing-selector qq-drop-processing">
                     <span>Processing dropped file...</span>
                     <span class="qq-drop-processing-spinner-selector qq-drop-processing-spinner"></span>
                 </span>
-						<ul class="qq-upload-list-selector qq-upload-list" aria-live="polite" aria-relevant="additions removals">
-							<li>
-								<div class="qq-progress-bar-container-selector">
-									<div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-progress-bar-selector qq-progress-bar"></div>
-								</div>
-								<span class="qq-upload-spinner-selector qq-upload-spinner"></span>
-								<img class="qq-thumbnail-selector" qq-max-size="100" qq-server-scale>
-								<span class="qq-upload-file-selector qq-upload-file"></span>
-								<span class="qq-upload-size-selector qq-upload-size"></span>
-								<button type="button" class="qq-btn qq-upload-cancel-selector qq-upload-cancel">Cancel</button>
-								<button type="button" class="qq-btn qq-upload-retry-selector qq-upload-retry">Retry</button>
-								<button type="button" class="qq-btn qq-upload-delete-selector qq-upload-delete">Delete</button>
-								<span role="status" class="qq-upload-status-text-selector qq-upload-status-text"></span>
-							</li>
-						</ul>
+                        <ul class="qq-upload-list-selector qq-upload-list" aria-live="polite"
+                            aria-relevant="additions removals">
+                            <li>
+                                <div class="qq-progress-bar-container-selector">
+                                    <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                                         class="qq-progress-bar-selector qq-progress-bar"></div>
+                                </div>
+                                <span class="qq-upload-spinner-selector qq-upload-spinner"></span>
+                                <img class="qq-thumbnail-selector" qq-max-size="100" qq-server-scale>
+                                <span class="qq-upload-file-selector qq-upload-file"></span>
+                                <span class="qq-upload-size-selector qq-upload-size"></span>
+                                <button type="button" class="qq-btn qq-upload-cancel-selector qq-upload-cancel">Cancel
+                                </button>
+                                <button type="button" class="qq-btn qq-upload-retry-selector qq-upload-retry">Retry
+                                </button>
+                                <button type="button" class="qq-btn qq-upload-delete-selector qq-upload-delete">Delete
+                                </button>
+                                <span role="status" class="qq-upload-status-text-selector qq-upload-status-text"></span>
+                            </li>
+                        </ul>
 
-						<dialog class="qq-alert-dialog-selector">
-							<div class="qq-dialog-message-selector"></div>
-							<div class="qq-dialog-buttons">
-								<button type="button" class="qq-cancel-button-selector">Close</button>
-							</div>
-						</dialog>
+                        <dialog class="qq-alert-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">Close</button>
+                            </div>
+                        </dialog>
 
-						<dialog class="qq-confirm-dialog-selector">
-							<div class="qq-dialog-message-selector"></div>
-							<div class="qq-dialog-buttons">
-								<button type="button" class="qq-cancel-button-selector">No</button>
-								<button type="button" class="qq-ok-button-selector">Yes</button>
-							</div>
-						</dialog>
+                        <dialog class="qq-confirm-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">No</button>
+                                <button type="button" class="qq-ok-button-selector">Yes</button>
+                            </div>
+                        </dialog>
 
-						<dialog class="qq-prompt-dialog-selector">
-							<div class="qq-dialog-message-selector"></div>
-							<input type="text">
-							<div class="qq-dialog-buttons">
-								<button type="button" class="qq-cancel-button-selector">Cancel</button>
-								<button type="button" class="qq-ok-button-selector">Ok</button>
-							</div>
-						</dialog>
-					</div>
-				</script>
-				<p><strong>Company:</strong> <?php echo Display::escHtml($company->name); ?></p>
-				<p><strong>Feed:</strong> <?php echo Display::escHtml($feed->label); ?> (#<?php echo $feed->idFeedOut; ?>)</p>
+                        <dialog class="qq-prompt-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <input type="text">
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">Cancel</button>
+                                <button type="button" class="qq-ok-button-selector">Ok</button>
+                            </div>
+                        </dialog>
+                    </div>
+                </script>
+                <p><strong>Company:</strong> <?php echo Display::escHtml($company->name); ?></p>
+                <p><strong>Feed:</strong> <?php echo Display::escHtml($feed->label); ?>(#<?php echo $feed->idFeedOut; ?>
+                    )</p>
 
-				<form enctype="multipart/form-data" id="form-upload" action="mgr_import.php" method="post" target="_blank">
-					<input type="hidden" name="destination" value="<?php echo intval($idFeedOut); ?>"/>
-					<input type="hidden" name="type" value="upload-outbound"/>
-					<input type="hidden" name="a" value="import"/>
-					<input type="hidden" name="filename" value=""/>
-					<input type="hidden" name="uuid" value=""/>
+                <form enctype="multipart/form-data" id="form-upload" action="mgr_import.php" method="post"
+                      target="_blank">
+                    <input type="hidden" name="destination" value="<?php echo intval($idFeedOut); ?>"/>
+                    <input type="hidden" name="type" value="upload-outbound"/>
+                    <input type="hidden" name="a" value="import"/>
+                    <input type="hidden" name="filename" value=""/>
+                    <input type="hidden" name="uuid" value=""/>
 
-					<table class="table table-bordered table-condensed table-striped">
-						<tr>
+                    <table class="table table-bordered table-condensed table-striped">
+                        <tr>
                             <td>File</p></td>
-							<td>
-								<p>Please select the file to upload from your computer. File must be in CSV format.</p>
-								<div id="import-uploader"></div>
-							</td>
-						</tr>
-						<tr>
-							<td>Field mapping</p></td>
-							<td>
+                            <td>
+                                <p>Please select the file to upload from your computer. File must be in CSV format.</p>
+                                <div id="import-uploader"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Field mapping</p></td>
+                            <td>
                                 <?php
                                 $allowedFields = $recordFields;
                                 $requiredFields = array('url', 'ip', 'stamp', 'email');
@@ -2186,57 +2321,57 @@ if (isset($_REQUEST['d'])) {
                                 }
 
                                 ?>
-							</td>
-						</tr>
-					</table>
-				</form>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
                 <script>
-					var importUploader = new qq.FineUploader({
-						callbacks: {
-							onComplete: function (id, name, responseJSON) {
-								if (responseJSON.success) {
-									$("#form-upload input[name='filename']").val(importUploader.getName(id));
-									$("#form-upload input[name='uuid']").val(importUploader.getUuid(id));
-								}
-							},
-						},
-						chunking: {
-							concurrent: {
-								enabled: true
-							},
-							enabled: true,
-							success: {
-								endpoint: '/leadadmin/ajax/fileUpload.php?done=1'
-							}
-						},
-						debug: <?php print ('development' === APPLICATION_ENV ? "true" : "false"); ?>,
-						element: document.getElementById("import-uploader"),
-						failedUploadTextDisplay: {
-							mode: 'custom'
-						},
-						multiple: false,
-						request: {
-							endpoint: '/leadadmin/ajax/fileUpload.php',
-							params: {
-								'type': 'upload-outbound',
-							},
-						},
-						retry: {
-							enableAuto: true
-						},
-						template: 'qq-template',
-						thumbnails: {
-							placeholders: {
-								waitingPath: '/leadadmin/libraries/fine-uploader/placeholders/waiting-generic.png',
-								notAvailablePath: '/leadadmin/libraries/fine-uploader/placeholders/not_available-generic.png'
-							}
-						},
-						validation: {
-							allowedExtensions: ['csv', 'txt'],
-							itemLimit: 1
-						}
-					});
-				</script>
+                    var importUploader = new qq.FineUploader({
+                        callbacks: {
+                            onComplete: function (id, name, responseJSON) {
+                                if (responseJSON.success) {
+                                    $("#form-upload input[name='filename']").val(importUploader.getName(id));
+                                    $("#form-upload input[name='uuid']").val(importUploader.getUuid(id));
+                                }
+                            },
+                        },
+                        chunking: {
+                            concurrent: {
+                                enabled: true
+                            },
+                            enabled: true,
+                            success: {
+                                endpoint: '/leadadmin/ajax/fileUpload.php?done=1'
+                            }
+                        },
+                        debug: <?php print ('development' === APPLICATION_ENV ? "true" : "false"); ?>,
+                        element: document.getElementById("import-uploader"),
+                        failedUploadTextDisplay: {
+                            mode: 'custom'
+                        },
+                        multiple: false,
+                        request: {
+                            endpoint: '/leadadmin/ajax/fileUpload.php',
+                            params: {
+                                'type': 'upload-outbound',
+                            },
+                        },
+                        retry: {
+                            enableAuto: true
+                        },
+                        template: 'qq-template',
+                        thumbnails: {
+                            placeholders: {
+                                waitingPath: '/leadadmin/libraries/fine-uploader/placeholders/waiting-generic.png',
+                                notAvailablePath: '/leadadmin/libraries/fine-uploader/placeholders/not_available-generic.png'
+                            }
+                        },
+                        validation: {
+                            allowedExtensions: ['csv', 'txt'],
+                            itemLimit: 1
+                        }
+                    });
+                </script>
                 <?php
             }
             break;
@@ -2263,11 +2398,11 @@ if (isset($_REQUEST['d'])) {
             <?php
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch feed information.</p>
+                <p>Database failure - could not fetch feed information.</p>
                 <?php
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Error fetching feed information - feed does not exist.</p>
+                <p>Error fetching feed information - feed does not exist.</p>
                 <?php
             } else {
 
@@ -2279,27 +2414,31 @@ if (isset($_REQUEST['d'])) {
                 } else {
 
                     ?>
-					<p>Retry rejections for Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
-					<form id="form-import">
-						<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
-						<input type="hidden" name="a" value="retry-outbound-rejections"/>
-						<input type="hidden" name="label" value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>
-						<table class="table table-bordered table-condensed table-striped">
-							<tr>
-								<td colspan='2'><p class='aCenter'>Retry Rejections Settings</p></td>
-							</tr>
-							<tr>
-								<td>
-									Period
-								</td>
-								<td>
-									<p>Period goes from midnight of the first date to 11:59p of the second date. Maximum of 6 months in the past.</p>
-									<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date("Y-m-d"); ?>'/>
-										to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'/></p>
-								</td>
-							</tr>
-						</table>
-					</form>
+                    <p>Retry rejections for Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
+                    <form id="form-import">
+                        <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+                        <input type="hidden" name="a" value="retry-outbound-rejections"/>
+                        <input type="hidden" name="label"
+                               value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>
+                        <table class="table table-bordered table-condensed table-striped">
+                            <tr>
+                                <td colspan='2'><p class='aCenter'>Retry Rejections Settings</p></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Period
+                                </td>
+                                <td>
+                                    <p>Period goes from midnight of the first date to 11:59p of the second date. Maximum
+                                        of 6 months in the past.</p>
+                                    <p><input type='text' name='dateStart' class='dateSelector'
+                                              value='<?php echo date("Y-m-d"); ?>'/>
+                                        to <input type='text' name='dateEnd' class='dateSelector'
+                                                  value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'/></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
                     <?php
                 }
             }
@@ -2319,7 +2458,8 @@ if (isset($_REQUEST['d'])) {
             }
 
             $_REQUEST['dateStart'] = !empty($_REQUEST['dateStart']) ? $_REQUEST['dateStart'] : date("Y-m-d");
-            $_REQUEST['dateEnd'] = !empty($_REQUEST['dateEnd']) ? $_REQUEST['dateEnd'] : date("Y-m-d", strtotime('Tomorrow'));
+            $_REQUEST['dateEnd'] = !empty($_REQUEST['dateEnd']) ? $_REQUEST['dateEnd'] : date("Y-m-d",
+                strtotime('Tomorrow'));
             $_REQUEST['urlList'] = !empty($_REQUEST['urlList']) && is_array($_REQUEST['urlList']) ? $_REQUEST['urlList'] : array();
             $_REQUEST['breakdown'] = !empty($_REQUEST['breakdown']) ? $_REQUEST['breakdown'] : 'day';
             $_REQUEST['sort'] = !empty($_REQUEST['sort']) ? $_REQUEST['sort'] : 'date';
@@ -2329,50 +2469,58 @@ if (isset($_REQUEST['d'])) {
 
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch feed information.</p>
+                <p>Database failure - could not fetch feed information.</p>
                 <?php
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Error fetching feed information - feed does not exist.</p>
+                <p>Error fetching feed information - feed does not exist.</p>
                 <?php
             } else {
                 ?>
-				<p>Feed ID: <strong><?php echo $feed->idFeedOut; ?></strong><br/>Feed Label: <strong><?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?></strong></p>
+                <p>Feed ID: <strong><?php echo $feed->idFeedOut; ?></strong><br/>Feed Label:
+                    <strong><?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?></strong></p>
 
-				<form id="form-urlreport" class="form-inlin1e">
-					<input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
-					<input type="hidden" name="d" value="dialog_urlreport"/>
-					<input type="hidden" name="submit" value="submit"/>
+                <form id="form-urlreport" class="form-inlin1e">
+                    <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+                    <input type="hidden" name="d" value="dialog_urlreport"/>
+                    <input type="hidden" name="submit" value="submit"/>
 
-					<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
-					<div class="form-group">
-						<label for="dateStart">Start Date:</label>
-						<input type="text" id="dateStart" name="dateStart" class="form-control dateSelector" value="<?php echo htmlspecialchars($_REQUEST['dateStart'], ENT_QUOTES); ?>"/>
-					</div>
+                    <p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select
+                        from all time records. (This could take a long time.)</p>
+                    <div class="form-group">
+                        <label for="dateStart">Start Date:</label>
+                        <input type="text" id="dateStart" name="dateStart" class="form-control dateSelector"
+                               value="<?php echo htmlspecialchars($_REQUEST['dateStart'], ENT_QUOTES); ?>"/>
+                    </div>
 
-					<div class="form-group">
-						<label for="dateEnd">End Date:</label>
-						<input type="text" id="dateEnd" name="dateEnd" class="form-control dateSelector" value="<?php echo htmlspecialchars($_REQUEST['dateEnd'], ENT_QUOTES); ?>"/>
-					</div>
+                    <div class="form-group">
+                        <label for="dateEnd">End Date:</label>
+                        <input type="text" id="dateEnd" name="dateEnd" class="form-control dateSelector"
+                               value="<?php echo htmlspecialchars($_REQUEST['dateEnd'], ENT_QUOTES); ?>"/>
+                    </div>
 
-					<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
-					<div class="form-group">
-						<label for="urls">URLs:</label>
+                    <p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
+                    <div class="form-group">
+                        <label for="urls">URLs:</label>
                         <?php
                         $urls = $leads->getOutboundURLDates($idFeedOut);
                         if ($urls && is_array($urls)) {
-                            printf("<select class=\"form-control\" id=\"urls\" multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n", sizeOf($urls));
+                            printf("<select class=\"form-control\" id=\"urls\" multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n",
+                                sizeOf($urls));
                             foreach ($urls as $url) {
-                                printf("<option value=\"%s\"%s>%s (%s)</option>\n", htmlspecialchars($url['url'], ENT_QUOTES), in_array($url['url'], $_REQUEST['urlList']) ? ' selected="selected"' : '', htmlspecialchars($url['url']), $url['date']);
+                                printf("<option value=\"%s\"%s>%s (%s)</option>\n",
+                                    htmlspecialchars($url['url'], ENT_QUOTES),
+                                    in_array($url['url'], $_REQUEST['urlList']) ? ' selected="selected"' : '',
+                                    htmlspecialchars($url['url']), $url['date']);
                             }
                             print "</select>\n";
                         }
                         ?>
-					</div>
+                    </div>
 
-					<div class="form-group">
-						<label for="breakdown">Count By:</label>
-						<select class="form-control" id="breakdown" name="breakdown">
+                    <div class="form-group">
+                        <label for="breakdown">Count By:</label>
+                        <select class="form-control" id="breakdown" name="breakdown">
                             <?php
                             $choices = array(
                                 'day' => 'Day',
@@ -2388,12 +2536,12 @@ if (isset($_REQUEST['d'])) {
                                 );
                             }
                             ?>
-						</select>
-					</div>
+                        </select>
+                    </div>
 
-					<div class="form-group">
-						<label for="id">Sort By:</label>
-						<select class="form-control" id="sort" name="sort">
+                    <div class="form-group">
+                        <label for="id">Sort By:</label>
+                        <select class="form-control" id="sort" name="sort">
                             <?php
                             $choices = array(
                                 'date' => 'Date',
@@ -2408,12 +2556,12 @@ if (isset($_REQUEST['d'])) {
                                 );
                             }
                             ?>
-						</select>
-					</div>
+                        </select>
+                    </div>
 
-					<div class="form-group">
-						<label for="id">Group By:</label>
-						<select class="form-control" id="group" name="group">
+                    <div class="form-group">
+                        <label for="id">Group By:</label>
+                        <select class="form-control" id="group" name="group">
                             <?php
                             $choices = array(
                                 'date' => 'Date',
@@ -2427,19 +2575,21 @@ if (isset($_REQUEST['d'])) {
                                 );
                             }
                             ?>
-						</select>
-					</div>
+                        </select>
+                    </div>
 
-				</form>
+                </form>
                 <?php
 
                 if (!empty($_REQUEST['submit'])) {
 
-                    $stats = $leads->getOutboundURLStatsReport($_REQUEST['idFeedOut'], $_REQUEST['urlList'], $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'], $_REQUEST['group']);
+                    $stats = $leads->getOutboundURLStatsReport($_REQUEST['idFeedOut'], $_REQUEST['urlList'],
+                        $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'],
+                        $_REQUEST['group']);
 
                     if (empty($stats)) {
                         ?>
-						<p>No records found.</p>
+                        <p>No records found.</p>
                         <?php
                     } else {
 
@@ -2448,7 +2598,7 @@ if (isset($_REQUEST['d'])) {
                         $file = fopen($filePath, "w");
                         if (!file_exists($filePath)) {
                             ?>
-							<p>Failed to create CSV report file.</p>
+                            <p>Failed to create CSV report file.</p>
                             <?php
                         } else {
                             $accepted = 0;
@@ -2467,14 +2617,20 @@ if (isset($_REQUEST['d'])) {
                             print "\t<tr>\n";
                             foreach ($stats as $stat) {
                                 print "\t<tr>\n";
-                                printf("\t\t<td>%s</td>\n", htmlspecialchars('date' == $_REQUEST['group'] ? 'N/A' : $stat['url']));
+                                printf("\t\t<td>%s</td>\n",
+                                    htmlspecialchars('date' == $_REQUEST['group'] ? 'N/A' : $stat['url']));
                                 printf("\t\t<td>%s</td>\n", htmlspecialchars($stat['date']));
                                 printf("\t\t<td>%s</td>\n", number_format($stat['accepted'], 0));
                                 printf("\t\t<td>%s</td>\n", number_format($stat['rejected'], 0));
                                 print "\t</tr>\n";
                                 $accepted += $stat['accepted'];
                                 $rejected += $stat['rejected'];
-                                fputcsv($file, array('date' == $_REQUEST['group'] ? 'N/A' : $stat['url'], $stat['date'], $stat['accepted'], $stat['rejected']));
+                                fputcsv($file, array(
+                                    'date' == $_REQUEST['group'] ? 'N/A' : $stat['url'],
+                                    $stat['date'],
+                                    $stat['accepted'],
+                                    $stat['rejected'],
+                                ));
                             }
                             fclose($file);
                             print "\t<tr>\n";
@@ -2496,47 +2652,54 @@ if (isset($_REQUEST['d'])) {
         case 'staticField':
             $e = $_REQUEST['e'] ?? '';
             ?>
-			<div>
-				<input type='text' name='staticFields_field[]' value=''/> = <input type='text' name='staticFields_value[]' value=''/>
-				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-			</div>
+            <div>
+                <input type='text' name='staticFields_field[]' value=''/> = <input type='text'
+                                                                                   name='staticFields_value[]'
+                                                                                   value=''/>
+                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+            </div>
             <?php
             break;
         case 'urlassignment':
             $e = $_REQUEST['e'] ?? '';
             ?>
-			<div>
-				<input type='text' name='urlassignments_url[]' value='' placeholder='URL'/> = <input type='text' name='urlassignments_id[]' value='' placeholder='Unique ID'/>
-				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-			</div>
+            <div>
+                <input type='text' name='urlassignments_url[]' value='' placeholder='URL'/> = <input type='text'
+                                                                                                     name='urlassignments_id[]'
+                                                                                                     value=''
+                                                                                                     placeholder='Unique ID'/>
+                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+            </div>
             <?php
             break;
         case 'varField':
             $e = $_REQUEST['e'] ?? '';
             ?>
-			<div>
-				API Field: <input type='text' name='varFields[]' value=''/> Mapped To: <select name='fieldMap[]'>
+            <div>
+                API Field: <input type='text' name='varFields[]' value=''/> Mapped To: <select name='fieldMap[]'>
                     <?php foreach ($allAvailableFields as $rF) { ?>
-						<option value='<?php echo Display::escHtml($rF->fieldName, ENT_QUOTES); ?>'><?php echo Display::escHtml($rF->fieldName); ?></option>
+                        <option value='<?php echo Display::escHtml($rF->fieldName,
+                            ENT_QUOTES); ?>'><?php echo Display::escHtml($rF->fieldName); ?></option>
                     <?php } ?>
-				</select>
-				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-			</div>
+                </select>
+                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+            </div>
             <?php
             break;
         case 'varValue':
             $e = $_REQUEST['e'] ?? '';
             ?>
-			<div>
-				Field: <select name='valueMap[field][]'>
+            <div>
+                Field: <select name='valueMap[field][]'>
                     <?php foreach ($recordFields as $rF) { ?>
-						<option value='<?php echo Display::escHtml($rF, ENT_QUOTES); ?>'><?php echo Display::escHtml($rF); ?></option>
+                        <option value='<?php echo Display::escHtml($rF,
+                            ENT_QUOTES); ?>'><?php echo Display::escHtml($rF); ?></option>
                     <?php } ?>
-				</select>
-				Incoming Value: <input type='text' name='valueMap[oldValue][]' value=''/>
-				Outgoing Value: <input type='text' name='valueMap[newValue][]' value=''/>
-				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-			</div>
+                </select>
+                Incoming Value: <input type='text' name='valueMap[oldValue][]' value=''/>
+                Outgoing Value: <input type='text' name='valueMap[newValue][]' value=''/>
+                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+            </div>
             <?php
             break;
         case 'dialog_editpopsetting':
@@ -2545,7 +2708,7 @@ if (isset($_REQUEST['d'])) {
             $popset = $leads->getPopulationSetting($idAssoc);
             if (empty($popset)) {
                 ?>
-				<p>Database failure - could not fetch population setting.</p>
+                <p>Database failure - could not fetch population setting.</p>
                 <?php
                 exit;
             }
@@ -2609,456 +2772,511 @@ if (isset($_REQUEST['d'])) {
                 $incomingFeeds = $leads->getInboundFeeds($idCompany, 'active');
             }
             ?>
-			<form id="<?php echo $mode; ?>_pop">
-				<input type="hidden" name="idAssoc" value="<?php echo $popset_idAssoc; ?>"/>
-				<input type="hidden" name="idFeedOut" value="<?php echo $popset_idFeedOut; ?>"/>
-				<input type="hidden" name="a" value="managePopulation"/>
-				<input type="hidden" name="action" value="<?php echo $mode; ?>"/>
-				<table class="table table-bordered table-condensed table-striped">
+            <form id="<?php echo $mode; ?>_pop">
+                <input type="hidden" name="idAssoc" value="<?php echo $popset_idAssoc; ?>"/>
+                <input type="hidden" name="idFeedOut" value="<?php echo $popset_idFeedOut; ?>"/>
+                <input type="hidden" name="a" value="managePopulation"/>
+                <input type="hidden" name="action" value="<?php echo $mode; ?>"/>
+                <table class="table table-bordered table-condensed table-striped">
                     <?php if ('edit' === $mode) { ?>
-						<tr>
-							<td>Population ID</td>
-							<td><?php echo $popset_idAssoc; ?></td>
-						</tr>
+                        <tr>
+                            <td>Population ID</td>
+                            <td><?php echo $popset_idAssoc; ?></td>
+                        </tr>
                     <?php } ?>
-					<tr>
-						<td><p>Incoming Feed (To Populate From)</p></td>
-						<td>
+                    <tr>
+                        <td><p>Incoming Feed (To Populate From)</p></td>
+                        <td>
                             <p>
                                 <input id="popIndividual" type="radio" name="populationType" value="individual"
                                     <?php if ($popset_populationType != 'category') {
                                         echo " checked";
-                                } ?>> Individual Feed Population<br>
+                                    } ?>> Individual Feed Population<br/>
                                 <input id="popCategory" type="radio" name="populationType" value="category"
                                     <?php if ($popset_populationType == 'category') {
                                         echo " checked";
-                                } ?>> Feed Category Population
+                                    } ?>> Feed Category Population
                             </p>
-							<p id="selectIndividual">
-								<select name="idFeedIn">
-									<option></option>
-                                    <?php
-                                    $lastCompany = '';
-                                    foreach ($incomingFeeds as $fI) {
-                                        if ($lastCompany !== $fI->name) {
-                                            $lastCompany = $fI->name;
-                                            printf('<optgroup label="%s">' . PHP_EOL,
-                                                Display::escHtml($fI->name, ENT_QUOTES | ENT_HTML5)
-                                            );
+                            <div id="selectIndividual">
+                                <p>
+                                    <select name="idFeedIn">
+                                        <option></option>
+                                        <?php
+                                        $lastCompany = '';
+                                        foreach ($incomingFeeds as $fI) {
+                                            if ($lastCompany !== $fI->name) {
+                                                $lastCompany = $fI->name;
+                                                printf('<optgroup label="%s">' . PHP_EOL,
+                                                    Display::escHtml($fI->name, ENT_QUOTES | ENT_HTML5)
+                                                );
+                                            }
+                                            ?>
+                                            <option value='<?php echo $fI->idFeedIn; ?>'
+                                                <?php if ($fI->idFeedIn == $popset_idFeedIn) {
+                                                    echo "selected='selected'";
+                                                } ?>
+                                            >(<?php echo $fI->idFeedIn; ?>
+                                                ) <?php echo Display::escHtml($fI->label); ?></option>
+                                            <?php
+                                            if ($lastCompany !== $fI->name) {
+                                                $lastCompany = $fI->name;
+                                                print '</optgroup>' . PHP_EOL;
+                                            }
                                         }
                                         ?>
-										<option value='<?php echo $fI->idFeedIn; ?>'
-                                            <?php if ($fI->idFeedIn == $popset_idFeedIn) {
-                                                echo "selected='selected'";
-                                            } ?>
-										>(<?php echo $fI->idFeedIn; ?>) <?php echo Display::escHtml($fI->label); ?></option>
-                                        <?php
-                                        if ($lastCompany !== $fI->name) {
-                                            $lastCompany = $fI->name;
-                                            print '</optgroup>' . PHP_EOL;
-                                        }
-                                    }
-                                    ?>
-								</select>
-							</p>
-                            <p id="selectCategory">
-                                <input type="radio" name="feedCategory" value="email"
-                                    <?php if ($popset_feedCategory == 'email') {
-                                        echo " checked";
-                                } ?>> Email<br>
-                                <input type="radio" name="feedCategory" value="phone"
-                                    <?php if ($popset_feedCategory == 'phone') {
-                                        echo " checked";
-                                } ?>> Phone<br>
-                                <input type="radio" name="feedCategory" value="ppc"
-                                    <?php if ($popset_feedCategory == 'ppc') {
-                                        echo " checked";
-                                } ?>> PPC<br>
+                                    </select>
+                                </p>
+                            </div>
+                            <div id="selectCategory">
+                                <p>Using a feed category population will cause ALL active incoming feeds from the
+                                    selected category to populate this outgoing feed.</p>
+                                <p style="color: red; background: yellow; font-weight: bold;">If you using a feed category population, it is
+                                    HIGHLY recommended that you use the "Standard Queue" queue type.</p>
+                                <p>
+                                    <input type="radio" name="feedCategory" value="email"
+                                        <?php if ($popset_feedCategory == 'email') {
+                                            echo " checked";
+                                        } ?>> Email<br/>
+                                    <input type="radio" name="feedCategory" value="phone"
+                                        <?php if ($popset_feedCategory == 'phone') {
+                                            echo " checked";
+                                        } ?>> Phone<br/>
+                                    <input type="radio" name="feedCategory" value="ppc"
+                                        <?php if ($popset_feedCategory == 'ppc') {
+                                            echo " checked";
+                                        } ?>> PPC<br/>
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>URL Filter Options</p></td>
+                        <td>
+                            <p>
+                                Using the 'Accept' option, urls that are listed here are the only ones that will be
+                                accepted into
+                                the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed
+                                here.
                             </p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>URL Filter Options</p></td>
-						<td>
-							<p>
-								Using the 'Accept' option, urls that are listed here are the only ones that will be accepted into
-								the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed here.
-							</p>
-							<p>
-								<input type='radio'
-								       name='filterTypeUrl'
-								       id='filterTypeUrl_disabled'
-								       value=''
+                            <p>
+                                <input type='radio'
+                                       name='filterTypeUrl'
+                                       id='filterTypeUrl_disabled'
+                                       value=''
                                     <?php if (
                                     empty($popset_filterTypeUrl)
                                     ) { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeUrl').hide(); <?php
+                                       onclick="$('#toggler_filterTypeUrl').hide(); <?php
                                        ?>$('#filterUrl_descriptor').html('Do nothing with');"
-								/> Disabled<br/>
-								<input type='radio'
-								       name='filterTypeUrl'
-								       id='filterTypeUrl_accept'
-								       value='accept'
+                                /> Disabled<br/>
+                                <input type='radio'
+                                       name='filterTypeUrl'
+                                       id='filterTypeUrl_accept'
+                                       value='accept'
                                     <?php if ($popset_filterTypeUrl == 'accept') { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeUrl').show(); <?php
+                                       onclick="$('#toggler_filterTypeUrl').show(); <?php
                                        ?>$('#filterUrl_descriptor').html('Accept');"
-								/> Accept<br/>
-								<input type='radio'
-								       name='filterTypeUrl'
-								       id='filterTypeUrl_reject'
-								       value='reject'
+                                /> Accept<br/>
+                                <input type='radio'
+                                       name='filterTypeUrl'
+                                       id='filterTypeUrl_reject'
+                                       value='reject'
                                     <?php if ($popset_filterTypeUrl == 'reject') { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeUrl').show(); <?php
+                                       onclick="$('#toggler_filterTypeUrl').show(); <?php
                                        ?>$('#filterUrl_descriptor').html('Reject');"
-								/> Reject<br/>
-							</p>
-							<div id='toggler_filterTypeUrl'
-							     style='display:<?php
+                                /> Reject<br/>
+                            </p>
+                            <div id='toggler_filterTypeUrl'
+                                 style='display:<?php
                                  if (empty($popset_filterTypeUrl)) {
                                      echo "none";
                                  } else {
                                      echo "block";
                                  }
                                  ?>;'
-							>
-								<p>The following urls:</p>
-								<p>
-									<a href='#' class='nonLink'
-									   onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Url" });'
-									>Add New URL to <span id='filterUrl_descriptor'></span></a>
-									| <a href='#' class='nonLink'
-									     onclick='element("filterUrl_multipleInsert"<?php
+                            >
+                                <p>The following urls:</p>
+                                <p>
+                                    <a href='#' class='nonLink'
+                                       onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e; ?>", "type": "Url" });'
+                                    >Add New URL to <span id='filterUrl_descriptor'></span></a>
+                                    | <a href='#' class='nonLink'
+                                         onclick='element("filterUrl_multipleInsert"<?php
                                          ?>, "element_multifilter"<?php
                                          ?>, { "type": "Url" });'
-									>Add Multiple</a>
-								</p>
-								<div id='filterUrl_multipleInsert'></div>
-								<div id='filterUrl_container'>
+                                    >Add Multiple</a>
+                                </p>
+                                <div id='filterUrl_multipleInsert'></div>
+                                <div id='filterUrl_container'>
                                     <?php foreach ($popset_filterUrl as $filterUrl) { ?>
-										<div>
-											<input type='text'
-											       name='filterUrl[]'
-											       value='<?php echo $filterUrl; ?>'
-											/>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
+                                        <div>
+                                            <input type='text'
+                                                   name='filterUrl[]'
+                                                   value='<?php echo $filterUrl; ?>'
+                                            />
+                                            <a href='#' class='nonLink'
+                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                        </div>
                                     <?php } ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Email Filter Options</p></td>
-						<td>
-							<p>
-								Using the 'Accept' option, email domains that are listed here are the only ones that will be
-								accepted into the feed. Using the 'Reject' option, all email domains will be accepted, except
-								the ones listed here.
-							</p>
-							<p>
-								<input type='radio'
-								       name='filterTypeEmail'
-								       id='filterTypeEmail_disabled'
-								       value=''
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Email Filter Options</p></td>
+                        <td>
+                            <p>
+                                Using the 'Accept' option, email domains that are listed here are the only ones that
+                                will be
+                                accepted into the feed. Using the 'Reject' option, all email domains will be accepted,
+                                except
+                                the ones listed here.
+                            </p>
+                            <p>
+                                <input type='radio'
+                                       name='filterTypeEmail'
+                                       id='filterTypeEmail_disabled'
+                                       value=''
                                     <?php if (
                                     empty($popset_filterTypeEmail)
                                     ) { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeEmail').hide(); <?php
+                                       onclick="$('#toggler_filterTypeEmail').hide(); <?php
                                        ?>$('#filterEmail_descriptor').html('Do nothing with');"
-								/> Disabled<br/>
-								<input type='radio'
-								       name='filterTypeEmail'
-								       id='filterTypeEmail_accept'
-								       value='accept'
+                                /> Disabled<br/>
+                                <input type='radio'
+                                       name='filterTypeEmail'
+                                       id='filterTypeEmail_accept'
+                                       value='accept'
                                     <?php if ($popset_filterTypeEmail == 'accept') { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeEmail').show(); <?php
+                                       onclick="$('#toggler_filterTypeEmail').show(); <?php
                                        ?>$('#filterEmail_descriptor').html('Accept');"
-								/> Accept<br/>
-								<input type='radio'
-								       name='filterTypeEmail'
-								       id='filterTypeEmail_reject'
-								       value='reject'
+                                /> Accept<br/>
+                                <input type='radio'
+                                       name='filterTypeEmail'
+                                       id='filterTypeEmail_reject'
+                                       value='reject'
                                     <?php if ($popset_filterTypeEmail == 'reject') { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeEmail').show(); <?php
+                                       onclick="$('#toggler_filterTypeEmail').show(); <?php
                                        ?>$('#filterEmail_descriptor').html('Reject');"
-								/> Reject<br/>
-							</p>
-							<div id='toggler_filterTypeEmail'
-							     style='display:<?php
+                                /> Reject<br/>
+                            </p>
+                            <div id='toggler_filterTypeEmail'
+                                 style='display:<?php
                                  if (empty($popset_filterTypeEmail)) {
                                      echo "none";
                                  } else {
                                      echo "block";
                                  }
                                  ?>;'
-							>
-								<p>The following email domains:</p>
-								<p>
-									<a href='#' class='nonLink'
-									   onclick='element("filterEmail_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Email"});'
-									>Add New Email Domain to <span id='filterEmail_descriptor'></span></a>
-								</p>
-								<div id='filterEmail_container'>
+                            >
+                                <p>The following email domains:</p>
+                                <p>
+                                    <a href='#' class='nonLink'
+                                       onclick='element("filterEmail_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Email"});'
+                                    >Add New Email Domain to <span id='filterEmail_descriptor'></span></a>
+                                </p>
+                                <div id='filterEmail_container'>
                                     <?php foreach ($popset_filterEmail as $filterEmail) { ?>
-										<div>
-											<input type='text'
-											       name='filterEmail[]'
-											       value='<?php echo $filterEmail; ?>'
-											/>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
+                                        <div>
+                                            <input type='text'
+                                                   name='filterEmail[]'
+                                                   value='<?php echo $filterEmail; ?>'
+                                            />
+                                            <a href='#' class='nonLink'
+                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                        </div>
                                     <?php } ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Listcode Filter Options</p></td>
-						<td>
-							<p>
-								Using the 'Accept' option, listcodes that are listed here are the only ones that will be
-								accepted into the feed. Using the 'Reject' option, all listcodes will be accepted, except
-								the ones listed here.
-							</p>
-							<p>
-								<input type='radio'
-								       name='filterTypeListcode'
-								       id='filterTypeListcode_disabled'
-								       value=''
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Listcode Filter Options</p></td>
+                        <td>
+                            <p>
+                                Using the 'Accept' option, listcodes that are listed here are the only ones that will be
+                                accepted into the feed. Using the 'Reject' option, all listcodes will be accepted,
+                                except
+                                the ones listed here.
+                            </p>
+                            <p>
+                                <input type='radio'
+                                       name='filterTypeListcode'
+                                       id='filterTypeListcode_disabled'
+                                       value=''
                                     <?php if (
                                     empty($popset_filterTypeListcode)
                                     ) { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeListcode').hide(); <?php
+                                       onclick="$('#toggler_filterTypeListcode').hide(); <?php
                                        ?>$('#filterListcode_descriptor').html('Do nothing with');"
-								/> Disabled<br/>
-								<input type='radio'
-								       name='filterTypeListcode'
-								       id='filterTypeListcode_accept'
-								       value='accept'
+                                /> Disabled<br/>
+                                <input type='radio'
+                                       name='filterTypeListcode'
+                                       id='filterTypeListcode_accept'
+                                       value='accept'
                                     <?php if ($popset_filterTypeListcode == 'accept') { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeListcode').show(); <?php
+                                       onclick="$('#toggler_filterTypeListcode').show(); <?php
                                        ?>$('#filterListcode_descriptor').html('Accept');"
-								/> Accept<br/>
-								<input type='radio'
-								       name='filterTypeListcode'
-								       id='filterTypeListcode_reject'
-								       value='reject'
+                                /> Accept<br/>
+                                <input type='radio'
+                                       name='filterTypeListcode'
+                                       id='filterTypeListcode_reject'
+                                       value='reject'
                                     <?php if ($popset_filterTypeListcode == 'reject') { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_filterTypeListcode').show(); <?php
+                                       onclick="$('#toggler_filterTypeListcode').show(); <?php
                                        ?>$('#filterListcode_descriptor').html('Reject');"
-								/> Reject<br/>
-							</p>
-							<div id='toggler_filterTypeListcode'
-							     style='display:<?php
+                                /> Reject<br/>
+                            </p>
+                            <div id='toggler_filterTypeListcode'
+                                 style='display:<?php
                                  if (empty($popset_filterTypeListcode)) {
                                      echo "none";
                                  } else {
                                      echo "block";
                                  }
                                  ?>;'
-							>
-								<p>The following email domains:</p>
-								<p>
-									<a href='#' class='nonLink'
-									   onclick='element("filterListcode_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Listcode"});'
-									>Add New Listcode to <span id='filterListcode_descriptor'></span></a>
-								</p>
-								<div id='filterListcode_container'>
+                            >
+                                <p>The following email domains:</p>
+                                <p>
+                                    <a href='#' class='nonLink'
+                                       onclick='element("filterListcode_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Listcode"});'
+                                    >Add New Listcode to <span id='filterListcode_descriptor'></span></a>
+                                </p>
+                                <div id='filterListcode_container'>
                                     <?php foreach ($popset_filterListcode as $filterListcode) { ?>
-										<div>
-											<input type='text'
-											       name='filterListcode[]'
-											       value='<?php echo $filterListcode; ?>'
-											/>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
+                                        <div>
+                                            <input type='text'
+                                                   name='filterListcode[]'
+                                                   value='<?php echo $filterListcode; ?>'
+                                            />
+                                            <a href='#' class='nonLink'
+                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                        </div>
                                     <?php } ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Force URL Options</p></td>
-						<td>
-							<p>
-								Utilizing 'URL Forcing' changes the url listed in the incoming feed to a completely different URL
-								for use in the outgoing feed.
-							</p>
-							<p>
-								<input type='radio'
-								       name='forceUrl'
-								       id='forceUrl_disabled'
-								       value='0'
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Force URL Options</p></td>
+                        <td>
+                            <p>
+                                Utilizing 'URL Forcing' changes the url listed in the incoming feed to a completely
+                                different URL
+                                for use in the outgoing feed.
+                            </p>
+                            <p>
+                                <input type='radio'
+                                       name='forceUrl'
+                                       id='forceUrl_disabled'
+                                       value='0'
                                     <?php if ($popset_forceUrl != '1') { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_forceUrlList').hide();"
-								/> Disabled<br/>
-								<input type='radio'
-								       name='forceUrl'
-								       id='forceUrl_enabled'
-								       value='1'
+                                       onclick="$('#toggler_forceUrlList').hide();"
+                                /> Disabled<br/>
+                                <input type='radio'
+                                       name='forceUrl'
+                                       id='forceUrl_enabled'
+                                       value='1'
                                     <?php if ($popset_forceUrl == '1') { ?>
-										checked='checked'
+                                        checked='checked'
                                     <?php } ?>
-									   onclick="$('#toggler_forceUrlList').show();"
-								/> Enabled
-							</p>
-							<div id='toggler_forceUrlList'
-							     style='display:<?php
+                                       onclick="$('#toggler_forceUrlList').show();"
+                                /> Enabled
+                            </p>
+                            <div id='toggler_forceUrlList'
+                                 style='display:<?php
                                  if ($popset_forceUrl) {
                                      echo "block";
                                  } else {
                                      echo "none";
                                  }
                                  ?>;'
-							>
-								<p>
-									Enter 'all' in the url field to force all non-specified urls to be changed to the new
-									url. Other specified urls will be changed to the listed forced url.
-								</p>
-								<div>
-									<p>Force Populating URLs to: </p>
-									<p>
-										<a href='#' class='nonLink' onclick='element("filterUrlList_container", "element_forceUrl", { "e": "<?php echo $e ?? ''; ?>"});'
-										>Add URL To Force</a>
-									</p>
-									<div id='filterUrlList_container'>
+                            >
+                                <p>
+                                    Enter 'all' in the url field to force all non-specified urls to be changed to the
+                                    new
+                                    url. Other specified urls will be changed to the listed forced url.
+                                </p>
+                                <div>
+                                    <p>Force Populating URLs to: </p>
+                                    <p>
+                                        <a href='#' class='nonLink'
+                                           onclick='element("filterUrlList_container", "element_forceUrl", { "e": "<?php echo $e ?? ''; ?>"});'
+                                        >Add URL To Force</a>
+                                    </p>
+                                    <div id='filterUrlList_container'>
                                         <?php foreach ($popset_forceUrlList as $fU) {
                                             $valuePair = explode("=", $fU);
                                             ?>
-											<div>
-												URL: <input type='text'
-												            name='forceUrlList_original[]'
-												            value='<?php echo $valuePair[0]; ?>'
-												/> Will be populated as: <input type='text'
-												                                name='forceUrlList_altered[]'
-												                                value='<?php echo $valuePair[1]; ?>'
-												>
-												<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-											</div>
+                                            <div>
+                                                URL: <input type='text'
+                                                            name='forceUrlList_original[]'
+                                                            value='<?php echo $valuePair[0]; ?>'
+                                                /> Will be populated as: <input type='text'
+                                                                                name='forceUrlList_altered[]'
+                                                                                value='<?php echo $valuePair[1]; ?>'
+                                                >
+                                                <a href='#' class='nonLink'
+                                                   onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                            </div>
                                         <?php } ?>
-									</div>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Queue Type</p></td>
-						<td>
-							<p>
-								Incoming records will be sent to this provider in REAL TIME as they come in. Do not use this option unless authorized. Most feeds have this option disabled.
-							</p>
-							<p>
-								<input type="radio" name="queueType" id="queueType_livedata" value="livedata" <?php if (empty($popset_queueType) || $popset_queueType == 'livedata') { ?> checked="checked" <?php } ?>/> Live Data (leads sent in real-time) [DEFAULT]<br/>
-								<input type="radio" name="queueType" id="queueType_queue" value="queue" <?php if ($popset_queueType == 'queue') { ?> checked="checked" <?php } ?>/> Standard Queue<br/>
-								<input type="radio" name="queueType" id="queueType_waterfall" value="waterfall" <?php if ($popset_queueType == 'waterfall') { ?> checked="checked" <?php } ?>/> Waterfall Live Standard (attempt each vendor in descending priority order; stop after the first accepted response)<br/>
-								<input type="radio" name="queueType" id="queueType_waterfallLimit" value="waterfallLimit" <?php if ($popset_queueType == 'waterfallLimit') { ?> checked="checked" <?php } ?>/> Waterfall Limit &amp; Queue (attempt vendors in priority order and queue; only skip to the next after the feed limits are hit)<br/>
-								<input type="radio" name="queueType" id="queueType_waterfallLimitLive" value="waterfallLimitLive" <?php if ($popset_queueType == 'waterfallLimitLive') { ?> checked="checked" <?php } ?>/> Waterfall Limit Live (attempt vendors in real-time in priority order; only skip to the next after the feed limits are hit)
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Waterfall Priority</p></td>
-						<td>
-							<p>
-								<input type="text" name="waterfallPriority" value="<?php echo Display::escHtml($popset_waterfallPriority); ?>"/><br/>
-								Only applies if the Queue Type setting above is set to "Waterfall" or "Waterfall Limit". Use any number from 0 to 65,535. A higher number means higher priority in the waterfall.
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Population Start Date</p></td>
-						<td>
-							<p>
-								If a value is filled in here, then records will not start populating this queue until midnight of the date provided. When using this feature, it is recommended to turn the "Queueing" option ON, because if the "Queueing" option is set to off, then no records will be queued at all, even if the start date below passes.
-							</p>
-							<p>
-								<input type="text" name="startDate" id="startDate" value="<?php echo Display::escHtml($popset_startDate); ?>"/>
-							</p>
-						</td>
-					</tr>
-				</table>
-			</form>
-			<script type="text/javascript">
-				$("#new_pop select[name='idFeedIn'], #edit_pop select[name='idFeedIn']").select2({
-					placeholder: "Select an incoming feed",
-					allowClear: true
-				});
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Queue Type</p></td>
+                        <td>
+                            <p>
+                                Incoming records will be sent to this provider in REAL TIME as they come in. Do not use
+                                this option unless authorized. Most feeds have this option disabled.
+                            </p>
+                            <p id="queueTypeWarning" style="color: red; background: yellow; font-weight: bold;">If you using a feed category population, it is
+                                HIGHLY recommended that you use the "Standard Queue" queue type.</p>
+                            <p>
+                                <input type="radio" name="queueType" id="queueType_livedata"
+                                       value="livedata" <?php if (empty($popset_queueType)
+                                    || $popset_queueType == 'livedata'
+                                ) { ?> checked="checked" <?php } ?>/> Live Data (leads sent in real-time) [DEFAULT]<br/>
+                                <input type="radio" name="queueType" id="queueType_queue"
+                                       value="queue" <?php if ($popset_queueType == 'queue') { ?> checked="checked" <?php } ?>/>
+                                Standard
+                                Queue<br/>
+                                <input type="radio" name="queueType" id="queueType_waterfall"
+                                       value="waterfall" <?php if ($popset_queueType == 'waterfall') { ?> checked="checked" <?php } ?>/>
+                                Waterfall Live Standard (attempt each vendor in descending priority order; stop after
+                                the first accepted response)<br/>
+                                <input type="radio" name="queueType" id="queueType_waterfallLimit"
+                                       value="waterfallLimit" <?php if ($popset_queueType
+                                    == 'waterfallLimit'
+                                ) { ?> checked="checked" <?php } ?>/> Waterfall Limit &amp; Queue (attempt vendors in
+                                priority order and queue; only skip to the next after the feed limits are
+                                hit)<br/>
+                                <input type="radio" name="queueType" id="queueType_waterfallLimitLive"
+                                       value="waterfallLimitLive" <?php if ($popset_queueType
+                                    == 'waterfallLimitLive'
+                                ) { ?> checked="checked" <?php } ?>/> Waterfall Limit Live (attempt vendors in real-time
+                                in priority order; only skip to the next after the feed limits are hit)
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Waterfall Priority</p></td>
+                        <td>
+                            <p>
+                                <input type="text" name="waterfallPriority"
+                                       value="<?php echo Display::escHtml($popset_waterfallPriority); ?>"/><br/>
+                                Only applies if the Queue Type setting above is set to "Waterfall" or "Waterfall Limit".
+                                Use any number from 0 to 65,535. A higher number means higher priority in the
+                                waterfall.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Population Start Date</p></td>
+                        <td>
+                            <p>
+                                If a value is filled in here, then records will not start populating this queue until
+                                midnight of the date provided. When using this feature, it is recommended to turn
+                                the "Queueing" option ON, because if the "Queueing" option is set to off, then no
+                                records will be queued at all, even if the start date below passes.
+                            </p>
+                            <p>
+                                <input type="text" name="startDate" id="startDate"
+                                       value="<?php echo Display::escHtml($popset_startDate); ?>"/>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <script type="text/javascript">
+                $("#new_pop select[name='idFeedIn'], #edit_pop select[name='idFeedIn']").select2({
+                    placeholder: "Select an incoming feed",
+                    allowClear: true
+                });
 
-				$('#new_pop input[name="startDate"], #edit_pop input[name="startDate"]').datepicker({
-					// Consistent format with the HTML5 picker
-					dateFormat: 'yy-mm-dd'
-				});
+                $('#new_pop input[name="startDate"], #edit_pop input[name="startDate"]').datepicker({
+                    // Consistent format with the HTML5 picker
+                    dateFormat: 'yy-mm-dd'
+                });
 
                 var popVal = $('input[type="radio"][name="populationType"]:checked').val();
-                if ( popVal == 'category' ) {
+                if (popVal === 'category') {
                     $('#selectCategory').show();
                     $('#selectIndividual').hide();
+                    $('#queueTypeWarning').show();
                 } else {
                     $('#selectCategory').hide();
                     $('#selectIndividual').show();
+                    $('#queueTypeWarning').hide();
                 }
 
-                $('input[type="radio"][name="populationType"]').change(function(){
+                $('input[type="radio"][name="populationType"]').change(function () {
                     var selectedPopVal = $('input[type="radio"][name="populationType"]:checked').val();
-                    if ( selectedPopVal == 'category' ) {
+                    if (selectedPopVal === 'category') {
                         $('#selectCategory').show();
                         $('#selectIndividual').hide();
+                        $('#queueTypeWarning').show();
                     } else {
                         $('#selectCategory').hide();
                         $('#selectIndividual').show();
+                        $('#queueTypeWarning').hide();
                     }
                 });
 
-			</script>
+            </script>
             <?php
             break;
 
         case 'element_filter':
             $t = $_REQUEST['options']['type'];
             ?>
-			<div>
-				<input type='text' name='filter<?php echo $t; ?>[]' value='<?php if (isset($_REQUEST['value'])) {
+            <div>
+                <input type='text' name='filter<?php echo $t; ?>[]' value='<?php if (isset($_REQUEST['value'])) {
                     echo $_REQUEST['value'];
                 } ?>'/>
-				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-			</div>
+                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+            </div>
             <?php
             break;
 
         case 'element_forceUrl':
             ?>
-			<div>
-				URL: <input type='text' name='forceUrlList_original[]' value=''/> Will be populated as: <input type='text' name='forceUrlList_altered[]' value=''/>
-				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-			</div>
+            <div>
+                URL: <input type='text' name='forceUrlList_original[]' value=''/> Will be populated as: <input
+                        type='text' name='forceUrlList_altered[]' value=''/>
+                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+            </div>
             <?php
             break;
 
         case 'element_multifilter':
             $t = $_REQUEST['options']['type'];
             ?>
-			<textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi'></textarea>
-			<input type='button' value='Add Multiple Urls' onclick="splitMultiFilter('<?php echo $e ?? ''; ?>', '<?php echo $t; ?>');"/>
+            <textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi'></textarea>
+            <input type='button' value='Add Multiple Urls'
+                   onclick="splitMultiFilter('<?php echo $e ?? ''; ?>', '<?php echo $t; ?>');"/>
             <?php
             break;
 
@@ -3079,43 +3297,46 @@ if (isset($_REQUEST['d'])) {
             $populationSettings = $leads->getPopulations($idFeedOut);
             $cacheFeedIn = array();
             ?>
-			<p>
-				Feed ID: <?php echo $feed->idFeedOut; ?><br/>
-				Label: <?php echo Display::escHtml($feed->label); ?><br/>
-				Description: <?php echo Display::escHtml($feed->description); ?>
-			</p>
+            <p>
+                Feed ID: <?php echo $feed->idFeedOut; ?><br/>
+                Label: <?php echo Display::escHtml($feed->label); ?><br/>
+                Description: <?php echo Display::escHtml($feed->description); ?>
+            </p>
 
-			<p>
-				<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#modal-newpop" data-dismiss="modal" data-feed-id="<?php echo $feed->idFeedOut; ?>">Add a new population parameter</button>
-			</p>
+            <p>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static"
+                        data-target="#modal-newpop" data-dismiss="modal"
+                        data-feed-id="<?php echo $feed->idFeedOut; ?>">Add a new population parameter
+                </button>
+            </p>
             <?php
             if ($populationSettings === false) {
                 ?>
-				<p>Error getting population settings.</p>
+                <p>Error getting population settings.</p>
                 <?php
             } elseif ($populationSettings == 0) {
                 ?>
-				<p>No settings found.</p>
+                <p>No settings found.</p>
                 <?php
             } else {
                 ?>
-				<table class="table table-bordered table-condensed table-striped">
-					<thead>
-					<tr>
-						<th><p>Populating Feed</p></th>
-						<th><p>Population Status</p></th>
-						<th><p>Filtering By URL</p></th>
-						<th><p>URL Filter Settings</p></th>
-						<th><p>Filtering By Email</p></th>
-						<th><p>Email Filter Settings</p></th>
-						<th><p>Filtering By Listcode</p></th>
-						<th><p>Listcode Filter Settings</p></th>
-						<th><p>Force URLs</p></th>
-						<th><p>Force URL Settings</p></th>
-						<th><p>Actions</p></th>
-					</tr>
-					</thead>
-					<tbody>
+                <table class="table table-bordered table-condensed table-striped">
+                    <thead>
+                    <tr>
+                        <th><p>Populating Feed</p></th>
+                        <th><p>Population Status</p></th>
+                        <th><p>Filtering By URL</p></th>
+                        <th><p>URL Filter Settings</p></th>
+                        <th><p>Filtering By Email</p></th>
+                        <th><p>Email Filter Settings</p></th>
+                        <th><p>Filtering By Listcode</p></th>
+                        <th><p>Listcode Filter Settings</p></th>
+                        <th><p>Force URLs</p></th>
+                        <th><p>Force URL Settings</p></th>
+                        <th><p>Actions</p></th>
+                    </tr>
+                    </thead>
+                    <tbody>
                     <?php
                     foreach ($populationSettings as $popSet) {
                         if (!isset($cacheFeedIn[$popSet->idFeedIn])) {
@@ -3204,71 +3425,79 @@ if (isset($_REQUEST['d'])) {
                             }
                         }
                         ?>
-						<tr>
-							<td valign='top'>
-								<p>
-									(<?php echo $popSet->idFeedIn; ?>)
-                                    <?php echo $cacheFeedIn[$popSet->idFeedIn]->label; ?>
-								</p>    
-                                <p><p>Population type: <?php echo $popSet->populationType; ?></p></p>
-							</td>
-							<td valign='top' class="text-center">
-								<input class="population-toggle" <?php if (!empty($popSet->enabled)) {
+                        <tr>
+                            <td valign='top'>
+                                <p>
+                                    <?php if ('category' == $popSet->populationType) { ?>
+                                        Category: <?php echo Display::escHtml($popSet->feedCategory); ?>
+                                    <?php } else { ?>
+                                        Feed: (<?php echo $popSet->idFeedIn; ?>) <?php echo Display::escHtml($cacheFeedIn[$popSet->idFeedIn]->label); ?>
+                                    <?php } ?>
+                                </p>
+                            </td>
+                            <td valign='top' class="text-center">
+                                <input class="population-toggle" <?php if (!empty($popSet->enabled)) {
                                     print 'checked="checked" ';
-                                } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Queueing" data-onstyle="success" data-off="Queueing" data-offstyle="danger" data-assoc-id="<?php echo $popSet->idAssoc; ?>" type="checkbox"/></td>
-							</td>
-							<td valign='top'>
-								<p><?php echo $filterTypeUrl; ?></p>
-							</td>
-							<td valign='top'>
-								<p><?php echo $filterUrl; ?></p>
-							</td>
-							<td valign='top'>
-								<p><?php echo $filterTypeEmail; ?></p>
-							</td>
-							<td valign='top'>
-								<p><?php echo $filterEmail; ?></p>
-							</td>
-							<td valign='top'>
-								<p><?php echo $filterTypeListcode; ?></p>
-							</td>
-							<td valign='top'>
-								<p><?php echo $filterListcode; ?></p>
-							</td>
-							<td valign='top'>
-								<p><?php echo $forceUrl; ?></p>
-							</td>
-							<td valign='top'>
-								<p><?php echo $forceUrlList; ?></p>
-							</td>
-							<td valign='top' class="text-center">
-								<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#modal-editpop" data-feed-id="<?php echo $feed->idFeedOut; ?>" data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Edit</button>
-							</td>
-						</tr>
+                                } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Queueing"
+                                       data-onstyle="success" data-off="Queueing" data-offstyle="danger"
+                                       data-assoc-id="<?php echo $popSet->idAssoc; ?>" type="checkbox"/></td>
+                            </td>
+                            <td valign='top'>
+                                <p><?php echo $filterTypeUrl; ?></p>
+                            </td>
+                            <td valign='top'>
+                                <p><?php echo $filterUrl; ?></p>
+                            </td>
+                            <td valign='top'>
+                                <p><?php echo $filterTypeEmail; ?></p>
+                            </td>
+                            <td valign='top'>
+                                <p><?php echo $filterEmail; ?></p>
+                            </td>
+                            <td valign='top'>
+                                <p><?php echo $filterTypeListcode; ?></p>
+                            </td>
+                            <td valign='top'>
+                                <p><?php echo $filterListcode; ?></p>
+                            </td>
+                            <td valign='top'>
+                                <p><?php echo $forceUrl; ?></p>
+                            </td>
+                            <td valign='top'>
+                                <p><?php echo $forceUrlList; ?></p>
+                            </td>
+                            <td valign='top' class="text-center">
+                                <button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+                                        data-backdrop="static" data-target="#modal-editpop"
+                                        data-feed-id="<?php echo $feed->idFeedOut; ?>"
+                                        data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Edit
+                                </button>
+                            </td>
+                        </tr>
                         <?php
                     }
                     ?>
-					</tbody>
-				</table>
-				<script type="text/javascript">
-					$('.population-toggle').bootstrapToggle();
+                    </tbody>
+                </table>
+                <script type="text/javascript">
+                    $('.population-toggle').bootstrapToggle();
 
-					$('.population-toggle').change(function () {
-						var idAssoc = $(this).data('assoc-id');
+                    $('.population-toggle').change(function () {
+                        var idAssoc = $(this).data('assoc-id');
 
-						$.ajax({
-							cache: false,
-							type: 'POST',
-							url: 'mgr_feedout.php',
-							data: {
-								'a': 'managePopulationParam',
-								'idAssoc': idAssoc,
-								'action': 'toggle',
-								'param': 'enabled'
-							}
-						});
-					});
-				</script>
+                        $.ajax({
+                            cache: false,
+                            type: 'POST',
+                            url: 'mgr_feedout.php',
+                            data: {
+                                'a': 'managePopulationParam',
+                                'idAssoc': idAssoc,
+                                'action': 'toggle',
+                                'param': 'enabled'
+                            }
+                        });
+                    });
+                </script>
                 <?php
             }
             ?>
@@ -3277,7 +3506,7 @@ if (isset($_REQUEST['d'])) {
 
         default:
             ?>
-			<p>Requested information doesn't exist.</p>
+            <p>Requested information doesn't exist.</p>
             <?php
             break;
     }
@@ -3293,42 +3522,46 @@ include(INCLUDES . "c_header.php");
 
 <div class="container-fluid">
 
-	<h2>Outgoing Feeds</h2>
+    <h2>Outgoing Feeds</h2>
 
     <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) { ?>
 
-		<form class="pull-right" id="status-select" method="get">
-			<select id="status" name="status">
-				<option value="active"<?php if ('active' === $status) {
+        <form class="pull-right" id="status-select" method="get">
+            <select id="status" name="status">
+                <option value="active"<?php if ('active' === $status) {
                     print ' selected="selected"';
                 } ?>>Show active feeds
-				</option>
-				<option value="hidden"<?php if ('hidden' === $status) {
+                </option>
+                <option value="hidden"<?php if ('hidden' === $status) {
                     print ' selected="selected"';
                 } ?>>Show hidden feeds
-				</option>
-				<option value="retired"<?php if ('retired' === $status) {
+                </option>
+                <option value="retired"<?php if ('retired' === $status) {
                     print ' selected="selected"';
                 } ?>>Show retired feeds
-				</option>
-				<option value=""<?php if (null === $status) {
+                </option>
+                <option value=""<?php if (null === $status) {
                     print ' selected="selected"';
                 } ?>>Show all feeds
-				</option>
-			</select>
-		</form>
+                </option>
+            </select>
+        </form>
 
-		<p>
-			<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newfeed" data-feed-id="">Add a new feed</button>
-		</p>
+        <p>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static"
+                    data-target="#newfeed" data-feed-id="">Add a new feed
+            </button>
+        </p>
 
     <?php } ?>
 
     <?php
 
-    foreach ($feedCategories
+    foreach (
+        $feedCategories
 
-             as $categoryKey => $categoryVal) {
+        as $categoryKey => $categoryVal
+    ) {
 
         print "<h4>Outgoing $categoryVal Feeds</h4>" . PHP_EOL;
 
@@ -3345,11 +3578,11 @@ include(INCLUDES . "c_header.php");
         <?php
         if ($outgoingFeeds === false) {
             ?>
-			<p>Error when trying to fetch feeds: database error.</p>
+            <p>Error when trying to fetch feeds: database error.</p>
             <?php
         } elseif ($outgoingFeeds == 0) {
             ?>
-			<p>Error when trying to fetch feeds: there are no feeds.</p>
+            <p>Error when trying to fetch feeds: there are no feeds.</p>
             <?php
         } else {
             //Go through each and compile the company list.
@@ -3369,17 +3602,17 @@ include(INCLUDES . "c_header.php");
 
             uksort($companyFeedLists, 'companyListSort');
             ?>
-			<table class="table table-bordered table-condensed table-striped-custom">
-				<thead>
-				<tr>
-					<th class="fTO_companyName outgoing-col-large" colspan="4">Company</th>
-					<th class="fTO_feedOverview outgoing-col-small" colspan="2">Total Feeds</th>
-					<th class="fTO_accepted outgoing-col-small">Total Accepted</th>
-					<th class="fTO_rejected outgoing-col-small">Total Rejected</th>
-					<th class="fTO_rejected outgoing-col-small">Total Queued</th>
-					<th class="fTO_options outgoing-col-small">Options</th>
-				</tr>
-				</thead>
+            <table class="table table-bordered table-condensed table-striped-custom">
+                <thead>
+                <tr>
+                    <th class="fTO_companyName outgoing-col-large" colspan="4">Company</th>
+                    <th class="fTO_feedOverview outgoing-col-small" colspan="2">Total Feeds</th>
+                    <th class="fTO_accepted outgoing-col-small">Total Accepted</th>
+                    <th class="fTO_rejected outgoing-col-small">Total Rejected</th>
+                    <th class="fTO_rejected outgoing-col-small">Total Queued</th>
+                    <th class="fTO_options outgoing-col-small">Options</th>
+                </tr>
+                </thead>
                 <?php
                 $grandTotalFeeds = 0;
                 $grandTotalAccepted = 0;
@@ -3415,779 +3648,835 @@ include(INCLUDES . "c_header.php");
                     }
                     $grandTotalFeeds += count($companyFeedList);
                     ?>
-					<tr class='fTORow fTO_Row bgGray'>
-						<td colspan='4'><?php echo $companyCache[$idCompany]->name; ?></td>
-						<td colspan='2'><?php echo count($companyFeedList); ?> (<?php echo $totalActive; ?> Active)</td>
-						<td class="text-right"><?php echo number_format($totalAccepted, 0); ?></td>
-						<td class="text-right"><?php echo number_format($totalRejected, 0); ?></td>
-						<td class="text-right"><?php echo number_format($totalQueued, 0); ?></td>
-						<td class="text-center">
-							<button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button>
-						</td>
-					</tr>
+                    <tr class='fTORow fTO_Row bgGray'>
+                        <td colspan='4'><?php echo $companyCache[$idCompany]->name; ?></td>
+                        <td colspan='2'><?php echo count($companyFeedList); ?> (<?php echo $totalActive; ?> Active)</td>
+                        <td class="text-right"><?php echo number_format($totalAccepted, 0); ?></td>
+                        <td class="text-right"><?php echo number_format($totalRejected, 0); ?></td>
+                        <td class="text-right"><?php echo number_format($totalQueued, 0); ?></td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-xs" type="button" data-toggle="collapse"
+                                    data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false"
+                                    aria-controls="collapseExample">Show Feeds
+                            </button>
+                        </td>
+                    </tr>
                     <?php
                     foreach ($companyFeedList as $feed) {
                         ?>
-						<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
-							<td><?php echo $feed->idFeedOut; ?></td>
-							<td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo Display::escHtml($feed->label); ?></td>
-							<td><?php echo Display::escHtml($feed->description); ?></td>
-							<td><?php echo Display::escHtml($feed->statusPop); ?></td>
-							<td><?php echo ucfirst($feed->status); ?></td>
-							<td><input class="cron-toggle" <?php if (!empty($feed->cron)) {
+                        <tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
+                            <td><?php echo $feed->idFeedOut; ?></td>
+                            <td class='fTO_label status-<?php echo $feed->status; ?>'><?php echo Display::escHtml($feed->label); ?></td>
+                            <td><?php echo Display::escHtml($feed->description); ?></td>
+                            <td><?php echo Display::escHtml($feed->statusPop); ?></td>
+                            <td><?php echo ucfirst($feed->status); ?></td>
+                            <td><input class="cron-toggle" <?php if (!empty($feed->cron)) {
                                     print 'checked="checked" ';
-                                } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Pushing" data-onstyle="success" data-off="Pushing" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedOut; ?>" type="checkbox"/></td>
-							<td class="text-right"><?php echo $feed->accepted; ?></td>
-							<td class="text-right"><a href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut); ?>&amp;label=<?php echo urlencode($feed->label); ?>" target="_blank"><?php echo $feed->rejected; ?></a></td>
-							<td class="text-right"><?php echo $feed->queued; ?></td>
-							<td class="text-center">
-								<div class="btn-group">
-									<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editfeed" data-mode="edit" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Edit Feed</button>
-									<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-										<span class="caret"></span>
-										<span class="sr-only">Toggle Dropdown</span>
-									</button>
-									<ul class="dropdown-menu">
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-showpop" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Show populations</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#newfeed" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Duplicate feed</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-testrecord" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Send test record</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-queue-preview" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Queue preview</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-clearqueue" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Clear queue</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">URL report</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Import data</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-upload" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Upload data</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Export data</a></li>
-										<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-retry-rejections" data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Retry rejections</a></li>
-									</ul>
-								</div>
-							</td>
-						</tr>
+                                } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Pushing"
+                                       data-onstyle="success" data-off="Pushing" data-offstyle="danger"
+                                       data-feed-id="<?php echo $feed->idFeedOut; ?>" type="checkbox"/></td>
+                            <td class="text-right"><?php echo $feed->accepted; ?></td>
+                            <td class="text-right"><a
+                                        href="mgr_rejections.php?type=outbound&amp;id=<?php echo urlencode($feed->idFeedOut); ?>&amp;label=<?php echo urlencode($feed->label); ?>"
+                                        target="_blank"><?php echo $feed->rejected; ?></a></td>
+                            <td class="text-right"><?php echo $feed->queued; ?></td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+                                            data-backdrop="static" data-target="#editfeed" data-mode="edit"
+                                            data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Edit Feed
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-xs dropdown-toggle"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span class="caret"></span>
+                                        <span class="sr-only">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-showpop"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Show
+                                                populations</a></li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#newfeed"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Duplicate feed</a>
+                                        </li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-testrecord"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Send test
+                                                record</a></li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-queue-preview"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Queue
+                                                preview</a></li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-clearqueue"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Clear
+                                                queue</a></li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-urlreport"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">URL
+                                                report</a></li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-import"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Import data</a>
+                                        </li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-upload"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Upload data</a>
+                                        </li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-export"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Export data</a>
+                                        </li>
+                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                               data-target="#modal-retry-rejections"
+                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Retry
+                                                rejections</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
                         <?php
                     }
                 }
                 ?>
-				<tfoot>
-				<tr>
-					<td colspan='2'>GRAND TOTAL</td>
-					<td colspan='4'><?php echo number_format($grandTotalFeeds, 0); ?></td>
-					<td class="text-right"><?php echo number_format($grandTotalAccepted, 0); ?></td>
-					<td class="text-right"><?php echo number_format($grandTotalRejected, 0); ?></td>
-					<td class="text-right"><?php echo number_format($grandTotalQueued, 0); ?></td>
-					<td>&nbsp;</td>
-				</tr>
-				</tfoot>
-			</table>
+                <tfoot>
+                <tr>
+                    <td colspan='2'>GRAND TOTAL</td>
+                    <td colspan='4'><?php echo number_format($grandTotalFeeds, 0); ?></td>
+                    <td class="text-right"><?php echo number_format($grandTotalAccepted, 0); ?></td>
+                    <td class="text-right"><?php echo number_format($grandTotalRejected, 0); ?></td>
+                    <td class="text-right"><?php echo number_format($grandTotalQueued, 0); ?></td>
+                    <td>&nbsp;</td>
+                </tr>
+                </tfoot>
+            </table>
             <?php
         }
     }
     ?>
 
-	<div class="modal fade" id="newfeed" tabindex="-1" role="dialog" aria-labelledby="newfeed_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="newfeed_title">Add a new outgoing feed</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-newfeed" type="button" class="btn btn-primary">Add feed</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="editfeed" tabindex="-1" role="dialog" aria-labelledby="editfeed_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="editfeed_title">Edit an outgoing feed</h4>
-				</div>
-				<div class="modal-body"></div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-editfeed" type="button" class="btn btn-primary">Save changes</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-showpop" tabindex="-1" role="dialog" aria-labelledby="showpop_title">
-		<div class="modal-dialog modal-xl" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="showpop_title">Population Settings</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-queue-preview" tabindex="-1" role="dialog" aria-labelledby="queue-preview_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="queue-preview_title">Queue Preview</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-clearqueue" tabindex="-1" role="dialog" aria-labelledby="clearqueue_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="clearqueue_title">Clear queued records</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-testrecord" tabindex="-1" role="dialog" aria-labelledby="testrecord_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="testrecord_title">Send a test record</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-testrecord" type="button" class="btn btn-primary">Submit</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-urlreport" tabindex="-1" role="dialog" aria-labelledby="urlreport_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="urlreport_title">URL Report</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-urlreport" type="button" class="btn btn-primary">Run Report</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-import" tabindex="-1" role="dialog" aria-labelledby="import_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="import_title">Import Legacy Data</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-import" type="button" class="btn btn-primary">Import</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-upload" tabindex="-1" role="dialog" aria-labelledby="upload_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="upload_title">Upload Legacy Data</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-upload" type="button" class="btn btn-primary">Upload</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-retry-rejections" tabindex="-1" role="dialog" aria-labelledby="retry_rejections_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="retry_rejections_title">Retry Rejections</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-retry-rejections" type="button" class="btn btn-primary">Submit</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-newpop" tabindex="-1" role="dialog" aria-labelledby="newpop_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="newpop_title">Add a new population parameter</h4>
-				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-newpop" type="button" class="btn btn-primary">Add population</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-editpop" tabindex="-1" role="dialog" aria-labelledby="editpop_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="editpop_title">Edit a population parameter</h4>
-				</div>
-				<div class="modal-body"></div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-editpop" type="button" class="btn btn-primary">Save changes</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="modal fade" id="modal-export" tabindex="-1" role="dialog" aria-labelledby="modal-export_title">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h4 class="modal-title" id="modal-export_title">Export legacy data</h4>
-				</div>
-				<div class="modal-body"></div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					<button id="modal-save-export" type="button" class="btn btn-primary">Export Data</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<script type="text/javascript">
-		$('#modal-save-newfeed').click(function (event) {
-			event.preventDefault();
-
-			var response = $.ajax({
-				url: "mgr_feedout.php",
-				type: "POST",
-				async: true,
-				data: $("#new_feed").serialize()
-			}).done(function (result) {
-				if (result.status == 1) {
-					window.location.reload(true);
-				} else {
-					alert(result.error);
-				}
-			});
-		});
-
-		$('#newfeed').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_newfeed',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#newfeed').on('shown.bs.modal', function (e) {
-			$("#newfeed select[name='timezone']").select2();
-		});
-
-		$('#modal-save-editfeed').click(function (event) {
-			event.preventDefault();
-
-			var response = $.ajax({
-				url: "mgr_feedout.php",
-				type: "POST",
-				async: true,
-				data: $("#edit_feed").serialize()
-			}).done(function (result) {
-				if (result.status == 1) {
-					// window.location.reload(true);
-					$('#editfeed').modal('hide');
-				} else {
-					alert(result.error);
-				}
-			});
-		});
-
-		$('#editfeed').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_editfeed',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#editfeed').on('shown.bs.modal', function (e) {
-			$("#editfeed select[name='timezone']").select2();
-		});
-
-		$('#modal-showpop').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_editpopulation',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-queue-preview').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-			$(modal).find('.modal-body').html('Loading ...');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_queue-preview',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-clearqueue').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_clearqueue',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-testrecord').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_testrecord',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-save-testrecord').click(function (event) {
-			event.preventDefault();
-
-			var data = $("#testrecord").serialize();
-			$('#modal-testrecord').find('.modal-body').html('Processing ...');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: data,
-				success: function (result) {
-					$('#modal-testrecord').find('.modal-body').html(result);
-					$('#modal-testrecord').animate({scrollTop: $('#scroll-to').offset().top}, 'fast');
-				}
-			});
-		});
-
-
-		$('#modal-urlreport').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_urlreport',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-save-urlreport').click(function (event) {
-			event.preventDefault();
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: $("#form-urlreport").serialize(),
-				success: function (data) {
-					$('#modal-urlreport').find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-import').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_import',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-save-import').click(function (event) {
-			event.preventDefault();
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: $("#form-import").serialize(),
-				success: function (result) {
-					if (result.status == 1) {
-						// window.location.reload(true);
-						$('#modal-import').modal('hide');
-					} else {
-						alert(result.error);
-					}
-				}
-			});
-		});
-
-		$('#modal-upload').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_upload',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-save-upload').click(function (event) {
-			event.preventDefault();
-			if ($("#form-upload select[name='field_url']").val() === '--') {
-				alert('Please select the URL column.');
-			} else if ($("#form-upload select[name='field_ip']").val() === '--') {
-				alert('Please select the IP column.');
-			} else if ($("#form-upload select[name='field_stamp']").val() === '--') {
-				alert('Please select the stamp column.');
-			} else if ($("#form-upload select[name='field_email']").val() === '--') {
-				alert('Please select the email column.');
-			} else if (importUploader.getInProgress()) {
-				alert('Please wait until your file has finished uploading before submitting this job.');
-			} else if (importUploader.getNetUploads() === 0 || $("#form-upload input[name='filename']").val() === '' || $("#form-upload input[name='uuid']").val() === '') {
-				alert('Please upload a file.');
-			} else {
-
-				var modal = $(this);
-
-				var response = $.ajax({
-					url: "/leadadmin/ajax/submitJob.php",
-					type: "POST",
-					async: true,
-					data: $("#form-upload").serialize()
-				}).done(function (result) {
-					if (result.success === true) {
-						if (result.link) {
-							window.location = result.link;
-						}
-					} else {
-						alert("Error: " + (result.error || 'Unknown'));
-					}
-				});
-			}
-		});
-
-		$('#modal-export').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_export',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-save-export').click(function (event) {
-			event.preventDefault();
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: $("#form-export").serialize(),
-				success: function (result) {
-					if (result.status == 1) {
-						// window.location.reload(true);
-						$('#modal-export').modal('hide');
-					} else {
-						alert(result.error);
-					}
-				}
-			});
-		});
-
-		$('#modal-retry-rejections').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_retry_rejections',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-save-retry-rejections').click(function (event) {
-			event.preventDefault();
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: $("#form-import").serialize(),
-				success: function (result) {
-					if (result.status == 1) {
-						// window.location.reload(true);
-						$('#modal-retry-rejections').modal('hide');
-					} else {
-						alert(result.error);
-					}
-				}
-			});
-		});
-
-		$('#modal-save-newpop').click(function (event) {
-			event.preventDefault();
-
-			var response = $.ajax({
-				url: "mgr_feedout.php",
-				type: "POST",
-				async: true,
-				data: $("#new_pop").serialize()
-			}).done(function (result) {
-				if (result.status == 1) {
-					window.location.reload(true);
-				} else {
-					alert(result.error);
-				}
-			});
-		});
-
-		$('#modal-newpop').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_newpopsetting',
-					'idFeedOut': idFeedOut
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#modal-save-editpop').click(function (event) {
-			event.preventDefault();
-
-			var response = $.ajax({
-				url: "mgr_feedout.php",
-				type: "POST",
-				async: true,
-				data: $("#edit_pop").serialize()
-			}).done(function (result) {
-				if (result.status === 1) {
-					// window.location.reload(true);
-					$('#modal-editpop').modal('hide');
-				} else {
-					alert(result.error);
-				}
-			});
-		});
-
-		$('#modal-editpop').on('show.bs.modal', function (e) {
-			var modal = $(this);
-			var idFeedOut = $(e.relatedTarget).data('feed-id');
-			var idAssoc = $(e.relatedTarget).data('assoc-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'd': 'dialog_editpopsetting',
-					'idFeedOut': idFeedOut,
-					'idAssoc': idAssoc
-				},
-				success: function (data) {
-					modal.find('.modal-body').html(data);
-				}
-			});
-		});
-
-		$('#status-select select').change(function (e) {
-			e.preventDefault();
-			$('#status-select').submit();
-		});
-
-		$('.feed-toggle').on('show.bs.collapse', function () {
-			$(this).prev().find('button[data-toggle="collapse"]').html('Hide Feeds');
-		});
-		$('.feed-toggle').on('hide.bs.collapse', function () {
-			$(this).prev().find('button[data-toggle="collapse"]').html('Show Feeds');
-		});
-
-		$('.cron-toggle').change(function () {
-			var idFeedOut = $(this).data('feed-id');
-
-			$.ajax({
-				cache: false,
-				type: 'POST',
-				url: 'mgr_feedout.php',
-				data: {
-					'a': 'manageFeedParam',
-					'idFeedOut': idFeedOut,
-					'action': 'toggle',
-					'param': 'cron'
-				}
-			});
-		});
-
-		$(document).on('hidden.bs.modal', '.modal', function () {
-			$('.modal:visible').length && $(document.body).addClass('modal-open');
-		});
-
-		function splitMultiFilter(e, t) {
-			values = $('#' + e + 'popset_filter' + t + 'Multi').val();
-			//alert(values);
-			valueArray = values.match(/[^\r\n]+/g);
-			for (count = 0; count < valueArray.length; count++) {
-				element(
-					e + "popset_filter" + t + "_container"
-					, "element_filter"
-					, {
-						"e": e
-						, "type": t
-						, "value": valueArray[count]
-					}
-				);
-			}
-			//alert('#'+e+'popset_filter'+t+'_multipleInsert');
-			$('#' + e + 'popset_filter' + t + '_multipleInsert').html("");
-		}
-	</script>
+    <div class="modal fade" id="newfeed" tabindex="-1" role="dialog" aria-labelledby="newfeed_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="newfeed_title">Add a new outgoing feed</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-newfeed" type="button" class="btn btn-primary">Add feed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editfeed" tabindex="-1" role="dialog" aria-labelledby="editfeed_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="editfeed_title">Edit an outgoing feed</h4>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-editfeed" type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-showpop" tabindex="-1" role="dialog" aria-labelledby="showpop_title">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="showpop_title">Population Settings</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-queue-preview" tabindex="-1" role="dialog" aria-labelledby="queue-preview_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="queue-preview_title">Queue Preview</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-clearqueue" tabindex="-1" role="dialog" aria-labelledby="clearqueue_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="clearqueue_title">Clear queued records</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-testrecord" tabindex="-1" role="dialog" aria-labelledby="testrecord_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="testrecord_title">Send a test record</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-testrecord" type="button" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-urlreport" tabindex="-1" role="dialog" aria-labelledby="urlreport_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="urlreport_title">URL Report</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-urlreport" type="button" class="btn btn-primary">Run Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-import" tabindex="-1" role="dialog" aria-labelledby="import_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="import_title">Import Legacy Data</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-import" type="button" class="btn btn-primary">Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-upload" tabindex="-1" role="dialog" aria-labelledby="upload_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="upload_title">Upload Legacy Data</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-upload" type="button" class="btn btn-primary">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-retry-rejections" tabindex="-1" role="dialog"
+         aria-labelledby="retry_rejections_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="retry_rejections_title">Retry Rejections</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-retry-rejections" type="button" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-newpop" tabindex="-1" role="dialog" aria-labelledby="newpop_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="newpop_title">Add a new population parameter</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-newpop" type="button" class="btn btn-primary">Add population</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-editpop" tabindex="-1" role="dialog" aria-labelledby="editpop_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="editpop_title">Edit a population parameter</h4>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-editpop" type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-export" tabindex="-1" role="dialog" aria-labelledby="modal-export_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="modal-export_title">Export legacy data</h4>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="modal-save-export" type="button" class="btn btn-primary">Export Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $('#modal-save-newfeed').click(function (event) {
+            event.preventDefault();
+
+            var response = $.ajax({
+                url: "mgr_feedout.php",
+                type: "POST",
+                async: true,
+                data: $("#new_feed").serialize()
+            }).done(function (result) {
+                if (result.status == 1) {
+                    window.location.reload(true);
+                } else {
+                    alert(result.error);
+                }
+            });
+        });
+
+        $('#newfeed').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_newfeed',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#newfeed').on('shown.bs.modal', function (e) {
+            $("#newfeed select[name='timezone']").select2();
+        });
+
+        $('#modal-save-editfeed').click(function (event) {
+            event.preventDefault();
+
+            var response = $.ajax({
+                url: "mgr_feedout.php",
+                type: "POST",
+                async: true,
+                data: $("#edit_feed").serialize()
+            }).done(function (result) {
+                if (result.status == 1) {
+                    // window.location.reload(true);
+                    $('#editfeed').modal('hide');
+                } else {
+                    alert(result.error);
+                }
+            });
+        });
+
+        $('#editfeed').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_editfeed',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#editfeed').on('shown.bs.modal', function (e) {
+            $("#editfeed select[name='timezone']").select2();
+        });
+
+        $('#modal-showpop').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_editpopulation',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-queue-preview').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+            $(modal).find('.modal-body').html('Loading ...');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_queue-preview',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-clearqueue').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_clearqueue',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-testrecord').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_testrecord',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-save-testrecord').click(function (event) {
+            event.preventDefault();
+
+            var data = $("#testrecord").serialize();
+            $('#modal-testrecord').find('.modal-body').html('Processing ...');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: data,
+                success: function (result) {
+                    $('#modal-testrecord').find('.modal-body').html(result);
+                    $('#modal-testrecord').animate({scrollTop: $('#scroll-to').offset().top}, 'fast');
+                }
+            });
+        });
+
+
+        $('#modal-urlreport').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_urlreport',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-save-urlreport').click(function (event) {
+            event.preventDefault();
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: $("#form-urlreport").serialize(),
+                success: function (data) {
+                    $('#modal-urlreport').find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-import').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_import',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-save-import').click(function (event) {
+            event.preventDefault();
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: $("#form-import").serialize(),
+                success: function (result) {
+                    if (result.status == 1) {
+                        // window.location.reload(true);
+                        $('#modal-import').modal('hide');
+                    } else {
+                        alert(result.error);
+                    }
+                }
+            });
+        });
+
+        $('#modal-upload').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_upload',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-save-upload').click(function (event) {
+            event.preventDefault();
+            if ($("#form-upload select[name='field_url']").val() === '--') {
+                alert('Please select the URL column.');
+            } else if ($("#form-upload select[name='field_ip']").val() === '--') {
+                alert('Please select the IP column.');
+            } else if ($("#form-upload select[name='field_stamp']").val() === '--') {
+                alert('Please select the stamp column.');
+            } else if ($("#form-upload select[name='field_email']").val() === '--') {
+                alert('Please select the email column.');
+            } else if (importUploader.getInProgress()) {
+                alert('Please wait until your file has finished uploading before submitting this job.');
+            } else if (importUploader.getNetUploads() === 0 || $("#form-upload input[name='filename']").val() === '' || $("#form-upload input[name='uuid']").val() === '') {
+                alert('Please upload a file.');
+            } else {
+
+                var modal = $(this);
+
+                var response = $.ajax({
+                    url: "/leadadmin/ajax/submitJob.php",
+                    type: "POST",
+                    async: true,
+                    data: $("#form-upload").serialize()
+                }).done(function (result) {
+                    if (result.success === true) {
+                        if (result.link) {
+                            window.location = result.link;
+                        }
+                    } else {
+                        alert("Error: " + (result.error || 'Unknown'));
+                    }
+                });
+            }
+        });
+
+        $('#modal-export').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_export',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-save-export').click(function (event) {
+            event.preventDefault();
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: $("#form-export").serialize(),
+                success: function (result) {
+                    if (result.status == 1) {
+                        // window.location.reload(true);
+                        $('#modal-export').modal('hide');
+                    } else {
+                        alert(result.error);
+                    }
+                }
+            });
+        });
+
+        $('#modal-retry-rejections').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_retry_rejections',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-save-retry-rejections').click(function (event) {
+            event.preventDefault();
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: $("#form-import").serialize(),
+                success: function (result) {
+                    if (result.status == 1) {
+                        // window.location.reload(true);
+                        $('#modal-retry-rejections').modal('hide');
+                    } else {
+                        alert(result.error);
+                    }
+                }
+            });
+        });
+
+        $('#modal-save-newpop').click(function (event) {
+            event.preventDefault();
+
+            var response = $.ajax({
+                url: "mgr_feedout.php",
+                type: "POST",
+                async: true,
+                data: $("#new_pop").serialize()
+            }).done(function (result) {
+                if (result.status == 1) {
+                    window.location.reload(true);
+                } else {
+                    alert(result.error);
+                }
+            });
+        });
+
+        $('#modal-newpop').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_newpopsetting',
+                    'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-save-editpop').click(function (event) {
+            event.preventDefault();
+
+            var response = $.ajax({
+                url: "mgr_feedout.php",
+                type: "POST",
+                async: true,
+                data: $("#edit_pop").serialize()
+            }).done(function (result) {
+                if (result.status === 1) {
+                    // window.location.reload(true);
+                    $('#modal-editpop').modal('hide');
+                } else {
+                    alert(result.error);
+                }
+            });
+        });
+
+        $('#modal-editpop').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+            var idAssoc = $(e.relatedTarget).data('assoc-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_editpopsetting',
+                    'idFeedOut': idFeedOut,
+                    'idAssoc': idAssoc
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#status-select select').change(function (e) {
+            e.preventDefault();
+            $('#status-select').submit();
+        });
+
+        $('.feed-toggle').on('show.bs.collapse', function () {
+            $(this).prev().find('button[data-toggle="collapse"]').html('Hide Feeds');
+        });
+        $('.feed-toggle').on('hide.bs.collapse', function () {
+            $(this).prev().find('button[data-toggle="collapse"]').html('Show Feeds');
+        });
+
+        $('.cron-toggle').change(function () {
+            var idFeedOut = $(this).data('feed-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'a': 'manageFeedParam',
+                    'idFeedOut': idFeedOut,
+                    'action': 'toggle',
+                    'param': 'cron'
+                }
+            });
+        });
+
+        $(document).on('hidden.bs.modal', '.modal', function () {
+            $('.modal:visible').length && $(document.body).addClass('modal-open');
+        });
+
+        function splitMultiFilter(e, t) {
+            values = $('#' + e + 'popset_filter' + t + 'Multi').val();
+            //alert(values);
+            valueArray = values.match(/[^\r\n]+/g);
+            for (count = 0; count < valueArray.length; count++) {
+                element(
+                    e + "popset_filter" + t + "_container"
+                    , "element_filter"
+                    , {
+                        "e": e
+                        , "type": t
+                        , "value": valueArray[count]
+                    }
+                );
+            }
+            //alert('#'+e+'popset_filter'+t+'_multipleInsert');
+            $('#' + e + 'popset_filter' + t + '_multipleInsert').html("");
+        }
+    </script>
 
 </body>
 </html>
