@@ -38,13 +38,13 @@ include( INCLUDES . "c_header.php" );
 	<?php $idCompany_in = isset( $_REQUEST['idCompany_in'] ) ? $_REQUEST['idCompany_in'] : '';
 	$idCompany_out      = isset( $_REQUEST['idCompany_out'] ) ? $_REQUEST['idCompany_out'] : '';
 
-	$companies = $leads->getCompanies( 'active' ); ?>
+	$inCompanies = $leads->getCompaniesMapping( 'active', 'idFeedIn' );
+	$outCompanies = $leads->getCompaniesMapping( 'active', 'idFeedOut' ); ?>
 
-	<?php if ( $companies === false ) { ?>
+	<?php if ( $inCompanies === false || $outCompanies === false ) { ?>
 		Database failure - could not fetch company list
-	<?php } elseif ( ! is_object( $companies ) && $companies == 0 ) { ?>
-		There are no companies in the database. Please create a company before
-		creating a report.
+	<?php } elseif (( ! is_object( $inCompanies ) && $inCompanies == 0 ) || ( ! is_object( $outCompanies ) && $outCompanies == 0 )) { ?>
+		There are no companies in the database. Please create a company before creating a report.
 	<?php } else { ?>
 		<form id="urlreport" method="GET" action="reports-mapping.php">
 			<label for="idCompany_in">Incoming Company:</label> <select name="idCompany_in" id="idCompany_in">
@@ -78,69 +78,69 @@ include( INCLUDES . "c_header.php" );
 	<?php if ( ! empty( $idCompany_in ) || ! empty( $idCompany_out ) ) { ?>
 
 		<?php $mappings = $leads->getUrlMappings( $idCompany_in, $idCompany_out );
-	if ( $mappings ) {
-		print "<table id=\"mapping_report\" class=\"table table-bordered table-condensed table-striped\">\n";
-		print "\t<thead>\n";
-		print "\t<tr class=\"bgGray\">\n";
-		print "\t\t<th>Incoming Company</th>\n";
-		print "\t\t<th>Incoming Feed</th>\n";
-		print "\t\t<th>Incoming URL</th>\n";
-		print "\t\t<th>Outgoing Company</th>\n";
-		print "\t\t<th>Outgoing Feed</th>\n";
-		print "\t\t<th>Active</th>\n";
-		print "\t</tr>\n";
-		print "\t</thead>\n";
-		print "\t<tbody>\n";
-		foreach ( $mappings as $mapping ) {
+		if ( $mappings ) {
+			print "<table id=\"mapping_report\" class=\"table table-bordered table-condensed table-striped\">\n";
+			print "\t<thead>\n";
 			print "\t<tr class=\"bgGray\">\n";
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
-			printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
-			if ( '1' == $mapping['active'] ) {
-				print "\t\t<td>Y</td>\n";
-			} else {
-				print "\t\t<td>N</td>\n";
-			}
+			print "\t\t<th>Incoming Company</th>\n";
+			print "\t\t<th>Incoming Feed</th>\n";
+			print "\t\t<th>Incoming URL</th>\n";
+			print "\t\t<th>Outgoing Company</th>\n";
+			print "\t\t<th>Outgoing Feed</th>\n";
+			print "\t\t<th>Active</th>\n";
 			print "\t</tr>\n";
+			print "\t</thead>\n";
+			print "\t<tbody>\n";
+			foreach ( $mappings as $mapping ) {
+				print "\t<tr class=\"bgGray\">\n";
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['inName'] ) );
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedIn'] . ': ' . $mapping['inDescription'] ) );
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['url'] ) );
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['outName'] ) );
+				printf( "\t\t<td>%s</td>\n", htmlspecialchars( $mapping['idFeedOut'] . ': ' . $mapping['outDescription'] ) );
+				if ( '1' == $mapping['active'] ) {
+					print "\t\t<td>Y</td>\n";
+				} else {
+					print "\t\t<td>N</td>\n";
+				}
+				print "\t</tr>\n";
 
-		}
-		print "\t</tbody>\n";
-		print "</table>\n";
-		?>
+			}
+			print "\t</tbody>\n";
+			print "</table>\n";
+			?>
 
-		<script type="text/javascript">
-			/*
-				var tf = new TableFilter(document.querySelector('#mapping_report'), {
-					base_path: '/leadadmin/libraries/tablefilter/',
-					filters_row_index: 1,
-					sort: true,
-					sort_config: {
-						sort_types:['String','String','String','String','String','String']
-					},
-					remember_grid_values: true,
-					alternate_rows: true,
-					btn_reset: true,
-					btn_reset_text: "Clear",
-					btn_text: " > ",
-					loader: true,
-					loader_text: "Filtering data...",
-					col_0: "select",
-					col_1: "select",
-					col_2: "select",
-					col_3: "select",
-					col_4: "select",
-					col_5: "select",
-					display_all_text: "< Show all >"
-				});
-				tf.init();
-			*/
-		</script>
-	<?php
-	} else {
-		print "No matches found for the search criteria specified.";
-	} ?>
+			<script type="text/javascript">
+				/*
+					var tf = new TableFilter(document.querySelector('#mapping_report'), {
+						base_path: '/leadadmin/libraries/tablefilter/',
+						filters_row_index: 1,
+						sort: true,
+						sort_config: {
+							sort_types:['String','String','String','String','String','String']
+						},
+						remember_grid_values: true,
+						alternate_rows: true,
+						btn_reset: true,
+						btn_reset_text: "Clear",
+						btn_text: " > ",
+						loader: true,
+						loader_text: "Filtering data...",
+						col_0: "select",
+						col_1: "select",
+						col_2: "select",
+						col_3: "select",
+						col_4: "select",
+						col_5: "select",
+						display_all_text: "< Show all >"
+					});
+					tf.init();
+				*/
+			</script>
+		<?php
+		} else {
+			print "No matches found for the search criteria specified.";
+		} ?>
 
 	<?php } else { ?>
 
@@ -149,6 +149,13 @@ include( INCLUDES . "c_header.php" );
 	<?php } ?>
 
 </div>
+
+<script type="text/javascript">
+	$("#idCompany_in").select2({
+		placeholder: "Select an incoming company",
+		allowClear: true
+	});
+</script>
 
 </body>
 </html>
