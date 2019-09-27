@@ -52,7 +52,7 @@ include( INCLUDES . "c_header.php" );
 					echo ' selected="selected"';
 				} ?>>Select an Incoming Company
 				</option>
-				<?php foreach ( $companies as $company ) { ?>
+				<?php foreach ( $inCompanies as $company ) { ?>
 					<option value='<?php echo $company->idCompany; ?>'
 					        <?php if ( $company->idCompany == $idCompany_in ){
 					        ?>selected='selected'<?php } ?>
@@ -64,7 +64,7 @@ include( INCLUDES . "c_header.php" );
 					echo ' selected="selected"';
 				} ?>>Select an Outgoing Company
 				</option>
-				<?php foreach ( $companies as $company ) { ?>
+				<?php foreach ( $outCompanies as $company ) { ?>
 					<option value='<?php echo $company->idCompany; ?>'
 					        <?php if ( $company->idCompany == $idCompany_out ){
 					        ?>selected='selected'<?php } ?>
@@ -151,6 +151,10 @@ include( INCLUDES . "c_header.php" );
 </div>
 
 <script type="text/javascript">
+	$("#idCompany_out").select2({
+		placeholder: "Select an outgoing company",
+		allowClear: true
+	});
 	$("#idCompany_in").select2({
 		placeholder: "Select an incoming company",
 		allowClear: true
