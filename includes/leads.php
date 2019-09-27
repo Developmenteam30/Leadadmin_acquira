@@ -2315,6 +2315,26 @@ class Leads
         return $results;
     }
 
+    public function getCompaniesMapping($status = null, $col = 'idFeedIn')
+    {
+        $results = array();
+
+        try {
+            if (!empty($status)) {
+                $query = $this->db->prepare("SELECT * FROM companies WHERE idCompany IN (SELECT $col FROM url_mapping) AND status = ? ORDER BY name");
+                $query->execute(array($status));
+            } else {
+                $query = $this->db->prepare("SELECT * FROM companies WHERE idCompany IN (SELECT $col FROM url_mapping) ORDER BY name");
+                $query->execute();
+            }
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get company list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function getCompaniesChoices($status = null)
     {
         $results = array();

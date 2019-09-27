@@ -38,7 +38,7 @@ include( INCLUDES . "c_header.php" );
 	<?php $idCompany_in = isset( $_REQUEST['idCompany_in'] ) ? $_REQUEST['idCompany_in'] : '';
 	$idCompany_out      = isset( $_REQUEST['idCompany_out'] ) ? $_REQUEST['idCompany_out'] : '';
 
-	$companies = $leads->getCompanies( 'active' ); ?>
+	$companies = $leads->getCompaniesMapping( 'active', 'idFeedIn' ); ?>
 
 	<?php if ( $companies === false ) { ?>
 		Database failure - could not fetch company list
@@ -149,6 +149,13 @@ include( INCLUDES . "c_header.php" );
 	<?php } ?>
 
 </div>
+
+<script type="text/javascript">
+	$("#idCompany_in").select2({
+		placeholder: "Select an incoming company",
+		allowClear: true
+	});
+</script>
 
 </body>
 </html>
