@@ -2315,6 +2315,26 @@ class Leads
         return $results;
     }
 
+    public function getInboundCompaniesMapping($status = null)
+    {
+        $results = array();
+
+        try {
+            if (!empty($status)) {
+                $query = $this->db->prepare("SELECT c.idCompany,c.name FROM url_mapping m LEFT JOIN feedinc fi ON fi.idFeedIn = m.idFeedIn LEFT JOIN companies c ON c.idCompany = fi.idCompany WHERE c.status = ? GROUP BY 1 ORDER BY 2");
+                $query->execute(array($status));
+            } else {
+                $query = $this->db->prepare("SELECT c.idCompany,c.name FROM url_mapping m LEFT JOIN feedinc fi ON fi.idFeedIn = m.idFeedIn LEFT JOIN companies c ON c.idCompany = fi.idCompany GROUP BY 1 ORDER BY 2");
+                $query->execute();
+            }
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get inbound company mapping list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function getCompaniesChoices($status = null)
     {
         $results = array();
@@ -3821,35 +3841,81 @@ class Leads
         return true;
     }
 
-    public function getUrlMappings()
+	public function getUrlMappings( $companyIn, $companyOut ) {
+		$results = array();
+		$params  = [];
+
+		$query
+			   = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
+		$query .= "FROM url_mapping m ";
+		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
+		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
+		$query .= "WHERE 1=1 ";
+
+		if ( ! empty( $companyIn ) ) {
+			$query    .= "AND ci.idCompany = ? ";
+			$params[] = $companyIn;
+		}
+		if ( ! empty( $companyOut ) ) {
+			$query    .= "AND co.idCompany = ? ";
+			$params[] = $companyOut;
+		}
+
+		$query .= " ) ";
+
+		if ( ! empty( $companyIn ) && empty( $companyOut ) ) {
+
+			$query .= "UNION ALL ";
+
+			$query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
+			$query .= "FROM stats_inbound s ";
+			$query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
+			$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+			$query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
+			$query .= "WHERE m.url IS NULL ";
+
+			$query    .= "AND ci.idCompany = ? ";
+			$params[] = $companyIn;
+
+			$query .= "GROUP BY 4 ) ";
+
+		}
+
+		$query .= "ORDER BY 1,2,4,5,6 ";
+
+		try {
+			$query = $this->db->prepare( $query );
+			$query->execute( $params );
+			$results = $query->fetchAll();
+		} catch ( PDOException $e ) {
+			$this->logError( 'Unable to get URL mappings: ' . $e->getMessage() );
+		}
+
+		return $results;
+	}
+
+    public function getOutboundCompanyMappingsByInboundCompany($idCompany)
     {
         $results = array();
 
-        $query = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
+        $query = "SELECT co.idCompany,co.name ";
         $query .= "FROM url_mapping m ";
-        $query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
-        $query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
-        $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
-        $query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ) ";
-
-        $query .= "UNION ALL ";
-
-        $query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
-        $query .= "FROM stats_inbound s ";
-        $query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
-        $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
-        $query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
-        $query .= "WHERE m.url IS NULL ";
-        $query .= "GROUP BY 4 ) ";
-
-        $query .= "ORDER BY 1,2,4,5,6 ";
+        $query .= "INNER JOIN feedinc fi ON m.idFeedIn = fi.idFeedIn ";
+        $query .= "INNER JOIN feedout fo ON m.idFeedOut = fo.idFeedOut ";
+        $query .= "INNER JOIN companies ci ON ci.idCompany = fi.idCompany ";
+        $query .= "INNER JOIN companies co ON co.idCompany = fo.idCompany ";
+        $query .= "WHERE fi.idCompany = ? ";
+        $query .= "GROUP BY 1 ";
+        $query .= "ORDER BY 2 ";
 
         try {
             $query = $this->db->prepare($query);
-            $query->execute();
-            $results = $query->fetchAll();
+            $query->execute(array($idCompany));
+            $results = $query->fetchAll(\PDO::FETCH_OBJ);
         } catch (PDOException $e) {
-            $this->logError('Unable to get URL mappings: ' . $e->getMessage());
+            $this->logError('Unable to get outbound company mappings by inbound company: ' . $e->getMessage());
         }
 
         return $results;
