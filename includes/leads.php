@@ -2315,21 +2315,21 @@ class Leads
         return $results;
     }
 
-    public function getCompaniesMapping($status = null, $col = 'idFeedIn')
+    public function getInboundCompaniesMapping($status = null)
     {
         $results = array();
 
         try {
             if (!empty($status)) {
-                $query = $this->db->prepare("SELECT * FROM companies WHERE idCompany IN (SELECT $col FROM url_mapping) AND status = ? ORDER BY name");
+                $query = $this->db->prepare("SELECT c.idCompany,c.name FROM url_mapping m LEFT JOIN feedinc fi ON fi.idFeedIn = m.idFeedIn LEFT JOIN companies c ON c.idCompany = fi.idCompany WHERE c.status = ? GROUP BY 1 ORDER BY 2");
                 $query->execute(array($status));
             } else {
-                $query = $this->db->prepare("SELECT * FROM companies WHERE idCompany IN (SELECT $col FROM url_mapping) ORDER BY name");
+                $query = $this->db->prepare("SELECT c.idCompany,c.name FROM url_mapping m LEFT JOIN feedinc fi ON fi.idFeedIn = m.idFeedIn LEFT JOIN companies c ON c.idCompany = fi.idCompany GROUP BY 1 ORDER BY 2");
                 $query->execute();
             }
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
-            $this->logError('Unable to get company list: ' . $e->getMessage());
+            $this->logError('Unable to get inbound company mapping list: ' . $e->getMessage());
         }
 
         return $results;
@@ -3895,6 +3895,31 @@ class Leads
 
 		return $results;
 	}
+
+    public function getOutboundCompanyMappingsByInboundCompany($idCompany)
+    {
+        $results = array();
+
+        $query = "SELECT co.idCompany,co.name ";
+        $query .= "FROM url_mapping m ";
+        $query .= "INNER JOIN feedinc fi ON m.idFeedIn = fi.idFeedIn ";
+        $query .= "INNER JOIN feedout fo ON m.idFeedOut = fo.idFeedOut ";
+        $query .= "INNER JOIN companies ci ON ci.idCompany = fi.idCompany ";
+        $query .= "INNER JOIN companies co ON co.idCompany = fo.idCompany ";
+        $query .= "WHERE fi.idCompany = ? ";
+        $query .= "GROUP BY 1 ";
+        $query .= "ORDER BY 2 ";
+
+        try {
+            $query = $this->db->prepare($query);
+            $query->execute(array($idCompany));
+            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get outbound company mappings by inbound company: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
 
     public function getInvoiceDetails($date, $idCompany)
     {
