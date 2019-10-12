@@ -1007,6 +1007,16 @@ class ProcessLeads
                     $c = false;
                     $result['reason'] = 'State (state) contains invalid characters.';
                 }
+
+                $filterState = json_decode($feedParams->filterState);
+                if ( $filterState->mode == 'includeOnly' && !in_array($value, $filterState->states) ) {
+                    $c = false;
+                    $result['reason'] = 'State is not included in list.';
+                } elseif ( $filterState->mode == 'excludeOnly' && in_array($value, $filterState->states) ) {
+                    $c = false;
+                    $result['reason'] = 'State is excluded in list.';
+                }
+
                 break;
 
             case 'zip':

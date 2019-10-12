@@ -762,17 +762,17 @@ if (isset($_REQUEST['d'])) {
                                 <input type="radio" name="filterState" value=""<?php if (empty($filterState_value->mode)) {
                                     print ' checked="checked"';
                                 } ?> /> Off<br/>
-                                <input type="radio" name="filterState" value="includeOnly"<?php if ('includeOnly' == $filterState_value->mode) {
+                                <input type="radio" name="filterState" value="includeOnly"<?php if (!empty($filterState_value->mode) && 'includeOnly' == $filterState_value->mode) {
                                     print ' checked="checked"';
                                 } ?> /> Include Only<br/>
-                                <input type="radio" name="filterState" value="excludeOnly"<?php if ('excludeOnly' == $filterState_value->mode) {
+                                <input type="radio" name="filterState" value="excludeOnly"<?php if (!empty($filterState_value->mode) && 'excludeOnly' == $filterState_value->mode) {
                                     print ' checked="checked"';
                                 } ?> /> Exclude Only<br/>
                             </p>
-                            <div id="filterStateChoice"<?php if ( $filterState_value->mode != 'includeOnly' && $filterState_value->mode != 'excludeOnly' ) echo ' style="display: none;"'; ?>>
+                            <div id="filterStateChoice"<?php if (empty($filterState_value->mode) || ($filterState_value->mode != 'includeOnly' && $filterState_value->mode != 'excludeOnly') ) echo ' style="display: none;"'; ?>>
                                 <p>Choose which states to include/exclude.</p>
                                 <p><?php foreach ( $all_states as $abbr => $st ) { ?>
-                                    <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='filterStateChoice[]' value='<?php echo $abbr; ?>'<?php if (in_array($abbr, $filterState_value->states)){ ?> checked='checked'<?php } ?> />&nbsp;<?php echo $st; ?></label> 
+                                    <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='filterStateChoice[]' value='<?php echo $abbr; ?>'<?php if (!empty($filterState_value->states) && in_array($abbr, $filterState_value->states)){ ?> checked='checked'<?php } ?> />&nbsp;<?php echo $st; ?></label> 
                                 <?php } ?></p>
                             </div>
                         </td>
