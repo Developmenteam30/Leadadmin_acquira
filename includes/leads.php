@@ -4346,7 +4346,7 @@ class Leads
         $results = array();
 
         try {
-            $query = $this->db->prepare("SELECT CONVERT_TZ(timestamp,?,?) AS timestampConverted,result,leadstamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL ORDER BY timestamp DESC LIMIT " . intval($offset) . ",100");
+            $query = $this->db->prepare("SELECT CONVERT_TZ(timestamp,?,?) AS timestampConverted,result,leadstamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip,leadId FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL ORDER BY timestamp DESC LIMIT " . intval($offset) . ",100");
             $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedIn));
             $results = $query->fetchAll();
         } catch (PDOException $e) {
@@ -4570,7 +4570,7 @@ class Leads
         $results = array();
 
         try {
-            $query = $this->db->prepare("SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,o.accepted,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.idRecord FROM archive.data_outbound_" . date('Ym') . " o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idFeedOut = ? AND o.processed = 1 AND o.accepted = 0 ORDER BY o.idRecord DESC LIMIT " . intval($offset) . ",100");
+            $query = $this->db->prepare("SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,o.accepted,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.idRecord,i.leadId FROM archive.data_outbound_" . date('Ym') . " o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idFeedOut = ? AND o.processed = 1 AND o.accepted = 0 ORDER BY o.idRecord DESC LIMIT " . intval($offset) . ",100");
             $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut));
             $results = $query->fetchAll();
         } catch (PDOException $e) {
