@@ -28,6 +28,7 @@ if ('clear-outbound-queue' === $job->type) {
 
     $fields = unserialize($job->fields);
     $status = 'Unknown error.';
+    $companyName = '';
 
     if (empty($job->destination) || empty($fields['label'])) {
 
@@ -62,6 +63,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: clear-outbound-queue\r\n";
     $body .= "\r\n";
+    $body .= "Company: {$companyName}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$fields['label']}\r\n";
     $body .= "\r\n";
@@ -82,6 +84,7 @@ if ('clear-outbound-queue' === $job->type) {
 
     $fields = unserialize($job->fields);
     $status = 'Unknown error.';
+    $companyName = '';
 
     if (empty($job->destination) || empty($fields['label']) || empty($fields['dateStart']) || empty($fields['dateEnd'])) {
 
@@ -141,6 +144,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: retry-outbound-rejections\r\n";
     $body .= "\r\n";
+    $body .= "Company: {$companyName}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$fields['label']}\r\n";
     $body .= "\r\n";
@@ -162,6 +166,7 @@ if ('clear-outbound-queue' === $job->type) {
 
     $fields = unserialize($job->fields);
     $status = 'Unknown error.';
+    $companyName = '';
 
     if (empty($job->destination) || empty($fields['columns'])) {
 
@@ -208,6 +213,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: export-incoming\r\n";
     $body .= "\r\n";
+    $body .= "Company: {$companyName}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$fields['label']}\r\n";
     $body .= "\r\n";
@@ -235,6 +241,7 @@ if ('clear-outbound-queue' === $job->type) {
 
     $fields = unserialize($job->fields);
     $status = 'Unknown error.';
+    $companyName = '';
 
     if (empty($job->destination)) {
 
@@ -281,6 +288,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: export-outgoing\r\n";
     $body .= "\r\n";
+    $body .= "Company: {$companyName}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$fields['label']}\r\n";
     $body .= "\r\n";
