@@ -1047,7 +1047,7 @@ include( INCLUDES . "c_header.php" );
 			<tr class="bgGray header">
 				<th>ID</th>
 				<th>Company Name</th>
-				<th class="hidden-xs">Notes</th>
+				<th class="hidden-xs">Campaign Overview</th>
 				<th>Options</th>
 			</tr>
 			</thead>
