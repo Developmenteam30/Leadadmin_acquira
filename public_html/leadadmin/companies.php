@@ -1290,6 +1290,23 @@ include( INCLUDES . "c_header.php" );
 		});
 	});
 
+	$('#modal-save-companynotes').click(function (event) {
+		event.preventDefault();
+
+		var response = $.ajax({
+			url: "dashboard.php",
+			type: "POST",
+			async: true,
+			data: $("#note_company").serialize()
+		}).done(function (result) {
+			if (result.status == 1) {
+				window.location.reload(true);
+			} else {
+				alert(result.error);
+			}
+		});
+	});
+
 	$('#companynotes').on('hide.bs.modal', function (e) {
 		$(this).find('.modal-body').html('');
 		refreshTimeout = setTimeout(function () {
