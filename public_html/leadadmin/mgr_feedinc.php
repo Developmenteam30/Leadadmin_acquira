@@ -97,6 +97,23 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Company cannot be empty.';
             }
 
+            if ( !isset($_REQUEST['filterState']) || empty($_REQUEST['filterState']) ) {
+                $filterStateField = '';
+            } else {
+                $filterStateField = $_REQUEST['filterState'];
+            }
+
+            if ( $filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice']) ) {
+                $filterStateChoice = '';
+            } else {
+                $filterStateChoice = $_REQUEST['filterStateChoice'];
+            }
+
+            if(!empty($filterStateField) && empty($filterStateChoice)) {
+                $c = false;
+                $result['error'] = 'If using the state filter feature, at least one state must be selected.';
+            }
+
             if ($c && empty($_REQUEST['allowedFields']) || !is_array($_REQUEST['allowedFields'])) {
                 // Must allow some fields, or the feed is worthless isn't it
                 $c = false;
@@ -233,18 +250,6 @@ if (isset($_REQUEST['a'])) {
                 }
 
                 if ($c) { //Add entry to the database.
-
-                    if ( !isset($_REQUEST['filterState']) || empty($_REQUEST['filterState']) ) {
-                        $filterStateField = '';
-                    } else {
-                        $filterStateField = $_REQUEST['filterState'];
-                    }
-                    
-                    if ( $filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice']) ) {
-                        $filterStateChoice = '';
-                    } else {
-                        $filterStateChoice = $_REQUEST['filterStateChoice'];
-                    }
 
                     $filterStateArray = array(
                         'mode' => $filterStateField,
@@ -758,6 +763,7 @@ if (isset($_REQUEST['d'])) {
                         <td><p>Filter State</p></td>
                         <td>
                             <?php $filterState_value = json_decode($feed_filterState); ?>
+                            <p>Use this feature to limit which state(s) leads are allowed to come from.</p>
                             <p>
                                 <input type="radio" name="filterState" value=""<?php if (empty($filterState_value->mode)) {
                                     print ' checked="checked"';
