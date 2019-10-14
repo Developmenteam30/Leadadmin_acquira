@@ -894,6 +894,55 @@ if( isset( $_REQUEST['d'] ) ) {
 
 			}
 			break;
+
+		case "dialog_companynotes":
+			$companyId = !empty( $_REQUEST['companyId'] ) ? $_REQUEST['companyId'] : '';
+			$company = $leads->getCompany( $companyId );
+
+			if( empty( $company ) ) {
+				?>
+				<p>There is no company that exists by that ID.</p>
+				<?php
+				break;
+
+			}
+
+			$fields = array(
+				array(
+					'id' => 'note',
+					'label' => 'Add a Note',
+					'type' => 'textarea',
+				),
+				array(
+					'id' => 'companyId',
+					'type' => 'hidden',
+					'value' => $company->idCompany,
+				),
+				array(
+					'id' => 'a',
+					'type' => 'hidden',
+					'value' => 'addNewNote',
+				),
+			);
+
+			Display::displayForm( 'note_company', $fields );
+
+			$notes = $leads->getCompanyNotes( $company->idCompany );
+			if( empty( $notes ) || !is_array( $notes ) ) {
+				print '<p>There are no notes on file for this company.</p>' . PHP_EOL;
+			} else {
+				foreach( $notes as $note ) {
+					printf( '<hr/><p>On <strong>%s</strong> at %s, <strong>%s</strong> wrote:<br/>%s</p>' . PHP_EOL,
+
+						date( 'D, M jS, Y', strtotime( $note->timestamp ) ),
+						date( 'g:ia', strtotime( $note->timestamp ) ),
+						htmlentities( $note->fullName ),
+						nl2br( htmlentities( $note->note ) )
+					);
+				}
+			}
+
+        break;
 	}
 	exit;
 }
@@ -1060,7 +1109,16 @@ include( INCLUDES . "c_header.php" );
 					<td><?php echo Display::escHtml( $company->name ); ?></td>
 					<td class="hidden-xs"><?php echo Display::escHtml( $company->note ); ?></td>
 					<td class="text-center">
-						<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editcompany" data-company-id="<?php echo $company->idCompany; ?>">Edit</button>
+						<div class="btn-group">
+							<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editcompany" data-company-id="<?php echo $company->idCompany; ?>">Edit</button>
+							<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<span class="caret"></span>
+								<span class="sr-only">Toggle Dropdown</span>
+							</button>
+							<ul class="dropdown-menu">
+								<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#companynotes" data-company-id="<?php echo $company->idCompany; ?>">Notes</a></li>
+							</ul>
+						</div>
 					</td>
 				</tr>
 				<?php
@@ -1108,7 +1166,31 @@ include( INCLUDES . "c_header.php" );
 	</div>
 </div>
 
+<div class="modal fade" id="companynotes" tabindex="-1" role="dialog" aria-labelledby="companynotes_title">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="companynotes_title">Company Notes</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="modal-save-companynotes" type="button" class="btn btn-primary">Add A New Note</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script type="text/javascript">
+	var refreshTimeout;
+	$(document).ready(function () {
+		refreshTimeout = setTimeout(function () {
+			location.reload();
+		}, 120000);
+	});
+
 	$('#modal-save-newcompany').click(function (event) {
 		event.preventDefault();
 
@@ -1185,7 +1267,48 @@ include( INCLUDES . "c_header.php" );
 		e.preventDefault();
 		$('#status-select').submit();
 	});
+
+	$('#companynotes').on('show.bs.modal', function (e) {
+		var modal = $(this);
+		var companyId = $(e.relatedTarget).data('company-id');
+
+		if(refreshTimeout) {
+			clearTimeout(refreshTimeout);
+		}
+
+		$.ajax({
+			cache: false,
+			type: 'POST',
+			url: 'companies.php',
+			data: {
+				'd': 'dialog_companynotes',
+				'companyId': companyId
+			},
+			success: function (data) {
+				modal.find('.modal-body').html(data);
+			}
+		});
+	});
+
+	$('#companynotes').on('hide.bs.modal', function (e) {
+		$(this).find('.modal-body').html('');
+		refreshTimeout = setTimeout(function () {
+			location.reload();
+		}, 120000);
+	});
 </script>
+
+<style>
+td.hidden-xs {
+	word-break: break-word;
+}
+.btn-group {
+	min-width: 60px;
+}
+.dropdown-menu {
+	min-width: 80px;
+}
+</style>
 
 </body>
 </html>
