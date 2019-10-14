@@ -5294,6 +5294,10 @@ class Leads
         $archiveDate = new \DateTime($dateStartIn);
         $dateStart = new \DateTime($dateStartIn);
         $dateEnd = new \DateTime($dateEndIn);
+        $today = new \DateTime();
+        if ($dateEnd > $today) {
+            $dateEnd = $today;
+        }
 
         $sql = "SELECT * FROM ( ";
 
