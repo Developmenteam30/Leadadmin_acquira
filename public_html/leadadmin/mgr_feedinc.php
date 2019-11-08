@@ -14,6 +14,59 @@ require_once(INCLUDES . 'display.php');
 
 include(INCLUDES . "f_site.php");
 
+$all_states = array('AL' => 'Alabama',
+    'AK' => 'Alaska',
+    'AZ' => 'Arizona',
+    'AR' => 'Arkansas',
+    'CA' => 'California',
+    'CO' => 'Colorado',
+    'CT' => 'Connecticut',
+    'DE' => 'Delaware',
+    'DC' => 'District of Columbia',
+    'FL' => 'Florida',
+    'GA' => 'Georgia',
+    'HI' => 'Hawaii',
+    'ID' => 'Idaho',
+    'IL' => 'Illinois',
+    'IN' => 'Indiana',
+    'IA' => 'Iowa',
+    'KS' => 'Kansas',
+    'KY' => 'Kentucky',
+    'LA' => 'Louisiana',
+    'ME' => 'Maine',
+    'MD' => 'Maryland',
+    'MA' => 'Massachusetts',
+    'MI' => 'Michigan',
+    'MN' => 'Minnesota',
+    'MS' => 'Mississippi',
+    'MO' => 'Missouri',
+    'MT' => 'Montana',
+    'NE' => 'Nebraska',
+    'NV' => 'Nevada',
+    'NH' => 'New Hampshire',
+    'NJ' => 'New Jersey',
+    'NM' => 'New Mexico',
+    'NY' => 'New York',
+    'NC' => 'North Carolina',
+    'ND' => 'North Dakota',
+    'OH' => 'Ohio',
+    'OK' => 'Oklahoma',
+    'OR' => 'Oregon',
+    'PA' => 'Pennsylvania',
+    'RI' => 'Rhode Island',
+    'SC' => 'South Carolina',
+    'SD' => 'South Dakota',
+    'TN' => 'Tennessee',
+    'TX' => 'Texas',
+    'UT' => 'Utah',
+    'VT' => 'Vermont',
+    'VA' => 'Virginia',
+    'WA' => 'Washington',
+    'WV' => 'West Virginia',
+    'WI' => 'Wisconsin',
+    'WY' => 'Wyoming',
+);
+
 if (isset($_REQUEST['a'])) {
     Header('Content-Type: application/json');
 
@@ -42,6 +95,23 @@ if (isset($_REQUEST['a'])) {
             if ($c && empty($_REQUEST['idCompany'])) {
                 $c = false;
                 $result['error'] = 'Company cannot be empty.';
+            }
+
+            if ( !isset($_REQUEST['filterState']) || empty($_REQUEST['filterState']) ) {
+                $filterStateField = '';
+            } else {
+                $filterStateField = $_REQUEST['filterState'];
+            }
+
+            if ( $filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice']) ) {
+                $filterStateChoice = '';
+            } else {
+                $filterStateChoice = $_REQUEST['filterStateChoice'];
+            }
+
+            if(!empty($filterStateField) && empty($filterStateChoice)) {
+                $c = false;
+                $result['error'] = 'If using the state filter feature, at least one state must be selected.';
             }
 
             if ($c && empty($_REQUEST['allowedFields']) || !is_array($_REQUEST['allowedFields'])) {
@@ -180,6 +250,13 @@ if (isset($_REQUEST['a'])) {
                 }
 
                 if ($c) { //Add entry to the database.
+
+                    $filterStateArray = array(
+                        'mode' => $filterStateField,
+                        'states' => $filterStateChoice
+                    );
+                    $filterState = json_encode($filterStateArray);
+
                     $idFeedIn = $leads->addInboundFeed(array(
                         'label' => empty($_REQUEST['label']) ? null : $_REQUEST['label'],
                         'description' => empty($_REQUEST['description']) ? null : $_REQUEST['description'],
@@ -198,6 +275,7 @@ if (isset($_REQUEST['a'])) {
                         'rejectOldLeadsMaxAge' => empty($_REQUEST['rejectOldLeadsMaxAge']) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
                         'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                         'chokePercent' => empty($_REQUEST['chokePercent']) ? 0 : intval($_REQUEST['chokePercent']),
+                        'filterState' => $filterState,
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'dailyLimit' => empty($_REQUEST['dailyLimit']) ? null : intval($_REQUEST['dailyLimit']),
                         'custom1Label' => empty($_REQUEST['custom1Label']) ? null : $_REQUEST['custom1Label'],
@@ -315,6 +393,25 @@ if (isset($_REQUEST['a'])) {
                 }
 
                 if ($c) {
+
+                    if ( !isset($_REQUEST['filterState']) || empty($_REQUEST['filterState']) ) {
+                        $filterStateField = '';
+                    } else {
+                        $filterStateField = $_REQUEST['filterState'];
+                    }
+                    
+                    if ( $filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice']) ) {
+                        $filterStateChoice = '';
+                    } else {
+                        $filterStateChoice = $_REQUEST['filterStateChoice'];
+                    }
+
+                    $filterStateArray = array(
+                        'mode' => $filterStateField,
+                        'states' => $filterStateChoice
+                    );
+                    $filterState = json_encode($filterStateArray);
+
                     $status = $leads->updateInboundFeed($_REQUEST['idFeedIn'], array(
                         'label' => trim($_REQUEST['label']),
                         'description' => empty($_REQUEST['description']) ? null : $_REQUEST['description'],
@@ -332,6 +429,7 @@ if (isset($_REQUEST['a'])) {
                         'rejectOldLeadsMaxAge' => empty($_REQUEST['rejectOldLeadsMaxAge']) ? null : $_REQUEST['rejectOldLeadsMaxAge'],
                         'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                         'chokePercent' => empty($_REQUEST['chokePercent']) ? 0 : intval($_REQUEST['chokePercent']),
+                        'filterState' => $filterState,
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'dailyLimit' => empty($_REQUEST['dailyLimit']) ? null : intval($_REQUEST['dailyLimit']),
                         'custom1Label' => empty($_REQUEST['custom1Label']) ? null : $_REQUEST['custom1Label'],
@@ -532,6 +630,7 @@ if (isset($_REQUEST['d'])) {
                 'rejectOldLeadsMaxAge',
                 'chokePercent',
                 'dailyLimit',
+                'filterState',
                 'feedCategory',
                 'custom1Label',
                 'custom2Label',
@@ -651,6 +750,39 @@ if (isset($_REQUEST['d'])) {
 							</p>
 						</td>
 					</tr>
+                    <tr>
+                        <script>
+                        $('input[name="filterState"]:radio').change(function() {
+                            if ( $(this).val() == 'includeOnly' || $(this).val() == 'excludeOnly' ) {
+                                $('#filterStateChoice').show();
+                            } else {
+                                $('#filterStateChoice').hide();
+                            }
+                        });
+                        </script>
+                        <td><p>Filter State</p></td>
+                        <td>
+                            <?php $filterState_value = json_decode($feed_filterState); ?>
+                            <p>Use this feature to limit which state(s) leads are allowed to come from.</p>
+                            <p>
+                                <input type="radio" name="filterState" value=""<?php if (empty($filterState_value->mode)) {
+                                    print ' checked="checked"';
+                                } ?> /> Off<br/>
+                                <input type="radio" name="filterState" value="includeOnly"<?php if (!empty($filterState_value->mode) && 'includeOnly' == $filterState_value->mode) {
+                                    print ' checked="checked"';
+                                } ?> /> Include Only<br/>
+                                <input type="radio" name="filterState" value="excludeOnly"<?php if (!empty($filterState_value->mode) && 'excludeOnly' == $filterState_value->mode) {
+                                    print ' checked="checked"';
+                                } ?> /> Exclude Only<br/>
+                            </p>
+                            <div id="filterStateChoice"<?php if (empty($filterState_value->mode) || ($filterState_value->mode != 'includeOnly' && $filterState_value->mode != 'excludeOnly') ) echo ' style="display: none;"'; ?>>
+                                <p>Choose which states to include/exclude.</p>
+                                <p><?php foreach ( $all_states as $abbr => $st ) { ?>
+                                    <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='filterStateChoice[]' value='<?php echo $abbr; ?>'<?php if (!empty($filterState_value->states) && in_array($abbr, $filterState_value->states)){ ?> checked='checked'<?php } ?> />&nbsp;<?php echo $st; ?></label> 
+                                <?php } ?></p>
+                            </div>
+                        </td>
+                    </tr>
 					<tr>
 						<td><p>Feed Category</p></td>
 						<td>

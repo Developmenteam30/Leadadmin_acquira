@@ -70,7 +70,8 @@ $leads = Leads::getInstance();
 				<thead>
 				<tr>
 					<th>Error Timestamp</th>
-					<th colspan="9">Error Message</th>
+					<th colspan="8">Error Message</th>
+					<th>LeadID</th>
 					<th>URL</th>
 					<th>Email</th>
 					<th>Lead Timestamp</th>
@@ -99,7 +100,8 @@ $leads = Leads::getInstance();
                         <?php } else { ?>
 	                        <td><?php echo Display::escHtml($record['timestampConverted']); ?></td>
                         <?php } ?>
-						<td class="error" colspan="9"><?php echo Display::escHtml($record['result']); ?></td>
+						<td class="error" colspan="8"><?php echo Display::escHtml($record['result']); ?></td>
+						<td><?php echo Display::escHtml($record['leadId']); ?></td>
 						<td><?php echo Display::escHtml($record['url']); ?></td>
 						<td><?php echo Display::escHtml($record['email']); ?></td>
 						<td><?php echo Display::escHtml($record['leadstamp']); ?></td>

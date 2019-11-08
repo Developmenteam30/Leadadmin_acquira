@@ -6,8 +6,14 @@ require_once(INCLUDES . 'processLeads.php');
 
 function showResultAndDie($result)
 {
-    $xml = Array2XML::createXML('response', $result);
-    echo $xml->saveXML();
+    if (!empty($_REQUEST['outFormat']) && 'json' === strtolower($_REQUEST['outFormat'])) {
+        Header('Content-Type: text/json');
+        echo json_encode($result);
+    } else {
+        Header('Content-Type: text/xml');
+        $xml = Array2XML::createXML('response', $result);
+        echo $xml->saveXML();
+    }
     die();
 }
 
@@ -15,10 +21,8 @@ $leads = Leads::getInstance();
 
 $statsDay = date('Y-m-d');
 
-Header('Content-Type: text/xml');
-
 $result = array(
-    'success' => 'false',
+    'success' => false,
     'reason' => 'Unknown error.',
 );
 
@@ -70,7 +74,8 @@ if (empty($_REQUEST['pswd']) || $_REQUEST['pswd'] != $feedParams->password) {
 
     // Only log if a password was actually sent
     if (!empty($_REQUEST['pswd'])) {
-        $leads->logError('Feed ' . $feedParams->label . ' Unauthorized user at ' . $_SERVER["REMOTE_ADDR"], true, false);
+        $leads->logError('Feed ' . $feedParams->label . ' Unauthorized user at ' . $_SERVER["REMOTE_ADDR"], true,
+            false);
         $_REQUEST['url'] = $_REQUEST['url'] ?? ''; // Ensure a value for the URL is set
         $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null);
     }
@@ -101,11 +106,11 @@ if ($validateResult['valid']) {
         if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
             $result['reason'] = $pushResponse['reason'];
         } else {
-            $result['success'] = 'true';
+            $result['success'] = true;
             $result['reason'] = 'Successfully inserted new record.';
             if (!empty($pushResponse['fields']) && is_array($pushResponse['fields'])) {
-			    foreach($pushResponse['fields'] as $key => $val) {
-			        $result[$key] = $val;
+                foreach ($pushResponse['fields'] as $key => $val) {
+                    $result[$key] = $val;
                 }
             }
         }
