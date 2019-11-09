@@ -10,7 +10,10 @@ if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 		array( 'name' => 'Outgoing Feeds', 'url' => '/leadadmin/mgr_feedout.php?status=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
         array( 'name' => 'CRM', 'url' => '/leadadmin/crm/prospects.php?searchIsArchived=0', 'level' => LEADS_SESSION_LEVEL_STAFF ),
         array( 'name' => 'IOs', 'url' => '/leadadmin/insertion-orders/?searchIsArchived=0', 'level' => LEADS_SESSION_LEVEL_STAFF ),
-		array( 'name' => 'Suppressions', 'url' => '/leadadmin/mgr_suppress.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+        array( 'name' => 'Suppressions', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
+            array( 'name' => 'Email', 'url' => '/leadadmin/mgr_suppress.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+            array( 'name' => 'Phone', 'url' => '/leadadmin/mgr_suppress_phone.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+        ) ),
 		array( 'name' => 'Jobs', 'url' => '/leadadmin/mgr_job.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Reports', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
 			array( 'name' => 'URL Mapping Report', 'url' => '/leadadmin/reports-mapping.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),

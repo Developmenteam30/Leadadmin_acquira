@@ -484,31 +484,48 @@ class ProcessLeads
         }
 
         // Check global and local suppression lists for email feeds
-        if ('email' == $feedOut->feedCategory) {
+        if ('email' == $feedOut->feedCategory && !empty($row->email) && $leads->checkSuppression($row->email,
+                $feedOut->idCompany)) {
 
-            if (!empty($row->email) && $leads->checkSuppression($row->email, null)) {
+            $result['text'] = 'LOCAL REJECTION: Email is suppressed';
+            $leads->outboundProcess($row, $feedOut, $result['text'], 0);
 
-                $result['text'] = 'LOCAL REJECTION: Email is suppressed (global)';
-                $leads->outboundProcess($row, $feedOut, $result['text'], 0);
-
-                if ($debug) {
-                    print "\t" . $result['text'] . PHP_EOL;
-                }
-
-                return $result;
-
-            } elseif (!empty($row->email) && $leads->checkSuppression($row->email, $feedOut->idCompany)) {
-
-                $result['text'] = 'LOCAL REJECTION: Email is suppressed (company)';
-                $leads->outboundProcess($row, $feedOut, $result['text'], 0);
-
-                if ($debug) {
-                    print "\t" . $result['text'] . PHP_EOL;
-                }
-
-                return $result;
-
+            if ($debug) {
+                print "\t" . $result['text'] . PHP_EOL;
             }
+
+            return $result;
+
+        }
+
+        // Check global and local suppression lists for phone feeds
+        if ('phone' == $feedOut->feedCategory && !empty($row->cellphone) && $leads->checkPhoneSuppression($row->cellphone,
+                $feedOut->idCompany)) {
+
+            $result['text'] = 'LOCAL REJECTION: Cellphone is suppressed';
+            $leads->outboundProcess($row, $feedOut, $result['text'], 0);
+
+            if ($debug) {
+                print "\t" . $result['text'] . PHP_EOL;
+            }
+
+            return $result;
+
+        }
+
+        // Check global and local suppression lists for phone feeds
+        if ('phone' == $feedOut->feedCategory && !empty($row->landline) && $leads->checkPhoneSuppression($row->landline,
+                $feedOut->idCompany)) {
+
+            $result['text'] = 'LOCAL REJECTION: Landline is suppressed';
+            $leads->outboundProcess($row, $feedOut, $result['text'], 0);
+
+            if ($debug) {
+                print "\t" . $result['text'] . PHP_EOL;
+            }
+
+            return $result;
+
         }
 
         $requestdata = array();
@@ -1262,6 +1279,23 @@ class ProcessLeads
             if ($exists === true) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Email exists in our global suppression file.';
+            }
+        }
+
+        // Check global suppression list for phone feeds
+        if (!empty($data['cellphone']) && 'phone' == $feedParams->feedCategory) {
+            $exists = $leads->checkPhoneSuppression($data['cellphone'], null);
+            if ($exists === true) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Cellphone exists in our global suppression file.';
+            }
+        }
+
+        if (!empty($data['landline']) && 'phone' == $feedParams->feedCategory) {
+            $exists = $leads->checkPhoneSuppression($data['landline'], null);
+            if ($exists === true) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Landline exists in our global suppression file.';
             }
         }
 

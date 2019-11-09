@@ -6914,7 +6914,7 @@ class Leads
 		}
         try {
 			$idSuppression = $this->insertRow( $table, array(
-                'idCompany' => $idCompany,
+                'idCompany' => empty( $idCompany ) ? 0 : $idCompany,
 				$type => $value,
             ));
         } catch (Leads_PDOException $e) {
@@ -6982,6 +6982,9 @@ class Leads
 
     public function checkPhoneSuppression( $phone, $idCompany = null ) {
 		$result = false;
+
+		// Strip out any non-numeric characters.
+        $phone = preg_replace('/[^0-9]/', '', $phone );
 
 		if( empty( $phone ) ) {
 			return $result;
