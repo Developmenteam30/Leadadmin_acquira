@@ -7298,7 +7298,7 @@ SQL;
         $errfile = fopen(SITE_ROOT . 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a');
         if ($errfile) {
             fwrite($errfile, $stamp . ' ' . $message . PHP_EOL);
-            fwrite($errfile, $stamp . ' REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL);
+            //fwrite($errfile, $stamp . ' REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL);
             fclose($errfile);
         }
 
@@ -7373,7 +7373,7 @@ SQL;
     public function pruneOrphanedOutboundRecords()
     {
         try {
-            $query = $this->db->prepare("DELETE o FROM dnrdmktg.data_outbound o LEFT JOIN data_inbound i ON i.idRecord = o.idRecord WHERE i.idRecord IS NULL;");
+            $query = $this->db->prepare("DELETE o FROM data_outbound o LEFT JOIN data_inbound i ON i.idRecord = o.idRecord WHERE i.idRecord IS NULL;");
             $query->execute();
         } catch (\PDOException $e) {
             $this->logError('Unable to prune orphaned outbound records: ' . $e->getMessage());
