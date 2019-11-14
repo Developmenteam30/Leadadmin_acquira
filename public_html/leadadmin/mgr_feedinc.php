@@ -1398,11 +1398,22 @@ if (isset($_REQUEST['d'])) {
 								Columns
 							</td>
 							<td>
+                                <button type="button" class="btn btn-primary" id="exp-check-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Check All</button>
+                                <button type="button" class="btn btn-primary" id="exp-uncheck-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All</button>
+                                <br>
                                 <?php foreach ($recordFields as $f) { ?>
-									<input type='checkbox' name='columns[]' value='<?php echo $f; ?>'/> <?php echo $f; ?>
+									<input class="export-check" type='checkbox' name='columns[]' value='<?php echo $f; ?>'/> <?php echo $f; ?>
                                 <?php } ?>
 							</td>
 						</tr>
+                        <script>
+                        $('#exp-check-all').click(function(){
+                            $('.export-check').prop('checked', true);
+                        });
+                        $('#exp-uncheck-all').click(function(){
+                            $('.export-check').prop('checked', false);
+                        });
+                        </script>
 						<tr>
 							<td>
 								Period
