@@ -6,6 +6,7 @@ require_once("../includes/c_config.php");
 require_once(INCLUDES . 'leads.php');
 $leads = Leads::getInstance();
 
+$verbose = false;
 $recordsPerRun = 1000;
 $maxThreads = 20;
 
@@ -14,7 +15,10 @@ exec("pgrep -f manageThreads.php", $processes);
 if (!empty($processes) && is_array($processes) && sizeOf($processes)) {
     foreach ($processes as $process) {
         if (getmypid() != $process) {
-            die('Already running.');
+            if ($verbose) {
+                print 'Already running.';
+            }
+            die();
         }
     }
 }
@@ -33,7 +37,9 @@ while (true) {
     $feeds = $leads->getOutboundFeedsCron(null);
 
     if (!$feeds || !is_array($feeds)) {
-        print "Unable to get feed list\n";
+        if ($verbose) {
+            print "Unable to get feed list\n";
+        }
         die();
     }
 
@@ -42,7 +48,9 @@ while (true) {
     foreach ($feeds as $feed) {
 
         $cnt = countProcesses($feed->idFeedOut);
-        print "Feed: {$feed->idFeedOut}, Processes: {$cnt}\n";
+        if ($verbose) {
+            print "Feed: {$feed->idFeedOut}, Processes: {$cnt}\n";
+        }
 
         $threads = round($feed->queued / $recordsPerRun);
         if ($threads < 1) {
@@ -53,10 +61,14 @@ while (true) {
             }
         }
 
-        print "\tThreads: {$threads}\n";
+        if ($verbose) {
+            print "\tThreads: {$threads}\n";
+        }
 
         while ($cnt < $threads) {
-            print "\tSpawning new\n";
+            if ($verbose) {
+                print "\tSpawning new\n";
+            }
 
             exec(sprintf('php -f pushLeads.php %s>/dev/null 2>&1 &',
                     escapeshellarg($feed->idFeedOut)
