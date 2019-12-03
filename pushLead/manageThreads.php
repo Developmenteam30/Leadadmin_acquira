@@ -10,7 +10,7 @@ $recordsPerRun = 1000;
 $maxThreads = 20;
 
 // Check to see if the manageThreads process is already running and it's not this process.
-exec("pgrep -f 'php -f manageThreads.php'", $processes);
+exec("pgrep -f manageThreads.php", $processes);
 if (!empty($processes) && is_array($processes) && sizeOf($processes)) {
     foreach ($processes as $process) {
         if (getmypid() != $process) {
