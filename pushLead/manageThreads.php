@@ -43,7 +43,9 @@ while (true) {
         die();
     }
 
-    print "\n====================================\n";
+    if ($verbose) {
+        print "\n====================================\n";
+    }
 
     foreach ($feeds as $feed) {
 
