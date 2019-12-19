@@ -399,7 +399,7 @@ class Leads
     public function verifyUser($username, $password)
     {
         try {
-            $query = $this->db->prepare("SELECT idUser,username,password,idCompany,level FROM users WHERE username = ?");
+            $query = $this->db->prepare("SELECT idUser,username,password,idCompany,level FROM users WHERE username = ? AND isArchived = 0");
             $query->execute(array($username));
             $results = $query->fetch();
 
