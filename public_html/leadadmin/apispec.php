@@ -97,8 +97,7 @@ $allowedArray = explode(';', 'pswd;' . $feed->allowedFields);
 
 <h4>API Field Definitions</h4>
 
-<p><strong>API URL:</strong> https://www.<?php echo SITE_URL; ?>/<?php echo LIVE_FOLDER; ?>
-    /<?php echo $feed->idFeedIn; ?>/livefeed.php</p>
+<p><strong>API URL:</strong> https://www.<?php echo SITE_URL; ?>/<?php echo LIVE_FOLDER; ?>/<?php echo $feed->idFeedIn; ?>/livefeed.php</p>
 
 <table>
     <thead>
