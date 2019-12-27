@@ -162,8 +162,11 @@ $pdf->Ln();
 setDarkOnLight($pdf);
 
 $pdf->SetFont('Arial', 'U');
-$pdf->Cell(0, 7, 'Pursuant to the Insertion Order to which this Exhibit "A" is attached,', 0, 1, 'C');
-$pdf->Cell(0, 7, 'Seller agrees to sell to Buyer, Data, based on the criteria/qualifications below.', 0, 1, 'C');
+// $pdf->Cell(0, 7, 'Pursuant to the Insertion Order to which this Exhibit "A" is attached,', 0, 1, 'C');
+// $pdf->Cell(0, 7, 'Seller agrees to sell to Buyer, Data, based on the criteria/qualifications below.', 0, 1, 'C');
+$pdf->Cell(0, 7, 'By signing this Insertion Order, you agree to accept and be bound to all', 0, 1, 'C');
+$pdf->Cell(0, 7, 'the terms and conditions set forth in the Qatalyst Ping Post Purchase', 0, 1, 'C');
+$pdf->Cell(0, 7, 'Terms and Condition Agreement located at https://www.qatalystinc.com/ping-post-terms/', 0, 1, 'C');
 $pdf->SetFont('Arial', '');
 
 // ROW
