@@ -275,4 +275,87 @@ $pdf->Cell(98, 14, 'Signature:', 1, 1, 'L');
 $pdf->Cell(98, 7, 'Date:', 1, 0, 'L');
 $pdf->Cell(98, 7, 'Date:', 1, 1, 'L');
 
+
+if (1 == $order->includeBankingInfo) {
+
+    $pdf->AddPage();
+
+    $pdf->Image(SITE_ROOT . '/public_html/leadadmin/images/logo.png', 83, null,50);
+
+    $pdf->SetFont('Arial', 'B', 11);
+    $pdf->Cell(0, 7, 'ACH/WIRE INSTRUCTIONS', 0, 1, 'C');
+
+    $pdf->Ln();
+    $pdf->SetFont('Arial', '', 11);
+
+    if ('publisher' === $order->orderType) {
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'BANK', 1, 0, 'L', 'true');
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, 'CHASE', 1, 1, 'L');
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'OFFICE', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, '4625 Gulf Blvd. St. Pete Beach, FL 33706', 1, 1, 'L');
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'ROUTING NUMBER', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, '267084131', 1, 1, 'L');
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'ACCOUNT NUMBER', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, '855959016', 1, 1, 'L');
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'FOR BENEFIT OF', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, 'Qatalyst, Inc.', 1, 1, 'L');
+
+    } else {
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'BANK', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, '', 1, 1, 'L');
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'OFFICE', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, '', 1, 1, 'L');
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'ROUTING NUMBER', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, '', 1, 1, 'L');
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'ACCOUNT NUMBER', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, '', 1, 1, 'L');
+
+        setLightOnDark($pdf);
+        $pdf->Cell(98, 7, 'FOR BENEFIT OF', 1, 0, 'L', true);
+        setDarkOnLight($pdf);
+        $pdf->Cell(98, 7, '', 1, 1, 'L');
+
+    }
+
+}
+
+if (1 == $order->includeW9) {
+
+    $pdf->AddPage();
+
+    if ('publisher' === $order->orderType) {
+        // include w9 file
+    } else {
+        // include blank w9
+    }
+
+}
+
 $pdf->Output('D', sprintf('Insertion Order %d.pdf', $order->orderId));
