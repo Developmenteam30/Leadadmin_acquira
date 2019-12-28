@@ -66,6 +66,12 @@ $leads = Leads::getInstance();
 
 			<h3>Last 100 rejections for <?php echo Display::escHtml($type); ?> feed: <?php echo Display::escHtml($label); ?></h3>
 
+			<?php if ( $offset > 0 ) { ?>
+				<p style="display: inline-block;margin-right:10px;"><?php printf('<a href="mgr_rejections.php?type=%s&amp;id=%s&amp;label=%s&amp;offset=%d">Previous page</a>', urlencode($type), urlencode($id), urlencode($label), intval($offset - 100)); ?></p>
+			<?php } ?>
+			<p style="display: inline-block;"><?php printf('<a href="mgr_rejections.php?type=%s&amp;id=%s&amp;label=%s&amp;offset=%d">Next page</a>', urlencode($type), urlencode($id), urlencode($label), intval($offset + 100)); ?></p>
+			<br>
+
 			<table class="rejectionsTable">
 				<thead>
 				<tr>
@@ -125,7 +131,10 @@ $leads = Leads::getInstance();
 				</tbody>
 			</table>
 
-			<p><?php printf('<a href="mgr_rejections.php?type=%s&amp;id=%s&amp;label=%s&amp;offset=%d">Next page</a>', urlencode($type), urlencode($id), urlencode($label), intval($offset + 100)); ?></p>
+			<?php if ( $offset > 0 ) { ?>
+				<p style="display: inline-block;margin-right:10px;"><?php printf('<a href="mgr_rejections.php?type=%s&amp;id=%s&amp;label=%s&amp;offset=%d">Previous page</a>', urlencode($type), urlencode($id), urlencode($label), intval($offset - 100)); ?></p>
+			<?php } ?>
+			<p style="display: inline-block;"><?php printf('<a href="mgr_rejections.php?type=%s&amp;id=%s&amp;label=%s&amp;offset=%d">Next page</a>', urlencode($type), urlencode($id), urlencode($label), intval($offset + 100)); ?></p>
 			<br/>
 
         <?php } ?>
