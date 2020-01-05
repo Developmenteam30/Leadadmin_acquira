@@ -23,7 +23,8 @@ class ProcessLeads
 
             // If there's already JSON data present, append to it
             if (!empty($requestdata[$vars[0]])) {
-                $requestdata[$vars[0]] = json_encode((object)array_merge(array($vars[1] => $value), (array)json_decode($requestdata[$vars[0]])));
+                $requestdata[$vars[0]] = json_encode((object)array_merge(array($vars[1] => $value),
+                    (array)json_decode($requestdata[$vars[0]])));
             } else {
                 $requestdata[$vars[0]] = json_encode((object)array($vars[1] => $value));
             }
@@ -89,7 +90,8 @@ class ProcessLeads
     <Leads>
         <Lead>
             <LeadInformation>
-               <LeadGeneratedDateTime>' . htmlspecialchars($requestdata['LeadGeneratedDateTime'] ?? '', ENT_XML1, 'UTF-8') . '</LeadGeneratedDateTime>
+               <LeadGeneratedDateTime>' . htmlspecialchars($requestdata['LeadGeneratedDateTime'] ?? '', ENT_XML1,
+                'UTF-8') . '</LeadGeneratedDateTime>
             </LeadInformation>
             <LeadIndividuals>
                 <Individual IndividualID="0">
@@ -117,8 +119,16 @@ class ProcessLeads
 </AgentCubedAPI>';
     }
 
-    public static function curlLead($requestdata, $url, $post, $verifypeer = false, $returntransfer = true, $header = false, $httpheader = null, $followlocation = false)
-    {
+    public static function curlLead(
+        $requestdata,
+        $url,
+        $post,
+        $verifypeer = false,
+        $returntransfer = true,
+        $header = false,
+        $httpheader = null,
+        $followlocation = false
+    ) {
 
         $ch = curl_init();
         $verbose = false;
@@ -263,7 +273,8 @@ class ProcessLeads
                 }
 
                 // Ensure we don't re-import records sent within the last 6 months
-                if (!empty($idFeedOut) && $leads->checkOutboundRecordExists($idRecord, $feedParams->idFeedIn, $feed->idFeedOut)) {
+                if (!empty($idFeedOut) && $leads->checkOutboundRecordExists($idRecord, $feedParams->idFeedIn,
+                        $feed->idFeedOut)) {
                     if ($debug) {
                         print "Skipping because already sent within the last 6 months</p>";
                     }
@@ -271,21 +282,24 @@ class ProcessLeads
                 }
 
                 // Ensure the record passes the population parameter filters for this feed
-                if (!is_null($feed->filterTypeUrl) && !ProcessLeads::filterValue($feed->filterTypeUrl, $data['url'], $feed->filterUrl)) {
+                if (!is_null($feed->filterTypeUrl) && !ProcessLeads::filterValue($feed->filterTypeUrl, $data['url'],
+                        $feed->filterUrl)) {
                     if ($debug) {
                         print "Skipping because does not pass population parameter URL filter</p>";
                     }
                     continue;
                 }
 
-                if (!is_null($feed->filterTypeEmail) && !ProcessLeads::filterValue($feed->filterTypeEmail, $data['email'], $feed->filterEmail)) {
+                if (!is_null($feed->filterTypeEmail) && !ProcessLeads::filterValue($feed->filterTypeEmail,
+                        $data['email'], $feed->filterEmail)) {
                     if ($debug) {
                         print "Skipping because does not pass population parameter email filter</p>";
                     }
                     continue;
                 }
 
-                if (!is_null($feed->filterTypeListcode) && !ProcessLeads::filterValue($feed->filterTypeListcode, $data['listcode'], $feed->filterListcode)) {
+                if (!is_null($feed->filterTypeListcode) && !ProcessLeads::filterValue($feed->filterTypeListcode,
+                        $data['listcode'], $feed->filterListcode)) {
                     if ($debug) {
                         print "Skipping because does not pass population parameter listcode filter</p>";
                     }
@@ -354,7 +368,9 @@ class ProcessLeads
                     }
                 }
 
-                $leads->outboundAdd($idRecord, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'], ((empty($idFeedOut) && ('livedata' == $feed->queueType || 'waterfall' == $feed->queueType || 'waterfallLimitLive' == $feed->queueType)) ? -1 : 0), $urlRewritten);
+                $leads->outboundAdd($idRecord, null, $feedParams->idFeedIn, $feed->idFeedOut, $data['url'],
+                    ((empty($idFeedOut) && ('livedata' == $feed->queueType || 'waterfall' == $feed->queueType || 'waterfallLimitLive' == $feed->queueType)) ? -1 : 0),
+                    $urlRewritten);
 
                 // If this is one of the "livedata" populations, immediately try to send the record through to the receiving feed.
                 if (empty($idFeedOut) && ('livedata' == $feed->queueType || 'waterfall' == $feed->queueType || 'waterfallLimitLive' == $feed->queueType)) {
@@ -403,17 +419,20 @@ class ProcessLeads
             if (!$liveData['anyProcessed']) {
                 // We did not attempt to send any records, probably because we were outside of feed processing hours.
                 $result['reason'] = 'No suitable buyers found.';
-                $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $result['reason']);
+                $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'),
+                    $result['reason']);
             } elseif (!$liveData['accepted'] || (!empty($feedParams->chokePercent) && $randomChoke <= $feedParams->chokePercent)) {
                 // All attempts failed, so send the last failure message or randomly choke the record.
                 if (!$liveData['accepted']) {
                     $result['reason'] = $liveData['reason'];
-                    $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $result['reason']);
+                    $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'),
+                        $result['reason']);
                 } else {
                     $result['reason'] = sprintf('Third-party rejection [Reason: Duplicate record] [Code: I%s1]',
                         $feedParams->idFeedIn
                     );
-                    $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'), $result['reason']);
+                    $leads->inboundProcess($idRecord, $feedParams->idFeedIn, $data['originalUrl'], date('Y-m-d'),
+                        $result['reason']);
                 }
             } else {
                 $result['fields'] = $liveData['fields'] ?? [];
@@ -465,29 +484,48 @@ class ProcessLeads
         }
 
         // Check global and local suppression lists for email feeds
-        if ('email' == $feedOut->feedCategory) {
+        if ('email' == $feedOut->feedCategory && !empty($row->email) && $leads->checkSuppression($row->email,
+                $feedOut->idCompany)) {
 
-            if (!empty($row->email) && $leads->checkSuppression($row->email, null)) {
+            $result['text'] = 'LOCAL REJECTION: Email is suppressed';
+            $leads->outboundProcess($row, $feedOut, $result['text'], 0);
 
-                $result['text'] = 'LOCAL REJECTION: Email is suppressed (global)';
-                $leads->outboundProcess($row, $feedOut, $result['text'], 0);
-
-                if ($debug) {
-                    print "\t" . $result['text'] . PHP_EOL;
-                }
-                return $result;
-
-            } elseif (!empty($row->email) && $leads->checkSuppression($row->email, $feedOut->idCompany)) {
-
-                $result['text'] = 'LOCAL REJECTION: Email is suppressed (company)';
-                $leads->outboundProcess($row, $feedOut, $result['text'], 0);
-
-                if ($debug) {
-                    print "\t" . $result['text'] . PHP_EOL;
-                }
-                return $result;
-
+            if ($debug) {
+                print "\t" . $result['text'] . PHP_EOL;
             }
+
+            return $result;
+
+        }
+
+        // Check global and local suppression lists for phone feeds
+        if ('phone' == $feedOut->feedCategory && !empty($row->cellphone) && $leads->checkPhoneSuppression($row->cellphone,
+                $feedOut->idCompany)) {
+
+            $result['text'] = 'LOCAL REJECTION: Cellphone is suppressed';
+            $leads->outboundProcess($row, $feedOut, $result['text'], 0);
+
+            if ($debug) {
+                print "\t" . $result['text'] . PHP_EOL;
+            }
+
+            return $result;
+
+        }
+
+        // Check global and local suppression lists for phone feeds
+        if ('phone' == $feedOut->feedCategory && !empty($row->landline) && $leads->checkPhoneSuppression($row->landline,
+                $feedOut->idCompany)) {
+
+            $result['text'] = 'LOCAL REJECTION: Landline is suppressed';
+            $leads->outboundProcess($row, $feedOut, $result['text'], 0);
+
+            if ($debug) {
+                print "\t" . $result['text'] . PHP_EOL;
+            }
+
+            return $result;
+
         }
 
         $requestdata = array();
@@ -547,91 +585,113 @@ class ProcessLeads
                     break;
 
                 case 'dobUS':
-                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, date("m-d-Y", strtotime($row->dob)), $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'dob_slashes':
-                    ProcessLeads::assignValue($key, date("m/d/Y", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, date("m/d/Y", strtotime($row->dob)), $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'dob_YYYY':
-                    ProcessLeads::assignValue($key, date("Y", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, date("Y", strtotime($row->dob)), $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'dob_MM':
-                    ProcessLeads::assignValue($key, date("m", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, date("m", strtotime($row->dob)), $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'dob_DD':
-                    ProcessLeads::assignValue($key, date("d", strtotime($row->dob)), $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, date("d", strtotime($row->dob)), $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'gender_full':
-                    ProcessLeads::assignValue($key, $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, $genderMap[$row->gender] ?? $row->gender, $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'stampUS':
-                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y H:i:s") : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y H:i:s") : '', $requestdata,
+                        $xmldata, $headerdata);
                     break;
 
                 case 'stampUS_dateOnly':
-                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y") : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y") : '', $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'stamp_YYYYmmdd':
-                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("Ymd") : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("Ymd") : '', $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'stamp_YYYY-mm-dd':
-                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("Y-m-d") : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("Y-m-d") : '', $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'stampUSAMPM':
-                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y h:i:sA") : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y h:i:sA") : '', $requestdata,
+                        $xmldata, $headerdata);
                     break;
 
                 case 'stampUS+AMPM':
-                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y h:i:s A") : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m-d-Y h:i:s A") : '', $requestdata,
+                        $xmldata, $headerdata);
                     break;
 
                 case 'stampUS_slashes':
-                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m/d/Y H:i:s") : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format("m/d/Y H:i:s") : '', $requestdata,
+                        $xmldata, $headerdata);
                     break;
 
                 case 'stamp_ISO8601':
-                    ProcessLeads::assignValue($key, !empty($date) ? $date->format('c') : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, !empty($date) ? $date->format('c') : '', $requestdata, $xmldata,
+                        $headerdata);
                     break;
 
                 case 'landline_areacode':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 0, 3) : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 0, 3) : '',
+                        $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'landline_NXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 3) : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 3) : '',
+                        $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'landline_XXXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 6, 4) : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 6, 4) : '',
+                        $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'landline_NXX+XXXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 7) : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->landline) ? substr($row->landline, 3, 7) : '',
+                        $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'cellphone_areacode':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 0, 3) : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 0, 3) : '',
+                        $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'cellphone_NXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 3) : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 3) : '',
+                        $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'cellphone_XXXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 6, 4) : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 6, 4) : '',
+                        $requestdata, $xmldata, $headerdata);
                     break;
 
                 case 'cellphone_NXX+XXXX':
-                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 7) : '', $requestdata, $xmldata, $headerdata);
+                    ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 7) : '',
+                        $requestdata, $xmldata, $headerdata);
                     break;
 
                 default:
@@ -655,7 +715,7 @@ class ProcessLeads
                 echo "\t" . $geturl . "\n";
                 echo "\tPosting data.\n";
             }
-            if(empty($row->simulateMode)) {
+            if (empty($row->simulateMode)) {
                 $result['text'] = ProcessLeads::curlLead(
                     "",
                     $geturl,
@@ -672,7 +732,7 @@ class ProcessLeads
             if ($debug) {
                 echo "\tPosting data.\n";
             }
-            if(empty($row->simulateMode)) {
+            if (empty($row->simulateMode)) {
                 $result['text'] = ProcessLeads::curlLead(
                     http_build_query($requestdata),
                     $feedOut->postUrl,
@@ -702,7 +762,7 @@ class ProcessLeads
                 echo "\t" . $geturl . "\n";
                 echo "\tPosting data.\n";
             }
-            if(empty($row->simulateMode)) {
+            if (empty($row->simulateMode)) {
                 $result['text'] = ProcessLeads::curlLead("", $geturl, false, false, true, false, $headerdata);
             }
 
@@ -715,7 +775,7 @@ class ProcessLeads
             $geturl = $feedOut->postUrl . ' JSON BODY: ' . json_encode($requestdata);
             $headerdata[] = 'Content-Type: application/json';
 
-            if(empty($row->simulateMode)) {
+            if (empty($row->simulateMode)) {
                 $result['text'] = ProcessLeads::curlLead(
                     json_encode($requestdata),
                     $feedOut->postUrl,
@@ -741,7 +801,7 @@ class ProcessLeads
 
             $geturl = $feedOut->postUrl . ' SOAP BODY: ' . $xml;
 
-            if(empty($row->simulateMode)) {
+            if (empty($row->simulateMode)) {
                 $client = new SoapClient($feedOut->postUrl, array('trace' => true));
                 $response = $client->AddLeadsUsingXMLString(array('xmlstring' => $xml));
                 $result['text'] = $client->__getLastResponse();
@@ -759,7 +819,7 @@ class ProcessLeads
                 $xml = str_replace('##' . $key . '##', htmlspecialchars($val, ENT_COMPAT | ENT_XML1), $xml);
             }
 
-            if(empty($row->simulateMode)) {
+            if (empty($row->simulateMode)) {
                 $result['text'] = ProcessLeads::curlLead(
                     $xml,
                     $geturl,
@@ -778,7 +838,7 @@ class ProcessLeads
             if ($debug) {
                 echo "\tPosting data.\n";
             }
-            if(empty($row->simulateMode)) {
+            if (empty($row->simulateMode)) {
                 $result['text'] = ProcessLeads::curlLead(
                     $requestdata,
                     $feedOut->postUrl,
@@ -876,7 +936,8 @@ class ProcessLeads
                     $c = false;
                     $result['reason'] = 'IP (ip) exceeds maximum allowed length.';
                 }
-                if ($c && !filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && !filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                if ($c && !filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && !filter_var($value,
+                        FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                     $c = false;
                     $result['reason'] = 'IP (ip) is invalid.';
                 }
@@ -889,7 +950,7 @@ class ProcessLeads
                         $date = new DateTime($value, new DateTimeZone($feedParams->timezone));
                         $date->setTimezone(new DateTimeZone('UTC'));
                         // Apply a time skew if set in the database.
-                        if ( ! empty($feedParams->timeskew)) {
+                        if (!empty($feedParams->timeskew)) {
                             $interval = DateInterval::createFromDateString($feedParams->timeskew);
                             $date->add($interval);
                         }
@@ -1007,6 +1068,23 @@ class ProcessLeads
                     $c = false;
                     $result['reason'] = 'State (state) contains invalid characters.';
                 }
+
+                $filterState = json_decode($feedParams->filterState);
+                if ($c && $filterState !== null && !empty($filterState->mode) && !empty($filterState->states) && is_array($filterState->states)) {
+                    if (strlen($value) !== 2) {
+                        $c = false;
+                        $result['reason'] = 'State must be exactly 2 characters.';
+                    } else {
+                        if ($filterState->mode == 'includeOnly' && !in_array($value, $filterState->states)) {
+                            $c = false;
+                            $result['reason'] = 'We do not accept leads from this state.';
+                        } elseif ($filterState->mode == 'excludeOnly' && in_array($value, $filterState->states)) {
+                            $c = false;
+                            $result['reason'] = 'We do not accept leads from this state.';
+                        }
+                    }
+                }
+
                 break;
 
             case 'zip':
@@ -1204,8 +1282,26 @@ class ProcessLeads
             }
         }
 
+        // Check global suppression list for phone feeds
+        if (!empty($data['cellphone']) && 'phone' == $feedParams->feedCategory) {
+            $exists = $leads->checkPhoneSuppression($data['cellphone'], null);
+            if ($exists === true) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Cellphone exists in our global suppression file.';
+            }
+        }
+
+        if (!empty($data['landline']) && 'phone' == $feedParams->feedCategory) {
+            $exists = $leads->checkPhoneSuppression($data['landline'], null);
+            if ($exists === true) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Landline exists in our global suppression file.';
+            }
+        }
+
         if (!is_null($feedParams->filterTypeUrl)) {
-            $urlAcceptable = ProcessLeads::filterValue($feedParams->filterTypeUrl, $data['url'], $feedParams->filterUrl);
+            $urlAcceptable = ProcessLeads::filterValue($feedParams->filterTypeUrl, $data['url'],
+                $feedParams->filterUrl);
             if (!$urlAcceptable) {
                 $result['valid'] = false;
                 $result['errors'][] = 'URL is not allowed on this feed.';
@@ -1213,7 +1309,8 @@ class ProcessLeads
         }
 
         if ($feedParams->dedupeEmail && !empty($data['email'])) {
-            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'email', $data, $feedParams->dedupeAcross);
+            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'email', $data,
+                $feedParams->dedupeAcross);
             if ($dupeCount === null) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Database failure - could not check duplicate email.';
@@ -1224,7 +1321,8 @@ class ProcessLeads
         }
 
         if ($feedParams->dedupeLandline && !empty($data['landline'])) {
-            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'landline', $data, $feedParams->dedupeAcross);
+            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'landline', $data,
+                $feedParams->dedupeAcross);
             if ($dupeCount === null) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Database failure - could not check duplicate landline.';
@@ -1235,7 +1333,8 @@ class ProcessLeads
         }
 
         if ($feedParams->dedupeCellphone && !empty($data['cellphone'])) {
-            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'cellphone', $data, $feedParams->dedupeAcross);
+            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'cellphone', $data,
+                $feedParams->dedupeAcross);
             if ($dupeCount === null) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Database failure - could not check duplicate cellphone.';

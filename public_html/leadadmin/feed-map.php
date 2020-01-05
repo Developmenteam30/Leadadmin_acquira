@@ -97,13 +97,14 @@ include( INCLUDES . "c_header.php" );
 						);
 						$shownPopulation = true;
 					}
-					printf( "<p style=\"margin-left:40px;\">%s - %s (%s: %s) CPL: $%s RPL: $%s%s%s%s%s</p>" . PHP_EOL,
+					printf( "<p style=\"margin-left:40px;\">%s - %s (%s: %s) CPL: $%s RPL: $%s%s%s%s%s%s</p>" . PHP_EOL,
 						htmlentities( $population->name ),
 						$population->idFeedOut,
 						htmlentities( $population->label ),
 						htmlentities( $population->description ),
 						$population->costPerLeadOverride !== null ? ( '<span style="color:red;">' . number_format( $population->costPerLeadOverride, 2 ) . '</span>*' ) : number_format( $incomingFeed->costPerLead, 2 ),
 						number_format( $population->revenuePerLead, 2 ),
+                        'category' === $population->populationType ? ' [<span style="color:#9b59b6;font-weight:bold;">POP CAT ' . strtoupper( $population->feedCategory ) . '</span>]' : '',
 						$population->queueType == 'livedata' ? ' [<span style="color:blue;font-weight:bold">LIVEDATA</span>]' :
 							( $population->queueType == 'waterfall' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL STD - Priority: ' . $population->waterfallPriority . '</span>]' ) :
 								( $population->queueType == 'waterfallLimit' ? ( ' [<span style="color:deeppink;font-weight:bold">WATERFALL LIMIT - Priority: ' . $population->waterfallPriority . '</span>]' ) :

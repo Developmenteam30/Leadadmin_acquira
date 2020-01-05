@@ -92,7 +92,8 @@ include( INCLUDES . "c_header.php" );
 
 			$validTypes = array(
 				'feedinc',
-				'suppression',
+				'email-suppression',
+				'phone-suppression',
 				'upload-outbound',
 			);
 
@@ -175,11 +176,15 @@ include( INCLUDES . "c_header.php" );
 					$leads->auditLog( 'FEEDINC:IMPORT', $jobId );
 					break;
 
-				case 'suppression':
-					$leads->auditLog( 'SUPPRESSION:IMPORT', $jobId );
-					break;
+                case 'email-suppression':
+                    $leads->auditLog( 'SUPPRESSION-EMAIL:IMPORT', $jobId );
+                    break;
 
-				case 'upload-outbound':
+                case 'phone-suppression':
+                    $leads->auditLog( 'SUPPRESSION-PHONE:IMPORT', $jobId );
+                    break;
+
+                case 'upload-outbound':
 					$leads->auditLog( 'FEEDOUT:IMPORT', $jobId );
 					break;
 			}
