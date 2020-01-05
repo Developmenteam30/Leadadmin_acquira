@@ -130,6 +130,8 @@ if (isset($_REQUEST['a'])) {
                 'deliveryDays' => empty($_REQUEST['deliveryDays']) ? null : $_REQUEST['deliveryDays'],
                 'callHours' => empty($_REQUEST['callHours']) ? null : $_REQUEST['callHours'],
                 'notes' => empty($_REQUEST['notes']) ? null : $_REQUEST['notes'],
+                'includeBankingInfo' => !empty($_REQUEST['includeBankingInfo']) ? 1 : 0,
+                'includeW9' => !empty($_REQUEST['includeW9']) ? 1 : 0,
             ));
             if (null === $orderId) {
                 $result['error'] = 'Error adding this order to the database.';
@@ -274,6 +276,8 @@ if (isset($_REQUEST['a'])) {
                 'callHours' => empty($_REQUEST['callHours']) ? null : $_REQUEST['callHours'],
                 'notes' => empty($_REQUEST['notes']) ? null : $_REQUEST['notes'],
                 'isArchived' => !empty($_REQUEST['isArchived']) ? 1 : 0,
+                'includeBankingInfo' => !empty($_REQUEST['includeBankingInfo']) ? 1 : 0,
+                'includeW9' => !empty($_REQUEST['includeW9']) ? 1 : 0,
             ));
             if (null === $orderId) {
                 $result['error'] = 'Error saving this order to the database.';
@@ -433,6 +437,22 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'notes',
                     'label' => 'Notes',
                     'type' => 'textarea',
+                ),
+                array(
+                    'id' => 'includeBankingInfo',
+                    'label' => 'Banking Info',
+                    'type' => 'checkbox',
+                    'choices' => array(
+                        '1' => 'Include banking info page',
+                    ),
+                ),
+                array(
+                    'id' => 'includeW9',
+                    'label' => 'W9',
+                    'type' => 'checkbox',
+                    'choices' => array(
+                        '1' => 'Include W9 form',
+                    ),
                 ),
                 array(
                     'id' => 'uploader',
@@ -750,6 +770,28 @@ if (isset($_REQUEST['d'])) {
                     ),
                     'value' => array(
                         '1' => !empty($order->isArchived) ? 1 : 0,
+                    ),
+                ),
+                array(
+                    'id' => 'includeBankingInfo',
+                    'label' => 'Banking Info',
+                    'type' => 'checkbox',
+                    'choices' => array(
+                        '1' => 'Include banking info page',
+                    ),
+                    'value' => array(
+                        '1' => !empty($order->includeBankingInfo) ? 1 : 0,
+                    ),
+                ),
+                array(
+                    'id' => 'includeW9',
+                    'label' => 'W9',
+                    'type' => 'checkbox',
+                    'choices' => array(
+                        '1' => 'Include W9 form',
+                    ),
+                    'value' => array(
+                        '1' => !empty($order->includeW9) ? 1 : 0,
                     ),
                 ),
                 array(

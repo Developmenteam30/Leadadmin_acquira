@@ -26,7 +26,9 @@ class Leads
 
         // Connect to the database
         try {
-            $this->db = new PDO('mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME, $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p'], array(\PDO::ATTR_PERSISTENT => $persistent));
+            $this->db = new PDO('mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME,
+                $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p'],
+                array(\PDO::ATTR_PERSISTENT => $persistent));
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
 
@@ -59,6 +61,7 @@ class Leads
     protected function quoteIdentifier($value)
     {
         $q = '`';
+
         return ($q . str_replace("$q", "$q$q", $value) . $q);
     }
 
@@ -73,8 +76,10 @@ class Leads
         }
 
         try {
-            $query = $this->db->prepare('INSERT INTO ' . $this->quoteIdentifier($table) . ' (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')');
+            $query = $this->db->prepare('INSERT INTO ' . $this->quoteIdentifier($table) . ' (' . implode(', ',
+                    $cols) . ') VALUES (' . implode(', ', $vals) . ')');
             $query->execute(array_values($data));
+
             return $this->db->lastInsertId();
         } catch (PDOException $e) {
             throw new Leads_PDOException('Unable to insert record', null, $e);
@@ -94,8 +99,10 @@ class Leads
         }
 
         try {
-            $query = $this->db->prepare('REPLACE INTO ' . $this->quoteIdentifier($table) . ' (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')');
+            $query = $this->db->prepare('REPLACE INTO ' . $this->quoteIdentifier($table) . ' (' . implode(', ',
+                    $cols) . ') VALUES (' . implode(', ', $vals) . ')');
             $query->execute(array_values($data));
+
             return $this->db->lastInsertId();
         } catch (PDOException $e) {
             throw new Leads_PDOException('Unable to replace record', null, $e);
@@ -130,6 +137,7 @@ class Leads
 
             $query = $this->db->prepare($sql);
             $query->execute(array_merge(array_values($data), array_values($where)));
+
             return true;
         } catch (PDOException $e) {
             throw new Leads_PDOException('Unable to update table', null, $e);
@@ -270,10 +278,12 @@ class Leads
             $status = $this->update('users', $fields, array(
                 'idUser' => $idUser,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update user: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -389,7 +399,7 @@ class Leads
     public function verifyUser($username, $password)
     {
         try {
-            $query = $this->db->prepare("SELECT idUser,username,password,idCompany,level FROM users WHERE username = ?");
+            $query = $this->db->prepare("SELECT idUser,username,password,idCompany,level FROM users WHERE username = ? AND isArchived = 0");
             $query->execute(array($username));
             $results = $query->fetch();
 
@@ -453,9 +463,11 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT a.logId,a.timestamp,a.ipaddress,a.userId,u.username,a.action,a.notes FROM auditlog a LEFT JOIN users u ON a.userId = u.idUser WHERE a.timestamp >= DATE_SUB(NOW(),INTERVAL 60 DAY) ORDER BY a.logId DESC");
             $query->execute();
+
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get auditlog: ' . $e->getMessage());
+
             return null;
         }
 
@@ -470,6 +482,7 @@ class Leads
             $query->execute(array($userId, $month . '01', $existingBusinessAmount, $newBusinessAmount));
         } catch (PDOException $e) {
             $this->logError('Unable to update expectation value: ' . $e->getMessage());
+
             return;
         }
 
@@ -910,6 +923,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add ledger entry: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -926,6 +940,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add ledger vendor entry: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -942,6 +957,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to replace ledger vendor entry: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -958,6 +974,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add offline ledger entry: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -972,6 +989,7 @@ class Leads
             $query->execute(array($ledgerId));
         } catch (\Exception $e) {
             $this->logError('Unable to delete ledger entry: ' . $e->getMessage());
+
             return null;
         }
 
@@ -986,6 +1004,7 @@ class Leads
             $query->execute(array($ledgerId));
         } catch (\Exception $e) {
             $this->logError('Unable to delete offline ledger entry: ' . $e->getMessage());
+
             return null;
         }
 
@@ -1000,6 +1019,7 @@ class Leads
             $query->execute(array($ledgerId));
         } catch (\Exception $e) {
             $this->logError('Unable to delete phones ledger entry: ' . $e->getMessage());
+
             return null;
         }
 
@@ -1013,10 +1033,12 @@ class Leads
             $status = $this->update('ledger', $fields, array(
                 'ledgerId' => $ledgerId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update ledger: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1030,10 +1052,12 @@ class Leads
             $status = $this->update('ledger_offline', $fields, array(
                 'ledgerId' => $ledgerId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update offline ledger: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1050,6 +1074,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add phone ledger entry: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1063,10 +1088,12 @@ class Leads
             $status = $this->update('ledger_phones', $fields, array(
                 'ledgerId' => $ledgerId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update phones ledger: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1083,6 +1110,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add phone ledger vendor entry: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1099,6 +1127,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to replace phone ledger vendor entry: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1582,7 +1611,9 @@ class Leads
             $sql .= "UNION ";
 
             if (!empty($distinctColumn) && empty($distinctValue)) {
-                $sql .= "SELECT DISTINCT(" . str_replace('ledgerMonth', "CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01')", $distinctColumn) . ") AS month ";
+                $sql .= "SELECT DISTINCT(" . str_replace('ledgerMonth',
+                        "CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01')",
+                        $distinctColumn) . ") AS month ";
             } else {
                 $sql .= "SELECT r.date as ledgerId,1 AS divisionId,c.idCompany AS companyId,5 AS verticalId,i.paymentDate,'ACH' AS paymentMethod,CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01') AS ledgerMonth,ROUND(SUM(r.value)*0.50,2) AS invoiceAmount,i.invoiceNumber AS invoiceNum,ROUND(SUM(r.value)*0.50,2) AS paymentAmount,NULL AS commissionAmount1,NULL AS commissionAmount2,NULL AS commissionDate1,NULL AS commissionDate2,NULL as commissionAmount3,NULL AS commissionDate3,0 AS type,u.idUser AS userId1,NULL AS userId2,NULL AS userId3,CONCAT('E',r.date) AS entryId,c.name AS companyName,'E-mail' AS divisionName,'Email Marketing' AS verticalName,u.fullName AS fullname1,NULL AS fullName2,NULL AS fullName3,'email' AS source,0 AS indexId,c.name AS vendorCompanyName ";
             }
@@ -1604,7 +1635,8 @@ class Leads
                 $sql .= "AND i.paymentDate IS NOT NULL ";
             }
             if (!empty($distinctColumn) && !empty($distinctValue)) {
-                $sql .= "AND " . str_replace('ledgerMonth', "CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01')", $distinctColumn) . " = ? ";
+                $sql .= "AND " . str_replace('ledgerMonth',
+                        "CONCAT_WS('-',SUBSTRING(r.date,1,4),SUBSTRING(r.date,5,2),'01')", $distinctColumn) . " = ? ";
                 $params[] = $distinctValue;
             }
             $sql .= "GROUP BY c.idCompany,r.date ";
@@ -1787,6 +1819,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add opportunity: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1800,10 +1833,12 @@ class Leads
             $status = $this->update('opportunities', $fields, array(
                 'opportunityId' => $opportunityId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update opportunity: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1867,6 +1902,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add opportunity note: ' . $pdoException->getMessage());
+
             return false;
         }
 
@@ -1898,6 +1934,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add insertion order: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -1985,10 +2022,12 @@ class Leads
             $status = $this->update('insertion_orders', $fields, array(
                 'orderId' => $orderId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update insertion order: ' . $pdoException->getMessage());
+
             return null;
         }
     }
@@ -2003,6 +2042,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add prospect: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2016,10 +2056,12 @@ class Leads
             $status = $this->update('prospects', $fields, array(
                 'prospectId' => $prospectId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update prospect: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2160,6 +2202,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add prospect note: ' . $pdoException->getMessage());
+
             return false;
         }
 
@@ -2191,6 +2234,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add credential: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2204,10 +2248,12 @@ class Leads
             $status = $this->update('credentials', $fields, array(
                 'credentialId' => $credentialId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update credential: ' . $pdoException->getMessage());
+
             return null;
         }
     }
@@ -2257,6 +2303,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add company: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2270,10 +2317,12 @@ class Leads
             $status = $this->update('companies', $fields, array(
                 'idCompany' => $idCompany,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update company: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2474,6 +2523,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add company note: ' . $pdoException->getMessage());
+
             return false;
         }
 
@@ -2505,6 +2555,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add vertical: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2555,10 +2606,12 @@ class Leads
             $status = $this->update('verticals', $fields, array(
                 'verticalId' => $verticalId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update vertical: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2602,6 +2655,7 @@ class Leads
             $query->execute(array($companyId, $verticalId));
         } catch (PDOException $e) {
             $this->logError('Unable to add company vertical mapping: ' . $e->getMessage());
+
             return;
         }
     }
@@ -2613,6 +2667,7 @@ class Leads
             $query->execute(array($companyId));
         } catch (PDOException $e) {
             $this->logError('Unable to clear company verticals: ' . $e->getMessage());
+
             return;
         }
     }
@@ -2624,6 +2679,7 @@ class Leads
             $query->execute(array($companyId, $divisionId));
         } catch (PDOException $e) {
             $this->logError('Unable to add company division mapping: ' . $e->getMessage());
+
             return;
         }
     }
@@ -2635,6 +2691,7 @@ class Leads
             $query->execute(array($companyId));
         } catch (PDOException $e) {
             $this->logError('Unable to clear company divisions: ' . $e->getMessage());
+
             return;
         }
     }
@@ -2727,6 +2784,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add field: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2740,10 +2798,12 @@ class Leads
             $status = $this->update('fields', $fields, array(
                 'fieldId' => $fieldId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update field: ' . $pdoException->getMessage());
+
             return null;
         }
     }
@@ -2826,10 +2886,12 @@ class Leads
             $status = $this->update('feedinc', $fields, array(
                 'idFeedIn' => $idFeedIn,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update inbound feed: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -2846,6 +2908,7 @@ class Leads
             $results = $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound feed info: ' . $e->getMessage());
+
             return null;
         }
 
@@ -2960,10 +3023,11 @@ class Leads
             $sql .= "ORDER BY fp.waterfallPriority " . ($descending ? "DESC" : "ASC") . ",FIELD(fp.queueType,'livedata','waterfallLimitLive','waterfall','waterfallLimit','queue')";
 //			$sql .= "ORDER BY fp.waterfallPriority DESC";
             $query = $this->db->prepare($sql);
-            $query->execute(array($idFeedIn,$idFeedIn));
+            $query->execute(array($idFeedIn, $idFeedIn));
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound population settings: ' . $e->getMessage());
+
             return false;
         }
 
@@ -2998,10 +3062,12 @@ class Leads
             $status = $this->update('feedout', $fields, array(
                 'idFeedOut' => $idFeedOut,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update outbound feed: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -3037,6 +3103,7 @@ class Leads
             }
         } catch (PDOException $e) {
             $this->logError('Unable to get population status: ' . $e->getMessage());
+
             return 'Error';
         }
 
@@ -3053,6 +3120,7 @@ class Leads
             $results = $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get feed population: ' . $e->getMessage());
+
             return false;
         }
 
@@ -3069,6 +3137,7 @@ class Leads
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get feed populations: ' . $e->getMessage());
+
             return false;
         }
 
@@ -3099,10 +3168,12 @@ class Leads
             $status = $this->update('feedPopulation', $fields, array(
                 'idAssoc' => $idAssoc,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update population: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -3123,6 +3194,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to update feedout retired status: ' . $e->getMessage());
+
             return false;
         }
 
@@ -3132,6 +3204,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to update feedPopulation retired status: ' . $e->getMessage());
+
             return false;
         }
 
@@ -3393,7 +3466,8 @@ class Leads
                 'idFeedIn' => $idFeedIn,
                 'listcode' => empty($fields['listcode']) ? null : substr($fields['listcode'], 0, 20),
                 'leadId' => empty($fields['leadId']) ? null : substr($fields['leadId'], 0, 255),
-                'leadstamp' => empty($fields['stamp']) ? null : $fields['stamp'], // Already converted to UTC and formatted by ProcessLeads::validateField
+                'leadstamp' => empty($fields['stamp']) ? null : $fields['stamp'],
+                // Already converted to UTC and formatted by ProcessLeads::validateField
                 'url' => empty($fields['url']) ? null : substr($this->parseUrl($fields['url']), 0, 255),
                 'ip' => empty($fields['ip']) ? null : substr($fields['ip'], 0, 45),
                 'email' => empty($fields['email']) ? null : substr($fields['email'], 0, 255),
@@ -3404,7 +3478,8 @@ class Leads
                 'city' => empty($fields['city']) ? null : substr($fields['city'], 0, 75),
                 'state' => empty($fields['state']) ? null : substr($fields['state'], 0, 25),
                 'zip' => empty($fields['zip']) ? null : substr($fields['zip'], 0, 20),
-                'dob' => (empty($fields['dob']) || '0000-00-00' == $fields['dob']) ? null : gmdate('Y-m-d', strtotime($fields['dob'])),
+                'dob' => (empty($fields['dob']) || '0000-00-00' == $fields['dob']) ? null : gmdate('Y-m-d',
+                    strtotime($fields['dob'])),
                 'gender' => empty($fields['gender']) ? null : substr($fields['gender'], 0, 10),
                 'landline' => empty($fields['landline']) ? null : substr($fields['landline'], 0, 20),
                 'cellphone' => empty($fields['cellphone']) ? null : substr($fields['cellphone'], 0, 20),
@@ -3417,13 +3492,15 @@ class Leads
                 'custom4' => empty($fields['custom4']) ? null : substr($fields['custom4'], 0, 255),
                 'custom5' => empty($fields['custom5']) ? null : substr($fields['custom5'], 0, 255),
                 'custom6' => empty($fields['custom6']) ? null : substr($fields['custom6'], 0, 255),
-                'timestamp' => empty($fields['timestampOverride']) ? gmdate('Y-m-d H:i:s') : gmdate('Y-m-d H:i:s', strtotime($fields['timestampOverride'])),
+                'timestamp' => empty($fields['timestampOverride']) ? gmdate('Y-m-d H:i:s') : gmdate('Y-m-d H:i:s',
+                    strtotime($fields['timestampOverride'])),
                 'customFields' => empty($customFields) ? null : json_encode($customFields),
             ));
         } catch (Leads_PDOException $e) {
             $this->db->rollBack();
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add inbound record: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -3437,10 +3514,12 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to insert stats_inbound record: ' . $e->getMessage());
+
             return null;
         }
 
         $this->db->commit();
+
         return $idRecord;
     }
 
@@ -3454,6 +3533,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to update data_inbound record: ' . $e->getMessage());
+
             return;
         }
 
@@ -3464,6 +3544,7 @@ class Leads
             } catch (PDOException $e) {
                 $this->db->rollBack();
                 $this->logError('Unable to update stats_inbound record: ' . $e->getMessage());
+
                 return;
             }
         }
@@ -3528,14 +3609,22 @@ class Leads
 
         } catch (PDOException $e) {
             $this->logError('Unable to check for inbound duplicates: ' . $e->getMessage());
+
             return null;
         }
 
         return false;
     }
 
-    public function outboundAdd($idRecord, $idRecordLegacy, $idFeedIn, $idFeedOut, $url, $processed = 0, $urlRewritten = false)
-    {
+    public function outboundAdd(
+        $idRecord,
+        $idRecordLegacy,
+        $idFeedIn,
+        $idFeedOut,
+        $url,
+        $processed = 0,
+        $urlRewritten = false
+    ) {
         $this->db->beginTransaction();
 
         try {
@@ -3551,6 +3640,7 @@ class Leads
             $this->db->rollBack();
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add outbound record: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -3560,6 +3650,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to add URL mapping: ' . $e->getMessage());
+
             return null;
         }
 
@@ -3571,6 +3662,7 @@ class Leads
             } catch (PDOException $e) {
                 $this->db->rollBack();
                 $this->logError('Unable to add to queue count: ' . $e->getMessage());
+
                 return null;
             }
         }
@@ -3589,6 +3681,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to add to queue count: ' . $e->getMessage());
+
             return null;
         }
     }
@@ -3604,10 +3697,17 @@ class Leads
 
         try {
             $query = $this->db->prepare('UPDATE data_outbound SET timestamp = NOW(), processed = 1, accepted = ?, isBillable = ?, result = ? WHERE idRecord = ? AND idFeedOut = ?');
-            $query->execute(array(!empty($accepted) ? 1 : 0, !empty($accepted) ? 1 : 0, $result, $row->idRecord, $feedOut->idFeedOut));
+            $query->execute(array(
+                !empty($accepted) ? 1 : 0,
+                !empty($accepted) ? 1 : 0,
+                $result,
+                $row->idRecord,
+                $feedOut->idFeedOut,
+            ));
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to update data_outbound record: ' . $e->getMessage());
+
             return null;
         }
 
@@ -3621,6 +3721,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to insert stats_outbound record: ' . $e->getMessage());
+
             return null;
         }
 
@@ -3638,10 +3739,20 @@ class Leads
                     } else {
                         $query = $this->db->prepare('INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,rejected) VALUES(?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE rejected = rejected + 1, costPerLead = ?, revenuePerLead = ?');
                     }
-                    $query->execute(array($row->idFeedIn, $feedOut->idFeedOut, $this->parseUrl($row->url), date('Y-m-d'), $costPerLead, $revenuePerLead, $costPerLead, $revenuePerLead));
+                    $query->execute(array(
+                        $row->idFeedIn,
+                        $feedOut->idFeedOut,
+                        $this->parseUrl($row->url),
+                        date('Y-m-d'),
+                        $costPerLead,
+                        $revenuePerLead,
+                        $costPerLead,
+                        $revenuePerLead,
+                    ));
                 } catch (PDOException $e) {
                     $this->db->rollBack();
                     $this->logError('Unable to insert stats_correllated record: ' . $e->getMessage());
+
                     return null;
                 }
             }
@@ -3653,6 +3764,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to subtract from queue count: ' . $e->getMessage());
+
             return null;
         }
 
@@ -3669,6 +3781,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to archive record: ' . $e->getMessage());
+
             return null;
         }
 
@@ -3709,6 +3822,7 @@ class Leads
         } catch (PDOException $e) {
             $this->logError('Unable to export inbound records: ' . $e->getMessage());
             $result['reason'] = 'SQL ERROR: ' . $e->getMessage();
+
             return $result;
         }
     }
@@ -3782,6 +3896,7 @@ class Leads
         } catch (PDOException $e) {
             $this->logError('Unable to export inbound records: ' . $e->getMessage());
             $result['reason'] = 'SQL ERROR: ' . $e->getMessage();
+
             return $result;
         }
     }
@@ -3807,6 +3922,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to toggle billable on data_outbound record: ' . $e->getMessage());
+
             return null;
         }
 
@@ -3816,10 +3932,15 @@ class Leads
             } else {
                 $query = $this->db->prepare('UPDATE stats_outbound SET billable = billable + 1 WHERE idFeedOut = ? AND url = ? AND stamp = ?');
             }
-            $query->execute(array($row->idFeedOut, $this->parseUrl(!empty($row->urlOutbound) ? $row->urlOutbound : $row->url), $statsDate));
+            $query->execute(array(
+                $row->idFeedOut,
+                $this->parseUrl(!empty($row->urlOutbound) ? $row->urlOutbound : $row->url),
+                $statsDate,
+            ));
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to toggle billable on stats_outbound record: ' . $e->getMessage());
+
             return null;
         }
 
@@ -3829,10 +3950,16 @@ class Leads
             } else {
                 $query = $this->db->prepare('UPDATE stats_correlated SET billable = billable + 1 WHERE idFeedIn = ? AND idFeedOut = ? AND url = ? AND stamp = ?');
             }
-            $query->execute(array($row->idFeedIn, $row->idFeedOut, $this->parseUrl(!empty($row->urlOutbound) ? $row->urlOutbound : $row->url), $statsDate));
+            $query->execute(array(
+                $row->idFeedIn,
+                $row->idFeedOut,
+                $this->parseUrl(!empty($row->urlOutbound) ? $row->urlOutbound : $row->url),
+                $statsDate,
+            ));
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to toggle billable on stats_correlated record: ' . $e->getMessage());
+
             return null;
         }
 
@@ -3841,60 +3968,61 @@ class Leads
         return true;
     }
 
-	public function getUrlMappings( $companyIn, $companyOut ) {
-		$results = array();
-		$params  = [];
+    public function getUrlMappings($companyIn, $companyOut)
+    {
+        $results = array();
+        $params = [];
 
-		$query
-			   = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
-		$query .= "FROM url_mapping m ";
-		$query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
-		$query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
-		$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
-		$query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
-		$query .= "WHERE 1=1 ";
+        $query
+            = "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,m.url,co.name AS outName,o.idFeedOut,o.description AS outDescription,IF(m.timestamp > DATE_SUB(NOW(), INTERVAL 30 DAY),1,0) AS active ";
+        $query .= "FROM url_mapping m ";
+        $query .= "INNER JOIN feedinc i ON m.idFeedIn = i.idFeedIn ";
+        $query .= "INNER JOIN feedout o ON m.idFeedOut = o.idFeedOut ";
+        $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+        $query .= "INNER JOIN companies co ON o.idCompany = co.idCompany ";
+        $query .= "WHERE 1=1 ";
 
-		if ( ! empty( $companyIn ) ) {
-			$query    .= "AND ci.idCompany = ? ";
-			$params[] = $companyIn;
-		}
-		if ( ! empty( $companyOut ) ) {
-			$query    .= "AND co.idCompany = ? ";
-			$params[] = $companyOut;
-		}
+        if (!empty($companyIn)) {
+            $query .= "AND ci.idCompany = ? ";
+            $params[] = $companyIn;
+        }
+        if (!empty($companyOut)) {
+            $query .= "AND co.idCompany = ? ";
+            $params[] = $companyOut;
+        }
 
-		$query .= " ) ";
+        $query .= " ) ";
 
-		if ( ! empty( $companyIn ) && empty( $companyOut ) ) {
+        if (!empty($companyIn) && empty($companyOut)) {
 
-			$query .= "UNION ALL ";
+            $query .= "UNION ALL ";
 
-			$query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
-			$query .= "FROM stats_inbound s ";
-			$query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
-			$query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
-			$query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
-			$query .= "WHERE m.url IS NULL ";
+            $query .= "( SELECT ci.name AS inName,i.idFeedIn,i.description AS inDescription,s.url,'-' AS outName,'X' AS idFeedOut,'-' AS outDescription, 0 AS active ";
+            $query .= "FROM stats_inbound s ";
+            $query .= "INNER JOIN feedinc i ON s.idFeedIn = i.idFeedIn ";
+            $query .= "INNER JOIN companies ci ON i.idCompany = ci.idCompany ";
+            $query .= "LEFT JOIN url_mapping m ON ( m.url = s.url AND m.idFeedIn = s.idFeedIn ) ";
+            $query .= "WHERE m.url IS NULL ";
 
-			$query    .= "AND ci.idCompany = ? ";
-			$params[] = $companyIn;
+            $query .= "AND ci.idCompany = ? ";
+            $params[] = $companyIn;
 
-			$query .= "GROUP BY 4 ) ";
+            $query .= "GROUP BY 4 ) ";
 
-		}
+        }
 
-		$query .= "ORDER BY 1,2,4,5,6 ";
+        $query .= "ORDER BY 1,2,4,5,6 ";
 
-		try {
-			$query = $this->db->prepare( $query );
-			$query->execute( $params );
-			$results = $query->fetchAll();
-		} catch ( PDOException $e ) {
-			$this->logError( 'Unable to get URL mappings: ' . $e->getMessage() );
-		}
+        try {
+            $query = $this->db->prepare($query);
+            $query->execute($params);
+            $results = $query->fetchAll();
+        } catch (PDOException $e) {
+            $this->logError('Unable to get URL mappings: ' . $e->getMessage());
+        }
 
-		return $results;
-	}
+        return $results;
+    }
 
     public function getOutboundCompanyMappingsByInboundCompany($idCompany)
     {
@@ -3926,9 +4054,11 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT * FROM invoices WHERE date = ? AND idCompany = ?");
             $query->execute(array($date, $idCompany));
+
             return $query->fetch(\PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get invoice details: ' . $e->getMessage());
+
             return false;
         }
 
@@ -3964,6 +4094,7 @@ class Leads
             ));
         } catch (PDOException $e) {
             $this->logError('Unable to update invoice value: ' . $e->getMessage());
+
             return;
         }
     }
@@ -4317,12 +4448,19 @@ class Leads
             if ($mappings && is_array($mappings)) {
                 foreach ($mappings as $mapping) {
                     $query = $this->db->prepare("REPLACE INTO revenue( date, idFeedIn, idFeedOut, url, value ) SELECT ?,idFeedIn,idFeedOut,url,value FROM revenue WHERE date = ? AND idFeedIn = ? AND idFeedOut = ? AND url = ?");
-                    $query->execute(array($toDate, $fromDate, $mapping['idFeedIn'], $mapping['idFeedOut'], $mapping['url']));
+                    $query->execute(array(
+                        $toDate,
+                        $fromDate,
+                        $mapping['idFeedIn'],
+                        $mapping['idFeedOut'],
+                        $mapping['url'],
+                    ));
                 }
             }
 
         } catch (PDOException $e) {
             $this->logError('Unable to copy revenue values: ' . $e->getMessage());
+
             return;
         }
 
@@ -4336,6 +4474,7 @@ class Leads
             $query->execute(array($date, $idFeedIn, $idFeedOut, $url, $value));
         } catch (PDOException $e) {
             $this->logError('Unable to update revenue value: ' . $e->getMessage());
+
             return;
         }
 
@@ -4346,7 +4485,7 @@ class Leads
         $results = array();
 
         try {
-            $query = $this->db->prepare("SELECT CONVERT_TZ(timestamp,?,?) AS timestampConverted,result,leadstamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL ORDER BY timestamp DESC LIMIT " . intval($offset) . ",100");
+            $query = $this->db->prepare("SELECT CONVERT_TZ(timestamp,?,?) AS timestampConverted,result,leadstamp,listcode,url,fname,lname,addr,addr2,city,state,zip,country,dob,gender,landline,cellphone,email,ip,leadId FROM data_inbound WHERE idFeedIn = ? AND result IS NOT NULL ORDER BY timestamp DESC LIMIT " . intval($offset) . ",100");
             $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedIn));
             $results = $query->fetchAll();
         } catch (PDOException $e) {
@@ -4384,10 +4523,12 @@ class Leads
             $status = $this->update('jobs', $fields, array(
                 'jobId' => $jobId,
             ));
+
             return $status;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to update job: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -4399,9 +4540,11 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn WHERE j.jobId = ?");
             $query->execute(array($jobId));
+
             return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get job details: ' . $e->getMessage());
+
             return null;
         }
 
@@ -4425,9 +4568,11 @@ class Leads
 
             $query = $this->db->prepare($sql);
             $query->execute($params);
+
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get jobs: ' . $e->getMessage());
+
             return null;
         }
 
@@ -4448,9 +4593,11 @@ class Leads
 
             $query = $this->db->prepare($sql);
             $query->execute($params);
+
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get jobs: ' . $e->getMessage());
+
             return null;
         }
 
@@ -4465,6 +4612,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to update data_inbound job timestamp: ' . $e->getMessage());
+
             return;
         }
     }
@@ -4477,6 +4625,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to update data_inbound record timestamp: ' . $e->getMessage());
+
             return;
         }
     }
@@ -4518,12 +4667,14 @@ class Leads
                         ));
 
                         $this->unlockTables();
+
                         return $row;
                     }
                 }
             }
         } catch (PDOException $e) {
             $this->logError('Unable to get pending job: ' . $e->getMessage());
+
             return;
         }
 
@@ -4570,7 +4721,7 @@ class Leads
         $results = array();
 
         try {
-            $query = $this->db->prepare("SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,o.accepted,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.idRecord FROM archive.data_outbound_" . date('Ym') . " o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idFeedOut = ? AND o.processed = 1 AND o.accepted = 0 ORDER BY o.idRecord DESC LIMIT " . intval($offset) . ",100");
+            $query = $this->db->prepare("SELECT CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,o.accepted,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.idRecord,i.leadId FROM archive.data_outbound_" . date('Ym') . " o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idFeedOut = ? AND o.processed = 1 AND o.accepted = 0 ORDER BY o.idRecord DESC LIMIT " . intval($offset) . ",100");
             $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut));
             $results = $query->fetchAll();
         } catch (PDOException $e) {
@@ -4602,6 +4753,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to retry outbound rejections (1): ' . $e->getMessage());
+
             return null;
         }
 
@@ -4612,6 +4764,7 @@ class Leads
             } catch (PDOException $e) {
                 $this->db->rollBack();
                 $this->logError('Unable to retry outbound rejections (2): ' . $e->getMessage());
+
                 return null;
             }
 
@@ -4621,6 +4774,7 @@ class Leads
             } catch (PDOException $e) {
                 $this->db->rollBack();
                 $this->logError('Unable to retry outbound rejections (3): ' . $e->getMessage());
+
                 return null;
             }
 
@@ -4630,6 +4784,7 @@ class Leads
             } catch (PDOException $e) {
                 $this->db->rollBack();
                 $this->logError('Unable to retry outbound rejections (4): ' . $e->getMessage());
+
                 return null;
             }
         }
@@ -4898,6 +5053,7 @@ class Leads
             $query->execute(array($idFeedIn, $this->parseUrl($url)));
         } catch (PDOException $e) {
             $this->logError('Unable to add notification record: ' . $e->getMessage());
+
             return;
         }
     }
@@ -4909,6 +5065,7 @@ class Leads
             $query->execute(array($idFeedIn));
         } catch (PDOException $e) {
             $this->logError('Unable to delete notification records: ' . $e->getMessage());
+
             return;
         }
     }
@@ -4923,6 +5080,7 @@ class Leads
             $cnt = $query->fetchColumn();
         } catch (PDOException $e) {
             $this->logError('Unable to check URL notification records: ' . $e->getMessage());
+
             return $cnt;
         }
 
@@ -4954,6 +5112,7 @@ class Leads
             $cnt = $query->fetchAll();
         } catch (PDOException $e) {
             $this->logError('Unable to get company sales notifications: ' . $e->getMessage());
+
             return $cnt;
         }
 
@@ -4968,6 +5127,7 @@ class Leads
         } catch (PDOException $e) {
             $this->db->rollBack();
             $this->logError('Unable to update company notification: ' . $e->getMessage());
+
             return null;
         }
     }
@@ -5032,7 +5192,8 @@ class Leads
             $checkSql->execute(array('data_inbound_' . $dateStart->format('Ym')));
             if ($checkSql && $checkSql->fetchColumn()) {
 
-                $sql .= " UNION " . str_replace("FROM data_inbound", "FROM archive." . $this->quoteIdentifier('data_inbound_' . $dateStart->format('Ym')), $baseSql);
+                $sql .= " UNION " . str_replace("FROM data_inbound",
+                        "FROM archive." . $this->quoteIdentifier('data_inbound_' . $dateStart->format('Ym')), $baseSql);
                 $params[] = DB_TIMEZONE;
                 $params[] = LOCAL_TIMEZONE;
                 if (!empty($email)) {
@@ -5065,6 +5226,7 @@ class Leads
         try {
             $query = $this->db->prepare($sql);
             $query->execute($params);
+
             return $query->fetchAll(\PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             echo $e->getMessage();
@@ -5101,7 +5263,9 @@ class Leads
                 $checkSql->execute(array('data_inbound_' . $dateStart->format('Ym')));
                 if ($checkSql && $checkSql->fetchColumn()) {
 
-                    $sql = str_replace("FROM data_inbound", "FROM archive." . $this->quoteIdentifier('data_inbound_' . $dateStart->format('Ym')), $baseSql) . " " . PHP_EOL;
+                    $sql = str_replace("FROM data_inbound",
+                            "FROM archive." . $this->quoteIdentifier('data_inbound_' . $dateStart->format('Ym')),
+                            $baseSql) . " " . PHP_EOL;
 
                     $file = fopen(ADMIN_ROOT . 'exports/homeowner_' . $dateStart->format('Ym') . '.csv', 'w');
                     if (!$file) {
@@ -5256,7 +5420,8 @@ class Leads
 
 
         do {
-            $sql .= str_replace("FROM data_outbound", "FROM archive." . $this->quoteIdentifier('data_outbound_' . $dateStart->format('Ym')), $baseSql);
+            $sql .= str_replace("FROM data_outbound",
+                "FROM archive." . $this->quoteIdentifier('data_outbound_' . $dateStart->format('Ym')), $baseSql);
             $params[] = DB_TIMEZONE;
             $params[] = LOCAL_TIMEZONE;
             $params[] = $recordId;
@@ -5277,6 +5442,7 @@ class Leads
         try {
             $query = $this->db->prepare($sql);
             $query->execute($params);
+
             return $query->fetchAll(\PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             echo $e->getMessage();
@@ -5294,6 +5460,10 @@ class Leads
         $archiveDate = new \DateTime($dateStartIn);
         $dateStart = new \DateTime($dateStartIn);
         $dateEnd = new \DateTime($dateEndIn);
+        $today = new \DateTime();
+        if ($dateEnd > $today) {
+            $dateEnd = $today;
+        }
 
         $sql = "SELECT * FROM ( ";
 
@@ -5478,6 +5648,7 @@ class Leads
 
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound URL exists results: ' . $e->getMessage());
+
             return null;
         }
 
@@ -5607,11 +5778,13 @@ class Leads
         $recordId = 0;
 
         $startDate = new \DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
+        $today = new \DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
         try {
             $startDate->sub(new \DateInterval('P3M'));
             $startDate->modify('first day of this month')->setTime(0, 0, 0);
             $endDate = clone $startDate;
-            $endDate->modify('last day of this month')->setTime(23, 59, 59);
+            $endDate->setDate($startDate->format('Y'), $startDate->format('m'), $today->format('d'))->setTime(23, 59,
+                59);
         } catch (Exception $e) {
             die('Date Error: ' . $e->getMessage());
         }
@@ -5669,6 +5842,7 @@ class Leads
             $this->logError('Unable to archive inbound accepted: ' . $e->getMessage());
             $this->rollBack();
         }
+
         return $cnt;
     }
 
@@ -5677,6 +5851,7 @@ class Leads
         try {
             $query = $this->db->prepare("DELETE FROM errorlog WHERE stamp <= DATE_SUB(NOW(), INTERVAL 15 DAY)");
             $query->execute();
+
             return $query->rowCount();
         } catch (PDOException $e) {
             $this->logError('Unable to delete old errorlog entries: ' . $e->getMessage());
@@ -5690,6 +5865,7 @@ class Leads
         try {
             $query = $this->db->prepare("SHOW TABLES LIKE 'feedinc_%_invalid'");
             $query->execute();
+
             return $query->fetchAll();
         } catch (PDOException $e) {
             $this->logError('Unable to get old legacy inbound tables: ' . $e->getMessage());
@@ -5707,6 +5883,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to lock tables: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -5716,6 +5893,7 @@ class Leads
             $rows = $query->rowCount();
         } catch (PDOException $e) {
             $this->logError('Unable to delete queued records (1): ' . $e->getMessage());
+
             return null;
         }
 
@@ -5724,6 +5902,7 @@ class Leads
             $query->execute(array($idFeedOut));
         } catch (PDOException $e) {
             $this->logError('Unable to delete queued records (3): ' . $e->getMessage());
+
             return null;
         }
 
@@ -5732,6 +5911,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to unlock tables: ' . $pdoException->getMessage());
+
             return null;
         }
 
@@ -5784,6 +5964,7 @@ class Leads
         $feed = $this->getInboundFeed($idFeedIn);
         if (!$feed) {
             $result['reason'] = 'Not a valid incoming feed.';
+
             return $result;
         }
 
@@ -5805,6 +5986,7 @@ class Leads
         $file = fopen($filePath, 'w');
         if (!$file) {
             $result['reason'] = 'Unable to create CSV file.';
+
             return $result;
         }
 
@@ -5897,6 +6079,7 @@ class Leads
         } catch (PDOException $e) {
             $this->logError('Unable to export inbound records: ' . $e->getMessage());
             $result['reason'] = 'SQL ERROR: ' . $e->getMessage();
+
             return $result;
         } finally {
             $this->setBufferedQuery();
@@ -5924,6 +6107,7 @@ class Leads
         $feed = $this->getOutboundFeed($idFeedOut);
         if (!$feed) {
             $result['reason'] = 'Not a valid outbound feed.';
+
             return $result;
         }
 
@@ -5934,6 +6118,7 @@ class Leads
         $file = fopen($filePath, 'w');
         if (!$file) {
             $result['reason'] = 'Unable to create CSV file.';
+
             return $result;
         }
 
@@ -6104,6 +6289,7 @@ class Leads
         } catch (PDOException $e) {
             $this->logError('Unable to export outbound records: ' . $e->getMessage());
             $result['reason'] = 'SQL ERROR: ' . $e->getMessage();
+
             return $result;
         } finally {
             $this->setBufferedQuery();
@@ -6129,6 +6315,7 @@ class Leads
         $file = fopen($filePath, 'w');
         if (!$file) {
             $result['reason'] = 'Unable to create CSV file.';
+
             return;
         }
 
@@ -6145,6 +6332,7 @@ class Leads
 
         } catch (PDOException $e) {
             $this->logError('Unable to export Comcast records: ' . $e->getMessage());
+
             return;
         } finally {
             $this->setBufferedQuery();
@@ -6163,6 +6351,7 @@ class Leads
         $file = fopen($filePath, 'w');
         if (!$file) {
             $result['reason'] = 'Unable to create CSV file.';
+
             return;
         }
 
@@ -6179,6 +6368,7 @@ class Leads
 
         } catch (PDOException $e) {
             $this->logError('Unable to export cable records: ' . $e->getMessage());
+
             return;
         } finally {
             $this->setBufferedQuery();
@@ -6196,10 +6386,12 @@ class Leads
 
             $query = $this->db->prepare($sql);
             $query->execute($fields);
+
             return $query;
 
         } catch (PDOException $e) {
             $this->logError('Unable to export records: ' . $e->getMessage());
+
             return null;
         } finally {
             $this->setBufferedQuery();
@@ -6260,10 +6452,20 @@ class Leads
                 $revenuePerLead = !empty($row->revenuePerLead) ? $row->revenuePerLead : 0.00;
 
                 try {
-                    $statsQuery->execute(array($row->idFeedIn, $row->idFeedOut, $this->parseUrl($row->url), $row->timestamp, $costPerLead, $revenuePerLead, $costPerLead, $revenuePerLead));
+                    $statsQuery->execute(array(
+                        $row->idFeedIn,
+                        $row->idFeedOut,
+                        $this->parseUrl($row->url),
+                        $row->timestamp,
+                        $costPerLead,
+                        $revenuePerLead,
+                        $costPerLead,
+                        $revenuePerLead,
+                    ));
                 } catch (PDOException $e) {
                     $this->db->rollBack();
                     $this->logError('Unable to insert stats_correllated backfill record: ' . $e->getMessage());
+
                     return null;
                 }
 
@@ -6353,6 +6555,7 @@ class Leads
 
         } catch (PDOException $e) {
             $this->logError('Unable to export queued records: ' . $e->getMessage());
+
             return;
         }
 
@@ -6381,10 +6584,12 @@ class Leads
                 $query = $this->db->prepare("SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ? LIMIT 500");
                 $query->execute(array($idFeedOut));
             }
+
             return $query;
 
         } catch (PDOException $e) {
             $this->logError('Unable to get queued records: ' . $e->getMessage());
+
             return null;
         }
 
@@ -6402,9 +6607,11 @@ class Leads
             $sql .= "GROUP BY 1";
             $query = $this->db->prepare($sql);
             $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut));
+
             return $query->fetchAll(\PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get outbound queue preview: ' . $e->getMessage());
+
             return [];
         }
     }
@@ -6461,6 +6668,7 @@ class Leads
                         $this->logError('Unable to update outbound record: ' . $pdoException->getMessage());
                         $query = $this->db->prepare("SELECT RELEASE_LOCK(?);");
                         $query->execute(array($lockName));
+
                         //$this->unlockTables();
                         return null;
                     }
@@ -6469,12 +6677,14 @@ class Leads
 
                 $query = $this->db->prepare("SELECT RELEASE_LOCK(?);");
                 $query->execute(array($lockName));
+
                 //$this->unlockTables();
                 return $rows;
             }
 
         } catch (PDOException $e) {
             $this->logError('Unable to get pending outbound queue record: ' . $e->getMessage());
+
             return null;
         } finally {
             try {
@@ -6500,6 +6710,7 @@ class Leads
             }
         } catch (PDOException $e) {
             $this->logError('Unable to get outbound record exists results: ' . $e->getMessage());
+
             return null;
         }
 
@@ -6514,6 +6725,7 @@ class Leads
                 }
             } catch (PDOException $e) {
                 $this->logError('Unable to get outbound record archive exists results: ' . $e->getMessage());
+
                 return null;
             }
             $date->sub(new \DateInterval('P1M'));
@@ -6533,9 +6745,11 @@ class Leads
                 $query = $this->db->prepare("SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.idRecord = ? AND o.idFeedOut = ?");
                 $query->execute(array($idRecord, $idFeedOut));
             }
+
             return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get outbound record: ' . $e->getMessage());
+
             return null;
         }
 
@@ -6547,9 +6761,11 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT * FROM data_inbound WHERE idRecord = ?");
             $query->execute(array($idRecord));
+
             return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound record: ' . $e->getMessage());
+
             return null;
         }
     }
@@ -6635,6 +6851,7 @@ class Leads
 
         } catch (PDOException $e) {
             $this->logError('Unable to get rejected records: ' . $e->getMessage());
+
             return;
         }
 
@@ -6646,6 +6863,7 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT label,successString,idFeedOut FROM feedout");
             $query->execute();
+
             return $query->fetchAll();
         } catch (PDOException $e) {
             $this->logError('Unable to get old legacy outbound tables: ' . $e->getMessage());
@@ -6664,6 +6882,7 @@ class Leads
             $cnt = $query->fetchColumn();
         } catch (PDOException $e) {
             $this->logError('Unable to check outbound daily count: ' . $e->getMessage());
+
             return $cnt;
         }
 
@@ -6680,18 +6899,23 @@ class Leads
             $cnt = $query->fetchColumn();
         } catch (PDOException $e) {
             $this->logError('Unable to check inbound daily count: ' . $e->getMessage());
+
             return $cnt;
         }
 
         return $cnt;
     }
 
-    public function addSuppression($idCompany, $email)
-    {
+    public function addSuppression($type, $idCompany, $value ) {
+
+		$table = 'suppression';
+		if ( $type == 'phone' ) {
+			$table .= '_phones';
+		}
         try {
-            $idSuppression = $this->insertRow('suppression', array(
-                'idCompany' => $idCompany,
-                'email' => $email,
+			$idSuppression = $this->insertRow( $table, array(
+                'idCompany' => empty( $idCompany ) ? 0 : $idCompany,
+				$type => $value,
             ));
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
@@ -6699,6 +6923,7 @@ class Leads
                 return null;
             } else {
                 $this->logError('Unable to add suppression: ' . $pdoException->getMessage());
+
                 return false;
             }
         }
@@ -6706,12 +6931,17 @@ class Leads
         return true;
     }
 
-    public function getSuppressionCounts()
+    public function getSuppressionCounts( $type )
     {
         $results = array();
 
+		$table = 'suppression';
+		if ( $type == 'phone' ) {
+			$table .= '_phones';
+		}
+
         try {
-            $query = $this->db->prepare("SELECT s.idCompany,c.name,COUNT(*) AS cnt FROM suppression s LEFT JOIN companies c ON s.idCompany = c.idCompany GROUP BY s.idCompany");
+			$query = $this->db->prepare( "SELECT s.idCompany,c.name,COUNT(*) AS cnt FROM $table s LEFT JOIN companies c ON s.idCompany = c.idCompany GROUP BY s.idCompany" );
             $query->execute(array());
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
@@ -6750,8 +6980,36 @@ class Leads
         return $result;
     }
 
-    public function exportSuppressions($idCompany)
-    {
+    public function checkPhoneSuppression( $phone, $idCompany = null ) {
+		$result = false;
+
+		// Strip out any non-numeric characters.
+        $phone = preg_replace('/[^0-9]/', '', $phone );
+
+		if( empty( $phone ) ) {
+			return $result;
+		}
+
+		try {
+			if( !empty( $idCompany ) ) {
+				$query = $this->db->prepare( "SELECT 1 FROM suppression_phones WHERE phone = ? AND ( idCompany = 0 OR idCompany = ? )" );
+				$query->execute( array( $phone, $idCompany ) );
+			} else {
+				$query = $this->db->prepare( "SELECT 1 FROM suppression_phones WHERE phone = ? AND idCompany = 0" );
+				$query->execute( array( $phone ) );
+			}
+
+			if( '1' == $query->fetchColumn() ) {
+				$result = true;
+			}
+		} catch( PDOException $e ) {
+			$this->logError( 'Unable to check suppression: ' . $e->getMessage() );
+		}
+
+		return $result;
+	}
+
+	public function exportSuppressions( $idCompany ) {
         $result = array();
 
         if (empty($idCompany)) {
@@ -6763,6 +7021,7 @@ class Leads
         $fh = fopen($filePath, 'w');
         if (!$fh) {
             $result['reason'] = 'Failed to create CSV file.';
+
             return $result;
         }
 
@@ -6783,7 +7042,44 @@ class Leads
             $this->logError('Unable to get get supression records for export: ' . $e->getMessage());
         }
 
+		fclose( $fh );
+		return $result;
+	}
+
+	public function exportPhoneSuppressions( $idCompany ) {
+		$result = array();
+
+		if( empty( $idCompany ) ) {
+			$result['file'] = 'exports/suppression_phone_global_' . time() . '.csv';
+		} else {
+			$result['file'] = 'exports/suppression_phone_' . intval( $idCompany ) . '_' . time() . '.csv';
+		}
+		$filePath = ADMIN_ROOT . $result['file'];
+		$fh = fopen( $filePath, 'w' );
+		if( !$fh ) {
+			$result['reason'] = 'Failed to create CSV file.';
+			return $result;
+		}
+
+		try {
+			if( empty( $idCompany ) ) {
+				$query = $this->db->prepare( "SELECT phone FROM suppression_phones WHERE idCompany = 0" );
+				$query->execute( array() );
+			} else {
+				$query = $this->db->prepare( "SELECT phone FROM suppression_phones WHERE idCompany = ?" );
+				$query->execute( array( $idCompany ) );
+			}
+			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
+				fwrite( $fh, $row['phone'] . PHP_EOL );
+			}
+			$result['reason'] = 'Success';
+		} catch( PDOException $e ) {
+			$result['reason'] = 'DB query error.';
+			$this->logError( 'Unable to get get supression records for export: ' . $e->getMessage() );
+		}
+
         fclose($fh);
+
         return $result;
     }
 
@@ -6836,7 +7132,14 @@ class Leads
 
             foreach ($records as $record) {
                 $query = $this->db->prepare("REPLACE INTO stats_outbound(idFeedOut,url,stamp,accepted,rejected,billable) VALUES(?,?,?,?,?,?)");
-                $query->execute(array($idFeedOut, $url, $date, $record['accepted'], $record['rejected'], $record['billable']));
+                $query->execute(array(
+                    $idFeedOut,
+                    $url,
+                    $date,
+                    $record['accepted'],
+                    $record['rejected'],
+                    $record['billable'],
+                ));
             }
         } catch (PDOException $e) {
             $this->db->rollBack();
@@ -6896,7 +7199,17 @@ HAVING IFNULL(SUM(si.accepted+si.rejected),0) < i.notifyThresholdCount;
 SQL;
 
             $query = $this->db->prepare($sql);
-            $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE));
+            $query->execute(array(
+                DB_TIMEZONE,
+                LOCAL_TIMEZONE,
+                DB_TIMEZONE,
+                LOCAL_TIMEZONE,
+                DB_TIMEZONE,
+                LOCAL_TIMEZONE,
+                DB_TIMEZONE,
+                LOCAL_TIMEZONE,
+            ));
+
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to check inbound feed thresholds: ' . $e->getMessage());
@@ -6926,7 +7239,17 @@ HAVING IFNULL(SUM(so.accepted+so.rejected),0) < o.notifyThresholdCount;
 SQL;
 
             $query = $this->db->prepare($sql);
-            $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE, DB_TIMEZONE, LOCAL_TIMEZONE));
+            $query->execute(array(
+                DB_TIMEZONE,
+                LOCAL_TIMEZONE,
+                DB_TIMEZONE,
+                LOCAL_TIMEZONE,
+                DB_TIMEZONE,
+                LOCAL_TIMEZONE,
+                DB_TIMEZONE,
+                LOCAL_TIMEZONE,
+            ));
+
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to check outbound feed thresholds: ' . $e->getMessage());
@@ -6975,7 +7298,7 @@ SQL;
         $errfile = fopen(SITE_ROOT . 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a');
         if ($errfile) {
             fwrite($errfile, $stamp . ' ' . $message . PHP_EOL);
-            fwrite($errfile, $stamp . ' REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL);
+            //fwrite($errfile, $stamp . ' REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL);
             fclose($errfile);
         }
 
@@ -7023,6 +7346,38 @@ SQL;
             $query->execute();
         } catch (\PDOException $e) {
             $this->logError('Unable to truncate sessions: ' . $e->getMessage());
+
+            return null;
+        }
+
+        return true;
+    }
+
+    public function freeTableSpace()
+    {
+        try {
+            $query = $this->db->prepare("ALTER TABLE data_inbound ENGINE=InnoDB");
+            $query->execute();
+
+            $query = $this->db->prepare("ALTER TABLE data_outbound ENGINE=InnoDB");
+            $query->execute();
+        } catch (\PDOException $e) {
+            $this->logError('Unable to free table space: ' . $e->getMessage());
+
+            return null;
+        }
+
+        return true;
+    }
+
+    public function pruneOrphanedOutboundRecords()
+    {
+        try {
+            $query = $this->db->prepare("DELETE o FROM data_outbound o LEFT JOIN data_inbound i ON i.idRecord = o.idRecord WHERE i.idRecord IS NULL;");
+            $query->execute();
+        } catch (\PDOException $e) {
+            $this->logError('Unable to prune orphaned outbound records: ' . $e->getMessage());
+
             return null;
         }
 
@@ -7034,6 +7389,7 @@ SQL;
         try {
             $query = $this->db->prepare("SELECT COUNT(*) AS cnt FROM errorlog WHERE stamp LIKE ?");
             $query->execute(array(date('Y-m-d') . '%'));
+
             return $query->fetchColumn();
         } catch (PDOException $e) {
             $this->logError('Unable to get error count: ' . $e->getMessage());
@@ -7047,6 +7403,7 @@ SQL;
         try {
             $query = $this->db->prepare("SELECT * FROM errorlog WHERE stamp LIKE ? ORDER BY stamp DESC");
             $query->execute(array(date('Y-m-d') . '%'));
+
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get error log: ' . $e->getMessage());

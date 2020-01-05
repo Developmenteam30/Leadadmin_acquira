@@ -57,11 +57,15 @@ if ('clear-outbound-queue' === $job->type) {
 
     }
 
+    $feedOut = $leads->getOutboundFeed($job->destination);
+    $feedCompany = $leads->getCompany($feedOut->idCompany);
+
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: clear-outbound-queue\r\n";
     $body .= "\r\n";
+    $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$fields['label']}\r\n";
     $body .= "\r\n";
@@ -136,11 +140,15 @@ if ('clear-outbound-queue' === $job->type) {
         return;
     }
 
+    $feedOut = $leads->getOutboundFeed($job->destination);
+    $feedCompany = $leads->getCompany($feedOut->idCompany);
+
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: retry-outbound-rejections\r\n";
     $body .= "\r\n";
+    $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$fields['label']}\r\n";
     $body .= "\r\n";
@@ -203,11 +211,15 @@ if ('clear-outbound-queue' === $job->type) {
         return;
     }
 
+    $feedIn = $leads->getInboundFeed($job->destination);
+    $feedCompany = $leads->getCompany($feedIn->idCompany);
+
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: export-incoming\r\n";
     $body .= "\r\n";
+    $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$fields['label']}\r\n";
     $body .= "\r\n";
@@ -276,11 +288,15 @@ if ('clear-outbound-queue' === $job->type) {
         return;
     }
 
+    $feedOut = $leads->getOutboundFeed($job->destination);
+    $feedCompany = $leads->getCompany($feedOut->idCompany);
+
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: export-outgoing\r\n";
     $body .= "\r\n";
+    $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$fields['label']}\r\n";
     $body .= "\r\n";
@@ -724,7 +740,7 @@ if ('clear-outbound-queue' === $job->type) {
 
     }
 
-} elseif ('suppression' === $job->type) {
+} elseif ('email-suppression' === $job->type) {
 
     $handle = @fopen($job->filename, "r");
     if (!$handle) {
@@ -736,7 +752,7 @@ if ('clear-outbound-queue' === $job->type) {
         exit;
     }
 
-    print "Importing suppression records from: {$job->filename}\n";
+    print "Importing email suppression records from: {$job->filename}\n";
 
     $fields = unserialize($job->fields);
 
@@ -779,13 +795,13 @@ if ('clear-outbound-queue' === $job->type) {
     $cnt = 0;
     while (($raw_data = fgetcsv($handle, 1000, ',')) !== false) {
 
-        $raw_data = trim($raw_data[0]);
+        $raw_data = trim($raw_data[0] ?? '');
 
         if (strpos($raw_data, '@') !== false && !filter_var($raw_data, FILTER_VALIDATE_EMAIL)) {
             $counts['invalid']++;
         } else {
             foreach ($lists as $list) {
-                $result = $leads->addSuppression($list, $raw_data);
+				$result = $leads->addSuppression( 'email', $list, $raw_data );
                 if (null === $result) {
                     $counts['dupe']++;
                 } elseif (false === $result) {
@@ -822,6 +838,120 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: suppression\r\n";
+    $body .= "\r\n";
+    $body .= "Total Records: {$cnt}\r\n";
+    $body .= "\r\n";
+    $body .= "Successful: {$counts['success']}\r\n";
+    $body .= "Duplicates: {$counts['dupe']}\r\n";
+    $body .= "Invalid: {$counts['invalid']}\r\n";
+    $body .= "Failures: {$counts['failures']}\r\n";
+    $body .= "\r\n";
+
+    $from = 'lmsalerts@' . SITE_URL;
+    $fromName = CONFIG_COMPANY_NAME;
+    $to = MANAGER_EMAIL;
+    $subject = 'Job Results - Suppression Import';
+    $header = "From:" . $fromName . " <" . $from . ">\n";
+    $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+
+} elseif ('phone-suppression' === $job->type) {
+
+    $handle = @fopen($job->filename, "r");
+    if (!$handle) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'Cannot open uploaded file for reading',
+        ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
+    }
+
+    print "Importing phone suppression records from: {$job->filename}\n";
+
+    $fields = unserialize($job->fields);
+
+    if (empty($fields['list'])) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'No list specified',
+        ));
+        exit;
+    }
+
+    $lists = array();
+    if ('multiple' == $fields['list']) {
+        foreach ($fields as $key => $val) {
+            if (strpos($key, 'suppress_multiselect_') !== false && isset($val)) {
+                $lists[] = intval($val);
+            }
+        }
+    } elseif ('global' == $fields['list']) {
+        $lists[] = 0;
+    } else {
+        $lists[] = intval($fields['list']);
+    }
+
+    if (sizeOf($lists) == 0) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'No list specified',
+        ));
+        exit;
+    }
+
+    $counts = array(
+        'success' => 0,
+        'invalid' => 0,
+        'failures' => 0,
+        'dupe' => 0,
+    );
+
+    $cnt = 0;
+    while (($raw_data = fgetcsv($handle, 1000, ',')) !== false) {
+
+        $raw_data = preg_replace('/[^0-9]/', '', $raw_data[0] ?? '');
+
+        if (empty($raw_data)) {
+            $counts['invalid']++;
+        } else {
+            foreach ($lists as $list) {
+                $result = $leads->addSuppression( 'phone', $list, $raw_data );
+                if (null === $result) {
+                    $counts['dupe']++;
+                } elseif (false === $result) {
+                    $counts['failures']++;
+                } else {
+                    $counts['success']++;
+                }
+            }
+        }
+
+        $cnt++;
+    }
+    fclose($handle);
+
+    if ($cnt == intval($job->records)) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'finished',
+        ));
+    } else {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'Record count does not match',
+        ));
+    }
+
+    print "FILE IMPORT COMPLETE!\n";
+
+    print "Successful: {$counts['success']}\n";
+    print "Duplicates: {$counts['dupe']}\n";
+    print "Invalid: {$counts['invalid']}\n";
+    print "Failures: {$counts['failures']}\n";
+
+    $body = "Job Results\r\n";
+    $body .= "\r\n";
+    $body .= "Job ID: {$job->jobId}\r\n";
+    $body .= "Job Type: phone-suppression\r\n";
     $body .= "\r\n";
     $body .= "Total Records: {$cnt}\r\n";
     $body .= "\r\n";
