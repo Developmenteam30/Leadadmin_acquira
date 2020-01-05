@@ -718,7 +718,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					),
 					array(
 						'id' => 'note',
-						'label' => 'Notes',
+						'label' => 'Campaign Overview',
 						'type' => 'textarea',
 						'value' => $company->note,
 					),
