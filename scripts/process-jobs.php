@@ -13,7 +13,7 @@ $mysqlErrorSource = 'Process Jobs';
 require_once(INCLUDES . "f_site.php");
 
 // PHPSPREADSHEET
-include( "../../includes/vendor/autoload.php" );
+include(INCLUDES . "vendor/autoload.php");
 
 ini_set("auto_detect_line_endings", true);
 set_time_limit(0);
@@ -70,7 +70,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "\r\n";
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
-    $body .= "Feed Label: {$fields['label']}\r\n";
+    $body .= "Feed Label: {$feedOut->label}\r\n";
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if ($cnt !== null) {
@@ -153,7 +153,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "\r\n";
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
-    $body .= "Feed Label: {$fields['label']}\r\n";
+    $body .= "Feed Label: {$feedOut->label}\r\n";
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if ($cnt !== null) {
@@ -224,7 +224,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "\r\n";
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
-    $body .= "Feed Label: {$fields['label']}\r\n";
+    $body .= "Feed Label: {$feedIn->label}\r\n";
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if (isset($result['cnt'])) {
@@ -301,7 +301,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "\r\n";
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
-    $body .= "Feed Label: {$fields['label']}\r\n";
+    $body .= "Feed Label: {$feedOut->label}\r\n";
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if (isset($result['cnt'])) {
@@ -325,185 +325,208 @@ if ('clear-outbound-queue' === $job->type) {
 
 } elseif ('feedinc' === $job->type) {
 
-    $ext = pathinfo($job->filename, PATHINFO_EXTENSION);
+    try {
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($job->filename);
+        $spreadsheet = $reader->load($job->filename);
 
-    if ( $ext == 'xls' || 'xlsx' ) {
-
-        $spreadsheet = PhpSpreadsheet\IOFactory::load( 'myfile.wherever' );
         $worksheet = $spreadsheet->getActiveSheet();
-        $raw_data = [];
-        foreach ($worksheet->getRowIterator() AS $row) {
-            $cellIterator = $row->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(FALSE); // Loops through all cells
-            $cells = [];
-            foreach ($cellIterator as $cell) {
-                $cells[] = $cell->getValue();
-            }
-            $raw_data[] = $cells;
-        }
 
-    } else {
+        print "Importing legacy records from: {$job->filename}\n";
 
-        $handle = @fopen($job->filename, "r");
-        if (!$handle) {
+        $feedParams = $leads->getInboundFeed($job->destination);
+        if (empty($feedParams)) {
+            print 'ERROR: Invalid incoming feed ID supplied';
             $leads->updateJob($job->jobId, array(
                 'status' => 'error',
-                'message' => 'Cannot open uploaded file for reading',
+                'message' => 'Invalid incoming feed ID supplied',
             ));
-            print 'ERROR: Cannot open uploaded file for reading';
             exit;
         }
-        $raw_data = fgetcsv($handle, 1000, ',');
-        fclose($handle);
 
-    }
+        $allowedFields = explode(";", $feedParams->allowedFields);
+        $fields = unserialize($job->fields);
 
-    print "Importing legacy records from: {$job->filename}\n";
+        $counts = array(
+            'success' => 0,
+            'invalid' => 0,
+            'failures' => 0,
+            'dupe' => 0,
+        );
 
-    $feedParams = $leads->getInboundFeed($job->destination);
-    if (empty($feedParams)) {
-        print 'ERROR: Invalid incoming feed ID supplied';
-        $leads->updateJob($job->jobId, array(
-            'status' => 'error',
-            'message' => 'Invalid incoming feed ID supplied',
-        ));
-        exit;
-    }
+        $recordsPerDay = null;
+        if (!empty($job->records) && !empty($fields['splitDelay'])) {
+            $recordsPerDay = round($job->records / $fields['splitDelay']);
+            $splitTimestamp = new \DateTime();
+        }
 
-    $allowedFields = explode(";", $feedParams->allowedFields);
-    $fields = unserialize($job->fields);
+        $cnt = 0;
+        foreach ($worksheet->getRowIterator() AS $row) {
+            $cellIterator = $row->getCellIterator();
+            $raw_data = [];
+            foreach ($cellIterator as $cell) {
+                $raw_data[] = trim($cell->getValue());
+            }
 
-    $counts = array(
-        'success' => 0,
-        'invalid' => 0,
-        'failures' => 0,
-        'dupe' => 0,
-    );
+            $data = array();
 
-    $recordsPerDay = null;
-    if (!empty($job->records) && !empty($fields['splitDelay'])) {
-        $recordsPerDay = round($job->records / $fields['splitDelay']);
-        $splitTimestamp = new \DateTime();
-    }
-
-    $cnt = 0;
-    while ($raw_data !== false) {
-
-        $data = array();
-
-        foreach ($allowedFields as $field) {
-            if (isset($fields['field_' . $field]) && is_numeric($fields['field_' . $field])) {
-                $col = $fields['field_' . $field];
-                if (!empty($raw_data[$col])) {
-                    if ('stamp' == $field) {
-                        // Check to see if we're using two separate timestamp columns
-                        if (!empty($fields['field_time']) && is_numeric($fields['field_time'])) {
-                            $time_col = $fields['field_time'];
-                            // Remove extraneous data from the date field
-                            if (strpos($raw_data[$col], ' ') !== false) {
-                                list($date, $garbage) = explode(' ', $raw_data[$col], 2);
+            foreach ($allowedFields as $field) {
+                if (isset($fields['field_' . $field]) && is_numeric($fields['field_' . $field])) {
+                    $col = $fields['field_' . $field];
+                    if (!empty($raw_data[$col])) {
+                        if ('stamp' == $field) {
+                            // Check to see if we're using two separate timestamp columns
+                            if (!empty($fields['field_time']) && is_numeric($fields['field_time'])) {
+                                $time_col = $fields['field_time'];
+                                // Remove extraneous data from the date field
+                                if (strpos($raw_data[$col], ' ') !== false) {
+                                    list($date, $garbage) = explode(' ', $raw_data[$col], 2);
+                                } else {
+                                    $date = $raw_data[$col];
+                                }
+                                $data['stamp'] = date("Y-m-d H:i:s",
+                                    strtotime($date . (!empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '')));
                             } else {
-                                $date = $raw_data[$col];
+                                $data['stamp'] = date("Y-m-d H:i:s", strtotime($raw_data[$col]));
                             }
-                            $data['stamp'] = date("Y-m-d H:i:s", strtotime($date . (!empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '')));
+                        } elseif ('dob' == $field) {
+                            $data['dob'] = date("Y-m-d", strtotime($raw_data[$col]));
                         } else {
-                            $data['stamp'] = date("Y-m-d H:i:s", strtotime($raw_data[$col]));
+                            $data[$field] = $raw_data[$col];
                         }
-                    } elseif ('dob' == $field) {
-                        $data['dob'] = date("Y-m-d", strtotime($raw_data[$col]));
-                    } else {
-                        $data[$field] = $raw_data[$col];
                     }
                 }
             }
-        }
 
-        // Fix zip codes with a missing leading zero
-        if (!empty($data['zip'])) {
-            $data['zip'] = str_pad($data['zip'], 5, '0', STR_PAD_LEFT);
-        }
-
-        if (isset($data['email'])) {
-            print "{$data['email']}";
-        } else {
-            print " ";
-        }
-
-        // Change the timestamp for split delay uploads
-        if (!empty($recordsPerDay)) {
-            // Increment the day once we've hit the recordsPerDay count
-            if (!empty($cnt) && ($cnt % $recordsPerDay) === 0) {
-                try {
-                    $splitTimestamp->add(new \DateInterval('P1D'));
-                } catch (\Exception $e) {
-                    // Do nothing
-                }
+            // Fix zip codes with a missing leading zero
+            if (!empty($data['zip'])) {
+                $data['zip'] = str_pad($data['zip'], 5, '0', STR_PAD_LEFT);
             }
 
-            // Combine our fake date with a random hour plus the original minutes and seconds
-            $timestampOverride = $splitTimestamp->format('Y-m-d') . ' ' . rand(6, 23) . date(':i:s', strtotime($data['stamp']));
-            $data['stamp'] = $timestampOverride;
-            $data['timestampOverride'] = $timestampOverride;
-        }
+            if (isset($data['email'])) {
+                print "{$data['email']}";
+            } else {
+                print " ";
+            }
 
-        $result = ProcessLeads::validateIncomingData($feedParams, $data);
+            // Change the timestamp for split delay uploads
+            if (!empty($recordsPerDay)) {
+                // Increment the day once we've hit the recordsPerDay count
+                if (!empty($cnt) && ($cnt % $recordsPerDay) === 0) {
+                    try {
+                        $splitTimestamp->add(new \DateInterval('P1D'));
+                    } catch (\Exception $e) {
+                        // Do nothing
+                    }
+                }
 
-        if ($result['valid']) {
+                // Combine our fake date with a random hour plus the original minutes and seconds
+                $timestampOverride = $splitTimestamp->format('Y-m-d') . ' ' . rand(6, 23) . date(':i:s',
+                        strtotime($data['stamp']));
+                $data['stamp'] = $timestampOverride;
+                $data['timestampOverride'] = $timestampOverride;
+            }
 
-            $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId);
-            if (null === $inboundId) {
-                print " - DBFAIL\n";
-                $counts['failures']++;
+            $result = ProcessLeads::validateIncomingData($feedParams, $data);
+
+            if ($result['valid']) {
+
+                $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId);
+                if (null === $inboundId) {
+                    print " - DBFAIL\n";
+                    $counts['failures']++;
+                } else {
+
+                    $pushResponse = ProcessLeads::pushIncomingData($feedParams, $data, $inboundId);
+                    if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
+                        print " - ERROR\n";
+                        $counts['invalid']++;
+                    } else {
+                        print " - VALID\n";
+                        $counts['success']++;
+                    }
+                }
+
             } else {
 
-                $pushResponse = ProcessLeads::pushIncomingData($feedParams, $data, $inboundId);
-                if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
-                    print " - ERROR\n";
-                    $counts['invalid']++;
-                } else {
-                    print " - VALID\n";
-                    $counts['success']++;
+                $counts['invalid']++;
+
+                print " - ERROR\n";
+                foreach ($result['errors'] as $error) {
+                    print "\t{$error}\n";
                 }
+
+                $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0],
+                    $job->jobId);
+
             }
 
-        } else {
+            print "\n";
 
-            $counts['invalid']++;
-
-            print " - ERROR\n";
-            foreach ($result['errors'] as $error) {
-                print "\t{$error}\n";
-            }
-
-            $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $job->jobId);
+            $cnt++;
+            unset($data);
 
         }
 
-        print "\n";
+        if ($cnt == intval($job->records)) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'finished',
+            ));
+        } else {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Record count does not match',
+            ));
+        }
 
-        $cnt++;
-        unset($data);
+        print "FILE IMPORT COMPLETE!\n";
 
-    }
-    fclose($handle);
+        print "Successful: {$counts['success']}\n";
+        print "Duplicates: {$counts['dupe']}\n";
+        print "Invalid: {$counts['invalid']}\n";
+        print "Failures: {$counts['failures']}\n";
 
-    if ($cnt == intval($job->records)) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'finished',
-        ));
-    } else {
+        $feedIn = $leads->getInboundFeed($job->destination);
+        $feedCompany = $leads->getCompany($feedIn->idCompany);
+
+        $body = "Job Results\r\n";
+        $body .= "\r\n";
+        $body .= "Job ID: {$job->jobId}\r\n";
+        $body .= "Job Type: export-incoming\r\n";
+        $body .= "\r\n";
+        $body .= "Company: {$feedCompany->name}\r\n";
+        $body .= "Feed ID: {$job->destination}\r\n";
+        $body .= "Feed Label: {$feedIn->label}\r\n";
+        $body .= "\r\n";
+        $body .= "Total Records: {$cnt}\r\n";
+        $body .= "\r\n";
+        $body .= "Successful: {$counts['success']}\r\n";
+        $body .= "Duplicates: {$counts['dupe']}\r\n";
+        $body .= "Invalid: {$counts['invalid']}\r\n";
+        $body .= "Failures: {$counts['failures']}\r\n";
+        $body .= "\r\n";
+
+        $from = 'lmsalerts@' . SITE_URL;
+        $fromName = CONFIG_COMPANY_NAME;
+        $to = MANAGER_EMAIL;
+        $subject = 'Job Results - Inbound Record Import';
+        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+
+    } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
         $leads->updateJob($job->jobId, array(
             'status' => 'error',
-            'message' => 'Record count does not match',
+            'message' => 'Cannot open uploaded file for reading',
         ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
+    } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'Cannot open default worksheet for reading',
+        ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
     }
-
-    print "FILE IMPORT COMPLETE!\n";
-
-    print "Successful: {$counts['success']}\n";
-    print "Duplicates: {$counts['dupe']}\n";
-    print "Invalid: {$counts['invalid']}\n";
-    print "Failures: {$counts['failures']}\n";
 
 } elseif ('upload-outbound' === $job->type) {
 
@@ -529,167 +552,189 @@ if ('clear-outbound-queue' === $job->type) {
         exit;
     }
 
-    $ext = pathinfo($job->filename, PATHINFO_EXTENSION);
+    try {
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($job->filename);
+        $spreadsheet = $reader->load($job->filename);
 
-    if ( $ext == 'xls' || 'xlsx' ) {
-
-        $spreadsheet = PhpSpreadsheet\IOFactory::load( 'myfile.wherever' );
         $worksheet = $spreadsheet->getActiveSheet();
-        $raw_data = [];
+
+        print "Importing legacy records from: {$job->filename}\n";
+
+        // Override inbound feed settings.
+        $feedParams = new stdClass();
+        $feedParams->idFeedIn = 136;
+        $feedParams->notifications = false;
+        $feedParams->required = null;
+        $feedParams->allowedFields = implode(";", $recordFields);
+        $feedParams->dailyLimit = null;
+        $feedParams->filterTypeUrl = null;
+        $feedParams->dedupeEmail = null;
+        $feedParams->dedupeLandline = null;
+        $feedParams->dedupeCellphone = null;
+        $feedParams->rejectOldLeads = false;
+        $feedParams->feedCategory = $feedOut->feedCategory;
+        $feedParams->timezone = 'UTC';
+
+        $allowedFields = explode(";", $feedParams->allowedFields);
+        $fields = unserialize($job->fields);
+
+        $counts = array(
+            'success' => 0,
+            'invalid' => 0,
+            'failures' => 0,
+            'dupe' => 0,
+        );
+
+        $cnt = 0;
         foreach ($worksheet->getRowIterator() AS $row) {
             $cellIterator = $row->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(FALSE); // Loops through all cells
-            $cells = [];
+            $raw_data = [];
             foreach ($cellIterator as $cell) {
-                $cells[] = $cell->getValue();
+                $raw_data[] = $cell->getFormattedValue();
             }
-            $raw_data[] = $cells;
-        }
 
-    } else {
+            $data = array();
 
-        $handle = @fopen($job->filename, "r");
-        if (!$handle) {
-            $leads->updateJob($job->jobId, array(
-                'status' => 'error',
-                'message' => 'Cannot open uploaded file for reading',
-            ));
-            print 'ERROR: Cannot open uploaded file for reading';
-            exit;
-        }
-        $raw_data = fgetcsv($handle, 1000, ',');
-        fclose($handle);
-
-    }
-
-    print "Importing legacy records from: {$job->filename}\n";
-
-    // Override inbound feed settings.
-    $feedParams = new stdClass();
-    $feedParams->idFeedIn = 136;
-    $feedParams->notifications = false;
-    $feedParams->required = null;
-    $feedParams->allowedFields = implode(";", $recordFields);
-    $feedParams->dailyLimit = null;
-    $feedParams->filterTypeUrl = null;
-    $feedParams->dedupeEmail = null;
-    $feedParams->dedupeLandline = null;
-    $feedParams->dedupeCellphone = null;
-    $feedParams->rejectOldLeads = false;
-    $feedParams->feedCategory = $feedOut->feedCategory;
-    $feedParams->timezone = 'UTC';
-
-    $allowedFields = explode(";", $feedParams->allowedFields);
-    $fields = unserialize($job->fields);
-
-    $counts = array(
-        'success' => 0,
-        'invalid' => 0,
-        'failures' => 0,
-        'dupe' => 0,
-    );
-
-    $cnt = 0;
-    while ($raw_data !== false) {
-
-        $data = array();
-
-        foreach ($allowedFields as $field) {
-            if (isset($fields['field_' . $field]) && is_numeric($fields['field_' . $field])) {
-                $col = $fields['field_' . $field];
-                if (!empty($raw_data[$col])) {
-                    if ('stamp' == $field) {
-                        // Check to see if we're using two separate timestamp columns
-                        if (!empty($fields['field_time']) && is_numeric($fields['field_time'])) {
-                            $time_col = $fields['field_time'];
-                            // Remove extraneous data from the date field
-                            if (strpos($raw_data[$col], ' ') !== false) {
-                                list($date, $garbage) = explode(' ', $raw_data[$col], 2);
+            foreach ($allowedFields as $field) {
+                if (isset($fields['field_' . $field]) && is_numeric($fields['field_' . $field])) {
+                    $col = $fields['field_' . $field];
+                    if (!empty($raw_data[$col])) {
+                        if ('stamp' == $field) {
+                            // Check to see if we're using two separate timestamp columns
+                            if (!empty($fields['field_time']) && is_numeric($fields['field_time'])) {
+                                $time_col = $fields['field_time'];
+                                // Remove extraneous data from the date field
+                                if (strpos($raw_data[$col], ' ') !== false) {
+                                    list($date, $garbage) = explode(' ', $raw_data[$col], 2);
+                                } else {
+                                    $date = $raw_data[$col];
+                                }
+                                $data['stamp'] = date("Y-m-d H:i:s",
+                                    strtotime($date . (!empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '')));
                             } else {
-                                $date = $raw_data[$col];
+                                $data['stamp'] = date("Y-m-d H:i:s", strtotime($raw_data[$col]));
                             }
-                            $data['stamp'] = date("Y-m-d H:i:s", strtotime($date . (!empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '')));
+                        } elseif ('dob' == $field) {
+                            $data['dob'] = date("Y-m-d", strtotime($raw_data[$col]));
                         } else {
-                            $data['stamp'] = date("Y-m-d H:i:s", strtotime($raw_data[$col]));
+                            $data[$field] = $raw_data[$col];
                         }
-                    } elseif ('dob' == $field) {
-                        $data['dob'] = date("Y-m-d", strtotime($raw_data[$col]));
-                    } else {
-                        $data[$field] = $raw_data[$col];
                     }
                 }
             }
-        }
 
-        // Fix zip codes with a missing leading zero
-        if (!empty($data['zip'])) {
-            $data['zip'] = str_pad($data['zip'], 5, '0', STR_PAD_LEFT);
-        }
+            // Fix zip codes with a missing leading zero
+            if (!empty($data['zip'])) {
+                $data['zip'] = str_pad($data['zip'], 5, '0', STR_PAD_LEFT);
+            }
 
-        if (isset($data['email'])) {
-            print "{$data['email']}";
-        } else {
-            print " ";
-        }
+            if (isset($data['email'])) {
+                print "{$data['email']}";
+            } else {
+                print " ";
+            }
 
-        $result = ProcessLeads::validateIncomingData($feedParams, $data);
+            $result = ProcessLeads::validateIncomingData($feedParams, $data);
 
-        if ($result['valid']) {
+            if ($result['valid']) {
 
-            $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId);
-            if (null === $inboundId) {
-                print " - DBFAIL\n";
-                $counts['failures']++;
+                $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), null, $job->jobId);
+                if (null === $inboundId) {
+                    print " - DBFAIL\n";
+                    $counts['failures']++;
+                } else {
+
+                    $pushResponse = ProcessLeads::pushIncomingData($feedParams, $data, $inboundId, $job->destination);
+                    if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
+                        print " - ERROR\n";
+                        $counts['invalid']++;
+                    } else {
+                        print " - VALID\n";
+                        $counts['success']++;
+                    }
+                }
+
             } else {
 
-                $pushResponse = ProcessLeads::pushIncomingData($feedParams, $data, $inboundId, $job->destination);
-                if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
-                    print " - ERROR\n";
-                    $counts['invalid']++;
-                } else {
-                    print " - VALID\n";
-                    $counts['success']++;
+                $counts['invalid']++;
+
+                print " - ERROR\n";
+                foreach ($result['errors'] as $error) {
+                    print "\t{$error}\n";
                 }
+
+                $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0],
+                    $job->jobId);
+
             }
 
-        } else {
+            print "\n";
 
-            $counts['invalid']++;
-
-            print " - ERROR\n";
-            foreach ($result['errors'] as $error) {
-                print "\t{$error}\n";
-            }
-
-            $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0], $job->jobId);
+            $cnt++;
+            unset($data);
 
         }
 
-        print "\n";
+        if ($cnt == intval($job->records)) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'finished',
+            ));
+        } else {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Record count does not match',
+            ));
+        }
 
-        $cnt++;
-        unset($data);
+        print "FILE IMPORT COMPLETE!\n";
 
-    }
-    fclose($handle);
+        print "Successful: {$counts['success']}\n";
+        print "Duplicates: {$counts['dupe']}\n";
+        print "Invalid: {$counts['invalid']}\n";
+        print "Failures: {$counts['failures']}\n";
 
-    if ($cnt == intval($job->records)) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'finished',
-        ));
-    } else {
+        $feedOut = $leads->getOutboundFeed($job->destination);
+        $feedCompany = $leads->getCompany($feedOut->idCompany);
+
+        $body = "Job Results\r\n";
+        $body .= "\r\n";
+        $body .= "Job ID: {$job->jobId}\r\n";
+        $body .= "Job Type: upload-outbound\r\n";
+        $body .= "\r\n";
+        $body .= "Company: {$feedCompany->name}\r\n";
+        $body .= "Feed ID: {$job->destination}\r\n";
+        $body .= "Feed Label: {$feedOut->label}\r\n";
+        $body .= "\r\n";
+        $body .= "Total Records: {$cnt}\r\n";
+        $body .= "\r\n";
+        $body .= "Successful: {$counts['success']}\r\n";
+        $body .= "Duplicates: {$counts['dupe']}\r\n";
+        $body .= "Invalid: {$counts['invalid']}\r\n";
+        $body .= "Failures: {$counts['failures']}\r\n";
+        $body .= "\r\n";
+
+        $from = 'lmsalerts@' . SITE_URL;
+        $fromName = CONFIG_COMPANY_NAME;
+        $to = MANAGER_EMAIL;
+        $subject = 'Job Results - Outbound Record Upload';
+        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+
+    } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
         $leads->updateJob($job->jobId, array(
             'status' => 'error',
-            'message' => 'Record count does not match',
+            'message' => 'Cannot open uploaded file for reading',
         ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
+    } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'Cannot open default worksheet for reading',
+        ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
     }
-
-    print "FILE IMPORT COMPLETE!\n";
-
-    print "Successful: {$counts['success']}\n";
-    print "Duplicates: {$counts['dupe']}\n";
-    print "Invalid: {$counts['invalid']}\n";
-    print "Failures: {$counts['failures']}\n";
 
 } elseif ('import-legacy-outbound' === $job->type) {
 
@@ -791,254 +836,259 @@ if ('clear-outbound-queue' === $job->type) {
 
 } elseif ('email-suppression' === $job->type) {
 
-    $ext = pathinfo($job->filename, PATHINFO_EXTENSION);
+    try {
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($job->filename);
+        $spreadsheet = $reader->load($job->filename);
 
-    if ( $ext == 'xls' || 'xlsx' ) {
-
-        $spreadsheet = PhpSpreadsheet\IOFactory::load( 'myfile.wherever' );
         $worksheet = $spreadsheet->getActiveSheet();
-        $raw_data = [];
-        foreach ($worksheet->getRowIterator() AS $row) {
-            $cellIterator = $row->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(FALSE); // Loops through all cells
-            $cells = [];
-            foreach ($cellIterator as $cell) {
-                $cells[] = $cell->getValue();
-            }
-            $raw_data[] = $cells;
-        }
 
-    } else {
+        print "Importing phone suppression records from: {$job->filename}\n";
 
-        $handle = @fopen($job->filename, "r");
-        if (!$handle) {
+        $fields = unserialize($job->fields);
+
+        if (empty($fields['list'])) {
             $leads->updateJob($job->jobId, array(
                 'status' => 'error',
-                'message' => 'Cannot open uploaded file for reading',
+                'message' => 'No list specified',
             ));
-            print 'ERROR: Cannot open uploaded file for reading';
             exit;
         }
-        $raw_data = fgetcsv($handle, 1000, ',');
-        fclose($handle);
 
-    }
-
-    print "Importing email suppression records from: {$job->filename}\n";
-
-    $fields = unserialize($job->fields);
-
-    if (empty($fields['list'])) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'error',
-            'message' => 'No list specified',
-        ));
-        exit;
-    }
-
-    $lists = array();
-    if ('multiple' == $fields['list']) {
-        foreach ($fields as $key => $val) {
-            if (strpos($key, 'suppress_multiselect_') !== false && isset($val)) {
-                $lists[] = intval($val);
-            }
-        }
-    } elseif ('global' == $fields['list']) {
-        $lists[] = 0;
-    } else {
-        $lists[] = intval($fields['list']);
-    }
-
-    if (sizeOf($lists) == 0) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'error',
-            'message' => 'No list specified',
-        ));
-        exit;
-    }
-
-    $counts = array(
-        'success' => 0,
-        'invalid' => 0,
-        'failures' => 0,
-        'dupe' => 0,
-    );
-
-    $cnt = 0;
-    while ($raw_data !== false) {
-
-        $raw_data = trim($raw_data[0] ?? '');
-
-        if (strpos($raw_data, '@') !== false && !filter_var($raw_data, FILTER_VALIDATE_EMAIL)) {
-            $counts['invalid']++;
-        } else {
-            foreach ($lists as $list) {
-				$result = $leads->addSuppression( 'email', $list, $raw_data );
-                if (null === $result) {
-                    $counts['dupe']++;
-                } elseif (false === $result) {
-                    $counts['failures']++;
-                } else {
-                    $counts['success']++;
+        $lists = array();
+        if ('multiple' == $fields['list']) {
+            foreach ($fields as $key => $val) {
+                if (strpos($key, 'suppress_multiselect_') !== false && isset($val)) {
+                    $lists[] = intval($val);
                 }
             }
+        } elseif ('global' == $fields['list']) {
+            $lists[] = 0;
+        } else {
+            $lists[] = intval($fields['list']);
         }
 
-        $cnt++;
-    }
-    fclose($handle);
+        if (sizeOf($lists) == 0) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'No list specified',
+            ));
+            exit;
+        }
 
-    if ($cnt == intval($job->records)) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'finished',
-        ));
-    } else {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'error',
-            'message' => 'Record count does not match',
-        ));
-    }
+        $counts = array(
+            'success' => 0,
+            'invalid' => 0,
+            'failures' => 0,
+            'dupe' => 0,
+        );
 
-    print "FILE IMPORT COMPLETE!\n";
+        $cnt = 0;
+        foreach ($worksheet->getRowIterator() AS $row) {
+            $cellIterator = $row->getCellIterator();
+            $raw_data = [];
+            foreach ($cellIterator as $cell) {
+                $raw_data = trim($cell->getValue());
 
-    print "Successful: {$counts['success']}\n";
-    print "Duplicates: {$counts['dupe']}\n";
-    print "Invalid: {$counts['invalid']}\n";
-    print "Failures: {$counts['failures']}\n";
+                if (strpos($raw_data, '@') !== false && !filter_var($raw_data, FILTER_VALIDATE_EMAIL)) {
+                    $counts['invalid']++;
+                } else {
+                    foreach ($lists as $list) {
+                        $result = $leads->addSuppression('email', $list, $raw_data);
+                    }
+                    if (null === $result) {
+                        $counts['dupe']++;
+                    } elseif (false === $result) {
+                        $counts['failures']++;
+                    } else {
+                        $counts['success']++;
+                    }
+                }
+            }
 
-    $body = "Job Results\r\n";
-    $body .= "\r\n";
-    $body .= "Job ID: {$job->jobId}\r\n";
-    $body .= "Job Type: suppression\r\n";
-    $body .= "\r\n";
-    $body .= "Total Records: {$cnt}\r\n";
-    $body .= "\r\n";
-    $body .= "Successful: {$counts['success']}\r\n";
-    $body .= "Duplicates: {$counts['dupe']}\r\n";
-    $body .= "Invalid: {$counts['invalid']}\r\n";
-    $body .= "Failures: {$counts['failures']}\r\n";
-    $body .= "\r\n";
+            $cnt++;
+        }
 
-    $from = 'lmsalerts@' . SITE_URL;
-    $fromName = CONFIG_COMPANY_NAME;
-    $to = MANAGER_EMAIL;
-    $subject = 'Job Results - Suppression Import';
-    $header = "From:" . $fromName . " <" . $from . ">\n";
-    $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+        if ($cnt == intval($job->records)) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'finished',
+            ));
+        } else {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Record count does not match',
+            ));
+        }
 
-} elseif ('phone-suppression' === $job->type) {
+        print "FILE IMPORT COMPLETE!\n";
 
-    $handle = @fopen($job->filename, "r");
-    if (!$handle) {
+        print "Successful: {$counts['success']}\n";
+        print "Duplicates: {$counts['dupe']}\n";
+        print "Invalid: {$counts['invalid']}\n";
+        print "Failures: {$counts['failures']}\n";
+
+        $body = "Job Results\r\n";
+        $body .= "\r\n";
+        $body .= "Job ID: {$job->jobId}\r\n";
+        $body .= "Job Type: email-suppression\r\n";
+        $body .= "\r\n";
+        $body .= "Total Records: {$cnt}\r\n";
+        $body .= "\r\n";
+        $body .= "Successful: {$counts['success']}\r\n";
+        $body .= "Duplicates: {$counts['dupe']}\r\n";
+        $body .= "Invalid: {$counts['invalid']}\r\n";
+        $body .= "Failures: {$counts['failures']}\r\n";
+        $body .= "\r\n";
+
+        $from = 'lmsalerts@' . SITE_URL;
+        $fromName = CONFIG_COMPANY_NAME;
+        $to = MANAGER_EMAIL;
+        $subject = 'Job Results - Email Suppression Import';
+        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+
+    } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
         $leads->updateJob($job->jobId, array(
             'status' => 'error',
             'message' => 'Cannot open uploaded file for reading',
         ));
         print 'ERROR: Cannot open uploaded file for reading';
         exit;
-    }
-
-    print "Importing phone suppression records from: {$job->filename}\n";
-
-    $fields = unserialize($job->fields);
-
-    if (empty($fields['list'])) {
+    } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
         $leads->updateJob($job->jobId, array(
             'status' => 'error',
-            'message' => 'No list specified',
+            'message' => 'Cannot open default worksheet for reading',
         ));
+        print 'ERROR: Cannot open uploaded file for reading';
         exit;
     }
 
-    $lists = array();
-    if ('multiple' == $fields['list']) {
-        foreach ($fields as $key => $val) {
-            if (strpos($key, 'suppress_multiselect_') !== false && isset($val)) {
-                $lists[] = intval($val);
-            }
+} elseif ('phone-suppression' === $job->type) {
+
+    try {
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($job->filename);
+        $spreadsheet = $reader->load($job->filename);
+
+        $worksheet = $spreadsheet->getActiveSheet();
+
+        print "Importing phone suppression records from: {$job->filename}\n";
+
+        $fields = unserialize($job->fields);
+
+        if (empty($fields['list'])) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'No list specified',
+            ));
+            exit;
         }
-    } elseif ('global' == $fields['list']) {
-        $lists[] = 0;
-    } else {
-        $lists[] = intval($fields['list']);
-    }
 
-    if (sizeOf($lists) == 0) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'error',
-            'message' => 'No list specified',
-        ));
-        exit;
-    }
-
-    $counts = array(
-        'success' => 0,
-        'invalid' => 0,
-        'failures' => 0,
-        'dupe' => 0,
-    );
-
-    $cnt = 0;
-    while (($raw_data = fgetcsv($handle, 1000, ',')) !== false) {
-
-        $raw_data = preg_replace('/[^0-9]/', '', $raw_data[0] ?? '');
-
-        if (empty($raw_data)) {
-            $counts['invalid']++;
-        } else {
-            foreach ($lists as $list) {
-                $result = $leads->addSuppression( 'phone', $list, $raw_data );
-                if (null === $result) {
-                    $counts['dupe']++;
-                } elseif (false === $result) {
-                    $counts['failures']++;
-                } else {
-                    $counts['success']++;
+        $lists = array();
+        if ('multiple' == $fields['list']) {
+            foreach ($fields as $key => $val) {
+                if (strpos($key, 'suppress_multiselect_') !== false && isset($val)) {
+                    $lists[] = intval($val);
                 }
             }
+        } elseif ('global' == $fields['list']) {
+            $lists[] = 0;
+        } else {
+            $lists[] = intval($fields['list']);
         }
 
-        $cnt++;
-    }
-    fclose($handle);
+        if (sizeOf($lists) == 0) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'No list specified',
+            ));
+            exit;
+        }
 
-    if ($cnt == intval($job->records)) {
-        $leads->updateJob($job->jobId, array(
-            'status' => 'finished',
-        ));
-    } else {
+        $counts = array(
+            'success' => 0,
+            'invalid' => 0,
+            'failures' => 0,
+            'dupe' => 0,
+        );
+
+        $cnt = 0;
+        foreach ($worksheet->getRowIterator() AS $row) {
+            $cellIterator = $row->getCellIterator();
+            $raw_data = [];
+            foreach ($cellIterator as $cell) {
+                $raw_data = preg_replace('/[^0-9]/', '', trim($cell->getValue()));
+
+                if (empty($raw_data)) {
+                    $counts['invalid']++;
+                } else {
+                    foreach ($lists as $list) {
+                        $result = $leads->addSuppression('phone', $list, $raw_data);
+                    }
+                    if (null === $result) {
+                        $counts['dupe']++;
+                    } elseif (false === $result) {
+                        $counts['failures']++;
+                    } else {
+                        $counts['success']++;
+                    }
+                }
+            }
+
+            $cnt++;
+        }
+
+        if ($cnt == intval($job->records)) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'finished',
+            ));
+        } else {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Record count does not match',
+            ));
+        }
+
+        print "FILE IMPORT COMPLETE!\n";
+
+        print "Successful: {$counts['success']}\n";
+        print "Duplicates: {$counts['dupe']}\n";
+        print "Invalid: {$counts['invalid']}\n";
+        print "Failures: {$counts['failures']}\n";
+
+        $body = "Job Results\r\n";
+        $body .= "\r\n";
+        $body .= "Job ID: {$job->jobId}\r\n";
+        $body .= "Job Type: phone-suppression\r\n";
+        $body .= "\r\n";
+        $body .= "Total Records: {$cnt}\r\n";
+        $body .= "\r\n";
+        $body .= "Successful: {$counts['success']}\r\n";
+        $body .= "Duplicates: {$counts['dupe']}\r\n";
+        $body .= "Invalid: {$counts['invalid']}\r\n";
+        $body .= "Failures: {$counts['failures']}\r\n";
+        $body .= "\r\n";
+
+        $from = 'lmsalerts@' . SITE_URL;
+        $fromName = CONFIG_COMPANY_NAME;
+        $to = MANAGER_EMAIL;
+        $subject = 'Job Results - Phone Suppression Import';
+        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+
+    } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
         $leads->updateJob($job->jobId, array(
             'status' => 'error',
-            'message' => 'Record count does not match',
+            'message' => 'Cannot open uploaded file for reading',
         ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
+    } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'Cannot open default worksheet for reading',
+        ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
     }
-
-    print "FILE IMPORT COMPLETE!\n";
-
-    print "Successful: {$counts['success']}\n";
-    print "Duplicates: {$counts['dupe']}\n";
-    print "Invalid: {$counts['invalid']}\n";
-    print "Failures: {$counts['failures']}\n";
-
-    $body = "Job Results\r\n";
-    $body .= "\r\n";
-    $body .= "Job ID: {$job->jobId}\r\n";
-    $body .= "Job Type: phone-suppression\r\n";
-    $body .= "\r\n";
-    $body .= "Total Records: {$cnt}\r\n";
-    $body .= "\r\n";
-    $body .= "Successful: {$counts['success']}\r\n";
-    $body .= "Duplicates: {$counts['dupe']}\r\n";
-    $body .= "Invalid: {$counts['invalid']}\r\n";
-    $body .= "Failures: {$counts['failures']}\r\n";
-    $body .= "\r\n";
-
-    $from = 'lmsalerts@' . SITE_URL;
-    $fromName = CONFIG_COMPANY_NAME;
-    $to = MANAGER_EMAIL;
-    $subject = 'Job Results - Suppression Import';
-    $header = "From:" . $fromName . " <" . $from . ">\n";
-    $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
 } else {
 

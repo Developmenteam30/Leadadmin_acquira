@@ -25,6 +25,13 @@ function dieError( $error ) {
 }
 
 ini_set( "auto_detect_line_endings", true );
+
+// Turn off output buffering
+ini_set( 'output_buffering', 'off' );
+
+// Turn off PHP output compression
+ini_set( 'zlib.output_compression', false );
+
 set_time_limit( 0 );
 
 if( isset( $_REQUEST['d'] ) ) {
@@ -121,12 +128,6 @@ include( INCLUDES . "c_header.php" );
 			if( !$handle ) {
 				dieError( 'Cannot open uploaded file for reading' );
 			}
-
-			// Turn off output buffering
-			ini_set( 'output_buffering', 'off' );
-
-			// Turn off PHP output compression
-			ini_set( 'zlib.output_compression', false );
 
 			// Flush (send) the output buffer and turn off output buffering
 			// ob_end_flush();

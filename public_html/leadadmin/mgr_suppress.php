@@ -11,7 +11,7 @@ $leads = Leads::getInstance();
 require_once(INCLUDES . 'display.php');
 
 // PHPSPREADSHEET
-include( "../../includes/vendor/autoload.php" );
+include("../../includes/vendor/autoload.php");
 
 if (isset($_REQUEST['a'])) {
     $result = array(
@@ -422,7 +422,7 @@ if (isset($_REQUEST['d'])) {
                     } else {
                         ?>
                         <p>Upload Suppression File</p>
-                        <p><strong>Suppression file must be saved in CSV format. Excel format will not work. There
+                        <p><strong>Suppression file may be saved in CSV or Excel format. There
                                 should only be one column in the spreadsheet and that column will contain the list of
                                 email addresses to be added. Maximum file size
                                 is <?php echo(MAX_UPLOAD_SIZE / 1024000); ?>MB.</strong></p>
@@ -431,8 +431,9 @@ if (isset($_REQUEST['d'])) {
                             <input type="hidden" name="MAX_FILE_SIZE" value="<?php echo MAX_UPLOAD_SIZE; ?>"/>
                             <input type="hidden" name="type" value="email-suppression"/>
                             <input type="hidden" name="destination" value="0"/>
-							<!-- File: <input type="file" name="import_file" multiple="false" accept="text/csv"/> -->
-							File: <input type="file" name="import_file" multiple="false" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+                            <!-- File: <input type="file" name="import_file" multiple="false" accept="text/csv"/> -->
+                            File: <input type="file" name="import_file" multiple="false"
+                                         accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
                             to Suppression List
                             <select id="suppress_list" name="list" onchange="checkIfMulti();">
                                 <option value="global">Global Suppression</option>

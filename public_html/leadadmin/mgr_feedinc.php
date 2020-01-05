@@ -14,7 +14,8 @@ require_once(INCLUDES . 'display.php');
 
 include(INCLUDES . "f_site.php");
 
-$all_states = array('AL' => 'Alabama',
+$all_states = array(
+    'AL' => 'Alabama',
     'AK' => 'Alaska',
     'AZ' => 'Arizona',
     'AR' => 'Arkansas',
@@ -97,19 +98,19 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Company cannot be empty.';
             }
 
-            if ( !isset($_REQUEST['filterState']) || empty($_REQUEST['filterState']) ) {
+            if (!isset($_REQUEST['filterState']) || empty($_REQUEST['filterState'])) {
                 $filterStateField = '';
             } else {
                 $filterStateField = $_REQUEST['filterState'];
             }
 
-            if ( $filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice']) ) {
+            if ($filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice'])) {
                 $filterStateChoice = '';
             } else {
                 $filterStateChoice = $_REQUEST['filterStateChoice'];
             }
 
-            if(!empty($filterStateField) && empty($filterStateChoice)) {
+            if (!empty($filterStateField) && empty($filterStateChoice)) {
                 $c = false;
                 $result['error'] = 'If using the state filter feature, at least one state must be selected.';
             }
@@ -126,7 +127,8 @@ if (isset($_REQUEST['a'])) {
                     foreach ($_REQUEST['required'] as $f) {
                         switch ($f) {
                             case "phone":
-                                if (!in_array('landline', $_REQUEST['allowedFields']) || !in_array('cellphone', $_REQUEST['allowedFields'])) {
+                                if (!in_array('landline', $_REQUEST['allowedFields']) || !in_array('cellphone',
+                                        $_REQUEST['allowedFields'])) {
                                     $c = false;
                                     $result['error'] = 'If phone is selected, both landline and cellphone must be allowed fields.';
                                 }
@@ -211,7 +213,8 @@ if (isset($_REQUEST['a'])) {
             }
 
             if ($c && !empty($_REQUEST['notifyThresholdTime'])) {
-                $notifyThresholdTime = DateTime::createFromFormat('Y-m-d g:iA', (date('Y-m-d') . ' ' . $_REQUEST['notifyThresholdTime']));
+                $notifyThresholdTime = DateTime::createFromFormat('Y-m-d g:iA',
+                    (date('Y-m-d') . ' ' . $_REQUEST['notifyThresholdTime']));
                 if (empty($notifyThresholdTime)) {
                     $result['error'] = 'Please enter a valid notification threshold time in the format hh:mmAM or hh:mmPM.';
                     $c = false;
@@ -223,7 +226,8 @@ if (isset($_REQUEST['a'])) {
             if (!empty($_REQUEST['filterUrlMulti'])) {
                 $filterUrlMulti = explode("\n", $_REQUEST['filterUrlMulti']);
             }
-            $_REQUEST['filterUrl'] = !empty($_REQUEST['filterUrl']) ? array_merge($_REQUEST['filterUrl'], $filterUrlMulti) : $filterUrlMulti;
+            $_REQUEST['filterUrl'] = !empty($_REQUEST['filterUrl']) ? array_merge($_REQUEST['filterUrl'],
+                $filterUrlMulti) : $filterUrlMulti;
             if (!empty($_REQUEST['filterUrl']) && is_array($_REQUEST['filterUrl'])) {
                 $_REQUEST['filterUrl'] = array_map('trim', $_REQUEST['filterUrl']);
                 $filterUrl = implode(';', $_REQUEST['filterUrl']);
@@ -253,7 +257,7 @@ if (isset($_REQUEST['a'])) {
 
                     $filterStateArray = array(
                         'mode' => $filterStateField,
-                        'states' => $filterStateChoice
+                        'states' => $filterStateChoice,
                     );
                     $filterState = json_encode($filterStateArray);
 
@@ -262,7 +266,8 @@ if (isset($_REQUEST['a'])) {
                         'description' => empty($_REQUEST['description']) ? null : $_REQUEST['description'],
                         'idCompany' => empty($_REQUEST['idCompany']) ? null : $_REQUEST['idCompany'],
                         'required' => empty($_REQUEST['required']) ? null : implode(';', $_REQUEST['required']),
-                        'allowedFields' => empty($_REQUEST['allowedFields']) ? null : implode(';', $_REQUEST['allowedFields']),
+                        'allowedFields' => empty($_REQUEST['allowedFields']) ? null : implode(';',
+                            $_REQUEST['allowedFields']),
                         'password' => genFeedPass(),
                         'dedupeEmail' => empty($_REQUEST['dedupeEmail']) ? 0 : 1,
                         'dedupeLandline' => empty($_REQUEST['dedupeLandline']) ? 0 : 1,
@@ -287,7 +292,8 @@ if (isset($_REQUEST['a'])) {
                         'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                         'notifyThresholdCount' => empty($_REQUEST['notifyThresholdCount']) ? 0 : $_REQUEST['notifyThresholdCount'],
                         'notifyThresholdTime' => !empty($notifyThresholdTime) ? $notifyThresholdTime->format('H:i:s') : null,
-                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',', $_REQUEST['notifyThresholdDays']),
+                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',',
+                            $_REQUEST['notifyThresholdDays']),
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                         'pauseMessage' => empty($_REQUEST['pauseMessage']) ? null : trim($_REQUEST['pauseMessage']),
                         'filterTypeDNCScrub' => json_encode($dncScrub),
@@ -378,7 +384,8 @@ if (isset($_REQUEST['a'])) {
                 }
 
                 if ($c && !empty($_REQUEST['notifyThresholdTime'])) {
-                    $notifyThresholdTime = DateTime::createFromFormat('Y-m-d g:iA', (date('Y-m-d') . ' ' . $_REQUEST['notifyThresholdTime']));
+                    $notifyThresholdTime = DateTime::createFromFormat('Y-m-d g:iA',
+                        (date('Y-m-d') . ' ' . $_REQUEST['notifyThresholdTime']));
                     if (empty($notifyThresholdTime)) {
                         $result['error'] = 'Please enter a valid notification threshold time in the format hh:mmAM or hh:mmPM.';
                         $c = false;
@@ -394,13 +401,13 @@ if (isset($_REQUEST['a'])) {
 
                 if ($c) {
 
-                    if ( !isset($_REQUEST['filterState']) || empty($_REQUEST['filterState']) ) {
+                    if (!isset($_REQUEST['filterState']) || empty($_REQUEST['filterState'])) {
                         $filterStateField = '';
                     } else {
                         $filterStateField = $_REQUEST['filterState'];
                     }
-                    
-                    if ( $filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice']) ) {
+
+                    if ($filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice'])) {
                         $filterStateChoice = '';
                     } else {
                         $filterStateChoice = $_REQUEST['filterStateChoice'];
@@ -408,7 +415,7 @@ if (isset($_REQUEST['a'])) {
 
                     $filterStateArray = array(
                         'mode' => $filterStateField,
-                        'states' => $filterStateChoice
+                        'states' => $filterStateChoice,
                     );
                     $filterState = json_encode($filterStateArray);
 
@@ -417,7 +424,8 @@ if (isset($_REQUEST['a'])) {
                         'description' => empty($_REQUEST['description']) ? null : $_REQUEST['description'],
                         'idCompany' => empty($_REQUEST['idCompany']) ? null : $_REQUEST['idCompany'],
                         'required' => empty($_REQUEST['required']) ? null : implode(';', $_REQUEST['required']),
-                        'allowedFields' => empty($_REQUEST['allowedFields']) ? null : implode(';', $_REQUEST['allowedFields']),
+                        'allowedFields' => empty($_REQUEST['allowedFields']) ? null : implode(';',
+                            $_REQUEST['allowedFields']),
                         'dedupeEmail' => empty($_REQUEST['dedupeEmail']) ? 0 : 1,
                         'dedupeLandline' => empty($_REQUEST['dedupeLandline']) ? 0 : 1,
                         'dedupeCellphone' => empty($_REQUEST['dedupeCellphone']) ? 0 : 1,
@@ -441,7 +449,8 @@ if (isset($_REQUEST['a'])) {
                         'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                         'notifyThresholdCount' => empty($_REQUEST['notifyThresholdCount']) ? 0 : $_REQUEST['notifyThresholdCount'],
                         'notifyThresholdTime' => !empty($notifyThresholdTime) ? $notifyThresholdTime->format('H:i:s') : null,
-                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',', $_REQUEST['notifyThresholdDays']),
+                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',',
+                            $_REQUEST['notifyThresholdDays']),
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                         'pauseMessage' => empty($_REQUEST['pauseMessage']) ? null : trim($_REQUEST['pauseMessage']),
                         'filterTypeDNCScrub' => json_encode($dncScrub),
@@ -542,7 +551,8 @@ if (isset($_REQUEST['a'])) {
                             $c = false;
                             $result['error'] = 'Unable to update feed.';
                         } else {
-                            $leads->auditLog('FEEDINC:PAUSED', $feed->idFeedIn . ':' . ($paused ? 'PAUSED' : 'ENABLED'));
+                            $leads->auditLog('FEEDINC:PAUSED',
+                                $feed->idFeedIn . ':' . ($paused ? 'PAUSED' : 'ENABLED'));
                         }
                     }
                     if ($c) {
@@ -591,18 +601,19 @@ if (isset($_REQUEST['d'])) {
             $feed = $leads->getInboundFeed($idFeedIn);
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch requested feed information.</p>
+                <p>Database failure - could not fetch requested feed information.</p>
                 <?php
                 exit;
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Could not fetch requested feed information - feed does not exist.</p>
+                <p>Could not fetch requested feed information - feed does not exist.</p>
                 <?php
                 exit;
             }
             $selectedRequired = explode(";", $feed->required);
             $selectedAllowedFields = explode(";", $feed->allowedFields);
-            $selectedNotifyThresholdDays = !empty($feed->notifyThresholdDays) ? explode(",", $feed->notifyThresholdDays) : array();
+            $selectedNotifyThresholdDays = !empty($feed->notifyThresholdDays) ? explode(",",
+                $feed->notifyThresholdDays) : array();
 
         case 'dialog_newfeed':
             if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
@@ -645,7 +656,7 @@ if (isset($_REQUEST['d'])) {
                 'pauseMessage',
                 'filterTypeDNCScrub',
                 'timezone',
-	            'timeskew',
+                'timeskew',
             );
             foreach ($feedProps as $feedProp) {
                 if (isset($feed)) {
@@ -698,114 +709,132 @@ if (isset($_REQUEST['d'])) {
             $companies = $leads->getCompanies('active');
             ?>
 
-			<form id="<?php echo $id; ?>">
-				<table class="table table-bordered table-condensed table-striped">
-					<tr>
-						<td>Feed Label</p></td>
-						<td>
-							<input type="hidden" name="idFeedIn" id="idFeedIn" value="<?php echo $feed_idFeedIn; ?>"/>
+            <form id="<?php echo $id; ?>">
+                <table class="table table-bordered table-condensed table-striped">
+                    <tr>
+                        <td>Feed Label</p></td>
+                        <td>
+                            <input type="hidden" name="idFeedIn" id="idFeedIn" value="<?php echo $feed_idFeedIn; ?>"/>
                             <?php if (!empty($idFeedIn) && $idFeedIn < 123) { ?>
-								<input type="hidden" name="label" id="label" value="<?php echo Display::escHtml($feed_label); ?>"/><?php echo Display::escHtml($feed_label); ?><br/>(Cannot modify incoming feed labels created before 5/24/18)
+                                <input type="hidden" name="label" id="label"
+                                       value="<?php echo Display::escHtml($feed_label); ?>"/><?php echo Display::escHtml($feed_label); ?>
+                                <br/>(Cannot modify incoming feed labels created before 5/24/18)
                             <?php } else { ?>
-								<input class="input-long" type="text" name="label" id="label" value="<?php echo Display::escHtml($feed_label); ?>"<?php if (!empty($idFeedIn) && $idFeedIn < 123) {
+                                <input class="input-long" type="text" name="label" id="label"
+                                       value="<?php echo Display::escHtml($feed_label); ?>"<?php if (!empty($idFeedIn) && $idFeedIn < 123) {
                                     print " readonly='readonly'";
                                 } ?>/>
                             <?php } ?>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td>Description</p></td>
-						<td>
-							<input class="input-long" type='text' name='description' id='description' value='<?php echo htmlentities($feed_description); ?>'/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td>Company</p></td>
-						<td>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Description</p></td>
+                        <td>
+                            <input class="input-long" type='text' name='description' id='description'
+                                   value='<?php echo htmlentities($feed_description); ?>'/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Company</p></td>
+                        <td>
 
                             <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) { ?>
                                 <?php if ($companies === false) { ?>
-									Database failure - could not fetch company list
+                                    Database failure - could not fetch company list
                                 <?php } elseif (!is_object($companies) && $companies == 0) { ?>
-									There are no companies in the database. Please create a company before
-									creating a feed.
+                                    There are no companies in the database. Please create a company before
+                                    creating a feed.
                                 <?php } else { ?>
-									<select name='idCompany'
-									        id='idCompany'
-									>
+                                    <select name='idCompany'
+                                            id='idCompany'
+                                    >
                                         <?php foreach ($companies as $company) { ?>
-											<option value='<?php echo $company->idCompany; ?>'
+                                            <option value='<?php echo $company->idCompany; ?>'
                                                     <?php if ($company->idCompany == $feed_idCompany){
                                                     ?>selected='selected'<?php } ?>
-											><?php echo $company->name; ?></option>
+                                            ><?php echo $company->name; ?></option>
                                         <?php } ?>
-									</select>
+                                    </select>
                                 <?php } ?>
                             <?php } else { ?>
                                 <?php echo $idCompany; ?>
-								<input type="hidden" name="idCompany" id="idCompany" value="<?php echo $idCompany; ?>"/>
+                                <input type="hidden" name="idCompany" id="idCompany" value="<?php echo $idCompany; ?>"/>
                             <?php } ?>
-							</p>
-						</td>
-					</tr>
+                            </p>
+                        </td>
+                    </tr>
                     <tr>
                         <script>
-                        $('input[name="filterState"]:radio').change(function() {
-                            if ( $(this).val() == 'includeOnly' || $(this).val() == 'excludeOnly' ) {
-                                $('#filterStateChoice').show();
-                            } else {
-                                $('#filterStateChoice').hide();
-                            }
-                        });
+                            $('input[name="filterState"]:radio').change(function () {
+                                if ($(this).val() == 'includeOnly' || $(this).val() == 'excludeOnly') {
+                                    $('#filterStateChoice').show();
+                                } else {
+                                    $('#filterStateChoice').hide();
+                                }
+                            });
                         </script>
                         <td><p>Filter State</p></td>
                         <td>
                             <?php $filterState_value = json_decode($feed_filterState); ?>
                             <p>Use this feature to limit which state(s) leads are allowed to come from.</p>
                             <p>
-                                <input type="radio" name="filterState" value=""<?php if (empty($filterState_value->mode)) {
+                                <input type="radio" name="filterState"
+                                       value=""<?php if (empty($filterState_value->mode)) {
                                     print ' checked="checked"';
                                 } ?> /> Off<br/>
-                                <input type="radio" name="filterState" value="includeOnly"<?php if (!empty($filterState_value->mode) && 'includeOnly' == $filterState_value->mode) {
+                                <input type="radio" name="filterState"
+                                       value="includeOnly"<?php if (!empty($filterState_value->mode) && 'includeOnly' == $filterState_value->mode) {
                                     print ' checked="checked"';
                                 } ?> /> Include Only<br/>
-                                <input type="radio" name="filterState" value="excludeOnly"<?php if (!empty($filterState_value->mode) && 'excludeOnly' == $filterState_value->mode) {
+                                <input type="radio" name="filterState"
+                                       value="excludeOnly"<?php if (!empty($filterState_value->mode) && 'excludeOnly' == $filterState_value->mode) {
                                     print ' checked="checked"';
                                 } ?> /> Exclude Only<br/>
                             </p>
-                            <div id="filterStateChoice"<?php if (empty($filterState_value->mode) || ($filterState_value->mode != 'includeOnly' && $filterState_value->mode != 'excludeOnly') ) echo ' style="display: none;"'; ?>>
+                            <div id="filterStateChoice"<?php if (empty($filterState_value->mode) || ($filterState_value->mode != 'includeOnly' && $filterState_value->mode != 'excludeOnly')) {
+                                echo ' style="display: none;"';
+                            } ?>>
                                 <p>Choose which states to include/exclude.</p>
-                                <p><?php foreach ( $all_states as $abbr => $st ) { ?>
-                                    <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='filterStateChoice[]' value='<?php echo $abbr; ?>'<?php if (!empty($filterState_value->states) && in_array($abbr, $filterState_value->states)){ ?> checked='checked'<?php } ?> />&nbsp;<?php echo $st; ?></label> 
-                                <?php } ?></p>
+                                <p><?php foreach ($all_states as $abbr => $st) { ?>
+                                        <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                                                                                       name='filterStateChoice[]'
+                                                                                                       value='<?php echo $abbr; ?>'<?php if (!empty($filterState_value->states) && in_array($abbr,
+                                                    $filterState_value->states)) { ?> checked='checked'<?php } ?> />&nbsp;<?php echo $st; ?>
+                                        </label>
+                                    <?php } ?></p>
                             </div>
                         </td>
                     </tr>
-					<tr>
-						<td><p>Feed Category</p></td>
-						<td>
-							<p>Determines which section this feed shows up under on the dashboard.</p>
-							<p>
-								<input type="radio" name="feedCategory" value="email"<?php if (empty($feed_feedCategory) || 'email' == $feed_feedCategory) {
+                    <tr>
+                        <td><p>Feed Category</p></td>
+                        <td>
+                            <p>Determines which section this feed shows up under on the dashboard.</p>
+                            <p>
+                                <input type="radio" name="feedCategory"
+                                       value="email"<?php if (empty($feed_feedCategory) || 'email' == $feed_feedCategory) {
                                     print ' checked="checked"';
                                 } ?> /> Email<br/>
-								<input type="radio" name="feedCategory" value="phone"<?php if ('phone' == $feed_feedCategory) {
+                                <input type="radio" name="feedCategory"
+                                       value="phone"<?php if ('phone' == $feed_feedCategory) {
                                     print ' checked="checked"';
                                 } ?> /> Phone<br/>
-								<input type="radio" name="feedCategory" value="ppc"<?php if ('ppc' == $feed_feedCategory) {
+                                <input type="radio" name="feedCategory"
+                                       value="ppc"<?php if ('ppc' == $feed_feedCategory) {
                                     print ' checked="checked"';
                                 } ?> /> PPC<br/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Timezone</p></td>
-						<td>
-							<p>Specify what timezone the incoming leads are being sent as. Please confirm with the vendor, as this may throw off the timestamps that are being sent to the client if incorrect.</p>
-							<p>
-								<select name="timezone">
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Timezone</p></td>
+                        <td>
+                            <p>Specify what timezone the incoming leads are being sent as. Please confirm with the
+                                vendor, as this may throw off the timestamps that are being sent to the client if
+                                incorrect.</p>
+                            <p>
+                                <select name="timezone">
                                     <?php
                                     $timezones = DateTimeZone::listIdentifiers();
                                     foreach ($timezones as $timezone) {
@@ -816,142 +845,189 @@ if (isset($_REQUEST['d'])) {
                                         );
                                     }
                                     ?>
-								</select>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td>Required Fields</p></td>
-						<td>
+                                </select>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Required Fields</p></td>
+                        <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
-								<label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='required[]' value='<?php echo Display::escHtml($f->fieldName); ?>' <?php if (in_array($f->fieldName, $selectedRequired)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?></label>
+                                <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                                                                               name='required[]'
+                                                                                               value='<?php echo Display::escHtml($f->fieldName); ?>'
+                                                                                               <?php if (in_array($f->fieldName,
+                                                                                                   $selectedRequired)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                </label>
                             <?php } ?>
-						</td>
-					</tr>
-					<tr>
-						<td>Allowed Fields</p></td>
-						<td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Allowed Fields</p></td>
+                        <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
-								<label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='allowedFields[]' value='<?php echo Display::escHtml($f->fieldName); ?>' <?php if (in_array($f->fieldName, $selectedAllowedFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?></label>
+                                <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                                                                               name='allowedFields[]'
+                                                                                               value='<?php echo Display::escHtml($f->fieldName); ?>'
+                                                                                               <?php if (in_array($f->fieldName,
+                                                                                                   $selectedAllowedFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                </label>
                             <?php } ?>
-						</td>
-					</tr>
-					<tr>
-						<td>Legacy Custom Fields</td>
-						<td>
-							<p>Use this section to store notes about what each custom field is being used for. <strong>These notes will be shown to the vendor in the API posting specs, so don't include anything proprietary.</strong></p>
-							custom1 = <input class="input-long" type="text" name="custom1Label" value="<?php echo Display::escHtml($feed_custom1Label); ?>"/><br/>
-							custom2 = <input class="input-long" type="text" name="custom2Label" value="<?php echo Display::escHtml($feed_custom2Label); ?>"/><br/>
-							custom3 = <input class="input-long" type="text" name="custom3Label" value="<?php echo Display::escHtml($feed_custom3Label); ?>"/><br/>
-							custom4 = <input class="input-long" type="text" name="custom4Label" value="<?php echo Display::escHtml($feed_custom4Label); ?>"/><br/>
-							custom5 = <input class="input-long" type="text" name="custom5Label" value="<?php echo Display::escHtml($feed_custom5Label); ?>"/><br/>
-							custom6 = <input class="input-long" type="text" name="custom6Label" value="<?php echo Display::escHtml($feed_custom6Label); ?>"/>
-						</td>
-					</tr>
-					<tr>
-						<td>Duplicate Filters</p></td>
-						<td>
-							<label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='dedupeEmail' value='1' <?php if ($feed_dedupeEmail){ ?>checked='checked'<?php } ?> />&nbsp;Reject Duplicate Emails</label>
-							<label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='dedupeLandline' value='1' <?php if ($feed_dedupeLandline){ ?>checked='checked'<?php } ?> />&nbsp;Reject Duplicate Landline Numbers</label>
-							<label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox' name='dedupeCellphone' value='1' <?php if ($feed_dedupeCellphone){ ?>checked='checked'<?php } ?> />&nbsp;Reject Duplicate Cellphone Numbers</label>
-						</td>
-					</tr>
-					<tr>
-						<td>Duplicate Options</p></td>
-						<td>
-							DISABLED: <input type='radio' name='dedupeAcross' id='dedupeAcross_none' value='none' <?php if ($feed_dedupeAcross == 'none'){ ?>checked='checked'<?php } ?> /> Allow duplicate records<br/>
-							THIS FEED: <input type='radio' name='dedupeAcross' id='dedupeAcross_all' value='all' <?php if ($feed_dedupeAcross == 'all'){ ?>checked='checked'<?php } ?> /> Dedupe across all records of this feed
-							<input type='radio' name='dedupeAcross' id='dedupeAcross_url' value='url' <?php if ($feed_dedupeAcross == 'url'){ ?>checked='checked'<?php } ?> /> Dedupe across same URL of this feed
-							<input type='radio' name='dedupeAcross' id='dedupeAcross_listcode' value='listcode' <?php if ($feed_dedupeAcross == 'listcode'){ ?>checked='checked'<?php } ?> /> Dedupe across same listcode of this feed<br/>
-							ALL FEEDS: <input type='radio' name='dedupeAcross' id='dedupeAcross_global' value='allGlobal' <?php if ($feed_dedupeAcross == 'allGlobal'){ ?>checked='checked'<?php } ?> /> Dedupe across all records of all feeds
-							<input type='radio' name='dedupeAcross' id='dedupeAcross_url' value='urlGlobal' <?php if (empty($feed_dedupeAcross) || $feed_dedupeAcross == 'urlGlobal'){ ?>checked='checked'<?php } ?> /> Dedupe across same URL of all feeds
-							<input type='radio' name='dedupeAcross' id='dedupeAcross_listcode' value='listcodeGlobal' <?php if ($feed_dedupeAcross == 'listcodeGlobal'){ ?>checked='checked'<?php } ?> /> Dedupe across same listcode of all feeds
-						</td>
-					</tr>
-					<tr>
-						<td>URL Filter Options</p></td>
-						<td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Legacy Custom Fields</td>
+                        <td>
+                            <p>Use this section to store notes about what each custom field is being used for. <strong>These
+                                    notes will be shown to the vendor in the API posting specs, so don't include
+                                    anything proprietary.</strong></p>
+                            custom1 = <input class="input-long" type="text" name="custom1Label"
+                                             value="<?php echo Display::escHtml($feed_custom1Label); ?>"/><br/>
+                            custom2 = <input class="input-long" type="text" name="custom2Label"
+                                             value="<?php echo Display::escHtml($feed_custom2Label); ?>"/><br/>
+                            custom3 = <input class="input-long" type="text" name="custom3Label"
+                                             value="<?php echo Display::escHtml($feed_custom3Label); ?>"/><br/>
+                            custom4 = <input class="input-long" type="text" name="custom4Label"
+                                             value="<?php echo Display::escHtml($feed_custom4Label); ?>"/><br/>
+                            custom5 = <input class="input-long" type="text" name="custom5Label"
+                                             value="<?php echo Display::escHtml($feed_custom5Label); ?>"/><br/>
+                            custom6 = <input class="input-long" type="text" name="custom6Label"
+                                             value="<?php echo Display::escHtml($feed_custom6Label); ?>"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Duplicate Filters</p></td>
+                        <td>
+                            <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                                                                           name='dedupeEmail' value='1'
+                                                                                           <?php if ($feed_dedupeEmail){ ?>checked='checked'<?php } ?> />&nbsp;Reject
+                                Duplicate Emails</label>
+                            <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                                                                           name='dedupeLandline'
+                                                                                           value='1'
+                                                                                           <?php if ($feed_dedupeLandline){ ?>checked='checked'<?php } ?> />&nbsp;Reject
+                                Duplicate Landline Numbers</label>
+                            <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                                                                           name='dedupeCellphone'
+                                                                                           value='1'
+                                                                                           <?php if ($feed_dedupeCellphone){ ?>checked='checked'<?php } ?> />&nbsp;Reject
+                                Duplicate Cellphone Numbers</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Duplicate Options</p></td>
+                        <td>
+                            DISABLED: <input type='radio' name='dedupeAcross' id='dedupeAcross_none' value='none'
+                                             <?php if ($feed_dedupeAcross == 'none'){ ?>checked='checked'<?php } ?> />
+                            Allow duplicate records<br/>
+                            THIS FEED: <input type='radio' name='dedupeAcross' id='dedupeAcross_all' value='all'
+                                              <?php if ($feed_dedupeAcross == 'all'){ ?>checked='checked'<?php } ?> />
+                            Dedupe across all records of this feed
+                            <input type='radio' name='dedupeAcross' id='dedupeAcross_url' value='url'
+                                   <?php if ($feed_dedupeAcross == 'url'){ ?>checked='checked'<?php } ?> /> Dedupe
+                            across same URL of this feed
+                            <input type='radio' name='dedupeAcross' id='dedupeAcross_listcode' value='listcode'
+                                   <?php if ($feed_dedupeAcross == 'listcode'){ ?>checked='checked'<?php } ?> /> Dedupe
+                            across same listcode of this feed<br/>
+                            ALL FEEDS: <input type='radio' name='dedupeAcross' id='dedupeAcross_global'
+                                              value='allGlobal'
+                                              <?php if ($feed_dedupeAcross == 'allGlobal'){ ?>checked='checked'<?php } ?> />
+                            Dedupe across all records of all feeds
+                            <input type='radio' name='dedupeAcross' id='dedupeAcross_url' value='urlGlobal'
+                                   <?php if (empty($feed_dedupeAcross) || $feed_dedupeAcross == 'urlGlobal'){ ?>checked='checked'<?php } ?> />
+                            Dedupe across same URL of all feeds
+                            <input type='radio' name='dedupeAcross' id='dedupeAcross_listcode' value='listcodeGlobal'
+                                   <?php if ($feed_dedupeAcross == 'listcodeGlobal'){ ?>checked='checked'<?php } ?> />
+                            Dedupe across same listcode of all feeds
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>URL Filter Options</p></td>
+                        <td>
 
-							<p>
-								Using the 'Accept' option, urls that are listed here are the only ones that will be accepted into
-								the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed here.
-							</p>
+                            <p>
+                                Using the 'Accept' option, urls that are listed here are the only ones that will be
+                                accepted into
+                                the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed
+                                here.
+                            </p>
 
-							<input type='radio'
-							       name='filterTypeUrl'
-							       id='filterTypeUrl_disabled'
-							       value=''
+                            <input type='radio'
+                                   name='filterTypeUrl'
+                                   id='filterTypeUrl_disabled'
+                                   value=''
                                 <?php if (
                                 empty($feed_filterTypeUrl)
                                 ) { ?>
-									checked='checked'
+                                    checked='checked'
                                 <?php } ?>
-								   onclick="$('#toggler_filterTypeUrl').hide(); <?php
+                                   onclick="$('#toggler_filterTypeUrl').hide(); <?php
                                    ?>$('#filterUrl_descriptor').html('Do nothing with');"
-							/> Disabled<br/>
-							<input type='radio'
-							       name='filterTypeUrl'
-							       id='filterTypeUrl_accept'
-							       value='accept'
+                            /> Disabled<br/>
+                            <input type='radio'
+                                   name='filterTypeUrl'
+                                   id='filterTypeUrl_accept'
+                                   value='accept'
                                 <?php if ($feed_filterTypeUrl == 'accept') { ?>
-									checked='checked'
+                                    checked='checked'
                                 <?php } ?>
-								   onclick="$('#toggler_filterTypeUrl').show(); <?php
+                                   onclick="$('#toggler_filterTypeUrl').show(); <?php
                                    ?>$('#filterUrl_descriptor').html('Accept');"
-							/> Accept<br/>
-							<input type='radio'
-							       name='filterTypeUrl'
-							       id='filterTypeUrl_reject'
-							       value='reject'
+                            /> Accept<br/>
+                            <input type='radio'
+                                   name='filterTypeUrl'
+                                   id='filterTypeUrl_reject'
+                                   value='reject'
                                 <?php if ($feed_filterTypeUrl == 'reject') { ?>
-									checked='checked'
+                                    checked='checked'
                                 <?php } ?>
-								   onclick="$('#toggler_filterTypeUrl').show(); <?php
+                                   onclick="$('#toggler_filterTypeUrl').show(); <?php
                                    ?>$('#filterUrl_descriptor').html('Reject');"
-							/> Reject<br/>
-							</p>
-							<div id='toggler_filterTypeUrl'
-							     style='display:<?php
+                            /> Reject<br/>
+                            </p>
+                            <div id='toggler_filterTypeUrl'
+                                 style='display:<?php
                                  if (empty($feed_filterTypeUrl)) {
                                      echo "none";
                                  } else {
                                      echo "block";
                                  }
                                  ?>;'
-							>
-								<p>The following urls:</p>
-								<p>
-									<a href='#' class='nonLink'
-									   onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Url" });'
-									>Add New URL to <span id='filterUrl_descriptor'></span></a>
-									| <a href='#' class='nonLink'
-									     onclick='element("filterUrl_multipleInsert"<?php
+                            >
+                                <p>The following urls:</p>
+                                <p>
+                                    <a href='#' class='nonLink'
+                                       onclick='element("filterUrl_container", "element_filter", { "e": "<?php echo $e ?? ''; ?>", "type": "Url" });'
+                                    >Add New URL to <span id='filterUrl_descriptor'></span></a>
+                                    | <a href='#' class='nonLink'
+                                         onclick='element("filterUrl_multipleInsert"<?php
                                          ?>, "element_multifilter"<?php
                                          ?>, { "e": "<?php echo $e ?? ''; ?>"<?php
                                          ?>, "type": "Url" });'
-									>Add Multiple</a>
-								</p>
-								<div id='filterUrl_multipleInsert'></div>
-								<div id='filterUrl_container'>
+                                    >Add Multiple</a>
+                                </p>
+                                <div id='filterUrl_multipleInsert'></div>
+                                <div id='filterUrl_container'>
                                     <?php foreach ($feed_filterUrl as $filterUrl) { ?>
-										<div>
-											<input type='text'
-											       name='filterUrl[]'
-											       value='<?php echo $filterUrl; ?>'
-											/>
-											<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-										</div>
+                                        <div>
+                                            <input type='text'
+                                                   name='filterUrl[]'
+                                                   value='<?php echo $filterUrl; ?>'
+                                            />
+                                            <a href='#' class='nonLink'
+                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                        </div>
                                     <?php } ?>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td><p>DNC Scrub Filter Options</p></td>
-						<td>
-							<p>
-								When enabled, all incoming leads will be filtered through the DNC Scrub API.
-							</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>DNC Scrub Filter Options</p></td>
+                        <td>
+                            <p>
+                                When enabled, all incoming leads will be filtered through the DNC Scrub API.
+                            </p>
                             <?php
                             $dncScrub = json_decode(!empty($feed_filterTypeDNCScrub) ? $feed_filterTypeDNCScrub : '{"enabled":false, "rejectStatuses": []}');
                             if (null === $dncScrub) {
@@ -960,119 +1036,181 @@ if (isset($_REQUEST['d'])) {
                                 $dncScrub->rejectStatuses = array();
                             }
                             ?>
-							<p>
-								<input type="radio" name="filterTypeDNCScrub_enabled" id="filterTypeDNCScrub_disabled" value=""<?php if (empty($dncScrub->enabled)) { ?> checked="checked"<?php } ?> onclick="$('#toggler_filterTypeDNCScrub').hide();"
-								/> Disabled<br/>
-								<input type="radio" name="filterTypeDNCScrub_enabled" id="filterTypeDNCScrub_enabled" value="true"<?php if (!empty($dncScrub->enabled)) { ?> checked="checked"<?php } ?> onclick="$('#toggler_filterTypeDNCScrub').show();"/> Enabled<br/>
-							</p>
-							<div id="toggler_filterTypeDNCScrub" style="display:<?php
+                            <p>
+                                <input type="radio" name="filterTypeDNCScrub_enabled" id="filterTypeDNCScrub_disabled"
+                                       value=""<?php if (empty($dncScrub->enabled)) { ?> checked="checked"<?php } ?>
+                                       onclick="$('#toggler_filterTypeDNCScrub').hide();"
+                                /> Disabled<br/>
+                                <input type="radio" name="filterTypeDNCScrub_enabled" id="filterTypeDNCScrub_enabled"
+                                       value="true"<?php if (!empty($dncScrub->enabled)) { ?> checked="checked"<?php } ?>
+                                       onclick="$('#toggler_filterTypeDNCScrub').show();"/> Enabled<br/>
+                            </p>
+                            <div id="toggler_filterTypeDNCScrub" style="display:<?php
                             if (!empty($dncScrub->enabled)) {
                                 echo "block";
                             } else {
                                 echo "none";
                             }
                             ?>;">
-								<p><strong>Select the result status codes that you would like to REJECT.</strong></p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="X"<?php if (in_array('X', $dncScrub->rejectStatuses)) {
+                                <p><strong>Select the result status codes that you would like to REJECT.</strong></p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="X"<?php if (in_array('X', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> X = Industry eXemption applied to an otherwise Do Not Call number – number can be called</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="C"<?php if (in_array('C', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> X = Industry eXemption applied to an otherwise Do Not Call number – number
+                                    can be called</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="C"<?php if (in_array('C', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
                                     }; ?> /> C = Clean, number can be called</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="O"<?php if (in_array('O', $dncScrub->rejectStatuses)) {
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="O"<?php if (in_array('O', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> O = ebr Override was applied to an otherwise Do Not Call number (including an explicit EBR overriding a number in Project DNC) – number can be called</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="E"<?php if (in_array('E', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> O = ebr Override was applied to an otherwise Do Not Call number (including
+                                    an explicit EBR overriding a number in Project DNC) – number can be called</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="E"<?php if (in_array('E', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> E = Ebr – currently valid, not on a Do Not Call list – number can be called</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="R"<?php if (in_array('R', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> E = Ebr – currently valid, not on a Do Not Call list – number can be called
+                                </p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="R"<?php if (in_array('R', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> R = expiRed ebr - number used to be a valid EBR, not on a Do Not Call list – number can be called (this ResultCode will be available in the near future)</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="W"<?php if (in_array('W', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> R = expiRed ebr - number used to be a valid EBR, not on a Do Not Call list
+                                    – number can be called (this ResultCode will be available in the near future)</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="W"<?php if (in_array('W', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> W = US Wireless number – number is not in any DNC database (or it is but has been overridden by an industry exemption) but it cannot be called from a predictive dialer.</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="G"<?php if (in_array('G', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> W = US Wireless number – number is not in any DNC database (or it is but
+                                    has been overridden by an industry exemption) but it cannot be called from a
+                                    predictive dialer.</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="G"<?php if (in_array('G', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> G = Valid EBR and US Wireless Number or VoIP Number, not on any DNC database (version 2+) – still cannot be called from a predictive dialer as EBRs do not constitute an exemption to those rules.</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="H"<?php if (in_array('H', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> G = Valid EBR and US Wireless Number or VoIP Number, not on any DNC
+                                    database (version 2+) – still cannot be called from a predictive dialer as EBRs do
+                                    not constitute an exemption to those rules.</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="H"<?php if (in_array('H', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> H = US Wireless Number or VoIP Number that is also a Valid EBR overriding an otherwise DNC number (version 2+) – still cannot be called from a predictive dialer as EBRs do not constitute an exemption to those rules.</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="L"<?php if (in_array('L', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> H = US Wireless Number or VoIP Number that is also a Valid EBR overriding
+                                    an otherwise DNC number (version 2+) – still cannot be called from a predictive
+                                    dialer as EBRs do not constitute an exemption to those rules.</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="L"<?php if (in_array('L', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> L = Wireless number in a US state that does not allow telemarketing to wireless numbers even if manually dialed (see W for more details); not on any DNC list; not an EBR.</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="F"<?php if (in_array('F', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> L = Wireless number in a US state that does not allow telemarketing to
+                                    wireless numbers even if manually dialed (see W for more details); not on any DNC
+                                    list; not an EBR.</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="F"<?php if (in_array('F', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> F = Valid EBR and Wireless number in a US state that does not allow telemarketing to wireless numbers even if manually dialed (see W for more details); not on any DNC list.</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="V"<?php if (in_array('V', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> F = Valid EBR and Wireless number in a US state that does not allow
+                                    telemarketing to wireless numbers even if manually dialed (see W for more details);
+                                    not on any DNC list.</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="V"<?php if (in_array('V', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> V = Valid EBR overriding otherwise DNC number that is also a Wireless number in a US state that does not allow telemarketing to wireless numbers even if manually dialed.</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="I"<?php if (in_array('I', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> V = Valid EBR overriding otherwise DNC number that is also a Wireless
+                                    number in a US state that does not allow telemarketing to wireless numbers even if
+                                    manually dialed.</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="I"<?php if (in_array('I', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> I = Invalid (area code not active or reserved/special use phone number pattern (i.e. 555-5555))</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="M"<?php if (in_array('M', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> I = Invalid (area code not active or reserved/special use phone number
+                                    pattern (i.e. 555-5555))</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="M"<?php if (in_array('M', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> M = Malformed (number is not 10 digits, etc.) – this actually never shows up in scrub results from the DNC Compliance Network™ Enterprise Edition – instead an error response will be returned</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="B"<?php if (in_array('B', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> M = Malformed (number is not 10 digits, etc.) – this actually never shows
+                                    up in scrub results from the DNC Compliance Network™ Enterprise Edition – instead an
+                                    error response will be returned</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="B"<?php if (in_array('B', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> B = Blocked (number is in an area code not covered by the National Subscription on this project or is in a configured no-call area code or no exemption was available in a pre-recorded call campaign)</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="P"<?php if (in_array('P', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> B = Blocked (number is in an area code not covered by the National
+                                    Subscription on this project or is in a configured no-call area code or no exemption
+                                    was available in a pre-recorded call campaign)</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="P"<?php if (in_array('P', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> P = Project DNC or DNF database match (No further checks are performed. The choice to scrub against DNC vs. DNF (Do Not Fax) needs to be made previously at the Campaign level.)</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="D"<?php if (in_array('D', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> P = Project DNC or DNF database match (No further checks are performed. The
+                                    choice to scrub against DNC vs. DNF (Do Not Fax) needs to be made previously at the
+                                    Campaign level.)</p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="D"<?php if (in_array('D', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> D = Do not call database match; Reason field provides additional details.</p>
-								<p><input type="checkbox" name="filterDNCScrub_reject_status[]" value="Y"<?php if (in_array('Y', $dncScrub->rejectStatuses)) {
+                                    }; ?> /> D = Do not call database match; Reason field provides additional details.
+                                </p>
+                                <p><input type="checkbox" name="filterDNCScrub_reject_status[]"
+                                          value="Y"<?php if (in_array('Y', $dncScrub->rejectStatuses)) {
                                         echo ' checked="checked"';
-                                    }; ?> /> Y = VoIP number not in any DNC databases (or it has been overridden by an industry exemption).</p>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td>Lead Rejections</p></td>
-						<td>
-							<p>How old are leads allowed to be before we reject them? This should be a text string like "7 Days Ago" or "30 Days Ago". Do not enter just a number. A blank value disables this feature.</p>
-							<p>
-								<input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge' value='<?php echo Display::escHtml($feed_rejectOldLeadsMaxAge); ?>' class='input-long'/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Daily Feed Limit</p></td>
-						<td>
-							<p>Leave blank for no limit (default). If a value is supplied here, the feed will stop accepting records after the daily limit is reached.</p>
-							<p>Note: If a choke percentage is defined below, then we will silently accept that percentage of leads over and above this daily limit. So if the choke is set at 25% and the feed limit is set at 750, we will accept approximately 1,000 leads before hitting the daily limit (but still only show 750 were accepted to the vendor).</p>
-							<p>
-								<input type="text" name="dailyLimit" value="<?php echo Display::escHtml($feed_dailyLimit); ?>"/>
-							</p>
+                                    }; ?> /> Y = VoIP number not in any DNC databases (or it has been overridden by an
+                                    industry exemption).</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Lead Rejections</p></td>
+                        <td>
+                            <p>How old are leads allowed to be before we reject them? This should be a text string like
+                                "7 Days Ago" or "30 Days Ago". Do not enter just a number. A blank value disables this
+                                feature.</p>
+                            <p>
+                                <input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge'
+                                       value='<?php echo Display::escHtml($feed_rejectOldLeadsMaxAge); ?>'
+                                       class='input-long'/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Daily Feed Limit</p></td>
+                        <td>
+                            <p>Leave blank for no limit (default). If a value is supplied here, the feed will stop
+                                accepting records after the daily limit is reached.</p>
+                            <p>Note: If a choke percentage is defined below, then we will silently accept that
+                                percentage of leads over and above this daily limit. So if the choke is set at 25% and
+                                the feed limit is set at 750, we will accept approximately 1,000 leads before hitting
+                                the daily limit (but still only show 750 were accepted to the vendor).</p>
+                            <p>
+                                <input type="text" name="dailyLimit"
+                                       value="<?php echo Display::escHtml($feed_dailyLimit); ?>"/>
+                            </p>
                             <?php if (!empty($feed_chokePercent)) { ?>
-								<p>Effective daily limit with choke: <?php echo round($feed_dailyLimit / ((100 - $feed_chokePercent) * .01)); ?></p>
+                                <p>Effective daily limit with
+                                    choke: <?php echo round($feed_dailyLimit / ((100 - $feed_chokePercent) * .01)); ?></p>
                             <?php } ?>
-						</td>
-					</tr>
-					<tr>
-						<td>Choke Percent</p></td>
-						<td>
-							<p>The percentage of leads that will randomly be rejected. For example, entering a value of "20" means that approximately 20% of all leads coming in will be rejected. This feature ONLY applies to feeds that are setup as "live" or "waterfall" on the outgoing population side. Normally this value is zero.</p>
-							<p>
-								<input type="text" name="chokePercent" id="chokePercent" value="<?php echo Display::escHtml($feed_chokePercent); ?>"/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Cost Per Lead</p></td>
-						<td>
-							<p>
-								<input type="text" name="costPerLead" value="<?php echo Display::escHtml($feed_costPerLead); ?>"/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Salesperson</p></td>
-						<td>
-							<p>By default, salesperson revenues are assigned at a company level. Only set this value if you are overriding the company-level salesperson with a feed-level salesperson.</p>
-							<p>
-								<select name="salesperson">
-									<option></option>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Choke Percent</p></td>
+                        <td>
+                            <p>The percentage of leads that will randomly be rejected. For example, entering a value of
+                                "20" means that approximately 20% of all leads coming in will be rejected. This feature
+                                ONLY applies to feeds that are setup as "live" or "waterfall" on the outgoing population
+                                side. Normally this value is zero.</p>
+                            <p>
+                                <input type="text" name="chokePercent" id="chokePercent"
+                                       value="<?php echo Display::escHtml($feed_chokePercent); ?>"/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Cost Per Lead</p></td>
+                        <td>
+                            <p>
+                                <input type="text" name="costPerLead"
+                                       value="<?php echo Display::escHtml($feed_costPerLead); ?>"/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Salesperson</p></td>
+                        <td>
+                            <p>By default, salesperson revenues are assigned at a company level. Only set this value if
+                                you are overriding the company-level salesperson with a feed-level salesperson.</p>
+                            <p>
+                                <select name="salesperson">
+                                    <option></option>
                                     <?php
                                     $users = $leads->getStaffUsers(\PDO::FETCH_KEY_PAIR, true, $feed_salesperson);
                                     foreach ($users as $idUser => $fullName) {
@@ -1083,63 +1221,86 @@ if (isset($_REQUEST['d'])) {
                                         );
                                     }
                                     ?>
-								</select>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td>Dormant Notifications</p></td>
-						<td>
-							<p>Should we send dormant URL notifications for URLs in this feed?</p>
-							<p>
-								<input type='radio' name='notifications' id='notifications_yes' value='1' <?php if ('1' == $feed_notifications) { ?>checked='checked'<?php } ?>/> Enabled
-								<input type='radio' name='notifications' id='notifications_no' value='0' <?php if ($feed_notifications != '1') { ?>checked='checked'<?php } ?>/> Disabled
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td>Threshold Notifications</p></td>
-						<td>
-							<p>Send an email notification if we have not received <input type="text" name="notifyThresholdCount" value="<?php echo htmlentities($feed_notifyThresholdCount); ?>"/> leads by <input type="text" name="notifyThresholdTime" placeholder="Example: 10:00AM" value="<?php echo htmlentities($feed_notifyThresholdTimeFormatted); ?>"/> on<br/>
+                                </select>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Dormant Notifications</p></td>
+                        <td>
+                            <p>Should we send dormant URL notifications for URLs in this feed?</p>
+                            <p>
+                                <input type='radio' name='notifications' id='notifications_yes' value='1'
+                                       <?php if ('1' == $feed_notifications) { ?>checked='checked'<?php } ?>/> Enabled
+                                <input type='radio' name='notifications' id='notifications_no' value='0'
+                                       <?php if ($feed_notifications != '1') { ?>checked='checked'<?php } ?>/> Disabled
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Threshold Notifications</p></td>
+                        <td>
+                            <p>Send an email notification if we have not received <input type="text"
+                                                                                         name="notifyThresholdCount"
+                                                                                         value="<?php echo htmlentities($feed_notifyThresholdCount); ?>"/>
+                                leads by <input type="text" name="notifyThresholdTime" placeholder="Example: 10:00AM"
+                                                value="<?php echo htmlentities($feed_notifyThresholdTimeFormatted); ?>"/>
+                                on<br/>
                                 <?php for ($i = 0; $i <= 6; $i++) { ?>
-									<label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox" name="notifyThresholdDays[]" value="<?php echo $i; ?>" <?php if (in_array($i, $selectedNotifyThresholdDays)){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?></label>
+                                    <label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox"
+                                                                                                   name="notifyThresholdDays[]"
+                                                                                                   value="<?php echo $i; ?>"
+                                                                                                   <?php if (in_array($i,
+                                                                                                       $selectedNotifyThresholdDays)){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?>
+                                    </label>
                                 <?php } ?>
-							</p>
-							<p><strong>To disable notifications from being sent, set the lead count to zero or uncheck all day boxes.</strong></p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Pause Message</p></td>
-						<td>
-							<p>If the feed is paused, send this rejection message to the vendor. If nothing is set here, the default message is "Lead rejected".</p>
-							<p>
-								<input type="text" name="pauseMessage" value="<?php echo Display::escHtml($feed_pauseMessage); ?>" class="input-long"/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td><p>Time Skew</p></td>
-						<td>
-							<p>If inbound timestamps on the feed should be manipulated before being saved to the DB, enter the amount of the skew below. This feature is not normally used. Examples: "-14 days", "+5 hours", etc. Use the timezone feature to adjust for timezones.</p>
-							<p>
-								<input type="text" name="timeskew" value="<?php echo Display::escHtml($feed_timeskew); ?>" class="input-long"/>
-							</p>
-						</td>
-					</tr>
-					<tr>
-						<td>Feed Status</p></td>
-						<td>
-							<p>
-								<input type='radio' name='status' id='status_active' value='active' <?php if (empty($feed_status) || 'active' == $feed_status) { ?>checked='checked'<?php } ?>/> Active (Visible)<br/>
-								<input type='radio' name='status' id='status_hidden' value='hidden' <?php if ('hidden' == $feed_status) { ?>checked='checked'<?php } ?>/> Active (Hidden)<br/>
-								<input type='radio' name='status' id='status_retired' value='retired' <?php if ('retired' == $feed_status) { ?>checked='checked'<?php } ?>/> Retired
-							</p>
-						</td>
-					</tr>
-				</table>
-				<input type="hidden" name="a" value="manageFeed"/>
-				<input type="hidden" name="action" value="<?php echo $mode; ?>"/>
-			</form>
+                            </p>
+                            <p><strong>To disable notifications from being sent, set the lead count to zero or uncheck
+                                    all day boxes.</strong></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Pause Message</p></td>
+                        <td>
+                            <p>If the feed is paused, send this rejection message to the vendor. If nothing is set here,
+                                the default message is "Lead rejected".</p>
+                            <p>
+                                <input type="text" name="pauseMessage"
+                                       value="<?php echo Display::escHtml($feed_pauseMessage); ?>" class="input-long"/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Time Skew</p></td>
+                        <td>
+                            <p>If inbound timestamps on the feed should be manipulated before being saved to the DB,
+                                enter the amount of the skew below. This feature is not normally used. Examples: "-14
+                                days", "+5 hours", etc. Use the timezone feature to adjust for timezones.</p>
+                            <p>
+                                <input type="text" name="timeskew"
+                                       value="<?php echo Display::escHtml($feed_timeskew); ?>" class="input-long"/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Feed Status</p></td>
+                        <td>
+                            <p>
+                                <input type='radio' name='status' id='status_active' value='active'
+                                       <?php if (empty($feed_status) || 'active' == $feed_status) { ?>checked='checked'<?php } ?>/>
+                                Active (Visible)<br/>
+                                <input type='radio' name='status' id='status_hidden' value='hidden'
+                                       <?php if ('hidden' == $feed_status) { ?>checked='checked'<?php } ?>/> Active
+                                (Hidden)<br/>
+                                <input type='radio' name='status' id='status_retired' value='retired'
+                                       <?php if ('retired' == $feed_status) { ?>checked='checked'<?php } ?>/> Retired
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                <input type="hidden" name="a" value="manageFeed"/>
+                <input type="hidden" name="action" value="<?php echo $mode; ?>"/>
+            </form>
             <?php
             break;
 
@@ -1160,11 +1321,11 @@ if (isset($_REQUEST['d'])) {
 
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch feed information.</p>
+                <p>Database failure - could not fetch feed information.</p>
                 <?php
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Error fetching feed information - feed does not exist.</p>
+                <p>Error fetching feed information - feed does not exist.</p>
                 <?php
             } else {
 
@@ -1172,83 +1333,92 @@ if (isset($_REQUEST['d'])) {
 
                 ?>
 
-				<script type="text/template" id="qq-template">
-					<div class="qq-uploader-selector qq-uploader" qq-drop-area-text="Drop file here">
-						<div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">
-							<div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-total-progress-bar-selector qq-progress-bar qq-total-progress-bar"></div>
-						</div>
-						<div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
-							<span class="qq-upload-drop-area-text-selector"></span>
-						</div>
-						<div class="qq-upload-button-selector qq-upload-button">
-							<div>Upload a file</div>
-						</div>
-						<span class="qq-drop-processing-selector qq-drop-processing">
+                <script type="text/template" id="qq-template">
+                    <div class="qq-uploader-selector qq-uploader" qq-drop-area-text="Drop file here">
+                        <div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">
+                            <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                                 class="qq-total-progress-bar-selector qq-progress-bar qq-total-progress-bar"></div>
+                        </div>
+                        <div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
+                            <span class="qq-upload-drop-area-text-selector"></span>
+                        </div>
+                        <div class="qq-upload-button-selector qq-upload-button">
+                            <div>Upload a file</div>
+                        </div>
+                        <span class="qq-drop-processing-selector qq-drop-processing">
                     <span>Processing dropped file...</span>
                     <span class="qq-drop-processing-spinner-selector qq-drop-processing-spinner"></span>
                 </span>
-						<ul class="qq-upload-list-selector qq-upload-list" aria-live="polite" aria-relevant="additions removals">
-							<li>
-								<div class="qq-progress-bar-container-selector">
-									<div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" class="qq-progress-bar-selector qq-progress-bar"></div>
-								</div>
-								<span class="qq-upload-spinner-selector qq-upload-spinner"></span>
-								<img class="qq-thumbnail-selector" qq-max-size="100" qq-server-scale>
-								<span class="qq-upload-file-selector qq-upload-file"></span>
-								<span class="qq-upload-size-selector qq-upload-size"></span>
-								<button type="button" class="qq-btn qq-upload-cancel-selector qq-upload-cancel">Cancel</button>
-								<button type="button" class="qq-btn qq-upload-retry-selector qq-upload-retry">Retry</button>
-								<button type="button" class="qq-btn qq-upload-delete-selector qq-upload-delete">Delete</button>
-								<span role="status" class="qq-upload-status-text-selector qq-upload-status-text"></span>
-							</li>
-						</ul>
+                        <ul class="qq-upload-list-selector qq-upload-list" aria-live="polite"
+                            aria-relevant="additions removals">
+                            <li>
+                                <div class="qq-progress-bar-container-selector">
+                                    <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                                         class="qq-progress-bar-selector qq-progress-bar"></div>
+                                </div>
+                                <span class="qq-upload-spinner-selector qq-upload-spinner"></span>
+                                <img class="qq-thumbnail-selector" qq-max-size="100" qq-server-scale>
+                                <span class="qq-upload-file-selector qq-upload-file"></span>
+                                <span class="qq-upload-size-selector qq-upload-size"></span>
+                                <button type="button" class="qq-btn qq-upload-cancel-selector qq-upload-cancel">Cancel
+                                </button>
+                                <button type="button" class="qq-btn qq-upload-retry-selector qq-upload-retry">Retry
+                                </button>
+                                <button type="button" class="qq-btn qq-upload-delete-selector qq-upload-delete">Delete
+                                </button>
+                                <span role="status" class="qq-upload-status-text-selector qq-upload-status-text"></span>
+                            </li>
+                        </ul>
 
-						<dialog class="qq-alert-dialog-selector">
-							<div class="qq-dialog-message-selector"></div>
-							<div class="qq-dialog-buttons">
-								<button type="button" class="qq-cancel-button-selector">Close</button>
-							</div>
-						</dialog>
+                        <dialog class="qq-alert-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">Close</button>
+                            </div>
+                        </dialog>
 
-						<dialog class="qq-confirm-dialog-selector">
-							<div class="qq-dialog-message-selector"></div>
-							<div class="qq-dialog-buttons">
-								<button type="button" class="qq-cancel-button-selector">No</button>
-								<button type="button" class="qq-ok-button-selector">Yes</button>
-							</div>
-						</dialog>
+                        <dialog class="qq-confirm-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">No</button>
+                                <button type="button" class="qq-ok-button-selector">Yes</button>
+                            </div>
+                        </dialog>
 
-						<dialog class="qq-prompt-dialog-selector">
-							<div class="qq-dialog-message-selector"></div>
-							<input type="text">
-							<div class="qq-dialog-buttons">
-								<button type="button" class="qq-cancel-button-selector">Cancel</button>
-								<button type="button" class="qq-ok-button-selector">Ok</button>
-							</div>
-						</dialog>
-					</div>
-				</script>
-				<p><strong>Company:</strong> <?php echo htmlentities($company->name); ?></p>
-				<p><strong>Feed:</strong> <?php echo htmlentities($feed->label); ?> (#<?php echo $feed->idFeedIn; ?>)</p>
+                        <dialog class="qq-prompt-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <input type="text">
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">Cancel</button>
+                                <button type="button" class="qq-ok-button-selector">Ok</button>
+                            </div>
+                        </dialog>
+                    </div>
+                </script>
+                <p><strong>Company:</strong> <?php echo htmlentities($company->name); ?></p>
+                <p><strong>Feed:</strong> <?php echo htmlentities($feed->label); ?> (#<?php echo $feed->idFeedIn; ?>)
+                </p>
 
-				<form enctype="multipart/form-data" id="form-import" action="mgr_import.php" method="post" target="_blank">
-					<input type="hidden" name="destination" value="<?php echo intval($idFeedIn); ?>"/>
-					<input type="hidden" name="type" value="feedinc"/>
-					<input type="hidden" name="a" value="Upload"/>
-					<input type="hidden" name="filename" value=""/>
-					<input type="hidden" name="uuid" value=""/>
+                <form enctype="multipart/form-data" id="form-import" action="mgr_import.php" method="post"
+                      target="_blank">
+                    <input type="hidden" name="destination" value="<?php echo intval($idFeedIn); ?>"/>
+                    <input type="hidden" name="type" value="feedinc"/>
+                    <input type="hidden" name="a" value="Upload"/>
+                    <input type="hidden" name="filename" value=""/>
+                    <input type="hidden" name="uuid" value=""/>
 
-					<table class="table table-bordered table-condensed table-striped">
-						<tr>
-							<td>File</p></td>
-							<td>
-								<p>Please select the file to upload from your computer. File must be in CSV format.</p>
-								<div id="import-uploader"></div>
-							</td>
-						</tr>
-						<tr>
-							<td>Field mapping</p></td>
-							<td>
+                    <table class="table table-bordered table-condensed table-striped">
+                        <tr>
+                            <td>File</p></td>
+                            <td>
+                                <p>Please select the file to upload from your computer. File may be in CSV or Excel
+                                    format.</p>
+                                <div id="import-uploader"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Field mapping</p></td>
+                            <td>
                                 <?php
                                 $allowedFields = explode(";", $feed->allowedFields);
                                 $requiredFields = explode(";", $feed->required);
@@ -1275,14 +1445,18 @@ if (isset($_REQUEST['d'])) {
                                 }
 
                                 ?>
-							</td>
-						</tr>
-						<tr>
-							<td>Queue Split</p></td>
-							<td>
-								<p>If you want this upload to be split and siphoned out over the course of X days, enter the number of days below. For normal uploads, you'll leave this blank. <strong>NOTE: The original lead timestamps will be altered when using this option.</strong></p>
-								<p><input type="number" name="splitDelay" min="0" value=""/></p>
-								<p>In order for this feature to work propertly, the outbound feeds accepting this data must be setup with a feed delay of 1 minute or greater.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Queue Split</p></td>
+                            <td>
+                                <p>If you want this upload to be split and siphoned out over the course of X days, enter
+                                    the number of days below. For normal uploads, you'll leave this blank. <strong>NOTE:
+                                        The original lead timestamps will be altered when using this option.</strong>
+                                </p>
+                                <p><input type="number" name="splitDelay" min="0" value=""/></p>
+                                <p>In order for this feature to work propertly, the outbound feeds accepting this data
+                                    must be setup with a feed delay of 1 minute or greater.
                                     <?php
                                     $feeds = $leads->getInboundPopulationSettings($idFeedIn, true);
                                     if (empty($feeds)) {
@@ -1300,57 +1474,57 @@ if (isset($_REQUEST['d'])) {
                                         print '</ul>';
                                     }
                                     ?>
-							</td>
-						</tr>
-					</table>
-				</form>
-				<script>
-					var importUploader = new qq.FineUploader({
-						callbacks: {
-							onComplete: function (id, name, responseJSON) {
-								if (responseJSON.success) {
-									$("#form-import input[name='filename']").val(importUploader.getName(id));
-									$("#form-import input[name='uuid']").val(importUploader.getUuid(id));
-								}
-							},
-						},
-						chunking: {
-							concurrent: {
-								enabled: true
-							},
-							enabled: true,
-							success: {
-								endpoint: '/leadadmin/ajax/fileUpload.php?done=1'
-							}
-						},
-						debug: <?php print ('development' === APPLICATION_ENV ? "true" : "false"); ?>,
-						element: document.getElementById("import-uploader"),
-						failedUploadTextDisplay: {
-							mode: 'custom'
-						},
-						multiple: false,
-						request: {
-							endpoint: '/leadadmin/ajax/fileUpload.php',
-							params: {
-								'type': 'feedinc',
-							},
-						},
-						retry: {
-							enableAuto: true
-						},
-						template: 'qq-template',
-						thumbnails: {
-							placeholders: {
-								waitingPath: '/leadadmin/libraries/fine-uploader/placeholders/waiting-generic.png',
-								notAvailablePath: '/leadadmin/libraries/fine-uploader/placeholders/not_available-generic.png'
-							}
-						},
-						validation: {
-							allowedExtensions: ['csv', 'txt', 'xlsx', 'xls'],
-							itemLimit: 1
-						}
-					});
-				</script>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+                <script>
+                    var importUploader = new qq.FineUploader({
+                        callbacks: {
+                            onComplete: function (id, name, responseJSON) {
+                                if (responseJSON.success) {
+                                    $("#form-import input[name='filename']").val(importUploader.getName(id));
+                                    $("#form-import input[name='uuid']").val(importUploader.getUuid(id));
+                                }
+                            },
+                        },
+                        chunking: {
+                            concurrent: {
+                                enabled: true
+                            },
+                            enabled: true,
+                            success: {
+                                endpoint: '/leadadmin/ajax/fileUpload.php?done=1'
+                            }
+                        },
+                        debug: <?php print ('development' === APPLICATION_ENV ? "true" : "false"); ?>,
+                        element: document.getElementById("import-uploader"),
+                        failedUploadTextDisplay: {
+                            mode: 'custom'
+                        },
+                        multiple: false,
+                        request: {
+                            endpoint: '/leadadmin/ajax/fileUpload.php',
+                            params: {
+                                'type': 'feedinc',
+                            },
+                        },
+                        retry: {
+                            enableAuto: true
+                        },
+                        template: 'qq-template',
+                        thumbnails: {
+                            placeholders: {
+                                waitingPath: '/leadadmin/libraries/fine-uploader/placeholders/waiting-generic.png',
+                                notAvailablePath: '/leadadmin/libraries/fine-uploader/placeholders/not_available-generic.png'
+                            }
+                        },
+                        validation: {
+                            allowedExtensions: ['csv', 'txt', 'xlsx', 'xls'],
+                            itemLimit: 1
+                        }
+                    });
+                </script>
                 <?php
             }
             break;
@@ -1376,102 +1550,119 @@ if (isset($_REQUEST['d'])) {
             <?php
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch feed information.</p>
+                <p>Database failure - could not fetch feed information.</p>
                 <?php
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Error fetching feed information - feed does not exist.</p>
+                <p>Error fetching feed information - feed does not exist.</p>
                 <?php
             } else {
                 ?>
-				<p>Exporting Data from Feed (ID:<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
-				<form id="form-export">
-					<input type="hidden" name="idFeedIn" value="<?php echo $feed->idFeedIn; ?>"/>
-					<input type="hidden" name="a" value="exportData"/>
-					<input type="hidden" name="label" value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>
-					<table class="table table-bordered table-condensed table-striped">
-						<tr>
-							<td colspan='2'><p class='aCenter'>Export Settings</p></td>
-						</tr>
-						<tr>
-							<td>
-								Columns
-							</td>
-							<td>
-                                <button type="button" class="btn btn-primary" id="exp-check-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Check All</button>
-                                <button type="button" class="btn btn-primary" id="exp-uncheck-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All</button>
+                <p>Exporting Data from Feed (ID:<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
+                <form id="form-export">
+                    <input type="hidden" name="idFeedIn" value="<?php echo $feed->idFeedIn; ?>"/>
+                    <input type="hidden" name="a" value="exportData"/>
+                    <input type="hidden" name="label"
+                           value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>
+                    <table class="table table-bordered table-condensed table-striped">
+                        <tr>
+                            <td colspan='2'><p class='aCenter'>Export Settings</p></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Columns
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary" id="exp-check-all"
+                                        style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Check All
+                                </button>
+                                <button type="button" class="btn btn-primary" id="exp-uncheck-all"
+                                        style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All
+                                </button>
                                 <br>
                                 <?php foreach ($recordFields as $f) { ?>
-									<input class="export-check" type='checkbox' name='columns[]' value='<?php echo $f; ?>'/> <?php echo $f; ?>
+                                    <input class="export-check" type='checkbox' name='columns[]'
+                                           value='<?php echo $f; ?>'/> <?php echo $f; ?>
                                 <?php } ?>
-							</td>
-						</tr>
+                            </td>
+                        </tr>
                         <script>
-                        $('#exp-check-all').click(function(){
-                            $('.export-check').prop('checked', true);
-                        });
-                        $('#exp-uncheck-all').click(function(){
-                            $('.export-check').prop('checked', false);
-                        });
+                            $('#exp-check-all').click(function () {
+                                $('.export-check').prop('checked', true);
+                            });
+                            $('#exp-uncheck-all').click(function () {
+                                $('.export-check').prop('checked', false);
+                            });
                         </script>
-						<tr>
-							<td>
-								Period
-							</td>
-							<td>
-								<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
-								<p><input type='text' name='dateStart' class='dateSelector' value='<?php echo date("Y-m-d"); ?>'/>
-									to <input type='text' name='dateEnd' class='dateSelector' value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'/></p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								URLs
-							</td>
-							<td>
-								<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
-								<p><a href='#' class='nonLink' onclick='element("export_<?php echo $idFeedIn; ?>_urls", "urlField", {"idFeedIn": <?php echo $idFeedIn; ?>} );'>Add URL</a></p>
-								<div>
-									<div id='export_<?php echo $idFeedIn; ?>_urls'>
-									</div>
-								</div>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								Email domains
-							</td>
-							<td>
-								<p>Email domains to limit the selection by. Leave blank to select all records regardless of email address. Do not include the @ symbol.</p>
-								<p><a href='#' class='nonLink' onclick='element("export_<?php echo $idFeedIn; ?>_emails", "emailField", {"idFeedIn": <?php echo $idFeedIn; ?>} );'>Add email domain</a></p>
-								<div>
-									<div id='export_<?php echo $idFeedIn; ?>_emails'>
-									</div>
-								</div>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								Limit</p>
-							</td>
-							<td>
-								<p>Set a limit on the number of records that are returned. Leave blank to return ALL records.</p>
-								<p><input type="text" name="limit" value=""/></p>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<td>
-								Rejects</p>
-							</td>
-							<td>
-								<p><input type="checkbox" name="includeRejects" value="1"/> Include rejected records in the export.</p>
-							</td>
-						</tr>
-					</table>
-				</form>
+                        <tr>
+                            <td>
+                                Period
+                            </td>
+                            <td>
+                                <p>Period goes from midnight of the first date to midnight of the second date. Leave
+                                    blank to select from all time records. (This could take a long time.)</p>
+                                <p><input type='text' name='dateStart' class='dateSelector'
+                                          value='<?php echo date("Y-m-d"); ?>'/>
+                                    to <input type='text' name='dateEnd' class='dateSelector'
+                                              value='<?php echo date("Y-m-d", strtotime('Tomorrow')); ?>'/></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                URLs
+                            </td>
+                            <td>
+                                <p>URLs to limit the selection by. Leave blank to select all records regardless of
+                                    URL.</p>
+                                <p><a href='#' class='nonLink'
+                                      onclick='element("export_<?php echo $idFeedIn; ?>_urls", "urlField", {"idFeedIn": <?php echo $idFeedIn; ?>} );'>Add
+                                        URL</a></p>
+                                <div>
+                                    <div id='export_<?php echo $idFeedIn; ?>_urls'>
+                                    </div>
+                                </div>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Email domains
+                            </td>
+                            <td>
+                                <p>Email domains to limit the selection by. Leave blank to select all records regardless
+                                    of email address. Do not include the @ symbol.</p>
+                                <p><a href='#' class='nonLink'
+                                      onclick='element("export_<?php echo $idFeedIn; ?>_emails", "emailField", {"idFeedIn": <?php echo $idFeedIn; ?>} );'>Add
+                                        email domain</a></p>
+                                <div>
+                                    <div id='export_<?php echo $idFeedIn; ?>_emails'>
+                                    </div>
+                                </div>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Limit</p>
+                            </td>
+                            <td>
+                                <p>Set a limit on the number of records that are returned. Leave blank to return ALL
+                                    records.</p>
+                                <p><input type="text" name="limit" value=""/></p>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Rejects</p>
+                            </td>
+                            <td>
+                                <p><input type="checkbox" name="includeRejects" value="1"/> Include rejected records in
+                                    the export.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
                 <?php
             }
             break;
@@ -1494,7 +1685,8 @@ if (isset($_REQUEST['d'])) {
             }
 
             $_REQUEST['dateStart'] = !empty($_REQUEST['dateStart']) ? $_REQUEST['dateStart'] : date("Y-m-d");
-            $_REQUEST['dateEnd'] = !empty($_REQUEST['dateEnd']) ? $_REQUEST['dateEnd'] : date("Y-m-d", strtotime('Tomorrow'));
+            $_REQUEST['dateEnd'] = !empty($_REQUEST['dateEnd']) ? $_REQUEST['dateEnd'] : date("Y-m-d",
+                strtotime('Tomorrow'));
             $_REQUEST['urlList'] = !empty($_REQUEST['urlList']) && is_array($_REQUEST['urlList']) ? $_REQUEST['urlList'] : array();
             $_REQUEST['breakdown'] = !empty($_REQUEST['breakdown']) ? $_REQUEST['breakdown'] : 'day';
             $_REQUEST['sort'] = !empty($_REQUEST['sort']) ? $_REQUEST['sort'] : 'date';
@@ -1505,50 +1697,58 @@ if (isset($_REQUEST['d'])) {
             <?php
             if ($feed === false) {
                 ?>
-				<p>Database failure - could not fetch feed information.</p>
+                <p>Database failure - could not fetch feed information.</p>
                 <?php
             } elseif (!is_object($feed) && $feed == 0) {
                 ?>
-				<p>Error fetching feed information - feed does not exist.</p>
+                <p>Error fetching feed information - feed does not exist.</p>
                 <?php
             } else {
                 ?>
-				<p>Feed ID: <strong><?php echo $feed->idFeedIn; ?></strong><br/>Feed Label: <strong><?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?></strong></p>
+                <p>Feed ID: <strong><?php echo $feed->idFeedIn; ?></strong><br/>Feed Label:
+                    <strong><?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?></strong></p>
 
-				<form id="form-urlreport" class="form-inlin1e">
-					<input type="hidden" name="idFeedIn" value="<?php echo $feed->idFeedIn; ?>"/>
-					<input type="hidden" name="d" value="dialog_urlreport"/>
-					<input type="hidden" name="submit" value="submit"/>
+                <form id="form-urlreport" class="form-inlin1e">
+                    <input type="hidden" name="idFeedIn" value="<?php echo $feed->idFeedIn; ?>"/>
+                    <input type="hidden" name="d" value="dialog_urlreport"/>
+                    <input type="hidden" name="submit" value="submit"/>
 
-					<p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select from all time records. (This could take a long time.)</p>
-					<div class="form-group">
-						<label for="dateStart">Start Date:</label>
-						<input type="text" id="dateStart" name="dateStart" class="form-control dateSelector" value="<?php echo htmlspecialchars($_REQUEST['dateStart'], ENT_QUOTES); ?>"/>
-					</div>
+                    <p>Period goes from midnight of the first date to midnight of the second date. Leave blank to select
+                        from all time records. (This could take a long time.)</p>
+                    <div class="form-group">
+                        <label for="dateStart">Start Date:</label>
+                        <input type="text" id="dateStart" name="dateStart" class="form-control dateSelector"
+                               value="<?php echo htmlspecialchars($_REQUEST['dateStart'], ENT_QUOTES); ?>"/>
+                    </div>
 
-					<div class="form-group">
-						<label for="dateEnd">End Date:</label>
-						<input type="text" id="dateEnd" name="dateEnd" class="form-control dateSelector" value="<?php echo htmlspecialchars($_REQUEST['dateEnd'], ENT_QUOTES); ?>"/>
-					</div>
+                    <div class="form-group">
+                        <label for="dateEnd">End Date:</label>
+                        <input type="text" id="dateEnd" name="dateEnd" class="form-control dateSelector"
+                               value="<?php echo htmlspecialchars($_REQUEST['dateEnd'], ENT_QUOTES); ?>"/>
+                    </div>
 
-					<p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
-					<div class="form-group">
-						<label for="urls">URLs:</label>
+                    <p>URLs to limit the selection by. Leave blank to select all records regardless of URL.</p>
+                    <div class="form-group">
+                        <label for="urls">URLs:</label>
                         <?php
                         $urls = $leads->getInboundURLDates($idFeedIn);
                         if ($urls && is_array($urls)) {
-                            printf("<select class=\"form-control\" id=\"urls\" multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n", sizeOf($urls));
+                            printf("<select class=\"form-control\" id=\"urls\" multiple=\"multiple\" name=\"urlList[]\" size=\"%d\">\n",
+                                sizeOf($urls));
                             foreach ($urls as $url) {
-                                printf("<option value=\"%s\"%s>%s (%s)</option>\n", htmlspecialchars($url['url'], ENT_QUOTES), in_array($url['url'], $_REQUEST['urlList']) ? ' selected="selected"' : '', htmlspecialchars($url['url']), $url['date']);
+                                printf("<option value=\"%s\"%s>%s (%s)</option>\n",
+                                    htmlspecialchars($url['url'], ENT_QUOTES),
+                                    in_array($url['url'], $_REQUEST['urlList']) ? ' selected="selected"' : '',
+                                    htmlspecialchars($url['url']), $url['date']);
                             }
                             print "</select>\n";
                         }
                         ?>
-					</div>
+                    </div>
 
-					<div class="form-group">
-						<label for="breakdown">Count By:</label>
-						<select class="form-control" id="breakdown" name="breakdown">
+                    <div class="form-group">
+                        <label for="breakdown">Count By:</label>
+                        <select class="form-control" id="breakdown" name="breakdown">
                             <?php
                             $choices = array(
                                 'day' => 'Day',
@@ -1564,12 +1764,12 @@ if (isset($_REQUEST['d'])) {
                                 );
                             }
                             ?>
-						</select>
-					</div>
+                        </select>
+                    </div>
 
-					<div class="form-group">
-						<label for="id">Sort By:</label>
-						<select class="form-control" id="sort" name="sort">
+                    <div class="form-group">
+                        <label for="id">Sort By:</label>
+                        <select class="form-control" id="sort" name="sort">
                             <?php
                             $choices = array(
                                 'date' => 'Date',
@@ -1584,12 +1784,12 @@ if (isset($_REQUEST['d'])) {
                                 );
                             }
                             ?>
-						</select>
-					</div>
+                        </select>
+                    </div>
 
-					<div class="form-group">
-						<label for="id">Group By:</label>
-						<select class="form-control" id="group" name="group">
+                    <div class="form-group">
+                        <label for="id">Group By:</label>
+                        <select class="form-control" id="group" name="group">
                             <?php
                             $choices = array(
                                 'date' => 'Date',
@@ -1603,19 +1803,21 @@ if (isset($_REQUEST['d'])) {
                                 );
                             }
                             ?>
-						</select>
-					</div>
+                        </select>
+                    </div>
 
-				</form>
+                </form>
                 <?php
 
                 if (!empty($_REQUEST['submit'])) {
 
-                    $stats = $leads->getInboundURLStatsReport($_REQUEST['idFeedIn'], $_REQUEST['urlList'], $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'], $_REQUEST['group']);
+                    $stats = $leads->getInboundURLStatsReport($_REQUEST['idFeedIn'], $_REQUEST['urlList'],
+                        $_REQUEST['breakdown'], $_REQUEST['dateStart'], $_REQUEST['dateEnd'], $_REQUEST['sort'],
+                        $_REQUEST['group']);
 
                     if (empty($stats)) {
                         ?>
-						<p>No records found.</p>
+                        <p>No records found.</p>
                         <?php
                     } else {
 
@@ -1624,7 +1826,7 @@ if (isset($_REQUEST['d'])) {
                         $file = fopen($filePath, "w");
                         if (!file_exists($filePath)) {
                             ?>
-							<p>Failed to create CSV report file.</p>
+                            <p>Failed to create CSV report file.</p>
                             <?php
                         } else {
                             $accepted = 0;
@@ -1643,14 +1845,16 @@ if (isset($_REQUEST['d'])) {
                             print "\t<tr>\n";
                             foreach ($stats as $stat) {
                                 print "\t<tr>\n";
-                                printf("\t\t<td>%s</td>\n", htmlspecialchars('date' == $_REQUEST['group'] ? 'N/A' : $stat['url']));
+                                printf("\t\t<td>%s</td>\n",
+                                    htmlspecialchars('date' == $_REQUEST['group'] ? 'N/A' : $stat['url']));
                                 printf("\t\t<td>%s</td>\n", htmlspecialchars($stat['date']));
                                 printf("\t\t<td>%s</td>\n", number_format($stat['accepted'], 0));
                                 printf("\t\t<td>%s</td>\n", number_format($stat['rejected'], 0));
                                 print "\t</tr>\n";
                                 $accepted += $stat['accepted'];
                                 $rejected += $stat['rejected'];
-                                fputcsv($file, array($stat['url'], $stat['date'], $stat['accepted'], $stat['rejected']));
+                                fputcsv($file,
+                                    array($stat['url'], $stat['date'], $stat['accepted'], $stat['rejected']));
                             }
                             fclose($file);
                             print "\t<tr>\n";
@@ -1672,19 +1876,19 @@ if (isset($_REQUEST['d'])) {
         case 'urlField':
             $idFeedIn = $_REQUEST['options']['idFeedIn'];
             ?>
-			<div>
-				URL: <input type='text' name='urlList[]' value=''/>
-				<a href='#' class='nonLink' onclick='$(this).parent().remove();'>[X]</a>
-			</div>
+            <div>
+                URL: <input type='text' name='urlList[]' value=''/>
+                <a href='#' class='nonLink' onclick='$(this).parent().remove();'>[X]</a>
+            </div>
             <?php
             break;
         case 'emailField':
             $idFeedIn = $_REQUEST['options']['idFeedIn'];
             ?>
-			<div>
-				Email domain: <input type='text' name='emailList[]' value=''/> (do not include @ symbol)
-				<a href='#' class='nonLink' onclick='$(this).parent().remove();'>[X]</a>
-			</div>
+            <div>
+                Email domain: <input type='text' name='emailList[]' value=''/> (do not include @ symbol)
+                <a href='#' class='nonLink' onclick='$(this).parent().remove();'>[X]</a>
+            </div>
             <?php
             break;
         case 'dialog_listcodes':
@@ -1706,55 +1910,55 @@ if (isset($_REQUEST['d'])) {
 
             $feed = $leads->getInboundFeed($idFeedIn);
             ?>
-			<p>Generate New Listcode for (<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
-			<p>
-				Select an Option:
-				<select id='' name=''
-				        onchange="display('dialog_listcodeManager', {'sub': <?php echo $feed->idFeedIn; ?>, 'type': $(this).val() });"
-				>
-					<option value='0'>Choose:</option>
-					<option value='1'>Generate Listcode for Single Url</option>
-					<option value='2'>Generate Individual Listcodes for Multiple Urls</option>
-					<option value='3'>Generate Listcode for URL Group</option>
-					<option value='4'>Browse existing listcodes</option>
-				</select>
-			</p>
-			<div id='dialog_listcodeManager_<?php echo $feed->idFeedIn; ?>'>
-			</div>
+            <p>Generate New Listcode for (<?php echo $feed->idFeedIn; ?>) <?php echo $feed->label; ?></p>
+            <p>
+                Select an Option:
+                <select id='' name=''
+                        onchange="display('dialog_listcodeManager', {'sub': <?php echo $feed->idFeedIn; ?>, 'type': $(this).val() });"
+                >
+                    <option value='0'>Choose:</option>
+                    <option value='1'>Generate Listcode for Single Url</option>
+                    <option value='2'>Generate Individual Listcodes for Multiple Urls</option>
+                    <option value='3'>Generate Listcode for URL Group</option>
+                    <option value='4'>Browse existing listcodes</option>
+                </select>
+            </p>
+            <div id='dialog_listcodeManager_<?php echo $feed->idFeedIn; ?>'>
+            </div>
             <?php
             break;
         case 'dialog_listcodeManager':
             switch ($_REQUEST['options']['type']) {
                 case 0:
                     ?>
-					<p>Please choose an option.</p>
+                    <p>Please choose an option.</p>
                     <?php
                     break;
                 case 1:
                     ?>
-					<p>Individual URL Listcode</p>
-					<div>
-						<input type='text'
-						       name='<?php echo $e ?? ''; ?>popset_filterUrl[]'
-						       value='<?php echo $filterUrl; ?>'
-						/>
-						<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-					</div>
+                    <p>Individual URL Listcode</p>
+                    <div>
+                        <input type='text'
+                               name='<?php echo $e ?? ''; ?>popset_filterUrl[]'
+                               value='<?php echo $filterUrl; ?>'
+                        />
+                        <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+                    </div>
                     <?php
                     break;
                 case 2:
                     ?>
-					<p>Multiple Individual URL Listcodes</p>
+                    <p>Multiple Individual URL Listcodes</p>
                     <?php
                     break;
                 case 3:
                     ?>
-					<p>URL Group Listcode</p>
+                    <p>URL Group Listcode</p>
                     <?php
                     break;
                 case 4:
                     ?>
-					<p>Browse Listcodes</p>
+                    <p>Browse Listcodes</p>
                     <?php
                     break;
             }
@@ -1763,28 +1967,28 @@ if (isset($_REQUEST['d'])) {
             $e = $_REQUEST['options']['e'] ?? '';
             $t = $_REQUEST['options']['type'] ?? '';
             ?>
-			<div>
-				<input type='text'
-				       name='filter<?php echo $t; ?>[]'
-				       value='<?php if (isset($_REQUEST['options']['value'])) {
+            <div>
+                <input type='text'
+                       name='filter<?php echo $t; ?>[]'
+                       value='<?php if (isset($_REQUEST['options']['value'])) {
                            echo $_REQUEST['options']['value'];
                        } ?>'
-				/>
-				<a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-			</div>
+                />
+                <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+            </div>
             <?php
             break;
         case 'element_multifilter':
             $e = $_REQUEST['options']['e'] ?? '';
             $t = $_REQUEST['options']['type'] ?? '';
             ?>
-			<textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi'></textarea>
+            <textarea name='filter<?php echo $t; ?>Multi' id='filter<?php echo $t; ?>Multi'></textarea>
             <?php
             break;
 
         default:
             ?>
-			<p>Requested information doesn't exist.</p>
+            <p>Requested information doesn't exist.</p>
             <?php
             break;
     }
@@ -1800,34 +2004,36 @@ include(INCLUDES . "c_header.php");
 
 <div class="container-fluid">
 
-	<h2>Incoming Feeds</h2>
+    <h2>Incoming Feeds</h2>
 
     <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) { ?>
 
-		<form class="pull-right" id="status-select" method="get">
-			<select id="status" name="status">
-				<option value="active"<?php if ('active' === $status) {
+        <form class="pull-right" id="status-select" method="get">
+            <select id="status" name="status">
+                <option value="active"<?php if ('active' === $status) {
                     print ' selected="selected"';
                 } ?>>Show active feeds
-				</option>
-				<option value="hidden"<?php if ('hidden' === $status) {
+                </option>
+                <option value="hidden"<?php if ('hidden' === $status) {
                     print ' selected="selected"';
                 } ?>>Show hidden feeds
-				</option>
-				<option value="retired"<?php if ('retired' === $status) {
+                </option>
+                <option value="retired"<?php if ('retired' === $status) {
                     print ' selected="selected"';
                 } ?>>Show retired feeds
-				</option>
-				<option value=""<?php if (null === $status) {
+                </option>
+                <option value=""<?php if (null === $status) {
                     print ' selected="selected"';
                 } ?>>Show all feeds
-				</option>
-			</select>
-		</form>
+                </option>
+            </select>
+        </form>
 
-		<p>
-			<button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#newfeedinc">Add a new feed</button>
-		</p>
+        <p>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static"
+                    data-target="#newfeedinc">Add a new feed
+            </button>
+        </p>
 
     <?php } ?>
 
@@ -1850,11 +2056,11 @@ include(INCLUDES . "c_header.php");
         <?php
         if ($incomingFeeds === false) {
             ?>
-			<p>Error when trying to fetch feeds: database error.</p>
+            <p>Error when trying to fetch feeds: database error.</p>
             <?php
         } elseif ($incomingFeeds == 0) {
             ?>
-			<p>Error when trying to fetch feeds: there are no feeds.</p>
+            <p>Error when trying to fetch feeds: there are no feeds.</p>
             <?php
         } else {
             //Go through each and compile the company list.
@@ -1874,15 +2080,15 @@ include(INCLUDES . "c_header.php");
 
             uksort($companyFeedLists, 'companyListSort');
             ?>
-			<table class="table table-bordered table-condensed table-striped-custom">
-				<thead>
-				<tr class='bgGray'>
-					<th class="incoming-col-large" colspan="2">Company</th>
-					<th class="incoming-col-small text-right">Accepted</th>
-					<th class="incoming-col-small text-right">Rejected</th>
-					<th class="incoming-col-small">Actions</th>
-				</tr>
-				</thead>
+            <table class="table table-bordered table-condensed table-striped-custom">
+                <thead>
+                <tr class='bgGray'>
+                    <th class="incoming-col-large" colspan="2">Company</th>
+                    <th class="incoming-col-small text-right">Accepted</th>
+                    <th class="incoming-col-small text-right">Rejected</th>
+                    <th class="incoming-col-small">Actions</th>
+                </tr>
+                </thead>
                 <?php
                 $grandTotalFeeds = 0;
                 $grandTotalAccepted = 0;
@@ -1905,377 +2111,410 @@ include(INCLUDES . "c_header.php");
                     }
                     $grandTotalFeeds += count($companyFeedList);
                     ?>
-					<tr class="custom-master">
-						<td colspan="2"><?php echo $companyCache[$idCompany]->name; ?> (<?php echo count($companyFeedList); ?>)</td>
-						<td class="text-right"><?php echo number_format($totalAccepted, 0); ?></td>
-						<td class="text-right"><?php echo number_format($totalRejected, 0); ?></td>
-						<td class="text-center">
-							<button class="btn btn-primary btn-xs" type="button" data-toggle="collapse" data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false" aria-controls="collapseExample">Show Feeds</button>
-						</td>
-					</tr>
+                    <tr class="custom-master">
+                        <td colspan="2"><?php echo $companyCache[$idCompany]->name; ?>
+                            (<?php echo count($companyFeedList); ?>)
+                        </td>
+                        <td class="text-right"><?php echo number_format($totalAccepted, 0); ?></td>
+                        <td class="text-right"><?php echo number_format($totalRejected, 0); ?></td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-xs" type="button" data-toggle="collapse"
+                                    data-target=".feed-toggle-<?php echo $idCompany; ?>" aria-expanded="false"
+                                    aria-controls="collapseExample">Show Feeds
+                            </button>
+                        </td>
+                    </tr>
                     <?php
                     foreach ($companyFeedList as $feed) {
                         ?>
-						<tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
-							<td class="status-<?php print $feed->status; ?>"><?php echo $feed->idFeedIn; ?>: <?php echo $feed->label; ?> (<?php echo htmlentities($feed->description); ?>)</td>
-							<td>
-								<input class="paused-toggle" <?php if (empty($feed->paused)) {
+                        <tr class="collapse bg-gray feed-toggle feed-toggle-<?php echo $idCompany; ?>">
+                            <td class="status-<?php print $feed->status; ?>"><?php echo $feed->idFeedIn; ?>
+                                : <?php echo $feed->label; ?> (<?php echo htmlentities($feed->description); ?>)
+                            </td>
+                            <td>
+                                <input class="paused-toggle" <?php if (empty($feed->paused)) {
                                     print 'checked="checked" ';
-                                } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Enabled" data-onstyle="success" data-off="Paused" data-offstyle="danger" data-feed-id="<?php echo $feed->idFeedIn; ?>" type="checkbox"/></td>
-							</td>
-							<td class="text-right"><?php echo $feed->dailyCount; ?></td>
-							<td class="text-right"><a href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn); ?>&amp;label=<?php echo urlencode($feed->label); ?>" target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
-							<td class="text-center">
+                                } ?>data-toggle="toggle" data-size="mini" data-width="80" data-on="Enabled"
+                                       data-onstyle="success" data-off="Paused" data-offstyle="danger"
+                                       data-feed-id="<?php echo $feed->idFeedIn; ?>" type="checkbox"/></td>
+                            </td>
+                            <td class="text-right"><?php echo $feed->dailyCount; ?></td>
+                            <td class="text-right"><a
+                                        href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn); ?>&amp;label=<?php echo urlencode($feed->label); ?>"
+                                        target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
+                            <td class="text-center">
                                 <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) { ?>
-									<div class="btn-group">
-										<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editfeedinc" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Edit Feed</button>
-										<button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-											<span class="caret"></span>
-											<span class="sr-only">Toggle Dropdown</span>
-										</button>
-										<ul class="dropdown-menu">
-											<li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>" target="_blank">API Spec</a></li>
-											<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Import data</a></li>
-											<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Export data</a></li>
-											<li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">URL report</a></li>
-										</ul>
-									</div>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+                                                data-backdrop="static" data-target="#editfeedinc"
+                                                data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Edit Feed
+                                        </button>
+                                        <button type="button" class="btn btn-primary btn-xs dropdown-toggle"
+                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>"
+                                                   target="_blank">API Spec</a></li>
+                                            <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                                   data-target="#modal-import"
+                                                   data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Import
+                                                    data</a></li>
+                                            <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                                   data-target="#modal-export"
+                                                   data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Export
+                                                    data</a></li>
+                                            <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                                   data-target="#modal-urlreport"
+                                                   data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">URL
+                                                    report</a></li>
+                                        </ul>
+                                    </div>
                                 <?php } else { ?>
-									<button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Import data</button>
+                                    <button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
+                                            data-backdrop="static" data-target="#modal-import"
+                                            data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Import data
+                                    </button>
                                 <?php } ?>
-							</td>
-						</tr>
+                            </td>
+                        </tr>
                         <?php
                     }
                 }
                 ?>
-				<tfoot>
-				<tr>
-					<td colspan="2">GRAND TOTAL</td>
-					<td class="text-right"><?php echo number_format($grandTotalAccepted, 0); ?></td>
-					<td class="text-right"><?php echo number_format($grandTotalRejected, 0); ?></td>
-					<td></td>
-				</tr>
-				</tfoot>
-			</table>
+                <tfoot>
+                <tr>
+                    <td colspan="2">GRAND TOTAL</td>
+                    <td class="text-right"><?php echo number_format($grandTotalAccepted, 0); ?></td>
+                    <td class="text-right"><?php echo number_format($grandTotalRejected, 0); ?></td>
+                    <td></td>
+                </tr>
+                </tfoot>
+            </table>
         <?php } ?>
     <?php } ?>
 </div>
 
 <div class="modal fade" id="newfeedinc" tabindex="-1" role="dialog" aria-labelledby="newfeedinc_title">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="newfeedinc_title">Add a new incoming feed</h4>
-			</div>
-			<div class="modal-body">
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-newfeedinc" type="button" class="btn btn-primary">Add feed</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="newfeedinc_title">Add a new incoming feed</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-newfeedinc" type="button" class="btn btn-primary">Add feed</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="editfeedinc" tabindex="-1" role="dialog" aria-labelledby="editfeedinc_title">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="editfeedinc_title">Edit an incoming feed</h4>
-			</div>
-			<div class="modal-body"></div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-editfeedinc" type="button" class="btn btn-primary">Save changes</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="editfeedinc_title">Edit an incoming feed</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-editfeedinc" type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="modal-import" tabindex="-1" role="dialog" aria-labelledby="modal-import_title">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="modal-import_title">Import legacy data</h4>
-			</div>
-			<div class="modal-body"></div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-import" type="button" class="btn btn-primary">Import Data</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modal-import_title">Import legacy data</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-import" type="button" class="btn btn-primary">Import Data</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="modal-export" tabindex="-1" role="dialog" aria-labelledby="modal-export_title">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="modal-export_title">Export legacy data</h4>
-			</div>
-			<div class="modal-body"></div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-export" type="button" class="btn btn-primary">Export Data</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modal-export_title">Export legacy data</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-export" type="button" class="btn btn-primary">Export Data</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="modal-urlreport" tabindex="-1" role="dialog" aria-labelledby="modal-urlreport_title">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="modal-urlreport_title">URL Report</h4>
-			</div>
-			<div class="modal-body"></div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-				<button id="modal-save-urlreport" type="button" class="btn btn-primary">Run Report</button>
-			</div>
-		</div>
-	</div>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modal-urlreport_title">URL Report</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-urlreport" type="button" class="btn btn-primary">Run Report</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript">
-	$('#modal-save-newfeedinc').click(function (event) {
-		event.preventDefault();
+    $('#modal-save-newfeedinc').click(function (event) {
+        event.preventDefault();
 
-		var response = $.ajax({
-			url: "mgr_feedinc.php",
-			type: "POST",
-			async: true,
-			data: $("#new_feedinc").serialize()
-		}).done(function (result) {
-			if (result.status == 1) {
-				window.location.reload(true);
-			} else {
-				alert(result.error);
-			}
-		});
-	});
+        var response = $.ajax({
+            url: "mgr_feedinc.php",
+            type: "POST",
+            async: true,
+            data: $("#new_feedinc").serialize()
+        }).done(function (result) {
+            if (result.status == 1) {
+                window.location.reload(true);
+            } else {
+                alert(result.error);
+            }
+        });
+    });
 
-	$('#newfeedinc').on('show.bs.modal', function (e) {
-		var modal = $(this);
+    $('#newfeedinc').on('show.bs.modal', function (e) {
+        var modal = $(this);
 
-		$.ajax({
-			cache: false,
-			type: 'POST',
-			url: 'mgr_feedinc.php',
-			data: {
-				'd': 'dialog_newfeed'
-			},
-			success: function (data) {
-				modal.find('.modal-body').html(data);
-			}
-		});
-	});
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: 'mgr_feedinc.php',
+            data: {
+                'd': 'dialog_newfeed'
+            },
+            success: function (data) {
+                modal.find('.modal-body').html(data);
+            }
+        });
+    });
 
-	$('#newfeedinc').on('shown.bs.modal', function(e) {
-		$("#newfeedinc select[name='timezone']").select2();
-	});
+    $('#newfeedinc').on('shown.bs.modal', function (e) {
+        $("#newfeedinc select[name='timezone']").select2();
+    });
 
-	$('#modal-save-editfeedinc').click(function (event) {
-		event.preventDefault();
+    $('#modal-save-editfeedinc').click(function (event) {
+        event.preventDefault();
 
-		var response = $.ajax({
-			url: "mgr_feedinc.php",
-			type: "POST",
-			async: true,
-			data: $("#edit_feedinc").serialize()
-		}).done(function (result) {
-			if (result.status == 1) {
-				// window.location.reload(true);
-				$('#editfeedinc').modal('hide');
-			} else {
-				alert(result.error);
-			}
-		});
-	});
+        var response = $.ajax({
+            url: "mgr_feedinc.php",
+            type: "POST",
+            async: true,
+            data: $("#edit_feedinc").serialize()
+        }).done(function (result) {
+            if (result.status == 1) {
+                // window.location.reload(true);
+                $('#editfeedinc').modal('hide');
+            } else {
+                alert(result.error);
+            }
+        });
+    });
 
-	$('#editfeedinc').on('show.bs.modal', function (e) {
-		var modal = $(this);
-		var idFeedIn = $(e.relatedTarget).data('feedinc-id');
+    $('#editfeedinc').on('show.bs.modal', function (e) {
+        var modal = $(this);
+        var idFeedIn = $(e.relatedTarget).data('feedinc-id');
 
-		$.ajax({
-			cache: false,
-			type: 'POST',
-			url: 'mgr_feedinc.php',
-			data: {
-				'd': 'dialog_editfeed',
-				'idFeedIn': idFeedIn
-			},
-			success: function (data) {
-				modal.find('.modal-body').html(data);
-			}
-		});
-	});
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: 'mgr_feedinc.php',
+            data: {
+                'd': 'dialog_editfeed',
+                'idFeedIn': idFeedIn
+            },
+            success: function (data) {
+                modal.find('.modal-body').html(data);
+            }
+        });
+    });
 
-	$('#editfeedinc').on('shown.bs.modal', function(e) {
-		$("#editfeedinc select[name='timezone']").select2();
-	});
+    $('#editfeedinc').on('shown.bs.modal', function (e) {
+        $("#editfeedinc select[name='timezone']").select2();
+    });
 
-	$('#modal-import').on('show.bs.modal', function (e) {
-		var modal = $(this);
-		var idFeedIn = $(e.relatedTarget).data('feedinc-id');
+    $('#modal-import').on('show.bs.modal', function (e) {
+        var modal = $(this);
+        var idFeedIn = $(e.relatedTarget).data('feedinc-id');
 
-		$.ajax({
-			cache: false,
-			type: 'POST',
-			url: 'mgr_feedinc.php',
-			data: {
-				'd': 'dialog_import',
-				'idFeedIn': idFeedIn
-			},
-			success: function (data) {
-				modal.find('.modal-body').html(data);
-			}
-		});
-	});
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: 'mgr_feedinc.php',
+            data: {
+                'd': 'dialog_import',
+                'idFeedIn': idFeedIn
+            },
+            success: function (data) {
+                modal.find('.modal-body').html(data);
+            }
+        });
+    });
 
-	$('#modal-save-import').click(function (event) {
-		event.preventDefault();
-		if ($("#form-import select[name='field_url']").val() === '--') {
-			alert('Please select the URL column.');
-		} else if ($("#form-import select[name='field_ip']").val() === '--') {
-			alert('Please select the IP column.');
-		} else if ($("#form-import select[name='field_stamp']").val() === '--') {
-			alert('Please select the stamp column.');
-		} else if ($("#form-import select[name='field_email']").val() === '--') {
-			alert('Please select the email column.');
-		} else if (importUploader.getInProgress()) {
-			alert('Please wait until your file has finished uploading before submitting this job.');
-		} else if (importUploader.getNetUploads() === 0 || $("#form-import input[name='filename']").val() === '' || $("#form-import input[name='uuid']").val() === '') {
-			alert('Please upload a file.');
-		} else {
+    $('#modal-save-import').click(function (event) {
+        event.preventDefault();
+        if ($("#form-import select[name='field_url']").val() === '--') {
+            alert('Please select the URL column.');
+        } else if ($("#form-import select[name='field_ip']").val() === '--') {
+            alert('Please select the IP column.');
+        } else if ($("#form-import select[name='field_stamp']").val() === '--') {
+            alert('Please select the stamp column.');
+        } else if ($("#form-import select[name='field_email']").val() === '--') {
+            alert('Please select the email column.');
+        } else if (importUploader.getInProgress()) {
+            alert('Please wait until your file has finished uploading before submitting this job.');
+        } else if (importUploader.getNetUploads() === 0 || $("#form-import input[name='filename']").val() === '' || $("#form-import input[name='uuid']").val() === '') {
+            alert('Please upload a file.');
+        } else {
 
-			var modal = $(this);
+            var modal = $(this);
 
-			var response = $.ajax({
-				url: "/leadadmin/ajax/submitJob.php",
-				type: "POST",
-				async: true,
-				data: $("#form-import").serialize()
-			}).done(function (result) {
-				if (result.success === true) {
-					if (result.link) {
-						window.location = result.link;
-					}
-				} else {
-					alert("Error: " + (result.error || 'Unknown'));
-				}
-			});
+            var response = $.ajax({
+                url: "/leadadmin/ajax/submitJob.php",
+                type: "POST",
+                async: true,
+                data: $("#form-import").serialize()
+            }).done(function (result) {
+                if (result.success === true) {
+                    if (result.link) {
+                        window.location = result.link;
+                    }
+                } else {
+                    alert("Error: " + (result.error || 'Unknown'));
+                }
+            });
 
-			//$('#form-import').submit();
-		}
-	});
+            //$('#form-import').submit();
+        }
+    });
 
-	$('#modal-export').on('show.bs.modal', function (e) {
-		var modal = $(this);
-		var idFeedIn = $(e.relatedTarget).data('feedinc-id');
+    $('#modal-export').on('show.bs.modal', function (e) {
+        var modal = $(this);
+        var idFeedIn = $(e.relatedTarget).data('feedinc-id');
 
-		$.ajax({
-			cache: false,
-			type: 'POST',
-			url: 'mgr_feedinc.php',
-			data: {
-				'd': 'dialog_export',
-				'idFeedIn': idFeedIn
-			},
-			success: function (data) {
-				modal.find('.modal-body').html(data);
-			}
-		});
-	});
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: 'mgr_feedinc.php',
+            data: {
+                'd': 'dialog_export',
+                'idFeedIn': idFeedIn
+            },
+            success: function (data) {
+                modal.find('.modal-body').html(data);
+            }
+        });
+    });
 
-	$('#modal-save-export').click(function (event) {
-		event.preventDefault();
+    $('#modal-save-export').click(function (event) {
+        event.preventDefault();
 
-		var response = $.ajax({
-			url: "mgr_feedinc.php",
-			type: "POST",
-			async: true,
-			data: $("#form-export").serialize()
-		}).done(function (result) {
-			alert(result.error);
-			if (result.status == 1) {
-				// window.location.reload(true);
-				$('#modal-export').modal('hide');
-			}
-		});
-	});
+        var response = $.ajax({
+            url: "mgr_feedinc.php",
+            type: "POST",
+            async: true,
+            data: $("#form-export").serialize()
+        }).done(function (result) {
+            alert(result.error);
+            if (result.status == 1) {
+                // window.location.reload(true);
+                $('#modal-export').modal('hide');
+            }
+        });
+    });
 
-	$('#modal-urlreport').on('show.bs.modal', function (e) {
-		var modal = $(this);
-		var idFeedIn = $(e.relatedTarget).data('feedinc-id');
+    $('#modal-urlreport').on('show.bs.modal', function (e) {
+        var modal = $(this);
+        var idFeedIn = $(e.relatedTarget).data('feedinc-id');
 
-		$.ajax({
-			cache: false,
-			type: 'POST',
-			url: 'mgr_feedinc.php',
-			data: {
-				'd': 'dialog_urlreport',
-				'idFeedIn': idFeedIn
-			},
-			success: function (data) {
-				modal.find('.modal-body').html(data);
-			}
-		});
-	});
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: 'mgr_feedinc.php',
+            data: {
+                'd': 'dialog_urlreport',
+                'idFeedIn': idFeedIn
+            },
+            success: function (data) {
+                modal.find('.modal-body').html(data);
+            }
+        });
+    });
 
-	$('#modal-save-urlreport').click(function (event) {
-		event.preventDefault();
+    $('#modal-save-urlreport').click(function (event) {
+        event.preventDefault();
 
-		$.ajax({
-			cache: false,
-			type: 'POST',
-			url: 'mgr_feedinc.php',
-			data: $("#form-urlreport").serialize(),
-			success: function (data) {
-				$('#modal-urlreport').find('.modal-body').html(data);
-			}
-		});
-	});
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: 'mgr_feedinc.php',
+            data: $("#form-urlreport").serialize(),
+            success: function (data) {
+                $('#modal-urlreport').find('.modal-body').html(data);
+            }
+        });
+    });
 
-	$('#newfeedinc, #editfeedinc').on('hide.bs.modal', function (e) {
-		$(this).find('.modal-body').html('');
-	});
+    $('#newfeedinc, #editfeedinc').on('hide.bs.modal', function (e) {
+        $(this).find('.modal-body').html('');
+    });
 
-	$('#status-select select').change(function (e) {
-		e.preventDefault();
-		$('#status-select').submit();
-	});
+    $('#status-select select').change(function (e) {
+        e.preventDefault();
+        $('#status-select').submit();
+    });
 
-	$('.feed-toggle').on('show.bs.collapse', function () {
-		$(this).prev().find('button[data-toggle="collapse"]').html('Hide Feeds');
-	});
-	$('.feed-toggle').on('hide.bs.collapse', function () {
-		$(this).prev().find('button[data-toggle="collapse"]').html('Show Feeds');
-	});
+    $('.feed-toggle').on('show.bs.collapse', function () {
+        $(this).prev().find('button[data-toggle="collapse"]').html('Hide Feeds');
+    });
+    $('.feed-toggle').on('hide.bs.collapse', function () {
+        $(this).prev().find('button[data-toggle="collapse"]').html('Show Feeds');
+    });
 
-	$('.paused-toggle').bootstrapToggle();
+    $('.paused-toggle').bootstrapToggle();
 
-	$('.paused-toggle').change(function () {
-		var idFeedIn = $(this).data('feed-id');
+    $('.paused-toggle').change(function () {
+        var idFeedIn = $(this).data('feed-id');
 
-		$.ajax({
-			cache: false,
-			type: 'POST',
-			url: 'mgr_feedinc.php',
-			data: {
-				'a': 'managePaused',
-				'idFeedIn': idFeedIn,
-				'action': 'toggle',
-				'param': 'enabled'
-			}
-		});
-	});
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: 'mgr_feedinc.php',
+            data: {
+                'a': 'managePaused',
+                'idFeedIn': idFeedIn,
+                'action': 'toggle',
+                'param': 'enabled'
+            }
+        });
+    });
 </script>
 
 </body>

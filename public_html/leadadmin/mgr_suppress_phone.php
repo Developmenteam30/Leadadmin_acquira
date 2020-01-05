@@ -413,7 +413,7 @@ if (isset($_REQUEST['d'])) {
                     } else {
                         ?>
                         <p>Upload Suppression File</p>
-                        <p><strong>Suppression file must be saved in CSV format. Excel format will not work. There
+                        <p><strong>Suppression file may be saved in CSV or Excel format. There
                                 should only be one column in the spreadsheet and that column will contain the list of
                                 phone numbers to be added. Maximum file size
                                 is <?php echo(MAX_UPLOAD_SIZE / 1024000); ?>MB.</strong></p>

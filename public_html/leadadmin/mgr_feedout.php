@@ -2288,7 +2288,8 @@ if (isset($_REQUEST['d'])) {
                         <tr>
                             <td>File</p></td>
                             <td>
-                                <p>Please select the file to upload from your computer. File must be in CSV format.</p>
+                                <p>Please select the file to upload from your computer. File may be in CSV or Excel
+                                    format.</p>
                                 <div id="import-uploader"></div>
                             </td>
                         </tr>
@@ -2367,7 +2368,7 @@ if (isset($_REQUEST['d'])) {
                             }
                         },
                         validation: {
-							allowedExtensions: ['csv', 'txt', 'xlsx', 'xls'],
+                            allowedExtensions: ['csv', 'txt', 'xlsx', 'xls'],
                             itemLimit: 1
                         }
                     });
@@ -2830,7 +2831,8 @@ if (isset($_REQUEST['d'])) {
                             <div id="selectCategory">
                                 <p>Using a feed category population will cause ALL active incoming feeds from the
                                     selected category to populate this outgoing feed.</p>
-                                <p style="color: red; background: yellow; font-weight: bold;">If you using a feed category population, it is
+                                <p style="color: red; background: yellow; font-weight: bold;">If you using a feed
+                                    category population, it is
                                     HIGHLY recommended that you use the "Standard Queue" queue type.</p>
                                 <p>
                                     <input type="radio" name="feedCategory" value="email"
@@ -3152,7 +3154,8 @@ if (isset($_REQUEST['d'])) {
                                 Incoming records will be sent to this provider in REAL TIME as they come in. Do not use
                                 this option unless authorized. Most feeds have this option disabled.
                             </p>
-                            <p id="queueTypeWarning" style="color: red; background: yellow; font-weight: bold;">If you using a feed category population, it is
+                            <p id="queueTypeWarning" style="color: red; background: yellow; font-weight: bold;">If you
+                                using a feed category population, it is
                                 HIGHLY recommended that you use the "Standard Queue" queue type.</p>
                             <p>
                                 <input type="radio" name="queueType" id="queueType_livedata"

@@ -1,0 +1,51 @@
+<!DOCTYPE AdchemyLead SYSTEM 'http://www.ratemarketplace.com/xml/AdchemyMortgageDTDV11.dtd'>
+<AdchemyLead version="1.1">
+    <ref>WS02_276780688254_61629_2144</ref>
+    <IpAddress>70.199.135.87</IpAddress>
+    <PropertyInfo>
+        <PROP_PURP type="primary"/>
+        <PROP_STATE>WA</PROP_STATE>
+        <HOUSE_TYPE type="Single Family"/>
+    </PropertyInfo>
+    <LoanInfo>
+        <LoanPreferences>
+            <DESIRED_LOAN_TYPE type="Refinance"/>
+            <LOAN_VALUE>260000</LOAN_VALUE>
+            <LOAN_TYPE type="fixed"/>
+            <LOAN_PURP type="lower_payment"/>
+        </LoanPreferences>
+        <BorrowerInfo>
+            <CREDIT_STATUS status="Excellent"/>
+        </BorrowerInfo>
+        <LoanPropertyValues>
+            <HOUSE_VALUE>700000</HOUSE_VALUE>
+            <FIRST_MORTGAGE_BALANCE>260000</FIRST_MORTGAGE_BALANCE>
+            <CURRENT_INTEREST_RATE>4.75</CURRENT_INTEREST_RATE>
+            <ADDITIONAL_CASH_TO_BORROW>0</ADDITIONAL_CASH_TO_BORROW>
+            <LTV>37.0</LTV>
+        </LoanPropertyValues>
+    </LoanInfo>
+    <ContactInfo>
+        <ContactName>
+            <FIRSTNAME>R w</FIRSTNAME>
+            <LASTNAME>Lane</LASTNAME>
+        </ContactName>
+        <EMAIL>hawkilane@centurytel.net</EMAIL>
+        <Address>
+            <ADDRESS1>4205 127th st ct nw</ADDRESS1>
+            <CITY>Gig Harbor</CITY>
+            <STATE>WA</STATE>
+            <ZIP>98332</ZIP>
+        </Address>
+        <Phone>
+            <PHONE_DAY_AREA>253</PHONE_DAY_AREA>
+            <PHONE_DAY>2225350</PHONE_DAY>
+            <PHONE_EVENING_AREA>253</PHONE_EVENING_AREA>
+            <PHONE_EVENING>2225350</PHONE_EVENING>
+        </Phone>
+        <ContactPreferences>
+            <PREF_CALLTIME_PART1 time="null"/>
+            <PREF_CALLTIME_PART2 location="null"/>
+        </ContactPreferences>
+    </ContactInfo>
+</AdchemyLead>

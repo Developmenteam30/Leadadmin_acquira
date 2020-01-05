@@ -97,7 +97,7 @@ $uploader = new UploadHandler();
 switch ($_REQUEST['type']) {
 	case 'feedinc':
 	case 'upload-outbound':
-        $uploader->allowedExtensions = array('csv', 'txt');
+        $uploader->allowedExtensions = array('csv', 'txt', 'xls', 'xlsx');
         break;
 
     case 'insertion-order-add':
