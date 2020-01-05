@@ -63,7 +63,7 @@ define('DB_TIMEZONE', 'UTC');
 define('LOCAL_TIMEZONE', 'America/New_York');
 
 define('COMPANY_LEGAL_NAME', 'Qatalyst, Inc.');
-define('COMPANY_ADDRESS_1', '256 Scotland Street, Ste A');
+define('COMPANY_ADDRESS_1', '200 2nd Ave S #314');
 define('COMPANY_ADDRESS_2', 'St Petersburg, FL 33701');
 define('COMPANY_PHONE', '727-284-7886');
 define('MAX_PHONE_LEADS_VENDORS', 10);
