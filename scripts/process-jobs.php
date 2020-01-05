@@ -212,7 +212,7 @@ if ('clear-outbound-queue' === $job->type) {
     }
 
     $feedIn = $leads->getInboundFeed($job->destination);
-    $feedCompany = $feedIn->companyName;
+    $feedCompany = $leads->getCompany($feedIn->idCompany);
 
     $body = "Job Results\r\n";
     $body .= "\r\n";
