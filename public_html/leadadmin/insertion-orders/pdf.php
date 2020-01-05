@@ -1,5 +1,7 @@
 <?php
 
+use setasign\Fpdi\Fpdi;
+
 include("../../../includes/c_config.php");
 
 require_once(INCLUDES . 'session.php');
@@ -8,6 +10,8 @@ LeadsSession::requireAccess(LEADS_SESSION_LEVEL_STAFF);
 
 require_once(INCLUDES . 'leads.php');
 require_once(INCLUDES . 'fpdf181/fpdf.php');
+require_once(INCLUDES . 'FPDI-2.2.0/src/autoload.php');
+require_once(INCLUDES . 'FPDI_PDF-Parser-2.0.4/src/autoload.php');
 $leads = Leads::getInstance();
 
 require_once(INCLUDES . 'display.php');
@@ -85,12 +89,12 @@ define('LARGER_TEXT_SIZE', 18);
 define('REGULAR_TEXT_SIZE', 15);
 define('SMALLER_TEXT_SIZE', 12);
 
-$pdf = new FPDF('P', 'mm', 'Letter');
+$pdf = new Fpdi('P', 'mm', 'Letter');
 $pdf->SetAutoPageBreak(true);
 
 $pdf->AddPage();
 
-$pdf->Image(SITE_ROOT . '/public_html/leadadmin/images/logo.png', 83, null,50);
+$pdf->Image(SITE_ROOT . '/public_html/leadadmin/images/logo.png', 83, null, 50);
 
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 7, 'Lead Data', 0, 1, 'C');
@@ -221,16 +225,16 @@ $pdf->Cell(0, 7, 'Other Requirements / State Omits / Qualifications / Notes', 1,
 setDarkOnLight($pdf);
 $pdf->MultiCell(0, 7, $order->notes, 1, 'L');
 
-$files = Display::findFilesRecurse( FILES_DIR . 'insertion-orders' . DIRECTORY_SEPARATOR . $order->orderId );
+$files = Display::findFilesRecurse(FILES_DIR . 'insertion-orders' . DIRECTORY_SEPARATOR . $order->orderId);
 //var_dump($files);
 
-if(!empty($files)) {
+if (!empty($files)) {
     $pdf->Ln();
     setLightOnDark($pdf);
     $pdf->Cell(0, 7, 'File Attachments', 1, 1, 'L', 'true');
 
     foreach ($files as $file) {
-        $pdf->Image($file, null, null,196);
+        $pdf->Image($file, null, null, 196);
     }
 }
 
@@ -280,7 +284,7 @@ if (1 == $order->includeBankingInfo) {
 
     $pdf->AddPage();
 
-    $pdf->Image(SITE_ROOT . '/public_html/leadadmin/images/logo.png', 83, null,50);
+    $pdf->Image(SITE_ROOT . '/public_html/leadadmin/images/logo.png', 83, null, 50);
 
     $pdf->SetFont('Arial', 'B', 11);
     $pdf->Cell(0, 7, 'ACH/WIRE INSTRUCTIONS', 0, 1, 'C');
@@ -348,12 +352,20 @@ if (1 == $order->includeBankingInfo) {
 
 if (1 == $order->includeW9) {
 
-    $pdf->AddPage();
-
     if ('publisher' === $order->orderType) {
         // include w9 file
     } else {
-        // include blank w9
+        // get the page count
+        $pageCount = $pdf->setSourceFile(SITE_ROOT . '/public_html/assets/pdf/fw9.pdf');
+        // iterate through all pages
+        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+            // import a page
+            $templateId = $pdf->importPage($pageNo);
+
+            $pdf->AddPage();
+            // use the imported page and adjust the page size
+            $pdf->useTemplate($templateId, ['adjustPageSize' => true]);
+        }
     }
 
 }
