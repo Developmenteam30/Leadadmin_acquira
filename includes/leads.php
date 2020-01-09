@@ -5323,6 +5323,85 @@ class Leads
         }
     }
 
+    public function homeownerExportArchivedSpecial($phoneSuppression, $emailSuppression, $zips, $limit)
+    {
+        $params = array();
+
+        //$dateStart = new \DateTime('2014-06-01');
+        $dateStart = new \DateTime('2018-01-01');
+        //$dateEnd = new \DateTime();
+        $dateEnd = new DateTime('2020-01-08');
+
+        $file = fopen(ADMIN_ROOT . 'exports/homeowner_' . time() . '.csv', 'w');
+        if (!$file) {
+            print 'Unable to create CSV file.';
+        }
+
+        fputcsv($file, array(
+            'leadstamp',
+            'url',
+            'fname',
+            'lname',
+            'addr1',
+            'addr2',
+            'city',
+            'state',
+            'zip',
+            'country',
+            'email',
+            'landline',
+            'cellphone',
+        ));
+
+        $checkSql = $this->db->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)");
+
+        // Establish our baseline SQL that we'll change in the loop
+        $baseSql = "SELECT i.leadstamp,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.email,i.landline,i.cellphone ";
+        $baseSql .= "FROM data_inbound AS i ";
+        $baseSql .= "WHERE i.idFeedIn IN ( 236, 187, 174, 250, 249, 294, 253, 246, 173, 171 )";
+
+        try {
+            do {
+
+                // Check if the table actually exists first, since archive tables are not always created immediately.
+                $checkSql->execute(array('data_inbound_' . $dateStart->format('Ym')));
+                if ($checkSql && $checkSql->fetchColumn()) {
+
+                    $sql = str_replace("FROM data_inbound",
+                            "FROM archive." . $this->quoteIdentifier('data_inbound_' . $dateStart->format('Ym')),
+                            $baseSql) . " " . PHP_EOL;
+
+                    $this->unsetBufferedQuery();
+
+                    $query = $this->db->prepare($sql);
+                    $query->execute();
+                    while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
+                        if (in_array($row['zip'], $zips) && !in_array($row['email'], $emailSuppression) && !in_array($row['landline'], $phoneSuppression) && !in_array($row['cellphone'], $phoneSuppression)) {
+                            fputcsv($file, $row);
+                        }
+
+                    }
+                }
+
+                $this->setBufferedQuery();
+
+                try {
+                    $dateStart->add(new \DateInterval(('P1M')));
+                } catch (\Exception $e) {
+                    break;
+                }
+            } while ($dateStart->format('Ym') <= $dateEnd->format('Ym'));
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            $this->logError('Unable to get archived inbound homeowner data: ' . $e->getMessage());
+        } finally {
+            $this->setBufferedQuery();
+            if ($file) {
+                fclose($file);
+            }
+        }
+    }
+
     public function homeownerExportCurrent()
     {
         $params = array();
@@ -6906,16 +6985,17 @@ class Leads
         return $cnt;
     }
 
-    public function addSuppression($type, $idCompany, $value ) {
+    public function addSuppression($type, $idCompany, $value)
+    {
 
-		$table = 'suppression';
-		if ( $type == 'phone' ) {
-			$table .= '_phones';
-		}
+        $table = 'suppression';
+        if ($type == 'phone') {
+            $table .= '_phones';
+        }
         try {
-			$idSuppression = $this->insertRow( $table, array(
-                'idCompany' => empty( $idCompany ) ? 0 : $idCompany,
-				$type => $value,
+            $idSuppression = $this->insertRow($table, array(
+                'idCompany' => empty($idCompany) ? 0 : $idCompany,
+                $type => $value,
             ));
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
@@ -6931,17 +7011,17 @@ class Leads
         return true;
     }
 
-    public function getSuppressionCounts( $type )
+    public function getSuppressionCounts($type)
     {
         $results = array();
 
-		$table = 'suppression';
-		if ( $type == 'phone' ) {
-			$table .= '_phones';
-		}
+        $table = 'suppression';
+        if ($type == 'phone') {
+            $table .= '_phones';
+        }
 
         try {
-			$query = $this->db->prepare( "SELECT s.idCompany,c.name,COUNT(*) AS cnt FROM $table s LEFT JOIN companies c ON s.idCompany = c.idCompany GROUP BY s.idCompany" );
+            $query = $this->db->prepare("SELECT s.idCompany,c.name,COUNT(*) AS cnt FROM $table s LEFT JOIN companies c ON s.idCompany = c.idCompany GROUP BY s.idCompany");
             $query->execute(array());
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
@@ -6980,36 +7060,38 @@ class Leads
         return $result;
     }
 
-    public function checkPhoneSuppression( $phone, $idCompany = null ) {
-		$result = false;
+    public function checkPhoneSuppression($phone, $idCompany = null)
+    {
+        $result = false;
 
-		// Strip out any non-numeric characters.
-        $phone = preg_replace('/[^0-9]/', '', $phone );
+        // Strip out any non-numeric characters.
+        $phone = preg_replace('/[^0-9]/', '', $phone);
 
-		if( empty( $phone ) ) {
-			return $result;
-		}
+        if (empty($phone)) {
+            return $result;
+        }
 
-		try {
-			if( !empty( $idCompany ) ) {
-				$query = $this->db->prepare( "SELECT 1 FROM suppression_phones WHERE phone = ? AND ( idCompany = 0 OR idCompany = ? )" );
-				$query->execute( array( $phone, $idCompany ) );
-			} else {
-				$query = $this->db->prepare( "SELECT 1 FROM suppression_phones WHERE phone = ? AND idCompany = 0" );
-				$query->execute( array( $phone ) );
-			}
+        try {
+            if (!empty($idCompany)) {
+                $query = $this->db->prepare("SELECT 1 FROM suppression_phones WHERE phone = ? AND ( idCompany = 0 OR idCompany = ? )");
+                $query->execute(array($phone, $idCompany));
+            } else {
+                $query = $this->db->prepare("SELECT 1 FROM suppression_phones WHERE phone = ? AND idCompany = 0");
+                $query->execute(array($phone));
+            }
 
-			if( '1' == $query->fetchColumn() ) {
-				$result = true;
-			}
-		} catch( PDOException $e ) {
-			$this->logError( 'Unable to check suppression: ' . $e->getMessage() );
-		}
+            if ('1' == $query->fetchColumn()) {
+                $result = true;
+            }
+        } catch (PDOException $e) {
+            $this->logError('Unable to check suppression: ' . $e->getMessage());
+        }
 
-		return $result;
-	}
+        return $result;
+    }
 
-	public function exportSuppressions( $idCompany ) {
+    public function exportSuppressions($idCompany)
+    {
         $result = array();
 
         if (empty($idCompany)) {
@@ -7042,41 +7124,44 @@ class Leads
             $this->logError('Unable to get get supression records for export: ' . $e->getMessage());
         }
 
-		fclose( $fh );
-		return $result;
-	}
+        fclose($fh);
 
-	public function exportPhoneSuppressions( $idCompany ) {
-		$result = array();
+        return $result;
+    }
 
-		if( empty( $idCompany ) ) {
-			$result['file'] = 'exports/suppression_phone_global_' . time() . '.csv';
-		} else {
-			$result['file'] = 'exports/suppression_phone_' . intval( $idCompany ) . '_' . time() . '.csv';
-		}
-		$filePath = ADMIN_ROOT . $result['file'];
-		$fh = fopen( $filePath, 'w' );
-		if( !$fh ) {
-			$result['reason'] = 'Failed to create CSV file.';
-			return $result;
-		}
+    public function exportPhoneSuppressions($idCompany)
+    {
+        $result = array();
 
-		try {
-			if( empty( $idCompany ) ) {
-				$query = $this->db->prepare( "SELECT phone FROM suppression_phones WHERE idCompany = 0" );
-				$query->execute( array() );
-			} else {
-				$query = $this->db->prepare( "SELECT phone FROM suppression_phones WHERE idCompany = ?" );
-				$query->execute( array( $idCompany ) );
-			}
-			while( $row = $query->fetch( PDO::FETCH_ASSOC ) ) {
-				fwrite( $fh, $row['phone'] . PHP_EOL );
-			}
-			$result['reason'] = 'Success';
-		} catch( PDOException $e ) {
-			$result['reason'] = 'DB query error.';
-			$this->logError( 'Unable to get get supression records for export: ' . $e->getMessage() );
-		}
+        if (empty($idCompany)) {
+            $result['file'] = 'exports/suppression_phone_global_' . time() . '.csv';
+        } else {
+            $result['file'] = 'exports/suppression_phone_' . intval($idCompany) . '_' . time() . '.csv';
+        }
+        $filePath = ADMIN_ROOT . $result['file'];
+        $fh = fopen($filePath, 'w');
+        if (!$fh) {
+            $result['reason'] = 'Failed to create CSV file.';
+
+            return $result;
+        }
+
+        try {
+            if (empty($idCompany)) {
+                $query = $this->db->prepare("SELECT phone FROM suppression_phones WHERE idCompany = 0");
+                $query->execute(array());
+            } else {
+                $query = $this->db->prepare("SELECT phone FROM suppression_phones WHERE idCompany = ?");
+                $query->execute(array($idCompany));
+            }
+            while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+                fwrite($fh, $row['phone'] . PHP_EOL);
+            }
+            $result['reason'] = 'Success';
+        } catch (PDOException $e) {
+            $result['reason'] = 'DB query error.';
+            $this->logError('Unable to get get supression records for export: ' . $e->getMessage());
+        }
 
         fclose($fh);
 
