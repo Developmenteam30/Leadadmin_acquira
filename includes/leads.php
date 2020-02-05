@@ -1809,6 +1809,122 @@ class Leads
         return $results;
     }
 
+    public function getUnpaidLedger(
+        $type,
+        $userId = null,
+        $distinctColumn = null,
+        $distinctValue = null
+    ) {
+        $results = array();
+        $params = array();
+        $sql = '';
+
+        // Advertiser ledger entries use regular fields for income
+        if (!empty($distinctColumn) && empty($distinctValue)) {
+            $sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
+        } else {
+            $sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger' AS source,0 AS indexId,clv.name AS vendorCompanyName  ";
+        }
+        $sql .= "FROM ledger l ";
+        $sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
+        $sql .= "LEFT JOIN companies clv ON l.vendorCompanyId = clv.idCompany ";
+        $sql .= "LEFT JOIN divisions d ON l.divisionId = d.divisionId ";
+        $sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+        $sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
+        $sql .= "LEFT JOIN users u3 ON l.userId3 = u3.idUser ";
+        $sql .= "LEFT JOIN verticals v ON l.divisionId = v.divisionId AND l.verticalId = v.verticalId ";
+        $sql .= "WHERE type = 1 ";
+        if (!empty($userId)) {
+            $sql .= "AND ( l.userId1 = ? OR l.userId2 = ? OR l.userId3 = ? ) ";
+            $params[] = $userId;
+            $params[] = $userId;
+            $params[] = $userId;
+        } else {
+            $sql .= "AND (l.paymentDate IS NULL ";
+            $sql .= "OR l.paymentAmount IS NULL ";
+            $sql .= "OR l.paymentMethod IS NULL ) ";
+        }
+        if (!empty($distinctColumn) && !empty($distinctValue)) {
+            $sql .= "AND " . $distinctColumn . " = ? ";
+            $params[] = $distinctValue;
+        }
+
+        $sql .= "UNION ";
+
+        if (!empty($distinctColumn) && empty($distinctValue)) {
+            $sql .= "SELECT DISTINCT(" . $distinctColumn . ") as month ";
+        } else {
+            $sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,1 AS type,l.userId1,l.userId2,l.userId3,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_offline' AS source,0 AS indexId,'' AS vendorCompanyName  ";
+        }
+        $sql .= "FROM ledger_offline l ";
+        $sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
+        $sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+        $sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
+        $sql .= "LEFT JOIN users u3 ON l.userId3 = u3.idUser ";
+        $sql .= "WHERE 1=1 ";
+        if (!empty($userId)) {
+            $sql .= "AND ( l.userId1 = ? OR l.userId2 = ? OR l.userId3 = ? ) ";
+            $params[] = $userId;
+            $params[] = $userId;
+            $params[] = $userId;
+        } else {
+            $sql .= "AND (l.paymentDate IS NULL ";
+            $sql .= "OR l.paymentAmount IS NULL ";
+            $sql .= "OR l.paymentMethod IS NULL ) ";
+        }
+        if (!empty($distinctColumn) && !empty($distinctValue)) {
+            $sql .= "AND " . $distinctColumn . " = ? ";
+            $params[] = $distinctValue;
+        }
+
+        $sql .= "UNION ";
+
+        if (!empty($distinctColumn) && empty($distinctValue)) {
+            $sql .= "SELECT DISTINCT(" . $distinctColumn . ") as month ";
+        } else {
+            $sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,1 AS type,l.userId1,l.userId2,l.userId3,CONCAT('L',l.ledgerId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_phones' AS source,0 AS indexId,'' AS vendorCompanyName  ";
+        }
+        $sql .= "FROM ledger_phones l ";
+        $sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
+        $sql .= "LEFT JOIN users u1 ON l.userId1 = u1.idUser ";
+        $sql .= "LEFT JOIN users u2 ON l.userId2 = u2.idUser ";
+        $sql .= "LEFT JOIN users u3 ON l.userId3 = u3.idUser ";
+        $sql .= "LEFT JOIN verticals v ON divisionId = 5 AND l.verticalId = v.verticalId ";
+        $sql .= "WHERE 1=1 ";
+        if (!empty($userId)) {
+            $sql .= "AND ( l.userId1 = ? OR l.userId2 = ? OR l.userId3 = ? ) ";
+            $params[] = $userId;
+            $params[] = $userId;
+            $params[] = $userId;
+        } else {
+            $sql .= "AND (l.paymentDate IS NULL ";
+            $sql .= "OR l.paymentAmount IS NULL ";
+            $sql .= "OR l.paymentMethod IS NULL ) ";
+        }
+        if (!empty($distinctColumn) && !empty($distinctValue)) {
+            $sql .= "AND " . $distinctColumn . " = ? ";
+            $params[] = $distinctValue;
+        }
+
+
+        if (!empty($distinctColumn) && empty($distinctValue)) {
+            $sql .= "GROUP BY month ";
+            $sql .= "ORDER BY month DESC ";
+        } else {
+            $sql .= "ORDER BY ledgerMonth ";
+        }
+
+        try {
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get ledger list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function addOpportunity($fields)
     {
 
@@ -5376,7 +5492,9 @@ class Leads
                     $query = $this->db->prepare($sql);
                     $query->execute();
                     while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
-                        if (in_array($row['zip'], $zips) && !in_array($row['email'], $emailSuppression) && !in_array($row['landline'], $phoneSuppression) && !in_array($row['cellphone'], $phoneSuppression)) {
+                        if (in_array($row['zip'], $zips) && !in_array($row['email'],
+                                $emailSuppression) && !in_array($row['landline'],
+                                $phoneSuppression) && !in_array($row['cellphone'], $phoneSuppression)) {
                             fputcsv($file, $row);
                         }
 

@@ -40,7 +40,9 @@ include(INCLUDES . "c_header.php");
 
 	<p><a href="/leadadmin/payments.php">*Payment Ledger</a></p>
 
-	<p><a href="/leadadmin/profit-loss.php">*Profit &amp; Loss Report</a></p>
+    <p><a href="/leadadmin/profit-loss.php">*Profit &amp; Loss Report</a></p>
+
+    <p><a href="/leadadmin/receivables.php">*Open Receivables Report</a></p>
 
 </div>
 
