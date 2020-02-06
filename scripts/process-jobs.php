@@ -3,6 +3,7 @@
 if (extension_loaded('newrelic')) {
     newrelic_set_appname('Qatalyst Scripts');
 }
+ini_set('memory_limit', '3G');
 
 include(__DIR__ . "/../includes/c_config.php");
 
