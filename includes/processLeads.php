@@ -159,8 +159,12 @@ class ProcessLeads
         }
 
         $response = curl_exec($ch);
+        $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         if (curl_errno($ch) != 0) {
             $response = "CURL Error: " . curl_error($ch);
+        }
+        if(200 !== $responseCode) {
+            $response = "HTTP Response Code: {$responseCode} [{$response}]";
         }
         if ($verbose) {
             if ($out) {
