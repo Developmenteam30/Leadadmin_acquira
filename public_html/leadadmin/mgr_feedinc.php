@@ -2008,7 +2008,9 @@ include(INCLUDES . "c_header.php");
 
 <div class="container-fluid">
 
-    <form method="get">
+    <h2>Incoming Feeds</h2>
+
+    <form method="get" class="pull-left">
 		<p>
 			<?php
 			print 'Quick Jump: <select id="statsQuick" name="statsQuick">' . PHP_EOL;
@@ -2052,8 +2054,6 @@ include(INCLUDES . "c_header.php");
 			Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsStart ) ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsEnd ) ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
 	</form>
 
-    <h2>Incoming Feeds</h2>
-
     <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) { ?>
 
         <form class="pull-right" id="status-select" method="get">
@@ -2079,7 +2079,7 @@ include(INCLUDES . "c_header.php");
             <input type="hidden" name="statsEnd" value="<?php echo $statsEnd; ?>">
         </form>
 
-        <p>
+        <p style="clear: both;">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static"
                     data-target="#newfeedinc">Add a new feed
             </button>
