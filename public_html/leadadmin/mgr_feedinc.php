@@ -2049,9 +2049,7 @@ include(INCLUDES . "c_header.php");
 			} while( $startDate >= $endDate );
 			print '</select>' . PHP_EOL;
 			?>
-            <input type="hidden" name="status" value="<?php echo $status; ?>">
-			Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsStart ) ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsEnd ) ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/>
-        </p>
+			Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsStart ) ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsEnd ) ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
 	</form>
 
     <h2>Incoming Feeds</h2>
@@ -2150,7 +2148,7 @@ include(INCLUDES . "c_header.php");
                     $totalRejected = 0;
                     foreach ($companyFeedList as $keyFeed => $feed) {
 
-                        $stats = $leads->getInboundStats($feed->idFeedIn);
+                        $stats = $leads->getInboundStatsRange( $feed->idFeedIn, date( 'Y-m-d', strtotime( $statsStart ) ), date( 'Y-m-d', strtotime( $statsEnd ) ) );
 
                         $companyFeedList[$keyFeed]->dailyCount = $stats['accepted'];
                         $totalAccepted += $stats['accepted'];
@@ -2335,6 +2333,21 @@ include(INCLUDES . "c_header.php");
 </div>
 
 <script type="text/javascript">
+
+    $('#statsQuick').on('change', function (e) {
+		let myValue = $(this).val() || '';
+		if (myValue !== '') {
+			let dates = myValue.split('|', 2);
+			$('input[name="statsStart"]').val(dates[0]);
+			$('input[name="statsEnd"]').val(dates[1]);
+		}
+	});
+
+	$('input[name="statsStart"], input[name="statsEnd"]').datepicker({
+		// Consistent format with the HTML5 picker
+		dateFormat: 'yy-mm-dd'
+	});
+
     $('#modal-save-newfeedinc').click(function (event) {
         event.preventDefault();
 
