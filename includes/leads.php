@@ -3046,7 +3046,7 @@ class Leads
         return $results;
     }
 
-    public function getInboundFeeds($idCompany = null, $status = null, $feedCategory = null, $idFeedIn = null)
+    public function getInboundFeeds($idCompany = null, $status = null, $feedCategory = null, $idFeedIn = null, $stampStart = null, $stampEnd = null)
     {
         $results = array();
         $params = array();
@@ -3054,8 +3054,17 @@ class Leads
         $sql = "SELECT f.*,c.name,MAX(n.timestamp) AS lastDate ";
         $sql .= "FROM feedinc f ";
         $sql .= "LEFT JOIN companies c ON f.idCompany = c.idCompany ";
-        $sql .= "LEFT JOIN companies_notes n ON n.companyId = c.idCompany ";
-        $sql .= "WHERE 1=1 ";
+        $sql .= "LEFT JOIN companies_notes n ON n.companyId = c.idCompany WHERE 1=1 ";
+
+        if (!empty($stampStart)){
+            $sql .= "AND n.timestamp >= ? ";
+            $params[] = $stampStart;
+        }
+        if (!empty($stampEnd)){
+            $sql .= "AND n.timestamp <= ? ";
+            $params[] = $stampEnd;
+        }
+
         if (!empty($idCompany)) {
             $sql .= "AND c.idCompany = ? ";
             $params[] = $idCompany;
@@ -3359,7 +3368,7 @@ class Leads
         return $results;
     }
 
-    public function getOutboundFeeds($idCompany = null, $status = null, $feedCategory = null)
+    public function getOutboundFeeds($idCompany = null, $status = null, $feedCategory = null, $stampStart = null, $stampEnd = null)
     {
         $results = array();
         $params = array();
@@ -3370,8 +3379,17 @@ class Leads
         $sql .= "LEFT JOIN feedinc i ON i.idFeedIn = p.idFeedIn ";
         $sql .= "LEFT JOIN companies ci ON ci.idCompany = i.idCompany ";
         $sql .= "LEFT JOIN companies co ON co.idCompany = o.idCompany ";
-        $sql .= "LEFT JOIN companies_notes n ON n.companyId = co.idCompany ";
-        $sql .= "WHERE 1=1 ";
+        $sql .= "LEFT JOIN companies_notes n ON n.companyId = co.idCompany WHERE 1=1 ";
+
+        if (!empty($stampStart)){
+            $sql .= "AND n.timestamp >= ? ";
+            $params[] = $stampStart;
+        }
+        if (!empty($stampEnd)){
+            $sql .= "AND n.timestamp <= ? ";
+            $params[] = $stampEnd;
+        }
+
         if (!empty($idCompany)) {
             $sql .= "AND ci.idCompany = ? ";
             $params[] = $idCompany;

@@ -14,6 +14,10 @@ require_once(INCLUDES . 'display.php');
 
 include(INCLUDES . "f_site.php");
 
+$statsStart = !empty( $_REQUEST['statsStart'] ) ? $_REQUEST['statsStart'] : date( 'Y-m-d' );
+$statsEnd = !empty( $_REQUEST['statsEnd'] ) ? $_REQUEST['statsEnd'] : date( 'Y-m-d' );
+$statsQuick = $_REQUEST['statsQuick'] ?? '';
+
 $all_states = array(
     'AL' => 'Alabama',
     'AK' => 'Alaska',
@@ -2006,6 +2010,50 @@ include(INCLUDES . "c_header.php");
 
     <h2>Incoming Feeds</h2>
 
+    <form method="get" class="pull-left">
+		<p>
+			<?php
+			print 'Quick Jump: <select id="statsQuick" name="statsQuick">' . PHP_EOL;
+			print '<option value=""></option>' . PHP_EOL;
+			$years = array();
+			$quarters = array();
+			$startDate = new \DateTime();
+			$endDate = new DateTime( ( date( 'Y' ) - 3 ) . '-01-01' );
+			do {
+				$year = $startDate->format( 'Y' );
+				$quarter = $year . '-Q' . ceil( $startDate->format( 'm' ) / 3 );
+				if( empty( $years[$year] ) ) {
+					$value = $year . '-01-01' . '|' . $year . '-12-31';
+					printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+						$value,
+						$statsQuick == $value ? ' selected="selected"' : '',
+						htmlentities( $year . ' Year' )
+					);
+					$years[$year] = true;
+				}
+				if( empty( $quarters[$quarter] ) ) {
+					$value = Display::getQuarterStart( $year, ceil( $startDate->format( 'm' ) / 3 ) ) . '|' . Display::getQuarterEnd( $year, ceil( $startDate->format( 'm' ) / 3 ) );
+					printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+						$value,
+						$statsQuick == $value ? ' selected="selected"' : '',
+						htmlentities( str_replace( '-Q', ' Qtr ', $quarter ) )
+					);
+					$quarters[$quarter] = true;
+				}
+
+				$value = $startDate->format( 'Y-m-01' ) . '|' . $startDate->format( 'Y-m-t' );
+				printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+					$value,
+					$statsQuick == $value ? ' selected="selected"' : '',
+					htmlentities( $startDate->format( 'Y-m' ) )
+				);
+				$startDate->sub( new \DateInterval( 'P1M' ) );
+			} while( $startDate >= $endDate );
+			print '</select>' . PHP_EOL;
+			?>
+			Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsStart ) ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsEnd ) ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
+	</form>
+
     <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) { ?>
 
         <form class="pull-right" id="status-select" method="get">
@@ -2027,9 +2075,11 @@ include(INCLUDES . "c_header.php");
                 } ?>>Show all feeds
                 </option>
             </select>
+            <input type="hidden" name="statsStart" value="<?php echo $statsStart; ?>">
+            <input type="hidden" name="statsEnd" value="<?php echo $statsEnd; ?>">
         </form>
 
-        <p>
+        <p style="clear: both;">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static"
                     data-target="#newfeedinc">Add a new feed
             </button>
@@ -2044,13 +2094,13 @@ include(INCLUDES . "c_header.php");
         print "<h4>Incoming $categoryVal Feeds</h4>" . PHP_EOL;
 
         if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
-            $incomingFeeds = $leads->getInboundFeeds(null, $status, $categoryKey);
+            $incomingFeeds = $leads->getInboundFeeds(null, $status, $categoryKey, null, $statsStart, $statsEnd);
         } else {
             $idCompany = LeadsSession::getCompanyId();
             if (empty($idCompany)) {
                 $idCompany = -9999;
             }
-            $incomingFeeds = $leads->getInboundFeeds($idCompany, $status, $categoryKey);
+            $incomingFeeds = $leads->getInboundFeeds($idCompany, $status, $categoryKey, null, $statsStart, $statsEnd);
         }
         ?>
         <?php
@@ -2098,7 +2148,7 @@ include(INCLUDES . "c_header.php");
                     $totalRejected = 0;
                     foreach ($companyFeedList as $keyFeed => $feed) {
 
-                        $stats = $leads->getInboundStats($feed->idFeedIn);
+                        $stats = $leads->getInboundStatsRange( $feed->idFeedIn, date( 'Y-m-d', strtotime( $statsStart ) ), date( 'Y-m-d', strtotime( $statsEnd ) ) );
 
                         $companyFeedList[$keyFeed]->dailyCount = $stats['accepted'];
                         $totalAccepted += $stats['accepted'];
@@ -2283,6 +2333,21 @@ include(INCLUDES . "c_header.php");
 </div>
 
 <script type="text/javascript">
+
+    $('#statsQuick').on('change', function (e) {
+		let myValue = $(this).val() || '';
+		if (myValue !== '') {
+			let dates = myValue.split('|', 2);
+			$('input[name="statsStart"]').val(dates[0]);
+			$('input[name="statsEnd"]').val(dates[1]);
+		}
+	});
+
+	$('input[name="statsStart"], input[name="statsEnd"]').datepicker({
+		// Consistent format with the HTML5 picker
+		dateFormat: 'yy-mm-dd'
+	});
+
     $('#modal-save-newfeedinc').click(function (event) {
         event.preventDefault();
 
@@ -2514,6 +2579,20 @@ include(INCLUDES . "c_header.php");
                 'param': 'enabled'
             }
         });
+    });
+
+    $('#statsQuick').on('change', function (e) {
+        let myValue = $(this).val() || '';
+        if (myValue !== '') {
+            let dates = myValue.split('|', 2);
+            $('input[name="statsStart"]').val(dates[0]);
+            $('input[name="statsEnd"]').val(dates[1]);
+        }
+    });
+
+    $('input[name="statsStart"], input[name="statsEnd"]').datepicker({
+        // Consistent format with the HTML5 picker
+        dateFormat: 'yy-mm-dd'
     });
 </script>
 
