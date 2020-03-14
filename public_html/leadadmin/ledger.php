@@ -213,6 +213,7 @@ if (isset($_REQUEST['a'])) {
                     'commissionAmount1' => empty($_REQUEST['commissionAmount1']) ? null : $_REQUEST['commissionAmount1'],
                     'commissionRevenue1' => empty($_REQUEST['commissionRevenue1']) ? null : $_REQUEST['commissionRevenue1'],
                     'userId1' => empty($_REQUEST['userId1']) ? null : $_REQUEST['userId1'],
+                    /* Disabled per #3309.
                     'commissionDate2' => !isset($commissionDate2) ? null : $commissionDate2->format('Y-m-d'),
                     'commissionAmount2' => empty($_REQUEST['commissionAmount2']) ? null : $_REQUEST['commissionAmount2'],
                     'commissionRevenue2' => empty($_REQUEST['commissionRevenue2']) ? null : $_REQUEST['commissionRevenue2'],
@@ -221,6 +222,7 @@ if (isset($_REQUEST['a'])) {
                     'commissionAmount3' => empty($_REQUEST['commissionAmount3']) ? null : $_REQUEST['commissionAmount3'],
                     'commissionRevenue3' => empty($_REQUEST['commissionRevenue3']) ? null : $_REQUEST['commissionRevenue3'],
                     'userId3' => empty($_REQUEST['userId3']) ? null : $_REQUEST['userId3'],
+                    */
                     'type' => $type,
                 );
 
@@ -475,6 +477,7 @@ if (isset($_REQUEST['a'])) {
                     'commissionAmount1' => empty($_REQUEST['commissionAmount1']) ? null : $_REQUEST['commissionAmount1'],
                     'commissionRevenue1' => empty($_REQUEST['commissionRevenue1']) ? null : $_REQUEST['commissionRevenue1'],
                     'userId1' => empty($_REQUEST['userId1']) ? null : $_REQUEST['userId1'],
+                    /* Disabled per #3309.
                     'commissionDate2' => !isset($commissionDate2) ? null : $commissionDate2->format('Y-m-d'),
                     'commissionAmount2' => empty($_REQUEST['commissionAmount2']) ? null : $_REQUEST['commissionAmount2'],
                     'commissionRevenue2' => empty($_REQUEST['commissionRevenue2']) ? null : $_REQUEST['commissionRevenue2'],
@@ -482,6 +485,7 @@ if (isset($_REQUEST['a'])) {
                     'commissionDate3' => !isset($commissionDate3) ? null : $commissionDate3->format('Y-m-d'),
                     'commissionAmount3' => empty($_REQUEST['commissionAmount3']) ? null : $_REQUEST['commissionAmount3'],
                     'commissionRevenue3' => empty($_REQUEST['commissionRevenue3']) ? null : $_REQUEST['commissionRevenue3'],
+                    */
                     'userId3' => empty($_REQUEST['userId3']) ? null : $_REQUEST['userId3'],
                 );
 
@@ -732,6 +736,7 @@ if (isset($_REQUEST['d'])) {
                 array(
                     'type' => '_divider',
                 ),
+                /* Disabled per #3309.
                 array(
                     'id' => 'userId2',
                     'label' => 'Salesperson 2',
@@ -791,6 +796,7 @@ if (isset($_REQUEST['d'])) {
                         'new' => 'New revenue/profit',
                     ),
                 ),
+                */
                 array(
                     'id' => 'a',
                     'type' => 'hidden',
@@ -1072,6 +1078,7 @@ if (isset($_REQUEST['d'])) {
                         'value' => $entry->commissionRevenue1,
                         'readonly' => true,
                     ),
+                    /* Disabled per #3309.
                     array(
                         'id' => 'userId2',
                         'label' => 'Salesperson 2',
@@ -1142,6 +1149,7 @@ if (isset($_REQUEST['d'])) {
                         'value' => $entry->commissionRevenue3,
                         'readonly' => true,
                     ),
+                    */
                     array(
                         'id' => 'a',
                         'type' => 'hidden',
@@ -1366,7 +1374,7 @@ if (isset($_REQUEST['d'])) {
                     array(
                         'type' => '_divider',
                     ),
-
+                    /* Disabled per #3309.
                     array(
                         'id' => 'userId2',
                         'label' => 'Salesperson 2',
@@ -1436,6 +1444,7 @@ if (isset($_REQUEST['d'])) {
                         ),
                         'value' => $entry->commissionRevenue3,
                     ),
+                    */
                     array(
                         'id' => 'a',
                         'type' => 'hidden',
