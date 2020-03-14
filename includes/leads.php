@@ -3398,6 +3398,27 @@ class Leads
         return $results;
     }
 
+    public function getOutboundFeedsByCompany($idCompany)
+    {
+        $results = array();
+        $params = array();
+
+        $sql = "SELECT * ";
+        $sql .= "FROM feedout ";
+        $sql .= "WHERE idCompany = ? ";
+        $params[] = $idCompany;
+
+        try {
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get outbound feed list by company: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function convertFields()
     {
         $results = array();

@@ -1,6 +1,7 @@
 {
   "require": {
     "phpoffice/phpspreadsheet": "^1.9",
-    "ext-pdo": "*"
+    "ext-pdo": "*",
+    "ext-curl": "*"
   }
 }
