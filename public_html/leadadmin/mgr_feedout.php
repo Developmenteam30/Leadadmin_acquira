@@ -3573,6 +3573,7 @@ include(INCLUDES . "c_header.php");
             print '</select>' . PHP_EOL;
             ?>
             Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsStart ) ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsEnd ) ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
+        <input type="hidden" name="status" value="<?php echo Display::escHtml($status); ?>">
     </form>
 
 
@@ -3597,8 +3598,8 @@ include(INCLUDES . "c_header.php");
                 } ?>>Show all feeds
                 </option>
             </select>
-            <input type="hidden" name="statsStart" value="<?php echo $statsStart; ?>">
-            <input type="hidden" name="statsEnd" value="<?php echo $statsEnd; ?>">
+            <input type="hidden" name="statsStart" value="<?php echo Display::escHtml($statsStart); ?>">
+            <input type="hidden" name="statsEnd" value="<?php echo Display::escHtml($statsEnd); ?>">
         </form>
 
         <p style="clear: both;">
