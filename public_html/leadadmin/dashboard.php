@@ -259,8 +259,8 @@ include( INCLUDES . "c_header.php" );
 	</form>
 
 	<?php
-	$users = $leads->getStaffUsers();
-	Display::displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd );
+	//$users = $leads->getStaffUsers();
+	//Display::displayDashboardRevenueTable( $leads, $users, $statsStart, $statsEnd );
 
 	foreach( $feedCategories as $categoryKey => $categoryVal ) {
 		?>
