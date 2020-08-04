@@ -191,6 +191,7 @@ if( isset( $_REQUEST['d'] ) ) {
 						LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS => 'Client Phone Leads Report',
 						LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Client Import Access',
 						LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Client Dashboard Access',
+                        LEADS_SESSION_LEVEL_CRM => 'CRM Access Only',
 						LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
 						LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
 					),
