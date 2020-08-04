@@ -1,14 +1,14 @@
 <?php
 require_once( INCLUDES . 'session.php' );
 
-if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CRM ) ) {
 
 	$nav = array(
 		array( 'name' => 'Dashboard', 'url' => '/leadadmin/dashboard.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Companies', 'url' => '/leadadmin/companies.php?searchStatus=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Incoming Feeds', 'url' => '/leadadmin/mgr_feedinc.php?status=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
 		array( 'name' => 'Outgoing Feeds', 'url' => '/leadadmin/mgr_feedout.php?status=active', 'level' => LEADS_SESSION_LEVEL_STAFF ),
-        array( 'name' => 'CRM', 'url' => '/leadadmin/crm/prospects.php?searchIsArchived=0', 'level' => LEADS_SESSION_LEVEL_STAFF ),
+        array( 'name' => 'CRM', 'url' => '/leadadmin/crm/prospects.php?searchIsArchived=0', 'level' => LEADS_SESSION_LEVEL_CRM ),
         array( 'name' => 'IOs', 'url' => '/leadadmin/insertion-orders/?searchIsArchived=0', 'level' => LEADS_SESSION_LEVEL_STAFF ),
         array( 'name' => 'Suppressions', 'level' => LEADS_SESSION_LEVEL_STAFF, 'menu' => array(
             array( 'name' => 'Email', 'url' => '/leadadmin/mgr_suppress.php', 'level' => LEADS_SESSION_LEVEL_STAFF ),

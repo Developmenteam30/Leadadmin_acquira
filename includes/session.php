@@ -1,137 +1,154 @@
 <?php
 
-require_once( INCLUDES . 'leads.php' );
+require_once(INCLUDES . 'leads.php');
 
-require_once( INCLUDES . 'sessions-database.php' );
-$pdo = new PDO( 'mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME, $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p'] );
-$pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-$session = new PdoSessionHandler( $pdo );
-session_set_save_handler( $session );
+require_once(INCLUDES . 'sessions-database.php');
+$pdo = new PDO('mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME,
+    $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p']);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$session = new PdoSessionHandler($pdo);
+session_set_save_handler($session);
 
-define( 'LEADS_SESSION_LEVEL_ADMIN', 90 );
-define( 'LEADS_SESSION_LEVEL_MANAGER', 75 );
-define( 'LEADS_SESSION_LEVEL_STAFF', 50 );
-define( 'LEADS_SESSION_LEVEL_CLIENT_DASHBOARD', 30 );
-define( 'LEADS_SESSION_LEVEL_CLIENT_IMPORT', 20 );
-define( 'LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS', 15 );
-define( 'LEADS_SESSION_LEVEL_CLIENT_REPORTS', 10 );
+define('LEADS_SESSION_LEVEL_ADMIN', 90);
+define('LEADS_SESSION_LEVEL_MANAGER', 75);
+define('LEADS_SESSION_LEVEL_STAFF', 50);
+define('LEADS_SESSION_LEVEL_CRM', 40);
+define('LEADS_SESSION_LEVEL_CLIENT_DASHBOARD', 30);
+define('LEADS_SESSION_LEVEL_CLIENT_IMPORT', 20);
+define('LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS', 15);
+define('LEADS_SESSION_LEVEL_CLIENT_REPORTS', 10);
 
 class LeadsSession
 {
-	public static function login( $userId, $level, $idCompany ) {
-		LeadsSession::start();
+    public static function login($userId, $level, $idCompany)
+    {
+        LeadsSession::start();
 
-		$_SESSION['userId'] = $userId;
-		$_SESSION['level'] = intval( $level );
-		$_SESSION['idCompany'] = intval( $idCompany );
+        $_SESSION['userId'] = $userId;
+        $_SESSION['level'] = intval($level);
+        $_SESSION['idCompany'] = intval($idCompany);
 
-		//session_write_close();
+        //session_write_close();
 
-		$leads = Leads::getInstance();
-		$leads->auditLog( 'LOGIN', null );
-	}
+        $leads = Leads::getInstance();
+        $leads->auditLog('LOGIN', null);
+    }
 
-	public static function logout() {
-		if( !empty( LeadsSession::getUserId() ) ) {
-			$leads = Leads::getInstance();
-			$leads->auditLog( 'LOGOUT', null );
-		}
+    public static function logout()
+    {
+        if (!empty(LeadsSession::getUserId())) {
+            $leads = Leads::getInstance();
+            $leads->auditLog('LOGOUT', null);
+        }
 
-		LeadsSession::start();
+        LeadsSession::start();
 
-		unset( $_SESSION['userId'] );
-		unset( $_SESSION['level'] );
-		unset( $_SESSION['idCompany'] );
+        unset($_SESSION['userId']);
+        unset($_SESSION['level']);
+        unset($_SESSION['idCompany']);
 
-		session_unset();
-		session_destroy();
-		$_SESSION = array();
-		//session_write_close();
-	}
+        session_unset();
+        session_destroy();
+        $_SESSION = array();
+        //session_write_close();
+    }
 
-	public static function getCompanyId() {
-		LeadsSession::start();
+    public static function getCompanyId()
+    {
+        LeadsSession::start();
 
-		if( empty( $_SESSION['idCompany'] ) ) {
-			session_write_close();
-			return null;
-		}
+        if (empty($_SESSION['idCompany'])) {
+            session_write_close();
 
-		//session_write_close();
-		return $_SESSION['idCompany'];
-	}
+            return null;
+        }
 
-	public static function getUserId() {
-		LeadsSession::start();
+        //session_write_close();
+        return $_SESSION['idCompany'];
+    }
 
-		if( empty( $_SESSION['userId'] ) ) {
-			//session_write_close();
-			return null;
-		}
+    public static function getUserId()
+    {
+        LeadsSession::start();
 
-		//session_write_close();
-		return $_SESSION['userId'];
-	}
+        if (empty($_SESSION['userId'])) {
+            //session_write_close();
+            return null;
+        }
 
-	public static function isValid( $level ) {
-		LeadsSession::start();
+        //session_write_close();
+        return $_SESSION['userId'];
+    }
 
-		if( empty( $_SESSION['level'] ) ) {
-			//session_write_close();
-			return false;
-		}
+    public static function isValid($level)
+    {
+        LeadsSession::start();
 
-		if( intval( $_SESSION['level'] ) < $level ) {
-			//session_write_close();
-			return false;
-		}
+        if (empty($_SESSION['level'])) {
+            //session_write_close();
+            return false;
+        }
 
-		//session_write_close();
-		return true;
-	}
+        if (intval($_SESSION['level']) < $level) {
+            //session_write_close();
+            return false;
+        }
 
-	public static function requireAccess( $level ) {
-		LeadsSession::start();
+        //session_write_close();
+        return true;
+    }
 
-		if( empty( $_SESSION['level'] ) ) {
-			return LeadsSession::deny();
-		}
+    public static function requireAccess($level)
+    {
+        LeadsSession::start();
 
-		if( intval( $_SESSION['level'] ) < $level ) {
-			return LeadsSession::deny();
-		}
+        if (empty($_SESSION['level'])) {
+            return LeadsSession::deny();
+        }
 
-		//session_write_close();
-	}
+        if (intval($_SESSION['level']) < $level) {
+            return LeadsSession::deny();
+        }
 
-	private static function start() {
-		if( session_status() !== PHP_SESSION_ACTIVE ) {
-			session_start();
-		}
-	}
+        //session_write_close();
+    }
 
-	private static function deny() {
+    private static function start()
+    {
+        if (!headers_sent() && session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
 
-		//session_write_close();
+        }
+    }
 
-		if( isset( $_REQUEST['a'] ) ) {
+    private static function deny()
+    {
 
-			Header( 'Content-Type: application/json' );
-			$result = array( 'status' => 0, 'error' => 'Sorry, you do not have access to this page. Log back in and try again.' );
-			echo json_encode( $result );
-			exit;
+        //session_write_close();
 
-		} else if( isset( $_REQUEST['d'] ) ) {
+        if (isset($_REQUEST['a'])) {
 
-			echo "Sorry, you do not have access to this page. Log back in and try again.";
-			exit;
+            Header('Content-Type: application/json');
+            $result = array(
+                'status' => 0,
+                'error' => 'Sorry, you do not have access to this page. Log back in and try again.',
+            );
+            echo json_encode($result);
+            exit;
 
-		} else {
+        } else {
+            if (isset($_REQUEST['d'])) {
 
-			header( "Location: /leadadmin/" );
-			exit;
+                echo "Sorry, you do not have access to this page. Log back in and try again.";
+                exit;
 
-		}
+            } else {
 
-	}
+                header("Location: /leadadmin/");
+                exit;
+
+            }
+        }
+
+    }
 }

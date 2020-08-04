@@ -4,7 +4,7 @@ include( "../../../includes/c_config.php" );
 
 require_once( INCLUDES . 'session.php' );
 require_once( INCLUDES . 'f_site.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_STAFF );
+LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CRM );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();

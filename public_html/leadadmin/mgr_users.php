@@ -48,8 +48,8 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			// Do not set a company for staff members and higher
-			if( $_REQUEST['level'] >= LEADS_SESSION_LEVEL_STAFF ) {
+			// Do not set a company for CRM users and higher
+			if( $_REQUEST['level'] >= LEADS_SESSION_LEVEL_CRM ) {
 				$_REQUEST['idCompany'] = null;
 			}
 
@@ -93,8 +93,8 @@ if( isset( $_REQUEST['a'] ) ) {
 				break;
 			}
 
-			// Do not set a company for staff members and higher
-			if( $_REQUEST['level'] >= LEADS_SESSION_LEVEL_STAFF ) {
+			// Do not set a company for CRM users and higher
+			if( $_REQUEST['level'] >= LEADS_SESSION_LEVEL_CRM ) {
 				$_REQUEST['idCompany'] = null;
 			}
 
@@ -102,7 +102,8 @@ if( isset( $_REQUEST['a'] ) ) {
 				$leads->setPasswordHash( $user->username, $_REQUEST['password'] );
 			}
 
-			if( 1 == $_REQUEST['isArchived'] ){
+			$isArchived = 0;
+			if( isset($_REQUEST['isArchived']) && 1 == $_REQUEST['isArchived'] ){
 				$isArchived = 1;
                 $_REQUEST['level'] = 0;
 			}
@@ -266,6 +267,7 @@ if( isset( $_REQUEST['d'] ) ) {
 							LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS => 'Client Phone Leads Report',
 							LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Client Import Access',
 							LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Client Dashboard Access',
+                            LEADS_SESSION_LEVEL_CRM => 'CRM Access Only',
 							LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
 							LEADS_SESSION_LEVEL_MANAGER => 'Manager',
 							LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
@@ -365,6 +367,8 @@ include( INCLUDES . "c_header.php" );
 				$level = 'Manager';
 			} else if( LEADS_SESSION_LEVEL_STAFF == $level ) {
 				$level = 'Staff Member';
+            } else if( LEADS_SESSION_LEVEL_CRM == $level ) {
+                $level = 'CRM Access Only';
 			} else if( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD == $level ) {
 				$level = 'Client Dashboard';
 			} else if( LEADS_SESSION_LEVEL_CLIENT_IMPORT == $level ) {

@@ -3,9 +3,15 @@
 require_once( '../../includes/c_config.php' );
 require_once( INCLUDES . 'session.php' );
 
-if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
 	header("Location: dashboard.php");
 	exit;
+} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CRM ) ) {
+    header("Location: crm/prospects.php?searchIsArchived=0");
+    exit;
+} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
+    header("Location: dashboard.php");
+    exit;
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_IMPORT ) ) {
 	header("Location: mgr_feedinc.php");
 	exit;
