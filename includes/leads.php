@@ -342,7 +342,7 @@ class Leads
         return $results;
     }
 
-    public function getStaffUsers($format = \PDO::FETCH_KEY_PAIR, $forceAll = false, $idUser = null)
+    public function getStaffUsers($format = \PDO::FETCH_KEY_PAIR, $forceAll = false, $idUser = null, $minLevel = LEADS_SESSION_LEVEL_STAFF)
     {
         $results = null;
 
@@ -351,10 +351,10 @@ class Leads
                 if (!empty($idUser)) {
                     // Sometimes we have a former employee set who would no longer show up in the user list. Force them to show if the value is currently set to their userId.
                     $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE ( level >= ? AND level < ? ) OR idUser = ? ORDER BY username");
-                    $query->execute(array(LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_ADMIN, $idUser));
+                    $query->execute(array($minLevel, LEADS_SESSION_LEVEL_ADMIN, $idUser));
                 } else {
                     $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE level >= ? AND level < ? ORDER BY username");
-                    $query->execute(array(LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_ADMIN));
+                    $query->execute(array($minLevel, LEADS_SESSION_LEVEL_ADMIN));
                 }
             } else {
                 $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE idUser = ?");

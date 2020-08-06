@@ -376,7 +376,7 @@ if ( isset( $_REQUEST['d'] ) ) {
 					'label'       => 'Salesperson',
 					'type'        => 'select',
 					'placeholder' => 'Select a salesperson',
-					'choices'     => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+					'choices'     => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true, null, LEADS_SESSION_LEVEL_CRM ),
 				),
 				array(
 					'id'      => 'actionType',
@@ -538,7 +538,7 @@ if ( isset( $_REQUEST['d'] ) ) {
 					'label'       => 'Salesperson',
 					'type'        => 'select',
 					'placeholder' => 'Select a salesperson',
-					'choices'     => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+					'choices'     => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true, null, LEADS_SESSION_LEVEL_CRM ),
 					'value'       => $prospect->userId,
 				),
 				array(
@@ -706,7 +706,7 @@ include( INCLUDES . "c_header.php" );
 			'id'      => 'searchSalesperson',
 			'label'   => 'Sales Person',
 			'type'    => 'select',
-			'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true ),
+			'choices' => $leads->getStaffUsers( \PDO::FETCH_KEY_PAIR, true, null, LEADS_SESSION_LEVEL_CRM ),
 			'value'   => $_REQUEST['searchSalesperson'] ?? '',
 		),
 		array(
