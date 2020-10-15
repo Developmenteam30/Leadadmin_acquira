@@ -10,8 +10,10 @@ define("SITE_URL", "qmleads.com");
 
 if ('development' == APPLICATION_ENV) {
     define("SITE_ROOT", "/var/www/html/development/qmleads.com/");
+    define('MANAGE_THREADS_SOCKET_PORT', 3331);
 } else {
     define("SITE_ROOT", "/var/www/html/production/qmleads.com/");
+    define('MANAGE_THREADS_SOCKET_PORT', 3332);
 }
 //Database Connection Configuration, Production Environment
 define("DATABASE_NAME", 'dnrdmktg');

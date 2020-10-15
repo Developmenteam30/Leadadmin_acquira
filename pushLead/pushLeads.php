@@ -3,7 +3,7 @@
 //pcntl_fork();
 set_time_limit(0);
 
-if (empty($argv[1])) {
+if (empty($argv[2])) {
     print "No feed id specified\n";
     die();
 }
@@ -19,7 +19,7 @@ function signalHandler($signal)
 
 $running = true;
 $debug = true;
-$idFeedOut = $argv[1];
+$idFeedOut = $argv[2];
 
 require_once("_f_curl.php"); //Easy to use curl function
 require_once("../includes/c_config.php");
