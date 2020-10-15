@@ -14,8 +14,8 @@ $status = !empty($_REQUEST['status']) ? $_REQUEST['status'] : null;
 require_once(INCLUDES . 'display.php');
 require_once(INCLUDES . 'f_site.php');
 
-$statsStart = !empty( $_REQUEST['statsStart'] ) ? $_REQUEST['statsStart'] : date( 'Y-m-d' );
-$statsEnd = !empty( $_REQUEST['statsEnd'] ) ? $_REQUEST['statsEnd'] : date( 'Y-m-d' );
+$statsStart = !empty($_REQUEST['statsStart']) ? $_REQUEST['statsStart'] : date('Y-m-d');
+$statsEnd = !empty($_REQUEST['statsEnd']) ? $_REQUEST['statsEnd'] : date('Y-m-d');
 $statsQuick = $_REQUEST['statsQuick'] ?? '';
 
 $feedIn = $leads->getInboundFeed(1);
@@ -1519,18 +1519,16 @@ if (isset($_REQUEST['d'])) {
                         <td>
                             <p>Determines which section this feed shows up under on the dashboard.</p>
                             <p>
-                                <input type="radio" name="feedCategory"
-                                       value="email"<?php if (empty($feed_feedCategory) || 'email' == $feed_feedCategory) {
-                                    print ' checked="checked"';
-                                } ?> /> Email<br/>
-                                <input type="radio" name="feedCategory"
-                                       value="phone"<?php if ('phone' == $feed_feedCategory) {
-                                    print ' checked="checked"';
-                                } ?> /> Phone<br/>
-                                <input type="radio" name="feedCategory"
-                                       value="ppc"<?php if ('ppc' == $feed_feedCategory) {
-                                    print ' checked="checked"';
-                                } ?> /> PPC<br/>
+                                <?php
+                                reset($feedCategories);
+                                $firstKey = key($feedCategories);
+                                foreach ($feedCategories as $categoryKey => $categoryVal) {
+                                    printf('<input type="radio" name="feedCategory" value="%s"%s/> %s<br/>',
+                                        Display::escHtml($categoryKey),
+                                        (empty($feed_feedCategory) && $categoryKey === $firstKey) || 'email' == $feed_feedCategory ? ' checked="checked"' : '',
+                                        Display::escHtml($categoryVal)
+                                    );
+                                } ?>
                             </p>
                         </td>
                     </tr>
@@ -3539,40 +3537,42 @@ include(INCLUDES . "c_header.php");
             $years = array();
             $quarters = array();
             $startDate = new \DateTime();
-            $endDate = new DateTime( ( date( 'Y' ) - 3 ) . '-01-01' );
+            $endDate = new DateTime((date('Y') - 3) . '-01-01');
             do {
-                $year = $startDate->format( 'Y' );
-                $quarter = $year . '-Q' . ceil( $startDate->format( 'm' ) / 3 );
-                if( empty( $years[$year] ) ) {
+                $year = $startDate->format('Y');
+                $quarter = $year . '-Q' . ceil($startDate->format('m') / 3);
+                if (empty($years[$year])) {
                     $value = $year . '-01-01' . '|' . $year . '-12-31';
-                    printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+                    printf('<option value="%s"%s>%s</option>' . PHP_EOL,
                         $value,
                         $statsQuick == $value ? ' selected="selected"' : '',
-                        htmlentities( $year . ' Year' )
+                        htmlentities($year . ' Year')
                     );
                     $years[$year] = true;
                 }
-                if( empty( $quarters[$quarter] ) ) {
-                    $value = Display::getQuarterStart( $year, ceil( $startDate->format( 'm' ) / 3 ) ) . '|' . Display::getQuarterEnd( $year, ceil( $startDate->format( 'm' ) / 3 ) );
-                    printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+                if (empty($quarters[$quarter])) {
+                    $value = Display::getQuarterStart($year, ceil($startDate->format('m') / 3)) . '|' . Display::getQuarterEnd($year, ceil($startDate->format('m') / 3));
+                    printf('<option value="%s"%s>%s</option>' . PHP_EOL,
                         $value,
                         $statsQuick == $value ? ' selected="selected"' : '',
-                        htmlentities( str_replace( '-Q', ' Qtr ', $quarter ) )
+                        htmlentities(str_replace('-Q', ' Qtr ', $quarter))
                     );
                     $quarters[$quarter] = true;
                 }
 
-                $value = $startDate->format( 'Y-m-01' ) . '|' . $startDate->format( 'Y-m-t' );
-                printf( '<option value="%s"%s>%s</option>' . PHP_EOL,
+                $value = $startDate->format('Y-m-01') . '|' . $startDate->format('Y-m-t');
+                printf('<option value="%s"%s>%s</option>' . PHP_EOL,
                     $value,
                     $statsQuick == $value ? ' selected="selected"' : '',
-                    htmlentities( $startDate->format( 'Y-m' ) )
+                    htmlentities($startDate->format('Y-m'))
                 );
-                $startDate->sub( new \DateInterval( 'P1M' ) );
-            } while( $startDate >= $endDate );
+                $startDate->sub(new \DateInterval('P1M'));
+            } while ($startDate >= $endDate);
             print '</select>' . PHP_EOL;
             ?>
-            Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsStart ) ) ); ?>"> to <input type="text" name="statsEnd" value="<?php echo htmlentities( date( 'Y-m-d', strtotime( $statsEnd ) ) ); ?>"> <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
+            Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities(date('Y-m-d', strtotime($statsStart))); ?>"> to <input type="text" name="statsEnd"
+                                                                                                                                                  value="<?php echo htmlentities(date('Y-m-d', strtotime($statsEnd))); ?>">
+            <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
         <input type="hidden" name="status" value="<?php echo Display::escHtml($status); ?>">
     </form>
 
@@ -3681,7 +3681,7 @@ include(INCLUDES . "c_header.php");
 
                     foreach ($companyFeedList as $keyFeed => $feed) {
 
-                        $stats = $leads->getOutboundStatsRange( $feed->idFeedOut, date( 'Y-m-d', strtotime( $statsStart ) ), date( 'Y-m-d', strtotime( $statsEnd ) ) );
+                        $stats = $leads->getOutboundStatsRange($feed->idFeedOut, date('Y-m-d', strtotime($statsStart)), date('Y-m-d', strtotime($statsEnd)));
 
                         $companyFeedList[$keyFeed]->accepted = $stats['accepted'];
                         $totalAccepted += $stats['accepted'];

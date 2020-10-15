@@ -816,18 +816,16 @@ if (isset($_REQUEST['d'])) {
                         <td>
                             <p>Determines which section this feed shows up under on the dashboard.</p>
                             <p>
-                                <input type="radio" name="feedCategory"
-                                       value="email"<?php if (empty($feed_feedCategory) || 'email' == $feed_feedCategory) {
-                                    print ' checked="checked"';
-                                } ?> /> Email<br/>
-                                <input type="radio" name="feedCategory"
-                                       value="phone"<?php if ('phone' == $feed_feedCategory) {
-                                    print ' checked="checked"';
-                                } ?> /> Phone<br/>
-                                <input type="radio" name="feedCategory"
-                                       value="ppc"<?php if ('ppc' == $feed_feedCategory) {
-                                    print ' checked="checked"';
-                                } ?> /> PPC<br/>
+                                <?php
+                                reset($feedCategories);
+                                $firstKey = key($feedCategories);
+                                foreach ($feedCategories as $categoryKey => $categoryVal) {
+                                    printf('<input type="radio" name="feedCategory" value="%s"%s/> %s<br/>',
+                                        Display::escHtml($categoryKey),
+                                        (empty($feed_feedCategory) && $categoryKey === $firstKey) || 'email' == $feed_feedCategory ? ' checked="checked"' : '',
+                                        Display::escHtml($categoryVal)
+                                    );
+                                } ?>
                             </p>
                         </td>
                     </tr>
