@@ -1525,7 +1525,7 @@ if (isset($_REQUEST['d'])) {
                                 foreach ($feedCategories as $categoryKey => $categoryVal) {
                                     printf('<input type="radio" name="feedCategory" value="%s"%s/> %s<br/>',
                                         Display::escHtml($categoryKey),
-                                        (empty($feed_feedCategory) && $categoryKey === $firstKey) || 'email' == $feed_feedCategory ? ' checked="checked"' : '',
+                                        (empty($feed_feedCategory) && $categoryKey === $firstKey) || $feed_feedCategory == $categoryKey ? ' checked="checked"' : '',
                                         Display::escHtml($categoryVal)
                                     );
                                 } ?>
@@ -1613,20 +1613,23 @@ if (isset($_REQUEST['d'])) {
                             </p>
                             <div>
                                 <div id='staticFields_container'>
-                                    <?php foreach ($feed_staticFields as $key => $val) {
-                                        ?>
-                                        <div>
-                                            <input type='text'
-                                                   name='staticFields_field[]'
-                                                   value='<?php echo Display::escHtml($key); ?>'
-                                            /> = <input type='text'
-                                                        name='staticFields_value[]'
-                                                        value='<?php echo Display::escHtml($val); ?>'
-                                            />
-                                            <a href='#' class='nonLink'
-                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                        </div>
-                                    <?php } ?>
+                                    <?php
+                                    if (!empty($feed_staticFields)) {
+                                        foreach ($feed_staticFields as $key => $val) {
+                                            ?>
+                                            <div>
+                                                <input type='text'
+                                                       name='staticFields_field[]'
+                                                       value='<?php echo Display::escHtml($key); ?>'
+                                                /> = <input type='text'
+                                                            name='staticFields_value[]'
+                                                            value='<?php echo Display::escHtml($val); ?>'
+                                                />
+                                                <a href='#' class='nonLink'
+                                                   onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                            </div>
+                                        <?php }
+                                    } ?>
                                 </div>
                             </div>
                         </td>
@@ -1646,25 +1649,27 @@ if (isset($_REQUEST['d'])) {
                                 <div id='varFields_container'>
                                     <?php
                                     $sFCount = 0;
-                                    foreach ($feed_varFields as $key => $val) {
-                                        ?>
-                                        <div>
-                                            API Field: <input type='text' name='varFields[]'
-                                                              value='<?php echo Display::escHtml($key); ?>'/>
-                                            Mapped To: <select name='fieldMap[]'>
-                                                <?php
-                                                foreach ($allAvailableFields as $rF) { ?>
-                                                    <option value='<?php echo Display::escHtml($rF->fieldName,
-                                                        ENT_QUOTES); ?>' <?php if ($val == $rF->fieldName) {
-                                                        echo "selected='selected'";
-                                                    } ?>><?php echo Display::escHtml($rF->fieldName); ?></option>
-                                                <?php } ?>
-                                            </select>
-                                            <a href='#' class='nonLink'
-                                               onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                        </div>
-                                        <?php
-                                        $sFCount++;
+                                    if (!empty($feed_varFields)) {
+                                        foreach ($feed_varFields as $key => $val) {
+                                            ?>
+                                            <div>
+                                                API Field: <input type='text' name='varFields[]'
+                                                                  value='<?php echo Display::escHtml($key); ?>'/>
+                                                Mapped To: <select name='fieldMap[]'>
+                                                    <?php
+                                                    foreach ($allAvailableFields as $rF) { ?>
+                                                        <option value='<?php echo Display::escHtml($rF->fieldName,
+                                                            ENT_QUOTES); ?>' <?php if ($val == $rF->fieldName) {
+                                                            echo "selected='selected'";
+                                                        } ?>><?php echo Display::escHtml($rF->fieldName); ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                                <a href='#' class='nonLink'
+                                                   onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                            </div>
+                                            <?php
+                                            $sFCount++;
+                                        }
                                     }
                                     ?>
                                 </div>
@@ -2837,18 +2842,14 @@ if (isset($_REQUEST['d'])) {
                                     category population, it is
                                     HIGHLY recommended that you use the "Standard Queue" queue type.</p>
                                 <p>
-                                    <input type="radio" name="feedCategory" value="email"
-                                        <?php if ($popset_feedCategory == 'email') {
-                                            echo " checked";
-                                        } ?>> Email<br/>
-                                    <input type="radio" name="feedCategory" value="phone"
-                                        <?php if ($popset_feedCategory == 'phone') {
-                                            echo " checked";
-                                        } ?>> Phone<br/>
-                                    <input type="radio" name="feedCategory" value="ppc"
-                                        <?php if ($popset_feedCategory == 'ppc') {
-                                            echo " checked";
-                                        } ?>> PPC<br/>
+                                    <?php
+                                    foreach ($feedCategories as $categoryKey => $categoryVal) {
+                                        printf('<input type="radio" name="feedCategory" value="%s"%s/> %s<br/>',
+                                            Display::escHtml($categoryKey),
+                                            $popset_feedCategory == $categoryKey ? ' checked="checked"' : '',
+                                            Display::escHtml($categoryVal)
+                                        );
+                                    } ?>
                                 </p>
                             </div>
                         </td>

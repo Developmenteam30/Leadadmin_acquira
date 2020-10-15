@@ -822,7 +822,7 @@ if (isset($_REQUEST['d'])) {
                                 foreach ($feedCategories as $categoryKey => $categoryVal) {
                                     printf('<input type="radio" name="feedCategory" value="%s"%s/> %s<br/>',
                                         Display::escHtml($categoryKey),
-                                        (empty($feed_feedCategory) && $categoryKey === $firstKey) || 'email' == $feed_feedCategory ? ' checked="checked"' : '',
+                                        (empty($feed_feedCategory) && $categoryKey === $firstKey) || $feed_feedCategory == $categoryKey ? ' checked="checked"' : '',
                                         Display::escHtml($categoryVal)
                                     );
                                 } ?>
