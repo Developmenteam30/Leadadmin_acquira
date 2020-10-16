@@ -7,6 +7,7 @@ defined('APPLICATION_ENV') || define('APPLICATION_ENV', (getenv('APPLICATION_ENV
 
 define("CONFIG_COMPANY_NAME", "Qatalyst");
 define("SITE_URL", "qmleads.com");
+define("POSTING_URL", "www.qmleads.com");
 
 if ('development' == APPLICATION_ENV) {
     define("SITE_ROOT", "/var/www/html/development/qmleads.com/");
