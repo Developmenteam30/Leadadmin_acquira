@@ -12,6 +12,10 @@ if (empty($_REQUEST['idFeedIn'])) {
     die('ERROR: Please specify a feed id.');
 }
 
+if (empty($_REQUEST['h'])) {
+    die('ERROR: Please specify the security code.');
+}
+
 $leads = Leads::getInstance();
 // If this a client, ensure they have access for this feed
 if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
@@ -27,6 +31,10 @@ if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
 $feed = $leads->getInboundFeed($_REQUEST['idFeedIn']);
 if (empty($feed)) {
     die('ERROR: Feed not found.');
+}
+
+if ($_REQUEST['h'] !== hash('sha256', $feed->idFeedIn . HASH_SALT . $feed->password)) {
+    die('ERROR: Security code is invalid.');
 }
 
 $company = $leads->getCompany($feed->idCompany);
@@ -63,24 +71,24 @@ $allowedArray = explode(';', 'pswd;' . $feed->allowedFields);
     <meta charset="UTF-8"/>
     <title>API Specifications - <?php echo $company->name; ?></title>
     <style type="text/css">
-        body {
-            font-family: Verdana, sans-serif;
-        }
+		body {
+			font-family: Verdana, sans-serif;
+		}
 
-        table {
-            border-collapse: collapse;
-            page-break-after: always;
-        }
+		table {
+			border-collapse: collapse;
+			page-break-after: always;
+		}
 
-        table td {
-            border: 1px solid #000;
-            padding: 5px;
-        }
+		table td {
+			border: 1px solid #000;
+			padding: 5px;
+		}
 
-        thead td {
-            font-weight: bold;
-            text-align: center;
-        }
+		thead td {
+			font-weight: bold;
+			text-align: center;
+		}
     </style>
 </head>
 

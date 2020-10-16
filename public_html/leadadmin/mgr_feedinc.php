@@ -2211,7 +2211,7 @@ include(INCLUDES . "c_header.php");
                                             <span class="sr-only">Toggle Dropdown</span>
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>"
+                                            <li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>&amp;h=<?php echo urlencode(hash('sha256', $feed->idFeedIn . HASH_SALT . $feed->password)) ?>"
                                                    target="_blank">API Spec</a></li>
                                             <li><a href="#" data-toggle="modal" data-backdrop="static"
                                                    data-target="#modal-import"
