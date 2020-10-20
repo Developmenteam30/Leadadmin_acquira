@@ -12,10 +12,18 @@ if (empty($_REQUEST['idFeedIn'])) {
     die('ERROR: Please specify a feed id.');
 }
 
+if (empty($_REQUEST['h'])) {
+    die('ERROR: Please specify the security code.');
+}
+
 $leads = Leads::getInstance();
 $feed = $leads->getInboundFeed($_REQUEST['idFeedIn']);
 if (empty($feed)) {
     die('ERROR: Feed not found.');
+}
+
+if ($_REQUEST['h'] !== hash('sha256', $feed->idFeedIn . HASH_SALT . $feed->password)) {
+    die('ERROR: Security code is invalid.');
 }
 
 $company = $leads->getCompany($feed->idCompany);

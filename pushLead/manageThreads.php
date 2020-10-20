@@ -10,23 +10,24 @@ $verbose = false;
 $recordsPerRun = 1000;
 $maxThreads = 20;
 
-// Check to see if the manageThreads process is already running and it's not this process.
-exec("pgrep -f manageThreads.php", $processes);
-if (!empty($processes) && is_array($processes) && sizeOf($processes)) {
-    foreach ($processes as $process) {
-        if (getmypid() != $process) {
-            if ($verbose) {
-                print 'Already running.';
-            }
-            die();
-        }
+// Simple test to see if this script is already running by binding to a specific port
+// Adapted from: https://www.timkay.com/solo/solo
+$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+if (@socket_bind($socket, '127.1.1.0', MANAGE_THREADS_SOCKET_PORT) === false) {
+    if ($verbose) {
+        die('Already running');
+    } else {
+        die();
     }
 }
 
 function countProcesses($idFeedOut)
 {
 
-    exec(sprintf("ps auxwww|grep '[p]ushLeads.php %d$'", intval($idFeedOut)), $output);
+    exec(sprintf("ps auxwww|grep '[p]ushLeads.php %s %d$'",
+        escapeshellarg(SITE_URL),
+        intval($idFeedOut)
+    ), $output);
 
     return !empty($output) && is_array($output) ? sizeOf($output) : 0;
 
@@ -72,7 +73,8 @@ while (true) {
                 print "\tSpawning new\n";
             }
 
-            exec(sprintf('php -f pushLeads.php %s>/dev/null 2>&1 &',
+            exec(sprintf('php -f pushLeads.php %s %s>/dev/null 2>&1 &',
+                    escapeshellarg(SITE_URL),
                     escapeshellarg($feed->idFeedOut)
                 )
             );

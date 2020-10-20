@@ -4772,7 +4772,7 @@ class Leads
         $results = array();
 
         try {
-            $query = $this->db->prepare("SELECT idRecord FROM dnrdmktg.data_inbound WHERE timestamp IS NULL");
+            $query = $this->db->prepare("SELECT idRecord FROM data_inbound WHERE timestamp IS NULL");
             $query->execute();
             $results = $query->fetchAll();
         } catch (PDOException $e) {
@@ -5071,7 +5071,7 @@ class Leads
         $results = array();
 
         try {
-            $query = $this->db->prepare("SELECT s.idFeedIn,s.url,c.name,i.label FROM dnrdmktg.stats_inbound s LEFT JOIN feedinc i ON i.idFeedIn = s.idFeedIn LEFT JOIN companies c ON i.idCompany = c.idCompany WHERE s.stamp >= DATE_SUB(NOW(),INTERVAL 90 DAY) AND s.accepted > 0 AND s.url != '' GROUP BY s.url,s.idFeedIn");
+            $query = $this->db->prepare("SELECT s.idFeedIn,s.url,c.name,i.label FROM stats_inbound s LEFT JOIN feedinc i ON i.idFeedIn = s.idFeedIn LEFT JOIN companies c ON i.idCompany = c.idCompany WHERE s.stamp >= DATE_SUB(NOW(),INTERVAL 90 DAY) AND s.accepted > 0 AND s.url != '' GROUP BY s.url,s.idFeedIn");
             $query->execute();
             $urls = $query->fetchAll();
 
@@ -5087,15 +5087,15 @@ class Leads
                         'name' => $url['name'],
                     );
 
-                    $query = $this->db->prepare("SELECT AVG(accepted) FROM dnrdmktg.stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 90 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn");
+                    $query = $this->db->prepare("SELECT AVG(accepted) FROM stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 90 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn");
                     $query->execute(array($url['url'], $url['idFeedIn']));
                     $results[$url['idFeedIn']][$url['url']]['daily'] = $query->fetchColumn();
 
-                    $query = $this->db->prepare("SELECT SUM(accepted) FROM dnrdmktg.stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 7 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn");
+                    $query = $this->db->prepare("SELECT SUM(accepted) FROM stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 7 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn");
                     $query->execute(array($url['url'], $url['idFeedIn']));
                     $results[$url['idFeedIn']][$url['url']]['weekly'] = $query->fetchColumn();
 
-                    $query = $this->db->prepare("SELECT SUM(accepted) FROM dnrdmktg.stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 30 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn");
+                    $query = $this->db->prepare("SELECT SUM(accepted) FROM stats_inbound WHERE stamp >= DATE_SUB(NOW(),INTERVAL 30 DAY) AND url = ? AND idFeedIn = ? GROUP BY url,idFeedIn");
                     $query->execute(array($url['url'], $url['idFeedIn']));
                     $results[$url['idFeedIn']][$url['url']]['monthly'] = $query->fetchColumn();
 
@@ -5230,15 +5230,15 @@ class Leads
 
         try {
             $sql = "SELECT c.idCompany,c.name,u.email,MAX(n.timestamp) AS lastDate FROM ( ";
-            $sql .= "SELECT idCompany FROM dnrdmktg.feedinc WHERE status IN ('active') ";
+            $sql .= "SELECT idCompany FROM feedinc WHERE status IN ('active') ";
             $sql .= "UNION ";
-            $sql .= "SELECT idCompany FROM dnrdmktg.feedout WHERE status IN ('active') ";
+            $sql .= "SELECT idCompany FROM feedout WHERE status IN ('active') ";
             $sql .= ") AS f ";
-            $sql .= "LEFT JOIN dnrdmktg.companies c ON c.idCompany = f.idCompany ";
-            $sql .= "LEFT JOIN dnrdmktg.users u ON u.idUser = c.accountManager ";
-            $sql .= "LEFT JOIN dnrdmktg.companies_notes n ON n.companyId = c.idCompany ";
-            $sql .= "LEFT JOIN dnrdmktg.notifications_companies nc ON nc.idCompany = c.idCompany ";
-            $sql .= "LEFT JOIN dnrdmktg.feedinc i ON i.idCompany = c.idCompany ";
+            $sql .= "LEFT JOIN companies c ON c.idCompany = f.idCompany ";
+            $sql .= "LEFT JOIN users u ON u.idUser = c.accountManager ";
+            $sql .= "LEFT JOIN companies_notes n ON n.companyId = c.idCompany ";
+            $sql .= "LEFT JOIN notifications_companies nc ON nc.idCompany = c.idCompany ";
+            $sql .= "LEFT JOIN feedinc i ON i.idCompany = c.idCompany ";
             $sql .= "WHERE c.accountManager IS NOT NULL ";
             $sql .= "AND u.level > 0 ";
             $sql .= "AND ( nc.lastNotification IS NULL OR nc.lastNotification < DATE_SUB(NOW(),INTERVAL 7 DAY)) ";
@@ -6654,9 +6654,9 @@ class Leads
 
         $sqlSelect = "SELECT a.idRecord,a.idFeedIn,a.idFeedOut,DATE_FORMAT(CONVERT_TZ(a.`timestamp`,?,?),'%Y-%m-%d') AS `timestamp`,di.url,fi.costPerLead,fo.revenuePerLead,fo.costPerLeadOverride ";
         $sqlSelect .= "FROM archive.data_outbound_201801 AS a ";
-        $sqlSelect .= "LEFT JOIN dnrdmktg.data_inbound AS di ON di.idRecord = a.idRecord ";
-        $sqlSelect .= "LEFT JOIN dnrdmktg.feedinc fi ON fi.idFeedIn = a.idFeedIn ";
-        $sqlSelect .= "LEFT JOIN dnrdmktg.feedout fo ON fo.idFeedOut = a.idFeedOut ";
+        $sqlSelect .= "LEFT JOIN data_inbound AS di ON di.idRecord = a.idRecord ";
+        $sqlSelect .= "LEFT JOIN feedinc fi ON fi.idFeedIn = a.idFeedIn ";
+        $sqlSelect .= "LEFT JOIN feedout fo ON fo.idFeedOut = a.idFeedOut ";
         $sqlSelect .= "WHERE a.idRecord > ? ";
         //$sqlSelect .= "WHERE a.timestamp >= CONVERT_TZ('2018-05-29 00:00:00',?,?) AND a.timestamp <= CONVERT_TZ('2018-05-29 23:59:59',?,?) ";
         //$sqlSelect .= "ORDER BY a.idRecord LIMIT 10000";

@@ -4,6 +4,8 @@
     "ext-pdo": "*",
     "ext-curl": "*",
     "ext-ctype": "*",
-    "ext-json": "*"
+    "ext-json": "*",
+    "ext-sockets": "*",
+    "ext-pcntl": "*"
   }
 }
