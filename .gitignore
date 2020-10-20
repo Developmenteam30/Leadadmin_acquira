@@ -4,3 +4,9 @@ public_html/leadadmin/exports/
 pushLead/lockfiles/
 uploads/
 includes/vendor/
+includes/c_config.php
+includes/f_site.php
+public_html/assets/css/admin.css
+public_html/leadadmin/images/Q-isolated.jpg
+public_html/leadadmin/images/logo.png
+public_html/logo.png
