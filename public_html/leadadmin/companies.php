@@ -1262,6 +1262,10 @@ include(INCLUDES . "c_header.php");
     $('#newcompany').on('show.bs.modal', function (e) {
         var modal = $(this);
 
+        if (refreshTimeout) {
+            clearTimeout(refreshTimeout);
+        }
+
         $.ajax({
             cache: false,
             type: 'POST',
@@ -1296,6 +1300,10 @@ include(INCLUDES . "c_header.php");
         var modal = $(this);
         var companyId = $(e.relatedTarget).data('company-id');
 
+        if (refreshTimeout) {
+            clearTimeout(refreshTimeout);
+        }
+
         $.ajax({
             cache: false,
             type: 'POST',
@@ -1311,7 +1319,7 @@ include(INCLUDES . "c_header.php");
     });
 
     $('#newcompany, #editcompany').on('hide.bs.modal', function (e) {
-        $(this).find('.modal-body').html('');
+        window.location.reload(true);
     });
 
     $('#status-select select').change(function (e) {
