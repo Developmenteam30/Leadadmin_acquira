@@ -79,7 +79,7 @@ if ('clear-outbound-queue' === $job->type) {
     }
     $body .= "\r\n";
 
-    $from = 'lmsalerts@' . SITE_URL;
+    $from = SYSTEM_FROM_EMAIL;
     $fromName = CONFIG_COMPANY_NAME;
     $to = MANAGER_EMAIL;
     $subject = 'Job Results - Clear Outbound Queue';
@@ -162,7 +162,7 @@ if ('clear-outbound-queue' === $job->type) {
     }
     $body .= "\r\n";
 
-    $from = 'lmsalerts@' . SITE_URL;
+    $from = SYSTEM_FROM_EMAIL;
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Retry Outbound Rejections';
@@ -239,7 +239,7 @@ if ('clear-outbound-queue' === $job->type) {
     }
     $body .= "\r\n";
 
-    $from = 'lmsalerts@' . SITE_URL;
+    $from = SYSTEM_FROM_EMAIL;
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Export Incoming Data';
@@ -316,7 +316,7 @@ if ('clear-outbound-queue' === $job->type) {
     }
     $body .= "\r\n";
 
-    $from = 'lmsalerts@' . SITE_URL;
+    $from = SYSTEM_FROM_EMAIL;
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Export Outgoing Data';
@@ -506,7 +506,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Failures: {$counts['failures']}\r\n";
         $body .= "\r\n";
 
-        $from = 'lmsalerts@' . SITE_URL;
+        $from = SYSTEM_FROM_EMAIL;
         $fromName = CONFIG_COMPANY_NAME;
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Inbound Record Import';
@@ -714,7 +714,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Failures: {$counts['failures']}\r\n";
         $body .= "\r\n";
 
-        $from = 'lmsalerts@' . SITE_URL;
+        $from = SYSTEM_FROM_EMAIL;
         $fromName = CONFIG_COMPANY_NAME;
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Outbound Record Upload';
@@ -940,7 +940,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Failures: {$counts['failures']}\r\n";
         $body .= "\r\n";
 
-        $from = 'lmsalerts@' . SITE_URL;
+        $from = SYSTEM_FROM_EMAIL;
         $fromName = CONFIG_COMPANY_NAME;
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Email Suppression Import';
@@ -1068,7 +1068,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Failures: {$counts['failures']}\r\n";
         $body .= "\r\n";
 
-        $from = 'lmsalerts@' . SITE_URL;
+        $from = SYSTEM_FROM_EMAIL;
         $fromName = CONFIG_COMPANY_NAME;
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Phone Suppression Import';

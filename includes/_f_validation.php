@@ -3,7 +3,7 @@
 function altVerifyEmail($email)
 {
 	//VER 1.0
-	list($userName, $mailDomain) = split("@", $email);
+	list($userName, $mailDomain) = explode("@", $email, 2);
 	if (checkdnsrr($mailDomain, "MX")) { return "OK"; } 
 	else { return "INVALID"; }
 }

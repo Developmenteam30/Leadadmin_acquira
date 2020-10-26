@@ -59,7 +59,7 @@ if (empty($_REQUEST['pswd']) || $_REQUEST['pswd'] != $feedParams->password) {
 
     // Verbose logging for troubleshooting. Turn off once testing is complete.
     if (false) {
-        $from = 'lmsalerts@' . SITE_URL;
+        $from = SYSTEM_FROM_EMAIL;
         $body = print_r($_REQUEST, true) . PHP_EOL;
         $body .= print_r($_SERVER, true) . PHP_EOL;
         $fromName = CONFIG_COMPANY_NAME . ' List Management System';

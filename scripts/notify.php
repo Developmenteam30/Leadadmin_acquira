@@ -20,7 +20,7 @@ function sendNotification( $label, $feedId, $url, $time, $hours ) {
 	$body .= "Feed: {$label} ({$feedId})\n\n";
 	$body .= "Last seen time: {$time}\n\n";
 
-	$from       = 'lmsalerts@'.SITE_URL;
+	$from       = SYSTEM_FROM_EMAIL;
 	$fromName   = CONFIG_COMPANY_NAME.' List Management System';
 	$header     = "From: " . $fromName . " <" . $from . ">\r\n";
 	//$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";

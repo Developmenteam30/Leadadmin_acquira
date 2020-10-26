@@ -196,7 +196,7 @@ class ProcessLeads
                     str_replace('.', '*', $data['url'])
                 );
 
-                $from = 'lmsalerts@' . SITE_URL;
+                $from = SYSTEM_FROM_EMAIL;
                 $fromName = CONFIG_COMPANY_NAME . ' List Management System';
                 $to = MANAGER_EMAIL;
                 $subject = 'List Management - New URL Alert';

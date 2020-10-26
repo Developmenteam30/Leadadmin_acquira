@@ -7551,7 +7551,7 @@ SQL;
                 return;
             }
 
-            $from = 'lmsalerts@' . SITE_URL;
+            $from = SYSTEM_FROM_EMAIL;
             $body = $stamp . ' ' . $message . PHP_EOL;
             $fromName = CONFIG_COMPANY_NAME . ' List Management System';
             $to = ADMINISTRATOR_EMAIL;
