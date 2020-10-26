@@ -1065,6 +1065,12 @@ if (isset($_REQUEST['d'])) {
                     'type' => 'text',
                     'value' => $_REQUEST['idRecord'] ?? rand(10000, getrandmax()),
                 ),
+                array(
+                    'id' => 'idFeedIn',
+                    'label' => 'Incoming Feed Id',
+                    'type' => 'text',
+                    'value' => $_REQUEST['idFeedIn'] ?? '1',
+                ),
             );
 
             // Add custom fields to the form for editing
@@ -1692,11 +1698,11 @@ if (isset($_REQUEST['d'])) {
                                         ?>
                                         <div>
                                             Field: <select name='valueMap[field][]'>
-                                                <?php foreach ($recordFields as $rF) { ?>
-                                                    <option value='<?php echo Display::escHtml($rF,
-                                                        ENT_QUOTES); ?>' <?php if (isset($vF['field']) && $vF['field'] == $rF) {
+                                                <?php foreach ($leads->getInboundFields(true) as $rF) { ?>
+                                                    <option value='<?php echo Display::escHtml($rF->fieldName,
+                                                        ENT_QUOTES); ?>' <?php if (isset($vF['field']) && $vF['field'] == $rF->fieldName) {
                                                         echo "selected='selected'";
-                                                    } ?>><?php echo Display::escHtml($rF); ?></option>
+                                                    } ?>><?php echo Display::escHtml($rF->fieldName); ?></option>
                                                 <?php } ?>
                                             </select>
                                             Incoming Value: <input type='text' name='valueMap[oldValue][]'
@@ -2699,9 +2705,8 @@ if (isset($_REQUEST['d'])) {
             ?>
             <div>
                 Field: <select name='valueMap[field][]'>
-                    <?php foreach ($recordFields as $rF) { ?>
-                        <option value='<?php echo Display::escHtml($rF,
-                            ENT_QUOTES); ?>'><?php echo Display::escHtml($rF); ?></option>
+                    <?php foreach ($leads->getInboundFields(true) as $rF) { ?>
+                        <option value='<?php echo Display::escHtml($rF->fieldName, ENT_QUOTES); ?>'><?php echo Display::escHtml($rF->fieldName); ?></option>
                     <?php } ?>
                 </select>
                 Incoming Value: <input type='text' name='valueMap[oldValue][]' value=''/>

@@ -2944,12 +2944,16 @@ class Leads
         return $results;
     }
 
-    public function getInboundFields()
+    public function getInboundFields($includeOutbound = false)
     {
         $results = array();
 
         try {
-            $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom') ORDER BY REPLACE(fieldName,'c_','')");
+            if ($includeOutbound) {
+                $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','outbound') ORDER BY REPLACE(fieldName,'c_','')");
+            } else {
+                $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom') ORDER BY REPLACE(fieldName,'c_','')");
+            }
             $query->execute();
             $results = $query->fetchAll(\PDO::FETCH_OBJ);
         } catch (PDOException $e) {
