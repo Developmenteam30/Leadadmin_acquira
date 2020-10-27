@@ -6190,6 +6190,11 @@ class Leads
             return $result;
         }
 
+        // We always need the timestamp column so we can order the records
+        if (!in_array('timestamp', $settings['columns'])) {
+            $settings['columns'][] = 'timestamp';
+        }
+
         if (!empty($settings['includeRejects'])) {
             $settings['columns'][] = 'result';
         }
@@ -6214,90 +6219,122 @@ class Leads
 
         fputcsv($file, $settings['columns']);
 
+        $subParams = [];
+        $archiveDate = new \DateTime($settings['dateStart'] . ' 00:00:00');
+        $dateEnd = new \DateTime($settings['dateEnd'] . ' 23:59:59');
+
+        // Pull from the data_inbound table first
+        $subSql = "( SELECT ";
+        $comma = false;
+        foreach ($settings['columns'] as $column) {
+            if ($comma) {
+                $subSql .= ', ';
+            }
+            $subSql .= $this->quoteIdentifier($column);
+            $comma = true;
+        }
+        $subSql .= " FROM data_inbound WHERE idFeedIn = ? ";
+        $subParams[] = $idFeedIn;
+
+        if (empty($settings['includeRejects'])) {
+            $subSql .= "AND result IS NULL ";
+        }
+
+        if (!empty($settings['dateStart']) && strtotime($settings['dateStart']) !== false) {
+            $subSql .= "AND timestamp >= CONVERT_TZ(?,?,?) ";
+            $subParams[] = date('Y-m-d', strtotime($settings['dateStart'])) . ' 00:00:00';
+            $subParams[] = LOCAL_TIMEZONE;
+            $subParams[] = DB_TIMEZONE;
+        }
+
+        if (!empty($settings['dateEnd']) && strtotime($settings['dateEnd']) !== false) {
+            $subSql .= "AND timestamp <= CONVERT_TZ(?,?,?) ";
+            $subParams[] = date('Y-m-d', strtotime($settings['dateEnd'])) . ' 23:59:59';
+            $subParams[] = LOCAL_TIMEZONE;
+            $subParams[] = DB_TIMEZONE;
+        }
+
+        if (!empty($settings['urlList']) && is_array($settings['urlList'])) {
+            $orFlag = false;
+
+            $subSql .= "AND (";
+            foreach ($settings['urlList'] as $url) {
+                if (!empty($url)) {
+                    if ($orFlag) {
+                        $subSql .= " OR ";
+                    }
+                    $subSql .= "url = ?";
+                    $subParams[] = $url;
+                    $orFlag = true;
+                }
+            }
+            $subSql .= ")";
+        }
+
+        if (!empty($settings['emailList']) && is_array($settings['emailList'])) {
+            $orFlag = false;
+
+            $subSql .= "AND (";
+            foreach ($settings['emailList'] as $email) {
+                if (!empty($email)) {
+                    if ($orFlag) {
+                        $subSql .= " OR ";
+                    }
+                    $subSql .= "email LIKE ?";
+                    $subParams[] = '%@' . $email;
+                    $orFlag = true;
+                }
+            }
+            $subSql .= ")";
+        }
+        $subSql .= ") UNION ";
+
+        $sql = "SELECT * FROM ( ";
+        $sql .= $subSql;
+        $params = $subParams;
+
+        // Loop through the same query, substituting the main table with the archive table for that month
+        do {
+            try {
+                // Check if an archive table exists for this month
+                $query = $this->db->prepare("SHOW TABLES FROM `archive` LIKE 'data_inbound_" . $archiveDate->format('Ym') . "'");
+                $query->execute();
+                $tableExists = $query->fetchAll();
+
+                if (!empty($tableExists)) {
+                    $sql .= str_replace(' FROM data_inbound WHERE ', ' FROM archive.data_inbound_' . $archiveDate->format('Ym') . ' WHERE ', $subSql);
+                    $params = array_merge($params, $subParams);
+                }
+
+            } catch (PDOException $e) {
+                $this->logError('Unable to check if inbound archive table exists: ' . $e->getMessage());
+            }
+
+            try {
+                $archiveDate->add(new \DateInterval(('P1M')));
+            } catch (\Exception $e) {
+                break;
+            }
+        } while ($archiveDate->format('Ym') <= $dateEnd->format('Ym'));
+
+        $sql = substr($sql, 0, -6); // Remove the last UNION statement
+        $sql .= " ) AS recs ";
+        if (!empty($settings['limit'])) {
+            $sql .= "ORDER BY recs.timestamp ";
+            $sql .= "LIMIT " . intval($settings['limit']);
+        }
+
         try {
-
-            $fields = array();
-
-            $query = "SELECT ";
-            $comma = false;
-            foreach ($settings['columns'] as $column) {
-                if ($comma) {
-                    $query .= ', ';
-                }
-                $query .= $this->quoteIdentifier($column);
-                $comma = true;
-            }
-            $query .= " FROM data_inbound WHERE idFeedIn = ? ";
-            $fields[] = $idFeedIn;
-
-            if (empty($settings['includeRejects'])) {
-                $query .= "AND result IS NULL ";
-            }
-
-            if (!empty($settings['dateStart']) && strtotime($settings['dateStart']) !== false) {
-                $query .= "AND timestamp >= CONVERT_TZ(?,?,?) ";
-                $fields[] = date('Y-m-d', strtotime($settings['dateStart'])) . ' 00:00:00';
-                $fields[] = LOCAL_TIMEZONE;
-                $fields[] = DB_TIMEZONE;
-            }
-
-            if (!empty($settings['dateEnd']) && strtotime($settings['dateEnd']) !== false) {
-                $query .= "AND timestamp <= CONVERT_TZ(?,?,?) ";
-                $fields[] = date('Y-m-d', strtotime($settings['dateEnd'])) . ' 23:59:59';
-                $fields[] = LOCAL_TIMEZONE;
-                $fields[] = DB_TIMEZONE;
-            }
-
-            if (!empty($settings['urlList']) && is_array($settings['urlList'])) {
-                $orFlag = false;
-
-                $query .= "AND (";
-                foreach ($settings['urlList'] as $url) {
-                    if (!empty($url)) {
-                        if ($orFlag) {
-                            $query .= " OR ";
-                        }
-                        $query .= "url = ?";
-                        $fields[] = $url;
-                        $orFlag = true;
-                    }
-                }
-                $query .= ")";
-            }
-
-            if (!empty($settings['emailList']) && is_array($settings['emailList'])) {
-                $orFlag = false;
-
-                $query .= "AND (";
-                foreach ($settings['emailList'] as $email) {
-                    if (!empty($email)) {
-                        if ($orFlag) {
-                            $query .= " OR ";
-                        }
-                        $query .= "email LIKE ?";
-                        $fields[] = '%@' . $email;
-                        $orFlag = true;
-                    }
-                }
-                $query .= ")";
-            }
-
-            if (!empty($settings['limit'])) {
-                $query .= "LIMIT " . intval($settings['limit']);
-            }
-
             $this->unsetBufferedQuery();
 
-            $result['query'] = $query;
-            $query = $this->db->Prepare($query);
-
-            $query->execute($fields);
+            $result['query'] = $sql;
+            $sql = $this->db->Prepare($sql);
+            $sql->execute($params);
             $cnt = 0;
-            while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            while ($row = $sql->fetch(PDO::FETCH_ASSOC)) {
                 $cnt++;
                 fputcsv($file, $row);
             }
-
         } catch (PDOException $e) {
             $this->logError('Unable to export inbound records: ' . $e->getMessage());
             $result['reason'] = 'SQL ERROR: ' . $e->getMessage();
