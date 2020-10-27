@@ -163,7 +163,7 @@ class ProcessLeads
         if (curl_errno($ch) != 0) {
             $response = "CURL Error: " . curl_error($ch);
         }
-        if(200 !== $responseCode) {
+        if (200 !== $responseCode) {
             $response = "HTTP Response Code: {$responseCode} [{$response}]";
         }
         if ($verbose) {
@@ -678,6 +678,10 @@ class ProcessLeads
                         $requestdata, $xmldata, $headerdata);
                     break;
 
+                case 'landline_prepend1':
+                    ProcessLeads::assignValue($key, $row->landline ? '1' . $row->landline : '', $requestdata, $xmldata, $headerdata);
+                    break;
+
                 case 'cellphone_areacode':
                     ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 0, 3) : '',
                         $requestdata, $xmldata, $headerdata);
@@ -696,6 +700,10 @@ class ProcessLeads
                 case 'cellphone_NXX+XXXX':
                     ProcessLeads::assignValue($key, 10 == strlen($row->cellphone) ? substr($row->cellphone, 3, 7) : '',
                         $requestdata, $xmldata, $headerdata);
+                    break;
+
+                case 'cellphone_prepend1':
+                    ProcessLeads::assignValue($key, $row->cellphone ? '1' . $row->cellphone : '', $requestdata, $xmldata, $headerdata);
                     break;
 
                 default:
