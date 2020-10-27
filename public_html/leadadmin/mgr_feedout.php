@@ -3442,6 +3442,7 @@ if (isset($_REQUEST['d'])) {
                                     <?php if ('category' == $popSet->populationType) { ?>
                                         Category: <?php echo Display::escHtml($popSet->feedCategory); ?>
                                     <?php } else { ?>
+                                        Company: <?php echo Display::escHtml($cacheFeedIn[$popSet->idFeedIn]->companyName ?? ''); ?><br/>
                                         Feed: (<?php echo $popSet->idFeedIn; ?>) <?php echo Display::escHtml($cacheFeedIn[$popSet->idFeedIn]->label); ?>
                                     <?php } ?>
                                 </p>
