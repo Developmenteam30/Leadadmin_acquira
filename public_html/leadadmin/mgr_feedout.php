@@ -1003,7 +1003,7 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'url',
                     'label' => 'URL',
                     'type' => 'text',
-                    'value' => $_REQUEST['url'] ?? ('http://www.' . SITE_URL),
+                    'value' => $_REQUEST['url'] ?? ('https://' . POSTING_URL),
                 ),
                 array(
                     'id' => 'stamp',

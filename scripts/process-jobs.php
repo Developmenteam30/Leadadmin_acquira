@@ -232,8 +232,8 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Total Records: {$result['cnt']}\r\n";
     }
     if (!empty($result['cnt']) && !empty($result['fileLink'])) {
-        $body .= sprintf("\r\nDownload Link: https://www.%s/leadadmin/%s\r\n",
-            SITE_URL,
+        $body .= sprintf("\r\nDownload Link: https://%s/leadadmin/%s\r\n",
+            POSTING_URL,
             $result['fileLink']
         );
     }
@@ -309,8 +309,8 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Total Records: {$result['cnt']}\r\n";
     }
     if (!empty($result['cnt']) && !empty($result['fileLink'])) {
-        $body .= sprintf("\r\nDownload Link: https://www.%s/leadadmin/%s\r\n",
-            SITE_URL,
+        $body .= sprintf("\r\nDownload Link: https://%s/leadadmin/%s\r\n",
+            POSTING_URL,
             $result['fileLink']
         );
     }

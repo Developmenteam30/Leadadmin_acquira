@@ -97,7 +97,7 @@ if( isset( $_REQUEST['a'] ) ) {
 			$message .= "\r\n";
 			$message .= "Your {$date} List Management Revenue Report is now available.  Your login credentials are listed below:\r\n";
 			$message .= "\r\n";
-			$message .= "Link: https://www." . SITE_URL . "/leadadmin/client_reports.php\r\n";
+			$message .= "Link: https://" . POSTING_URL . "/leadadmin/client_reports.php\r\n";
 			$message .= "Username: {$user->username}\r\n";
 			$message .= "Password: [If you forgot your password, please contact your " . CONFIG_COMPANY_NAME . " Account Manager]\r\n";
 			$message .= "\r\n";
