@@ -6976,11 +6976,18 @@ class Leads
         $date = new \DateTime();
         for ($i = 0; $i < 6; $i++) {
             try {
-                $table = $this->quoteIdentifier('data_outbound_' . $date->format('Ym'));
-                $query = $this->db->prepare("SELECT 1 FROM archive." . $table . " WHERE idRecord = ? AND idFeedIn = ? AND idFeedOut = ?");
-                $query->execute(array($idRecord, $idFeedIn, $idFeedOut));
-                if ($query && $query->fetchColumn()) {
-                    return true;
+                // Check if an archive table exists for this month
+                $query = $this->db->prepare("SHOW TABLES FROM `archive` LIKE 'data_outbound_" . $date->format('Ym') . "'");
+                $query->execute();
+                $tableExists = $query->fetchAll();
+
+                if (!empty($tableExists)) {
+                    $table = $this->quoteIdentifier('data_outbound_' . $date->format('Ym'));
+                    $query = $this->db->prepare("SELECT 1 FROM archive." . $table . " WHERE idRecord = ? AND idFeedIn = ? AND idFeedOut = ?");
+                    $query->execute(array($idRecord, $idFeedIn, $idFeedOut));
+                    if ($query && $query->fetchColumn()) {
+                        return true;
+                    }
                 }
             } catch (PDOException $e) {
                 $this->logError('Unable to get outbound record archive exists results: ' . $e->getMessage());
