@@ -144,6 +144,29 @@ class Display
                 }
                 print '</div>';
 
+            } elseif ('checkboxBits' == $field['type']) {
+
+                printf("\t<label data-for=\"%s\">%s%s</label>%s\n",
+                    htmlspecialchars($field['id']),
+                    htmlspecialchars($field['label']),
+                    (!empty($field['required']) ? ' <span class="required">*</span> ' : ''),
+                    (!empty($field['label_append']) ? $field['label_append'] : '')
+                );
+                print '<div class="checkbox-choices">';
+                if (!empty($field['choices']) && is_array($field['choices'])) {
+                    foreach ($field['choices'] as $key => $val) {
+                        printf("\t<input class=\"form-control\" type=\"checkbox\" name=\"%s%s\" value=\"%s\"%s /> %s%s\n",
+                            htmlspecialchars($field['id']),
+                            (sizeOf($field['choices']) > 1 ? '[]' : ''),
+                            htmlspecialchars($key),
+                            isset($field['value']) && LeadsSession::checkBit($field['value'], $key) ? ' checked="checked"' : '',
+                            htmlspecialchars($val),
+                            (!empty($field['choice_append']) ? $field['choice_append'] : '')
+                        );
+                    }
+                }
+                print '</div>';
+
             } elseif ('radio' == $field['type']) {
 
                 printf("\t<label data-for=\"%s\">%s%s</label>\n",

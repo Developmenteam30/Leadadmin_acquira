@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once(INCLUDES . 'session.php');
-LeadsSession::requireAccess(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD);
+LeadsSession::requireAccess([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF]);
 
 require_once(INCLUDES . 'leads.php');
 require_once(INCLUDES . 'processLeads.php');
@@ -254,7 +254,7 @@ if (isset($_REQUEST['a'])) {
 
                 $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-                if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+                if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                     $idCompany = LeadsSession::getCompanyId();
                     if (empty($idCompany)) {
                         $idCompany = -9999;
@@ -368,7 +368,7 @@ if (isset($_REQUEST['a'])) {
             $idAssoc = !empty($_REQUEST['idAssoc']) ? $_REQUEST['idAssoc'] : '';
             $action = !empty($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -594,7 +594,7 @@ if (isset($_REQUEST['a'])) {
             $result['error'] = 'Failed when attempting to manage feed params.';
 
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -653,12 +653,12 @@ if (isset($_REQUEST['a'])) {
             $c = true;
             $result['error'] = 'Failed when trying to import data.';
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $c = false;
                 $result['error'] = 'Sorry, you do not have permission to import legacy data.';
             }
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -733,12 +733,12 @@ if (isset($_REQUEST['a'])) {
             $c = true;
             $result['error'] = 'Failed when trying to export data.';
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 $c = false;
                 $result['error'] = 'Sorry, you do not have permission to export data.';
             }
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -779,12 +779,12 @@ if (isset($_REQUEST['a'])) {
             $c = true;
             $result['error'] = 'Failed when trying to retry outbound rejections.';
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $c = false;
                 $result['error'] = 'Sorry, you do not have permission to retry outbound rejections.';
             }
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -873,7 +873,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_testrecord':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1215,7 +1215,7 @@ if (isset($_REQUEST['d'])) {
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
             $idRecord = !empty($_REQUEST['idRecord']) ? $_REQUEST['idRecord'] : 0;
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1272,7 +1272,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_queue-preview':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1323,7 +1323,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_clearqueue':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1354,7 +1354,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_editfeed':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1372,6 +1372,10 @@ if (isset($_REQUEST['d'])) {
                 <p>Database failure - could not fetch requested feed information.</p>
                 <?php
                 exit;
+            }
+
+            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF) && 'ppc' !== $feed->feedCategory) {
+                die('Sorry, you do not have access to this feed.');
             }
 
             $feed->staticFields = !empty($feed->staticFieldsJSON) ? json_decode($feed->staticFieldsJSON,
@@ -1468,7 +1472,7 @@ if (isset($_REQUEST['d'])) {
                 $selectedNotifyThresholdDays = array();
             }
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $companies = array($leads->getCompany($feed_idCompany));
             } else {
                 $companies = $leads->getCompanies();
@@ -1974,11 +1978,11 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_export':
             $idFeedOut = $_REQUEST['idFeedOut'];
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 die('Sorry, you do not have permission to export data.');
             }
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2088,11 +2092,11 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_import':
             $idFeedOut = $_REQUEST['idFeedOut'] ?? '';
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 die('Sorry, you do not have permission to import data.');
             }
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2198,7 +2202,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_upload':
             $idFeedOut = $_REQUEST['idFeedOut'];
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2393,11 +2397,11 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_retry_rejections':
             $idFeedOut = $_REQUEST['idFeedOut'] ?? '';
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 die('Sorry, you do not have permission to retry outbound rejections.');
             }
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2461,7 +2465,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_urlreport':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2775,7 +2779,7 @@ if (isset($_REQUEST['d'])) {
             }
             $feed = $leads->getOutboundFeed($popset_idFeedOut);
 
-            if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $incomingFeeds = $leads->getInboundFeeds(null, 'active', null, $popset_idFeedIn);
             } else {
                 $idCompany = LeadsSession::getCompanyId();
@@ -3294,7 +3298,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_editpopulation':
             $idFeedOut = !empty(['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -3352,6 +3356,10 @@ if (isset($_REQUEST['d'])) {
                     foreach ($populationSettings as $popSet) {
                         if (!isset($cacheFeedIn[$popSet->idFeedIn])) {
                             $cacheFeedIn[$popSet->idFeedIn] = $leads->getInboundFeed($popSet->idFeedIn);
+                            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF]) && $cacheFeedIn[$popSet->idFeedIn]->idCompany != $idCompany) {
+                                unset($cacheFeedIn[$popSet->idFeedIn]);
+                                continue;
+                            }
                             if (!is_object($cacheFeedIn[$popSet->idFeedIn])) {
                                 $cacheFeedIn[$popSet->idFeedIn] = new stdClass;
                                 $cacheFeedIn[$popSet->idFeedIn]->label = 'Error';
@@ -3584,7 +3592,7 @@ include(INCLUDES . "c_header.php");
     </form>
 
 
-    <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) { ?>
+    <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) { ?>
 
         <form class="pull-right" id="status-select" method="get">
             <select id="status" name="status">
@@ -3627,14 +3635,14 @@ include(INCLUDES . "c_header.php");
 
         print "<h4>Outgoing $categoryVal Feeds</h4>" . PHP_EOL;
 
-        if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
-            $outgoingFeeds = $leads->getOutboundFeeds(null, $status, $categoryKey, $statsStart, $statsEnd);
+        if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            $outgoingFeeds = $leads->getOutboundFeeds(null, $status, $categoryKey);
         } else {
             $idCompany = LeadsSession::getCompanyId();
             if (empty($idCompany)) {
                 $idCompany = -9999;
             }
-            $outgoingFeeds = $leads->getOutboundFeeds($idCompany, $status, $categoryKey, $statsStart, $statsEnd);
+            $outgoingFeeds = $leads->getOutboundFeeds($idCompany, $status, $categoryKey);
         }
         ?>
         <?php

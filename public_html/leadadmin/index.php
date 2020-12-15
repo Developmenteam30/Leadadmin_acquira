@@ -3,14 +3,11 @@
 require_once( '../../includes/c_config.php' );
 require_once( INCLUDES . 'session.php' );
 
-if( LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+if( LeadsSession::isValid( [LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF] ) ) {
 	header("Location: dashboard.php");
 	exit;
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CRM ) ) {
     header("Location: crm/prospects.php?searchIsArchived=0");
-    exit;
-} else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_DASHBOARD ) ) {
-    header("Location: dashboard.php");
     exit;
 } else if( LeadsSession::isValid( LEADS_SESSION_LEVEL_CLIENT_IMPORT ) ) {
 	header("Location: mgr_feedinc.php");
@@ -54,7 +51,7 @@ if( isset( $_REQUEST['a'] ) ) {
 
 					$result['status'] = 1;
 					$result['error'] = 'Successfully logged in.';
-					LeadsSession::login( $user['idUser'], $user['level'], $user['idCompany'] );
+					LeadsSession::login( $user['idUser'], $user['accessBits'], $user['idCompany'] );
 
 				} else {
 

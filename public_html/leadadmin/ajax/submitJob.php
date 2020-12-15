@@ -16,7 +16,7 @@ function dieError($error)
     die();
 }
 
-if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_IMPORT)) {
+if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
     dieError('You do not have access to this page or your session has timed out. Log back in and try again.');
 }
 
@@ -27,7 +27,7 @@ if (!isset($_REQUEST['destination'])) {
     dieError('No destination supplied');
 }
 
-if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
     $idCompany = LeadsSession::getCompanyId();
     if (empty($idCompany)) {
         $idCompany = -9999;

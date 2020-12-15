@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once(INCLUDES . 'session.php');
-LeadsSession::requireAccess(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD);
+LeadsSession::requireAccess([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF]);
 
 require_once(INCLUDES . 'leads.php');
 require_once(INCLUDES . 'display.php');
@@ -18,7 +18,7 @@ if (empty($_REQUEST['h'])) {
 
 $leads = Leads::getInstance();
 // If this a client, ensure they have access for this feed
-if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
     $idCompany = LeadsSession::getCompanyId();
     if (empty($idCompany)) {
         $idCompany = -9999;

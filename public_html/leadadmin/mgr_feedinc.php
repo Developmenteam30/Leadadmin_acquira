@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once(INCLUDES . 'session.php');
-LeadsSession::requireAccess(LEADS_SESSION_LEVEL_CLIENT_IMPORT);
+LeadsSession::requireAccess([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF ]);
 
 require_once(INCLUDES . 'leads.php');
 $leads = Leads::getInstance();
@@ -86,7 +86,7 @@ if (isset($_REQUEST['a'])) {
             $result['error'] = 'Failed when attempting to manage feeds.';
             $action = $_REQUEST['action'];
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 $c = false;
                 $result['error'] = 'Sorry, you do not have permission to edit feeds.';
             }
@@ -243,7 +243,7 @@ if (isset($_REQUEST['a'])) {
 
             if ('new' == $action) {
 
-                if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+                if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
                     $c = false;
                     $result['error'] = 'Sorry, you do not have permission to add new feeds.';
                 }
@@ -318,7 +318,7 @@ if (isset($_REQUEST['a'])) {
                 }
             } else {
                 if ($c) {
-                    if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+                    if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
                         $idCompany = LeadsSession::getCompanyId();
                         if (empty($idCompany)) {
                             $idCompany = -9999;
@@ -338,6 +338,11 @@ if (isset($_REQUEST['a'])) {
                     if ($feed === false) {
                         $c = false;
                         $result['error'] = 'Database failure - could not fetch feed information for editing.';
+                    }
+
+                    if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF) && 'ppc' !== $feed->feedCategory) {
+                        $c = false;
+                        $result['error'] = 'Sorry, you do not have access to this feed.';
                     }
                 }
                 if ($c && $_REQUEST['label'] != $feed->label) { //Label is being altered.
@@ -482,12 +487,13 @@ if (isset($_REQUEST['a'])) {
             $c = true;
             $result['error'] = 'Failed when trying to export data.';
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 $c = false;
                 $result['error'] = 'Sorry, you do not have permission to export data.';
             }
 
-            if ($c && !LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])
+            ) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -588,11 +594,11 @@ if (isset($_REQUEST['d'])) {
             $mode = 'edit';
             $idFeedIn = $_REQUEST['idFeedIn'];
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 die('Sorry, you do not have permission to edit feeds.');
             }
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -620,7 +626,7 @@ if (isset($_REQUEST['d'])) {
                 $feed->notifyThresholdDays) : array();
 
         case 'dialog_newfeed':
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 die('Sorry, you do not have permission to add new feeds.');
             }
 
@@ -744,7 +750,7 @@ if (isset($_REQUEST['d'])) {
                         <td>Company</p></td>
                         <td>
 
-                            <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) { ?>
+                            <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) { ?>
                                 <?php if ($companies === false) { ?>
                                     Database failure - could not fetch company list
                                 <?php } elseif (!is_object($companies) && $companies == 0) { ?>
@@ -1309,7 +1315,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_import':
             $idFeedIn = $_REQUEST['idFeedIn'];
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1533,11 +1539,11 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_export':
             $idFeedIn = $_REQUEST['idFeedIn'];
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 die('Sorry, you do not have permission to export data.');
             }
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1672,11 +1678,11 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_urlreport':
             $idFeedIn = !empty($_REQUEST['idFeedIn']) ? $_REQUEST['idFeedIn'] : 0;
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 die('Sorry, you do not have permission to run URL reports.');
             }
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1896,11 +1902,11 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_listcodes':
             $idFeedIn = $_REQUEST['options']['idFeedIn'];
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
                 die('Sorry, you do not have permission to generate listcodes.');
             }
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2059,7 +2065,7 @@ include(INCLUDES . "c_header.php");
         <input type="hidden" name="status" value="<?php echo Display::escHtml($status); ?>">
     </form>
 
-    <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) { ?>
+    <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) { ?>
 
         <form class="pull-right" id="status-select" method="get">
             <select id="status" name="status">
@@ -2094,18 +2100,20 @@ include(INCLUDES . "c_header.php");
 
     <?php
 
+    print '<div style="clear:both;"></div>';
+
     foreach ($feedCategories as $categoryKey => $categoryVal) {
 
         print "<h4>Incoming $categoryVal Feeds</h4>" . PHP_EOL;
 
-        if (LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
-            $incomingFeeds = $leads->getInboundFeeds(null, $status, $categoryKey, null, $statsStart, $statsEnd);
+        if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
+            $incomingFeeds = $leads->getInboundFeeds(null, $status, $categoryKey, null);
         } else {
             $idCompany = LeadsSession::getCompanyId();
             if (empty($idCompany)) {
                 $idCompany = -9999;
             }
-            $incomingFeeds = $leads->getInboundFeeds($idCompany, $status, $categoryKey, null, $statsStart, $statsEnd);
+            $incomingFeeds = $leads->getInboundFeeds($idCompany, $status, $categoryKey, null);
         }
         ?>
         <?php
@@ -2199,7 +2207,7 @@ include(INCLUDES . "c_header.php");
                                         href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn); ?>&amp;label=<?php echo urlencode($feed->label); ?>"
                                         target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
                             <td class="text-center">
-                                <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) { ?>
+                                <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_CLIENT_DASHBOARD,LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) { ?>
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
                                                 data-backdrop="static" data-target="#editfeedinc"

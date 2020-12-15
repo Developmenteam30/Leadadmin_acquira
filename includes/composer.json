@@ -6,6 +6,7 @@
     "ext-ctype": "*",
     "ext-json": "*",
     "ext-sockets": "*",
-    "ext-pcntl": "*"
+    "ext-pcntl": "*",
+    "ext-simplexml": "*"
   }
 }

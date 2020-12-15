@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( LEADS_SESSION_LEVEL_CLIENT_IMPORT );
+LeadsSession::requireAccess([LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF]);
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
@@ -35,7 +35,7 @@ if( isset( $_REQUEST['a'] ) ) {
 				),
 			);
 
-			if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+			if( !LeadsSession::isValid( [LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC] ) ) {
 				$idCompany = LeadsSession::getCompanyId();
 				if( empty( $idCompany ) ) {
 					$idCompany = -9999;
@@ -209,7 +209,7 @@ if( !empty( $_REQUEST['jobId'] ) ) {
 <h1>Batch Jobs</h1>
 
 <?php
-	if( !LeadsSession::isValid( LEADS_SESSION_LEVEL_STAFF ) ) {
+	if( !LeadsSession::isValid( [LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC] ) ) {
 		$idCompany = LeadsSession::getCompanyId();
 		if( empty( $idCompany ) ) {
 			$idCompany = -9999;

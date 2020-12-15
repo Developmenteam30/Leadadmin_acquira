@@ -35,7 +35,7 @@ require_once(INCLUDES . 'session.php');
 require_once(INCLUDES . 'leads.php');
 $leads = Leads::getInstance();
 
-if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_CLIENT_IMPORT)) {
+if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
     Header('Content-Type: application/json');
     http_response_code(403);
 

@@ -5,7 +5,7 @@ $title = 'Rejection Log';
 include(INCLUDES . "c_header.php");
 
 require_once(INCLUDES . 'session.php');
-LeadsSession::requireAccess(LEADS_SESSION_LEVEL_CLIENT_IMPORT);
+LeadsSession::requireAccess([LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF]);
 
 require_once(INCLUDES . 'display.php');
 require_once(INCLUDES . 'leads.php');
@@ -29,7 +29,7 @@ $leads = Leads::getInstance();
 
         if ($type == 'inbound') {
             // If this a client, ensure they have access for this feed
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -37,17 +37,33 @@ $leads = Leads::getInstance();
                 if (!$leads->checkInboundFeedAccess($idCompany, $id)) {
                     die('Sorry, you do not have access to view this feed');
                 }
+            } elseif (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+                $feed = $leads->getInboundFeed($_REQUEST['id']);
+                if (empty($feed)) {
+                    die('ERROR: Feed not found.');
+                }
+                if ('ppc' !== $feed->feedCategory) {
+                    die('Sorry, you do not have access to view this feed');
+                }
             }
 
             $records = $leads->getInboundRejections($id, $offset);
         } elseif ($type == 'outbound') {
             // If this a client, ensure they have access for this feed
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
                 }
                 if (!$leads->checkOutboundFeedAccess($idCompany, $id)) {
+                    die('Sorry, you do not have access to view this feed');
+                }
+            } elseif (!LeadsSession::isValid(LEADS_SESSION_LEVEL_STAFF)) {
+                $feed = $leads->getOutboundFeed($_REQUEST['id']);
+                if (empty($feed)) {
+                    die('ERROR: Feed not found.');
+                }
+                if ('ppc' !== $feed->feedCategory) {
                     die('Sorry, you do not have access to view this feed');
                 }
             }

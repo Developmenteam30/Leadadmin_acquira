@@ -250,7 +250,7 @@ class Leads
         return $value;
     }
 
-    public function addUser($username, $password, $fullName, $idCompany, $level, $email)
+    public function addUser($username, $password, $fullName, $idCompany, $accessBits, $email)
     {
 
         try {
@@ -258,7 +258,7 @@ class Leads
                 'username' => $username,
                 'fullName' => $fullName,
                 'idCompany' => $idCompany,
-                'level' => $level,
+                'accessBits' => $accessBits,
                 'email' => $email,
             ));
         } catch (Leads_PDOException $e) {
@@ -293,7 +293,7 @@ class Leads
     public function getUser($idUser)
     {
         try {
-            $query = $this->db->prepare("SELECT idUser,username,password,fullName,idCompany,level,email FROM users WHERE idUser = ?");
+            $query = $this->db->prepare("SELECT idUser,username,password,fullName,idCompany,accessBits,email FROM users WHERE idUser = ?");
             $query->execute(array($idUser));
             $results = $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
@@ -306,7 +306,7 @@ class Leads
     public function getUsername($username)
     {
         try {
-            $query = $this->db->prepare("SELECT username,password,fullName,idCompany,level FROM users WHERE username = ?");
+            $query = $this->db->prepare("SELECT username,password,fullName,idCompany,accessBits FROM users WHERE username = ?");
             $query->execute(array($username));
             $results = $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
@@ -323,7 +323,7 @@ class Leads
 
         try {
 
-            $sql = "SELECT idUser,username,fullName,idCompany,level ";
+            $sql = "SELECT idUser,username,fullName,idCompany,accessBits ";
             $sql .= "FROM users ";
             if (!empty($status) && 'active' === $status) {
                 $sql .= "WHERE isArchived = 0 ";
@@ -342,7 +342,7 @@ class Leads
         return $results;
     }
 
-    public function getStaffUsers($format = \PDO::FETCH_KEY_PAIR, $forceAll = false, $idUser = null, $minLevel = LEADS_SESSION_LEVEL_STAFF)
+    public function getStaffUsers($format = \PDO::FETCH_KEY_PAIR, $forceAll = false, $idUser = null)
     {
         $results = null;
 
@@ -350,11 +350,11 @@ class Leads
             if ($forceAll || LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
                 if (!empty($idUser)) {
                     // Sometimes we have a former employee set who would no longer show up in the user list. Force them to show if the value is currently set to their userId.
-                    $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE ( level >= ? AND level < ? ) OR idUser = ? ORDER BY username");
-                    $query->execute(array($minLevel, LEADS_SESSION_LEVEL_ADMIN, $idUser));
+                    $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE ( accessBits & ? ) OR idUser = ? ORDER BY username");
+                    $query->execute(array(LEADS_SESSION_LEVEL_SALESPERSON, $idUser));
                 } else {
-                    $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE level >= ? AND level < ? ORDER BY username");
-                    $query->execute(array($minLevel, LEADS_SESSION_LEVEL_ADMIN));
+                    $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE accessBits & ? ORDER BY username");
+                    $query->execute(array(LEADS_SESSION_LEVEL_SALESPERSON));
                 }
             } else {
                 $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE idUser = ?");
@@ -399,7 +399,7 @@ class Leads
     public function verifyUser($username, $password)
     {
         try {
-            $query = $this->db->prepare("SELECT idUser,username,password,idCompany,level FROM users WHERE username = ? AND isArchived = 0");
+            $query = $this->db->prepare("SELECT idUser,username,password,idCompany,accessBits FROM users WHERE username = ? AND isArchived = 0");
             $query->execute(array($username));
             $results = $query->fetch();
 
@@ -414,7 +414,7 @@ class Leads
 
                     return array(
                         'idUser' => $results['idUser'],
-                        'level' => $results['level'],
+                        'accessBits' => $results['accessBits'],
                         'idCompany' => $results['idCompany'],
                     );
                 }
