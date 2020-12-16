@@ -233,7 +233,7 @@ if (isset($_REQUEST['a'])) {
                         'timezone' => $_REQUEST['timezone'],
                     );
 
-                    if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+                    if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                         $fields['launchDate'] = !empty($_REQUEST['launchDate']) ? $_REQUEST['launchDate'] : null;
                     }
 
@@ -322,7 +322,7 @@ if (isset($_REQUEST['a'])) {
                         'timezone' => $_REQUEST['timezone'],
                     );
 
-                    if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+                    if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                         $fields['launchDate'] = !empty($_REQUEST['launchDate']) ? $_REQUEST['launchDate'] : null;
                     }
 
@@ -1875,7 +1875,7 @@ if (isset($_REQUEST['d'])) {
                         <td><p>Launch Date</p></td>
                         <td>
                             <p>
-                                <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) { ?>
+                                <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
                                     <input type='text' name='launchDate'
                                            value='<?php echo Display::escHtml($feed_launchDate); ?>'
                                            autocomplete="off"/>

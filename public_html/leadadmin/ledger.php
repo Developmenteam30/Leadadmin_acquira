@@ -36,7 +36,7 @@ if (isset($_REQUEST['a'])) {
             $c = true;
             $result['error'] = 'Failed when trying to add a new ledger entry.';
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $result['error'] = 'You do not have access to add/edit entries.';
                 $c = false;
             }
@@ -264,7 +264,7 @@ if (isset($_REQUEST['a'])) {
             break;
 
         case "deleteLedger":
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $result['error'] = 'You do not have access to add/edit entries.';
                 break;
             }
@@ -296,7 +296,7 @@ if (isset($_REQUEST['a'])) {
             $c = true;
             $result['error'] = 'Failed when trying to edit a ledger entry.';
 
-            if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $result['error'] = 'You do not have access to add/edit entries.';
                 $c = false;
             }
@@ -1544,7 +1544,7 @@ include(INCLUDES . "c_header.php");
 
     <h2><?php echo($type == 0 ? 'Publisher' : 'Advertiser'); ?></h2>
 
-    <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) { ?>
+    <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
         <p>
             <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static"
                     data-target="#genericledger">Add a new entry
@@ -1653,7 +1653,7 @@ include(INCLUDES . "c_header.php");
                         <th>Method</th>
                         <th>Salesperson</th>
                         <th>Commissions</th>
-                        <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) { ?>
+                        <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
                             <th>Options</th>
                         <?php } ?>
                     </tr>
@@ -1665,13 +1665,13 @@ include(INCLUDES . "c_header.php");
                         if (substr($entry->ledgerMonth, 0, 7) == $month) {
                             $invoiceTotal += $entry->invoiceAmount;
                             $paymentTotal += $entry->paymentAmount;
-                            if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId1) {
+                            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId1) {
                                 $commissionTotal += $entry->commissionAmount1;
                             }
-                            if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId2) {
+                            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId2) {
                                 $commissionTotal += $entry->commissionAmount2;
                             }
-                            if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId3) {
+                            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId3) {
                                 $commissionTotal += $entry->commissionAmount3;
                             }
 
@@ -1694,19 +1694,19 @@ include(INCLUDES . "c_header.php");
                                 <td><?php echo htmlentities($entry->fullName1); ?>
                                     <br/><?php echo htmlentities($entry->fullName2); ?></td>
                                 <td data-tf-sortKey="<?php echo number_format($entry->commissionAmount1,
-                                    2); ?>"><?php echo (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId1) ? '$' . number_format($entry->commissionAmount1,
-                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId1) && !empty($entry->commissionDate1) && !empty($entry->commissionAmount1)) {
+                                    2); ?>"><?php echo (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId1) ? '$' . number_format($entry->commissionAmount1,
+                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId1) && !empty($entry->commissionDate1) && !empty($entry->commissionAmount1)) {
                                         echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
                                     } ?>
-                                    <br/><?php echo (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId2) ? '$' . number_format($entry->commissionAmount2,
-                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId2) && !empty($entry->commissionDate2) && !empty($entry->commissionAmount2)) {
+                                    <br/><?php echo (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId2) ? '$' . number_format($entry->commissionAmount2,
+                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId2) && !empty($entry->commissionDate2) && !empty($entry->commissionAmount2)) {
                                         echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
                                     } ?>
-                                    <br/><?php echo (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId3) ? '$' . number_format($entry->commissionAmount3,
-                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) || LeadsSession::getUserId() == $entry->userId3) && !empty($entry->commissionDate3) && !empty($entry->commissionAmount3)) {
+                                    <br/><?php echo (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId3) ? '$' . number_format($entry->commissionAmount3,
+                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId3) && !empty($entry->commissionDate3) && !empty($entry->commissionAmount3)) {
                                         echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
                                     } ?></td>
-                                <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) { ?>
+                                <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
                                     <td class="text-center">
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
@@ -1747,7 +1747,7 @@ include(INCLUDES . "c_header.php");
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>$<?php echo number_format($commissionTotal, 2); ?></td>
-                        <?php if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) { ?>
+                        <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
                             <td>&nbsp;</td>
                         <?php } ?>
                     </tr>

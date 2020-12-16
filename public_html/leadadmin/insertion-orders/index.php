@@ -26,7 +26,7 @@ if (isset($_REQUEST['a'])) {
             $result['error'] = 'Failed when trying to add a new order';
 
             $userId = LeadsSession::getUserId();
-            if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 if (empty($_REQUEST['userId'])) {
                     $result['error'] = 'Please select a salesperson from the list.';
                     break;
@@ -171,7 +171,7 @@ if (isset($_REQUEST['a'])) {
             }
 
             $userId = LeadsSession::getUserId();
-            if (LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 if (empty($_REQUEST['userId'])) {
                     $result['error'] = 'Please select a salesperson from the list.';
                     break;
@@ -335,7 +335,7 @@ if (isset($_REQUEST['d'])) {
                     'type' => 'select',
                     'placeholder' => 'Select a salesperson',
                     'choices' => $leads->getStaffUsers(),
-                    'active' => LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) ? true : false,
+                    'active' => LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) ? true : false,
                     'required' => true,
                 ),
                 array(
@@ -636,7 +636,7 @@ if (isset($_REQUEST['d'])) {
                     'type' => 'select',
                     'placeholder' => 'Select a salesperson',
                     'choices' => $leads->getStaffUsers(),
-                    'active' => LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER) ? true : false,
+                    'active' => LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) ? true : false,
                     'required' => true,
                     'value' => $order->userId,
                 ),

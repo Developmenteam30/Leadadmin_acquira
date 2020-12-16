@@ -347,7 +347,7 @@ class Leads
         $results = null;
 
         try {
-            if ($forceAll || LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if ($forceAll || LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 if (!empty($idUser)) {
                     // Sometimes we have a former employee set who would no longer show up in the user list. Force them to show if the value is currently set to their userId.
                     $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE ( accessBits & ? ) OR idUser = ? ORDER BY username");
@@ -524,7 +524,7 @@ class Leads
             $sql .= "AND fo.launchDate >= CAST(? AS DATE) ";
             $params[] = $startDate;
             $sql .= "AND c.salesperson IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND c.salesperson = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -544,7 +544,7 @@ class Leads
             $sql .= "AND fo.launchDate >= CAST(? AS DATE) ";
             $params[] = $startDate;
             $sql .= "AND c.salesperson IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND c.salesperson = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -563,7 +563,7 @@ class Leads
             $sql .= "AND ( fo.launchDate IS NULL OR fo.launchDate < CAST(? AS DATE) ) ";
             $params[] = $startDate;
             $sql .= "AND c.salesperson IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND c.salesperson = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -583,7 +583,7 @@ class Leads
             $sql .= "AND ( fo.launchDate IS NULL OR fo.launchDate < CAST(? AS DATE) ) ";
             $params[] = $startDate;
             $sql .= "AND c.salesperson IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND c.salesperson = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -601,7 +601,7 @@ class Leads
             $params[] = $endDate;
             $sql .= "AND l.commissionRevenue1 IS NOT NULL ";
             $sql .= "AND l.userId1 IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND l.userId1 = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -617,7 +617,7 @@ class Leads
             $params[] = $endDate;
             $sql .= "AND l.commissionRevenue2 IS NOT NULL ";
             $sql .= "AND l.userId2 IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND l.userId2 = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -640,7 +640,7 @@ class Leads
             $params[] = $endDate;
             $sql .= "AND l.commissionRevenue1 IS NOT NULL ";
             $sql .= "AND l.userId1 IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND l.userId1 = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -661,7 +661,7 @@ class Leads
             $params[] = $endDate;
             $sql .= "AND l.commissionRevenue2 IS NOT NULL ";
             $sql .= "AND l.userId2 IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND l.userId2 = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -679,7 +679,7 @@ class Leads
             $params[] = $endDate;
             $sql .= "AND l.commissionRevenue1 IS NOT NULL ";
             $sql .= "AND l.userId1 IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND l.userId1 = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -695,7 +695,7 @@ class Leads
             $params[] = $endDate;
             $sql .= "AND l.commissionRevenue2 IS NOT NULL ";
             $sql .= "AND l.userId2 IS NOT NULL ";
-            if (!$offline && !LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+            if (!$offline && !LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
                 $sql .= "AND l.userId2 = ? ";
                 $params[] = LeadsSession::getUserId();
             }
@@ -1168,7 +1168,7 @@ class Leads
         }
         $sql .= "WHERE l.ledgerId = ? ";
         $params[] = $ledgerId;
-        if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+        if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
             $sql .= "AND l.userId = ? ";
             $params[] = LeadsSession::getUserId();
         }
@@ -1195,7 +1195,7 @@ class Leads
         $params[] = $indexId;
         $sql .= "WHERE l.ledgerId = ? ";
         $params[] = $ledgerId;
-        if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+        if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
             $sql .= "AND ( userId1 = ? OR userId2 = ? OR userId3 = ? )";
             $params[] = LeadsSession::getUserId();
             $params[] = LeadsSession::getUserId();
@@ -1220,7 +1220,7 @@ class Leads
 
         $sql = "SELECT * FROM ledger_offline WHERE ledgerId = ? ";
         $params[] = $ledgerId;
-        if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+        if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
             $sql .= "AND ( userId1 = ? OR userId2 = ? OR userId3 = ? )";
             $params[] = LeadsSession::getUserId();
             $params[] = LeadsSession::getUserId();
@@ -1272,7 +1272,7 @@ class Leads
         }
         $sql .= "WHERE l.ledgerId = ? ";
         $params[] = $ledgerId;
-        if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+        if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
             $sql .= "AND ( userId1 = ? OR userId2 = ? OR userId3 = ? ) ";
             $params[] = LeadsSession::getUserId();
             $params[] = LeadsSession::getUserId();
@@ -1301,7 +1301,7 @@ class Leads
         $params[] = $indexId;
         $sql .= "WHERE l.ledgerId = ? ";
         $params[] = $ledgerId;
-        if (!LeadsSession::isValid(LEADS_SESSION_LEVEL_MANAGER)) {
+        if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
             $sql .= "AND ( userId1 = ? OR userId2 = ? OR userId3 = ? )";
             $params[] = LeadsSession::getUserId();
             $params[] = LeadsSession::getUserId();
