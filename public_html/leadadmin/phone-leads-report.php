@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once( INCLUDES . 'session.php' );
-LeadsSession::requireAccess( [LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS, LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD] );
+LeadsSession::requireAccess( [LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS, LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD] );
 
 require_once( INCLUDES . 'leads.php' );
 $leads = Leads::getInstance();
