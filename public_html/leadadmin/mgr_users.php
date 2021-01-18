@@ -238,7 +238,7 @@ if (isset($_REQUEST['d'])) {
                 ),
             );
 
-            Display::displayForm('new_user', $fields);
+            Display::displayForm('new_user', $fields, '', ['disableAutocomplete' => true]);
 
             break;
 
@@ -327,7 +327,7 @@ if (isset($_REQUEST['d'])) {
                     ),
                 );
 
-                Display::displayForm('edit_user', $fields);
+                Display::displayForm('edit_user', $fields, '', ['disableAutocomplete' => true]);
 
             }
             break;

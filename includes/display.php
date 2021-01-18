@@ -75,8 +75,9 @@ class Display
         }
 
         if (empty($options['fieldOnly'])) {
-            printf("<form class=\"form-inline\" id=\"%s\">\n",
-                htmlspecialchars($name, ENT_QUOTES | ENT_HTML5)
+            printf("<form class=\"form-inline\" id=\"%s\"%s>\n",
+                htmlspecialchars($name, ENT_QUOTES | ENT_HTML5),
+                !empty($options['disableAutocomplete']) ? ' autocomplete="off"' : ''
             );
         }
 
