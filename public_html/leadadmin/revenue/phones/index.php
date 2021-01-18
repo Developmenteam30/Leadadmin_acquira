@@ -3,7 +3,7 @@
 include("../../../../includes/c_config.php");
 
 require_once(INCLUDES . 'session.php');
-LeadsSession::requireAccess(LEADS_SESSION_LEVEL_MANAGER);
+LeadsSession::requireAccess([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]);
 
 require_once(INCLUDES . 'leads.php');
 $leads = Leads::getInstance();
@@ -31,7 +31,7 @@ include(INCLUDES . "c_header.php");
 <?php include(INCLUDES . 'c_nav.php'); ?>
 
 <div class="container-fluid">
-	<h2>Phone Revenue Report</h2>
+    <h2>Phone Revenue Report</h2>
 
     <?php
     $dateStart = !empty($_REQUEST['dateStart']) ? $_REQUEST['dateStart'] : date('Y-m-d');
@@ -41,7 +41,7 @@ include(INCLUDES . "c_header.php");
     $statsQuick = $_REQUEST['statsQuick'] ?? '';
     ?>
 
-	<form class="form-inline">
+    <form class="form-inline">
         <?php
         print 'Quick Jump: <select id="statsQuick" name="statsQuick">' . PHP_EOL;
         print '<option value=""></option>' . PHP_EOL;
@@ -81,12 +81,12 @@ include(INCLUDES . "c_header.php");
         } while ($startDate >= $endDate);
         print '</select>' . PHP_EOL;
         ?>
-		Set Dates:
-		<input type="text" name="dateStart" class="dateSelector" value="<?php echo Display::escHtml($dateStart, ENT_QUOTES | ENT_HTML5); ?>"/>
-		to
-		<input type="text" name="dateEnd" class="dateSelector" value="<?php echo Display::escHtml($dateEnd, ENT_QUOTES | ENT_HTML5); ?>"/>
+        Set Dates:
+        <input type="text" name="dateStart" class="dateSelector" value="<?php echo Display::escHtml($dateStart, ENT_QUOTES | ENT_HTML5); ?>"/>
+        to
+        <input type="text" name="dateEnd" class="dateSelector" value="<?php echo Display::escHtml($dateEnd, ENT_QUOTES | ENT_HTML5); ?>"/>
 
-		<!--
+        <!--
 		<select name="companyId">
 			<option value="">Filter by company</option>
             <?php
@@ -102,8 +102,8 @@ include(INCLUDES . "c_header.php");
 		</select>
 		-->
 
-		<select name="userId">
-			<option value="">Filter by salesperson</option>
+        <select name="userId">
+            <option value="">Filter by salesperson</option>
             <?php
             $users = $leads->getStaffUsers();
             foreach ($users as $id => $name) {
@@ -114,9 +114,9 @@ include(INCLUDES . "c_header.php");
                 );
             }
             ?>
-		</select>
-		<input class="btn btn-primary" type="submit" name="submit" value="Update"/>
-	</form>
+        </select>
+        <input class="btn btn-primary" type="submit" name="submit" value="Update"/>
+    </form>
 
     <?php
 
@@ -352,14 +352,14 @@ include(INCLUDES . "c_header.php");
 </div>
 
 <script>
-	$('#statsQuick').on('change', function (e) {
-		let myValue = $(this).val() || '';
-		if (myValue !== '') {
-			let dates = myValue.split('|', 2);
-			$('input[name="dateStart"]').val(dates[0]);
-			$('input[name="dateEnd"]').val(dates[1]);
-		}
-	});
+    $('#statsQuick').on('change', function (e) {
+        let myValue = $(this).val() || '';
+        if (myValue !== '') {
+            let dates = myValue.split('|', 2);
+            $('input[name="dateStart"]').val(dates[0]);
+            $('input[name="dateEnd"]').val(dates[1]);
+        }
+    });
 </script>
 
 </body>
