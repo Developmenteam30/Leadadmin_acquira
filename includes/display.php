@@ -97,7 +97,7 @@ class Display
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlentities($field['label'])
                 );
-                printf("\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" value=\"%s\"%s%s%s%s />\n",
+                printf("\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" data-lpignore=\"true\" value=\"%s\"%s%s%s%s />\n",
                     htmlspecialchars($field['type'], ENT_QUOTES | ENT_HTML5),
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
@@ -114,7 +114,7 @@ class Display
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlentities($field['label'])
                 );
-                printf("\t<input class=\"form-control\" type=\"text\" name=\"%s\" id=\"%s\" pattern=\"^\\$?(([1-9](\\d*|\\d{0,2}(,\\d{3})*))|0)(\\.\\d{1,2})?$\" value=\"%s\"%s%s />\n",
+                printf("\t<input class=\"form-control\" type=\"text\" name=\"%s\" id=\"%s\" pattern=\"^\\$?(([1-9](\\d*|\\d{0,2}(,\\d{3})*))|0)(\\.\\d{1,2})?$\" data-lpignore=\"true\" value=\"%s\"%s%s />\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     (!empty($field['value']) ? htmlspecialchars($field['value'], ENT_QUOTES | ENT_HTML5) : ''),
