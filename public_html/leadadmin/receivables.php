@@ -135,11 +135,11 @@ include(INCLUDES."c_header.php");
 			<th>Division</th>
 			<th>Company</th>
 			<th>Invoice #</th>
-			<th>Salesperson</th>
-			<th>Commissions</th>
-			<th>Commission Date</th>
-			<th>Payment Method</th>
-			<th>Payment Amount</th>
+            <th>Invoice Amount</th>
+            <th>Payment Method</th>
+            <th>Commissions</th>
+            <th>Commission Date</th>
+            <th>Salesperson</th>
 			<th>Options</th>
 		</tr>
 	</thead>
@@ -156,11 +156,11 @@ include(INCLUDES."c_header.php");
 			<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 			<td><?php echo htmlentities( $entry->companyName ); ?></td>
 			<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
+            <td>$<?php echo number_format( $entry->invoiceAmount, 2 ); ?></td>
+            <td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
+            <td><?php echo !empty( $entry->commissionAmount1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : ''; ?><?php if( !empty( $entry->commissionDate1 ) && !empty( $entry->commissionAmount1 ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?><br/><?php echo !empty( $entry->commissionAmount2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : ''; ?><?php if( !empty( $entry->commissionDate2 ) && !empty( $entry->commissionAmount2 ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?>&nbsp;</td>
+            <td><?php echo htmlentities( $entry->commissionDate1 ); ?>&nbsp;<br/><?php echo htmlentities( $entry->commissionDate2 ); ?>&nbsp;</td>
             <td><?php echo $entry->fullName1; ?>&nbsp;<br/><?php echo $entry->fullName2; ?>&nbsp;</td>
-			<td><?php echo !empty( $entry->commissionAmount1 ) ? '$' . number_format( $entry->commissionAmount1, 2 ) : ''; ?><?php if( !empty( $entry->commissionDate1 ) && !empty( $entry->commissionAmount1 ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?><br/><?php echo !empty( $entry->commissionAmount2 ) ? '$' . number_format( $entry->commissionAmount2, 2 ) : ''; ?><?php if( !empty( $entry->commissionDate2 ) && !empty( $entry->commissionAmount2 ) ) { echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />'; } ?>&nbsp;</td>
-			<td><?php echo htmlentities( $entry->commissionDate1 ); ?>&nbsp;<br/><?php echo htmlentities( $entry->commissionDate2 ); ?>&nbsp;</td>
-			<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-			<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
 			<td class="text-center"><?php if( 'ledger_offline' === $entry->source ) { ?>
 <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#editofflineledger" data-ledger-id="<?php echo $entry->ledgerId; ?>">Edit</button>
 <?php } else if( 'ledger_phones' === $entry->source ) { ?>
