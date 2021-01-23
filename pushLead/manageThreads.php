@@ -10,10 +10,9 @@ $verbose = false;
 $recordsPerRun = 1000;
 $maxThreads = 20;
 
-// Simple test to see if this script is already running by binding to a specific port
-// Adapted from: https://www.timkay.com/solo/solo
-$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-if (@socket_bind($socket, '127.1.1.0', MANAGE_THREADS_SOCKET_PORT) === false) {
+$key = ftok(__FILE__, 'M');
+$semaphore = sem_get($key, 1);
+if (sem_acquire($semaphore, true) === false) {
     if ($verbose) {
         die('Already running');
     } else {
@@ -37,7 +36,7 @@ while (true) {
 
     $feeds = $leads->getOutboundFeedsCron(null);
 
-    if (!$feeds || !is_array($feeds)) {
+    if (null === $feeds || !is_array($feeds)) {
         if ($verbose) {
             print "Unable to get feed list\n";
         }

@@ -7,6 +7,7 @@
     "ext-json": "*",
     "ext-sockets": "*",
     "ext-pcntl": "*",
-    "ext-simplexml": "*"
+    "ext-simplexml": "*",
+    "ext-sysvsem": "*"
   }
 }
