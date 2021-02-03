@@ -76,6 +76,24 @@ if (isset($_REQUEST['a'])) {
                 $c = false;
             }
 
+            if ($c && !empty($_REQUEST['billingCycleStart'])) {
+                try {
+                    $billingCycleStart = new DateTime($_REQUEST['billingCycleStart']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid billing cycle start date.';
+                    $c = false;
+                }
+            }
+
+            if ($c && !empty($_REQUEST['billingCycleEnd'])) {
+                try {
+                    $billingCycleEnd = new DateTime($_REQUEST['billingCycleEnd']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid billing cycle end date.';
+                    $c = false;
+                }
+            }
+
             if ($c && empty($_REQUEST['ledgerMonth'])) {
                 $result['error'] = 'Ledger month cannot be blank.';
                 $c = false;
@@ -208,6 +226,8 @@ if (isset($_REQUEST['a'])) {
                     'ledgerMonth' => $ledgerMonth->format('Y-m-d'),
                     'invoiceAmount' => empty($_REQUEST['invoiceAmount']) ? 0.00 : $_REQUEST['invoiceAmount'],
                     'invoiceNum' => empty($_REQUEST['invoiceNum']) ? null : $_REQUEST['invoiceNum'],
+                    'billingCycleStart' => !isset( $billingCycleStart ) ? null : $billingCycleStart->format( 'Y-m-d' ),
+                    'billingCycleEnd' => !isset( $billingCycleEnd ) ? null : $billingCycleEnd->format( 'Y-m-d' ),
                     'paymentAmount' => empty($_REQUEST['paymentAmount']) ? null : $_REQUEST['paymentAmount'],
                     'commissionDate1' => !isset($commissionDate1) ? null : $commissionDate1->format('Y-m-d'),
                     'commissionAmount1' => empty($_REQUEST['commissionAmount1']) ? null : $_REQUEST['commissionAmount1'],
@@ -340,6 +360,24 @@ if (isset($_REQUEST['a'])) {
                 $c = false;
             }
 
+            if ($c && !empty($_REQUEST['billingCycleStart'])) {
+                try {
+                    $billingCycleStart = new DateTime($_REQUEST['billingCycleStart']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid billing cycle start date.';
+                    $c = false;
+                }
+            }
+
+            if ($c && !empty($_REQUEST['billingCycleEnd'])) {
+                try {
+                    $billingCycleEnd = new DateTime($_REQUEST['billingCycleEnd']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid billing cycle end date.';
+                    $c = false;
+                }
+            }
+
             if ($c && empty($_REQUEST['ledgerMonth'])) {
                 $result['error'] = 'Ledger month cannot be blank.';
                 $c = false;
@@ -469,6 +507,8 @@ if (isset($_REQUEST['a'])) {
                     'verticalId' => empty($_REQUEST['verticalId']) ? null : $_REQUEST['verticalId'],
                     'paymentDate' => !isset($paymentDate) ? null : $paymentDate->format('Y-m-d'),
                     'paymentMethod' => empty($_REQUEST['paymentMethod']) ? null : $_REQUEST['paymentMethod'],
+                    'billingCycleStart' => !isset( $billingCycleStart ) ? null : $billingCycleStart->format( 'Y-m-d' ),
+                    'billingCycleEnd' => !isset( $billingCycleEnd ) ? null : $billingCycleEnd->format( 'Y-m-d' ),
                     'ledgerMonth' => $ledgerMonth->format('Y-m-d'),
                     'invoiceAmount' => empty($_REQUEST['invoiceAmount']) ? 0.00 : $_REQUEST['invoiceAmount'],
                     'invoiceNum' => empty($_REQUEST['invoiceNum']) ? null : $_REQUEST['invoiceNum'],
@@ -601,6 +641,18 @@ if (isset($_REQUEST['d'])) {
                     'label' => 'Invoice Amount',
                     'type' => 'currency',
                     'required' => true,
+                ),
+                array(
+                    'id' => 'billingCycleStart',
+                    'label' => 'Billing Cycle Start',
+                    'type' => 'text',
+                    'autocomplete' => 'off',
+                ),
+                array(
+                    'id' => 'billingCycleEnd',
+                    'label' => 'Billing Cycle End',
+                    'type' => 'text',
+                    'autocomplete' => 'off',
                 ),
                 array(
                     'id' => 'ledgerMonth',
@@ -814,7 +866,7 @@ if (isset($_REQUEST['d'])) {
             ?>
 
             <script type="text/javascript">
-                $('#new_ledger input[name=paymentDate], #new_ledger input[name=commissionDate1], #new_ledger input[name=commissionDate2], #new_ledger input[name=commissionDate3]').datepicker({
+                $('#new_ledger input[name=paymentDate], #new_ledger input[name=commissionDate1], #new_ledger input[name=commissionDate2], #new_ledger input[name=commissionDate3], #new_ledger input[name=billingCycleStart], #new_ledger input[name=billingCycleEnd]').datepicker({
                     // Consistent format with the HTML5 picker
                     dateFormat: 'yy-mm-dd'
                 });
@@ -999,6 +1051,20 @@ if (isset($_REQUEST['d'])) {
                         'type' => 'currency',
                         'required' => true,
                         'value' => $entry->invoiceAmount,
+                        'readonly' => true,
+                    ),
+                    array(
+                        'id' => 'billingCycleStart',
+                        'label' => 'Billing Cycle Start',
+                        'type' => 'text',
+                        'value' => $entry->billingCycleStart,
+                        'readonly' => true,
+                    ),
+                    array(
+                        'id' => 'billingCycleEnd',
+                        'label' => 'Billing Cycle End',
+                        'type' => 'text',
+                        'value' => $entry->billingCycleEnd,
                         'readonly' => true,
                     ),
                     array(
@@ -1222,6 +1288,18 @@ if (isset($_REQUEST['d'])) {
                         'type' => 'currency',
                         'required' => true,
                         'value' => $entry->invoiceAmount,
+                    ),
+                    array(
+                        'id' => 'billingCycleStart',
+                        'label' => 'Billing Cycle Start',
+                        'type' => 'text',
+                        'value' => $entry->billingCycleStart,
+                    ),
+                    array(
+                        'id' => 'billingCycleEnd',
+                        'label' => 'Billing Cycle End',
+                        'type' => 'text',
+                        'value' => $entry->billingCycleEnd,
                     ),
                     array(
                         'id' => 'ledgerMonth',
@@ -1476,7 +1554,7 @@ if (isset($_REQUEST['d'])) {
                     });
 
                     $('#editledger').on('shown.bs.modal', function (e) {
-                        $('#editledger input[name=paymentDate], #editledger input[name=commissionDate1], #editledger input[name=commissionDate2], #editledger input[name=commissionDate3]').datepicker({
+                        $('#editledger input[name=paymentDate], #editledger input[name=commissionDate1], #editledger input[name=commissionDate2], #editledger input[name=commissionDate3, #editledger input[name=billingCycleStart], #editledger input[name=billingCycleStart]]').datepicker({
                             // Consistent format with the HTML5 picker
                             dateFormat: 'yy-mm-dd'
                         });

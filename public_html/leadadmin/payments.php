@@ -552,12 +552,13 @@ include( INCLUDES . "c_header.php" );
 						<th>Division</th>
 						<th>Company</th>
 						<th>Invoice #</th>
-						<th>Salesperson</th>
+                        <th>Billing Cycle</th>
 						<th>Payment Date</th>
-						<th>Payment Method</th>
-						<th>Payment Amount</th>
-						<th>Email</th>
-					</tr>
+                        <th>Payment Method</th>
+                        <th>Payment Amount</th>
+                        <th>Salesperson</th>
+                        <th>Email</th>
+                    </tr>
 					</thead>
 					<tbody>
 					<?php
@@ -571,11 +572,12 @@ include( INCLUDES . "c_header.php" );
 								<td><?php echo htmlentities( $entry->divisionName ); ?></td>
 								<td><?php echo htmlentities( $entry->vendorCompanyName ); ?></td>
 								<td><?php echo htmlentities( $entry->invoiceNum ); ?></td>
-								<td><?php echo $entry->fullName1; ?>&nbsp;<br/><?php echo $entry->fullName2; ?>&nbsp;</td>
+                                <td><?php echo htmlentities( $entry->billingCycleStart ); ?><br/><?php echo htmlentities( $entry->billingCycleEnd ); ?></td>
 								<td><?php echo htmlentities( $entry->paymentDate ); ?></td>
-								<td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
-								<td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
-								<td class="text-center">
+                                <td><?php echo htmlentities( $entry->paymentMethod ); ?></td>
+                                <td>$<?php echo number_format( $entry->paymentAmount, 2 ); ?></td>
+                                <td><?php echo $entry->fullName1; ?>&nbsp;<br/><?php echo $entry->fullName2; ?>&nbsp;</td>
+                                <td class="text-center">
 									<?php if( 'email' === $entry->source ) { ?>
 										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo 'E|' . $entry->ledgerId . '|' . $entry->companyId; ?>"/>
 									<?php } else if( 'ledger_phones' === $entry->source ) { ?>
@@ -586,7 +588,7 @@ include( INCLUDES . "c_header.php" );
 										<input class="email-payment" type="checkbox" name="emailLedgerId[]" value="<?php echo $entry->divisionId . '|' . $entry->ledgerId; ?>"/>
 									<?php } ?>
 								</td>
-							</tr>
+                            </tr>
 							<?php
 						}
 					}
