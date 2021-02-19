@@ -706,6 +706,61 @@ class ProcessLeads
                     ProcessLeads::assignValue($key, $row->cellphone ? '1' . $row->cellphone : '', $requestdata, $xmldata, $headerdata);
                     break;
 
+                case 'inbound_company':
+                    if (!empty($row->idFeedIn)) {
+                        if (!isset($feedIn)) {
+                            $feedIn = $leads->getInboundFeed($row->idFeedIn);
+                        }
+                        if (!empty($feedIn)) {
+                            $feedCompany = $leads->getCompany($feedIn->idCompany);
+                            if (!empty($feedCompany)) {
+                                ProcessLeads::assignValue($key, $feedCompany->name ?? '', $requestdata, $xmldata, $headerdata);
+                            }
+                            break;
+                        }
+                    }
+                    ProcessLeads::assignValue($key, '', $requestdata, $xmldata, $headerdata);
+                    break;
+
+                case 'inbound_cpl':
+                    if (!empty($row->idFeedIn)) {
+                        if (!isset($feedIn)) {
+                            $feedIn = $leads->getInboundFeed($row->idFeedIn);
+                        }
+                        if (!empty($feedIn)) {
+                            ProcessLeads::assignValue($key, $feedIn->costPerLead ?? '', $requestdata, $xmldata, $headerdata);
+                            break;
+                        }
+                    }
+                    ProcessLeads::assignValue($key, '', $requestdata, $xmldata, $headerdata);
+                    break;
+
+                case 'inbound_label':
+                    if (!empty($row->idFeedIn)) {
+                        if (!isset($feedIn)) {
+                            $feedIn = $leads->getInboundFeed($row->idFeedIn);
+                        }
+                        if (!empty($feedIn)) {
+                            ProcessLeads::assignValue($key, $feedIn->label ?? '', $requestdata, $xmldata, $headerdata);
+                            break;
+                        }
+                    }
+                    ProcessLeads::assignValue($key, '', $requestdata, $xmldata, $headerdata);
+                    break;
+
+                case 'inbound_description':
+                    if (!empty($row->idFeedIn)) {
+                        if (!isset($feedIn)) {
+                            $feedIn = $leads->getInboundFeed($row->idFeedIn);
+                        }
+                        if (!empty($feedIn)) {
+                            ProcessLeads::assignValue($key, $feedIn->description ?? '', $requestdata, $xmldata, $headerdata);
+                            break;
+                        }
+                    }
+                    ProcessLeads::assignValue($key, '', $requestdata, $xmldata, $headerdata);
+                    break;
+
                 default:
                     ProcessLeads::assignValue($key, $row->{$val} ?? '', $requestdata, $xmldata, $headerdata);
                     break;

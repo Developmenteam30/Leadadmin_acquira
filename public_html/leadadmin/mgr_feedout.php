@@ -1119,6 +1119,7 @@ if (isset($_REQUEST['d'])) {
                 'custom5' => trim($_REQUEST['custom5'] ?? ''),
                 'custom6' => trim($_REQUEST['custom6'] ?? ''),
                 'idRecord' => trim($_REQUEST['idRecord'] ?? ''),
+                'idFeedIn' => trim($_REQUEST['idFeedIn'] ?? ''),
                 'testRecord' => 1,
             );
 
