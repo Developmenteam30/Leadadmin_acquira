@@ -632,7 +632,7 @@ if (isset($_REQUEST['d'])) {
                 ),
                 array(
                     'id' => 'invoiceNum',
-                    'label' => (0 == $type) ? 'Client Invoice #' : 'QM Invoice #',
+                    'label' => (0 == $type) ? 'Client Invoice #' : COMPANY_INITIALS . ' Invoice #',
                     'type' => 'text',
                     'required' => true,
                 ),
@@ -1039,7 +1039,7 @@ if (isset($_REQUEST['d'])) {
                     ),
                     array(
                         'id' => 'invoiceNum',
-                        'label' => (0 == $entry->type) ? 'Client Invoice #' : 'QM Invoice #',
+                        'label' => (0 == $entry->type) ? 'Client Invoice #' : COMPANY_INITIALS . ' Invoice #',
                         'type' => 'text',
                         'required' => true,
                         'value' => $entry->invoiceNum,
@@ -1277,7 +1277,7 @@ if (isset($_REQUEST['d'])) {
                     ),
                     array(
                         'id' => 'invoiceNum',
-                        'label' => (0 == $entry->type) ? 'Client Invoice #' : 'QM Invoice #',
+                        'label' => (0 == $entry->type) ? 'Client Invoice #' : COMPANY_INITIALS . ' Invoice #',
                         'type' => 'text',
                         'required' => true,
                         'value' => $entry->invoiceNum,

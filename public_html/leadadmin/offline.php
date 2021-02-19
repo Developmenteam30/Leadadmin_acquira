@@ -650,7 +650,7 @@ if( isset( $_REQUEST['d'] ) ) {
 				),
 				array(
 					'id' => 'ourPoNum',
-					'label' => 'QM PO #',
+					'label' => COMPANY_INITIALS . ' PO #',
 					'type' => 'text',
 				),
 				array(
@@ -988,7 +988,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					),
 					array(
 						'id' => 'ourPoNum',
-						'label' => 'QM PO #',
+						'label' => COMPANY_INITIALS . ' PO #',
 						'type' => 'text',
 						'value' => $entry->ourPoNum,
 						'readonly' => true,
@@ -1312,7 +1312,7 @@ if( isset( $_REQUEST['d'] ) ) {
 					),
 					array(
 						'id' => 'ourPoNum',
-						'label' => 'QM PO #',
+						'label' => COMPANY_INITIALS. ' PO #',
 						'type' => 'text',
 						'value' => $entry->ourPoNum,
 					),
@@ -1633,7 +1633,7 @@ include( INCLUDES . "c_header.php" );
 						<th>Salesperson 1</th>
 						<th>Salesperson 2</th>
 						<th>Order Date</th>
-						<th>QM Inv #</th>
+						<th><?php Display::escHtml(COMPANY_INITIALS); ?> Inv #</th>
 						<th>Amount</th>
 						<th>Pmt Date</th>
 						<th>Pmt Mthd</th>
@@ -1645,7 +1645,7 @@ include( INCLUDES . "c_header.php" );
 					<tr class="header">
 						<th>Vendor Name</th>
 						<th>List Name</th>
-						<th>QM PO #</th>
+						<th><?php Display::escHtml(COMPANY_INITIALS); ?> PO #</th>
 						<th>Qty</th>
 						<th>Commissions 1</th>
 						<th>Commissions 2</th>

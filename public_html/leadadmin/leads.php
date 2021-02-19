@@ -1538,7 +1538,7 @@ include( INCLUDES . "c_header.php" );
                         <th style="width:300px;">List Name</th>
                         <th>Order Date</th>
                         <th>Qty</th>
-                        <th>QM Inv #</th>
+                        <th><?php Display::escHtml(COMPANY_INITIALS); ?> Inv #</th>
                         <th>Inv Amt</th>
                         <th>Pmt Date</th>
                         <th>Pmt Mthd</th>
