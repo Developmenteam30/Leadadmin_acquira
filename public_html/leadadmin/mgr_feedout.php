@@ -190,15 +190,6 @@ if (isset($_REQUEST['a'])) {
 
             if ($action == 'new') {
 
-                if ($c) {
-                    //Label can not be already used
-                    $checkResult = $leads->checkOutboundFeedLabelExists($_REQUEST['label']);
-                    if (true === $checkResult) {
-                        $c = false;
-                        $result['error'] = 'That feed label is already being used.';
-                    }
-                }
-
                 if ($c) { //Add entry to the database.
 
                     $fields = array(
@@ -282,15 +273,6 @@ if (isset($_REQUEST['a'])) {
                             $c = false;
                             $result['error'] = 'Label must start with a letter, can can contain '
                                 . 'letters, numbers, and underscore only.';
-                        }
-
-                        if ($c) {
-                            //Label can not be already used
-                            $checkResult = $leads->checkOutboundFeedLabelExists($_REQUEST['label']);
-                            if (true === $checkResult) {
-                                $c = false;
-                                $result['error'] = 'That feed label is already being used.';
-                            }
                         }
                     }
 

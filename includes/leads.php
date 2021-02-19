@@ -3542,24 +3542,6 @@ class Leads
         return $result;
     }
 
-    public function checkOutboundFeedLabelExists($label)
-    {
-        $result = false;
-
-        try {
-            $query = $this->db->prepare("SELECT 1 FROM feedout WHERE label = ?");
-            $query->execute(array($label));
-            if ('1' == $query->fetchColumn()) {
-                $result = true;
-            }
-        } catch (PDOException $e) {
-            $this->logError('Unable to check outbound feed label: ' . $e->getMessage());
-        }
-
-        return $result;
-    }
-
-
     public function getOutboundStats($idFeedOut)
     {
         $results = array('accepted' => 0, 'rejected' => 0);
