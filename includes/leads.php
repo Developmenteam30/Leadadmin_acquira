@@ -3267,7 +3267,7 @@ class Leads
     public function addPopulation($fields)
     {
 
-        if (empty($fields['idFeedIn']) || empty($fields['idFeedOut'])) {
+        if ((empty($fields['idFeedIn']) && empty($fields['feedCategory'])) || empty($fields['idFeedOut'])) {
             return null;
         }
 
