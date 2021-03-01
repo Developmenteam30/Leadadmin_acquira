@@ -534,7 +534,9 @@ class ProcessLeads
 
         $requestdata = array();
         $xmldata = array();
-        $headerdata = array();
+        $headerdata = array(
+            'User-Agent: ' . CONFIG_COMPANY_NAME . ' Leads System',
+        );
         foreach ($staticFields as $key => $val) { //Compile Static Fields into the post array.
             ProcessLeads::assignValue($key, $val, $requestdata, $xmldata, $headerdata);
         }
