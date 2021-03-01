@@ -1724,6 +1724,7 @@ include(INCLUDES . "c_header.php");
                         <th>Vertical</th>
                         <th>Invoice Amount</th>
                         <th>Invoice #</th>
+                        <th>Billing Cycle</th>
                         <th>Date Paid</th>
                         <?php if (1 == $type) { ?>
                             <th>Vendor</th><?php } ?>
@@ -1762,6 +1763,7 @@ include(INCLUDES . "c_header.php");
                                 <td data-tf-sortKey="<?php echo number_format($entry->invoiceAmount, 2); ?>">
                                     $<?php echo number_format($entry->invoiceAmount, 2); ?></td>
                                 <td><?php echo htmlentities($entry->invoiceNum); ?></td>
+                                <td><?php echo htmlentities( $entry->billingCycleStart ); ?><br/><?php echo htmlentities( $entry->billingCycleEnd ); ?></td>
                                 <td><?php echo $entry->paymentDate; ?></td>
                                 <?php if (1 == $type) { ?>
                                     <td><?php echo htmlentities($entry->vendorCompanyName1); ?></td>
@@ -1818,7 +1820,8 @@ include(INCLUDES . "c_header.php");
                         <td>$<?php echo number_format($invoiceTotal, 2); ?></td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
-                        <?php if (1 == $type) { ?>
+                        <td>&nbsp;</td>
+                       <?php if (1 == $type) { ?>
                             <td>&nbsp;</td>
                         <?php } ?>
                         <td>$<?php echo number_format($paymentTotal, 2); ?></td>
