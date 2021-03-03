@@ -31,7 +31,7 @@ function sendOutboundNotification( $notification ) {
 	$fromName = CONFIG_COMPANY_NAME . ' List Management System';
 	$subject = "{$notification->name} - {$notification->label} - Below Daily Threshold";
 	$body = "Company: {$notification->name}\r\n\r\n";
-	$body .= "Feed: {$notification->label} (#{$notification->idFeedOut})\r\n\r\n";
+	$body .= "Feed Label: {$notification->label} (#{$notification->idFeedOut})\r\n\r\n";
 	$body .= "Feed Description: {$notification->description}\r\n\r\n";
 	$body .= "We have sent {$notification->leadsPassed} leads on this feed today and we are expecting to have sent at least {$notification->notifyThresholdCount} leads by {$notification->notifyThresholdTimeFormatted}.\r\n\r\n";
 	$header = "From: \"{$fromName}\" <" . OWNER_EMAIL_FROM . ">\r\n";

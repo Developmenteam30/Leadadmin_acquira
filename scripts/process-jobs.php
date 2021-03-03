@@ -72,6 +72,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$feedOut->label}\r\n";
+    $body .= "Feed Description: {$feedOut->description}\r\n";
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if ($cnt !== null) {
@@ -155,6 +156,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$feedOut->label}\r\n";
+    $body .= "Feed Description: {$feedOut->description}\r\n";
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if ($cnt !== null) {
@@ -226,6 +228,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$feedIn->label}\r\n";
+    $body .= "Feed Description: {$feedIn->description}\r\n";
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if (isset($result['cnt'])) {
@@ -303,6 +306,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
     $body .= "Feed Label: {$feedOut->label}\r\n";
+    $body .= "Feed Description: {$feedOut->description}\r\n";
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if (isset($result['cnt'])) {
@@ -497,6 +501,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Company: {$feedCompany->name}\r\n";
         $body .= "Feed ID: {$job->destination}\r\n";
         $body .= "Feed Label: {$feedIn->label}\r\n";
+        $body .= "Feed Description: {$feedIn->description}\r\n";
         $body .= "\r\n";
         $body .= "Total Records: {$cnt}\r\n";
         $body .= "\r\n";
@@ -705,6 +710,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Company: {$feedCompany->name}\r\n";
         $body .= "Feed ID: {$job->destination}\r\n";
         $body .= "Feed Label: {$feedOut->label}\r\n";
+        $body .= "Feed Description: {$feedOut->description}\r\n";
         $body .= "\r\n";
         $body .= "Total Records: {$cnt}\r\n";
         $body .= "\r\n";
