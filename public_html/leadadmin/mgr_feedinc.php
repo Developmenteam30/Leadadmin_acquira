@@ -3,7 +3,7 @@
 include("../../includes/c_config.php");
 
 require_once(INCLUDES . 'session.php');
-LeadsSession::requireAccess([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF ]);
+LeadsSession::requireAccess([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_IMPORT, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF]);
 
 require_once(INCLUDES . 'leads.php');
 $leads = Leads::getInstance();
@@ -730,10 +730,7 @@ if (isset($_REQUEST['d'])) {
                                        value="<?php echo Display::escHtml($feed_label); ?>"/><?php echo Display::escHtml($feed_label); ?>
                                 <br/>(Cannot modify incoming feed labels created before 5/24/18)
                             <?php } else { ?>
-                                <input class="input-long" type="text" name="label" id="label"
-                                       value="<?php echo Display::escHtml($feed_label); ?>"<?php if (!empty($idFeedIn) && $idFeedIn < 123) {
-                                    print " readonly='readonly'";
-                                } ?>/>
+                                <input class="input-long" type="text" name="label" id="label" value="<?php echo Display::escHtml($feed_label); ?>"/>
                             <?php } ?>
                             </p>
                         </td>
@@ -2207,7 +2204,7 @@ include(INCLUDES . "c_header.php");
                                         href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn); ?>&amp;label=<?php echo urlencode($feed->label); ?>"
                                         target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
                             <td class="text-center">
-                                <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_CLIENT_DASHBOARD,LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) { ?>
+                                <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) { ?>
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-primary btn-xs" data-toggle="modal"
                                                 data-backdrop="static" data-target="#editfeedinc"
