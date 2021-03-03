@@ -345,7 +345,7 @@ if (isset($_REQUEST['a'])) {
                         $result['error'] = 'Sorry, you do not have access to this feed.';
                     }
                 }
-                if ($c && $_REQUEST['label'] != $feed->label) { //Label is being altered.
+                if ($c && $_REQUEST['label'] != $feed->label && 'Qatalyst' === CONFIG_COMPANY_NAME) { //Label is being altered.
 
                     if ($c) {
                         //Label can not be already used
