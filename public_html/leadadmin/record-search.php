@@ -28,7 +28,7 @@ if (isset($_REQUEST['d'])) {
     exit;
 }
 
-$title = 'Email Search';
+$title = 'Record Search';
 include(INCLUDES . "c_header.php");
 ?>
 <body>
@@ -37,9 +37,13 @@ include(INCLUDES . "c_header.php");
 
 <div class="container-fluid">
 
-	<h2>Record Search</h2>
-	<p>Fill out any or all of the fields below to perform an "AND" search against all of the fields that are filled in.</p>
-	<p>Searches will be performed against the entire archive of data back to June 2014. Results are limited to the first 500 matching entries and are sorted with the most recent entries on top.</p>
+    <h2>Record Search</h2>
+    <p>Fill out any or all of the fields below to perform an "AND" search against all of the fields that are filled in.</p>
+    <p>Searches will be performed against the entire archive of data back to June 2014.</p>
+    <?php if ('Qatalyst' === CONFIG_COMPANY_NAME) { ?>
+        <p>We started keeping inbound rejected records on 5/1/2018 and outbound rejected records on 9/1/2018. Before these dates, only accepted records were logged and available for searching.</p>
+    <?php } ?>
+    <p>Results are limited to the first 500 matching entries and are sorted with the most recent entries on top.</p>
 
     <?php
 
@@ -87,69 +91,69 @@ include(INCLUDES . "c_header.php");
         $leads->auditLog('SEARCH:EMAIL', json_encode(array('email' => $email, 'phone' => $phone, 'url' => $url, 'ip' => $ip)));
 
         ?>
-		<p>Searching incoming feeds ...</p>
+        <p>Searching incoming feeds ...</p>
 
         <?php
         $records = $leads->inboundRecordSearch($email, $phone, $url, $ip);
         if (is_array($records) && sizeOf($records) > 0) {
             ?>
 
-			<table class="table table-bordered table-striped-triple table-condensed">
-				<thead>
-				<tr>
-					<th>Incoming Feed</th>
-					<th>Email</th>
-					<th>Timestamp</th>
-					<th>URL</th>
-					<th>First Name</th>
-					<th>Last Name</th>
-					<th>Lead Timestamp</th>
-					<th>IP Address</th>
-					<th>DOB</th>
-				</tr>
-				<tr>
-					<th>Address 1</th>
-					<th>Address 2</th>
-					<th>City</th>
-					<th>State</th>
-					<th>Zipcode</th>
-					<th>Country</th>
-					<th>Landline</th>
-					<th>Cellphone</th>
-					<th>Gender</th>
-				</tr>
-				<tr>
-					<th colspan="9">Incoming and Outgoing Responses</th>
-				</tr>
-				</thead>
-				<tbody>
+            <table class="table table-bordered table-striped-triple table-condensed">
+                <thead>
+                <tr>
+                    <th>Incoming Feed</th>
+                    <th>Email</th>
+                    <th>Timestamp</th>
+                    <th>URL</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Lead Timestamp</th>
+                    <th>IP Address</th>
+                    <th>DOB</th>
+                </tr>
+                <tr>
+                    <th>Address 1</th>
+                    <th>Address 2</th>
+                    <th>City</th>
+                    <th>State</th>
+                    <th>Zipcode</th>
+                    <th>Country</th>
+                    <th>Landline</th>
+                    <th>Cellphone</th>
+                    <th>Gender</th>
+                </tr>
+                <tr>
+                    <th colspan="9">Incoming and Outgoing Responses</th>
+                </tr>
+                </thead>
+                <tbody>
 
                 <?php foreach ($records as $record) { ?>
-					<tr>
-						<td><?php echo Display::escHtml($record->label); ?> (#<?php echo Display::escHtml($record->idFeedIn); ?>)</td>
-						<td><?php echo Display::escHtml($record->email); ?></td>
-						<td><?php echo Display::escHtml($record->timestampConverted); ?></td>
-						<td><?php echo Display::escHtml($record->url); ?></td>
-						<td><?php echo Display::escHtml($record->fname); ?></td>
-						<td><?php echo Display::escHtml($record->lname); ?></td>
-						<td><?php echo Display::escHtml($record->leadstamp); ?></td>
-						<td><?php echo Display::escHtml($record->ip); ?></td>
-						<td><?php echo Display::escHtml($record->dob); ?></td>
-					</tr>
-					<tr>
-						<td><?php echo Display::escHtml($record->addr); ?>&nbsp;</td>
-						<td><?php echo Display::escHtml($record->addr2); ?></td>
-						<td><?php echo Display::escHtml($record->city); ?></td>
-						<td><?php echo Display::escHtml($record->state); ?></td>
-						<td><?php echo Display::escHtml($record->zip); ?></td>
-						<td><?php echo Display::escHtml($record->country); ?></td>
-						<td><?php echo Display::escHtml($record->landline); ?></td>
-						<td><?php echo Display::escHtml($record->cellphone); ?></td>
-						<td><?php echo Display::escHtml($record->gender); ?></td>
-					</tr>
-					<tr>
-						<td colspan="9">
-							<p><strong>Incoming Response</strong>: <?php echo Display::escHtml($record->result ?? 'Success'); ?></p>
+                    <tr>
+                        <td><?php echo Display::escHtml($record->label); ?> (#<?php echo Display::escHtml($record->idFeedIn); ?>)</td>
+                        <td><?php echo Display::escHtml($record->email); ?></td>
+                        <td><?php echo Display::escHtml($record->timestampConverted); ?></td>
+                        <td><?php echo Display::escHtml($record->url); ?></td>
+                        <td><?php echo Display::escHtml($record->fname); ?></td>
+                        <td><?php echo Display::escHtml($record->lname); ?></td>
+                        <td><?php echo Display::escHtml($record->leadstamp); ?></td>
+                        <td><?php echo Display::escHtml($record->ip); ?></td>
+                        <td><?php echo Display::escHtml($record->dob); ?></td>
+                    </tr>
+                    <tr>
+                        <td><?php echo Display::escHtml($record->addr); ?>&nbsp;</td>
+                        <td><?php echo Display::escHtml($record->addr2); ?></td>
+                        <td><?php echo Display::escHtml($record->city); ?></td>
+                        <td><?php echo Display::escHtml($record->state); ?></td>
+                        <td><?php echo Display::escHtml($record->zip); ?></td>
+                        <td><?php echo Display::escHtml($record->country); ?></td>
+                        <td><?php echo Display::escHtml($record->landline); ?></td>
+                        <td><?php echo Display::escHtml($record->cellphone); ?></td>
+                        <td><?php echo Display::escHtml($record->gender); ?></td>
+                    </tr>
+                    <tr>
+                        <td colspan="9">
+                            <p><strong>Incoming Response</strong>: <?php echo Display::escHtml($record->result ?? 'Success'); ?></p>
                             <?php
                             $outboundRecords = $leads->outboundRecordSearchById($record->idRecord);
                             if (!empty($outboundRecords)) {
@@ -168,11 +172,11 @@ include(INCLUDES . "c_header.php");
                                 print '<p>No outgoing records found.</p>';
                             }
                             ?>
-						</td>
-					</tr>
+                        </td>
+                    </tr>
                 <?php } ?>
-				</tbody>
-			</table>
+                </tbody>
+            </table>
 
             <?php
         } else {
