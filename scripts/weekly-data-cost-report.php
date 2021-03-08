@@ -31,9 +31,10 @@ $spreadsheet->getActiveSheet()
     ->setCellValue('A1', 'Company Name')
     ->setCellValue('B1', 'Feed ID')
     ->setCellValue('C1', 'Feed Label')
-    ->setCellValue('D1', 'Accepted')
-    ->setCellValue('E1', 'CPL')
-    ->setCellValue('F1', 'Cost');
+    ->setCellValue('D1', 'Feed Description')
+    ->setCellValue('E1', 'Accepted')
+    ->setCellValue('F1', 'CPL')
+    ->setCellValue('G1', 'Cost');
 
 $feeds = $leads->getInboundFeeds(null, 'active');
 
@@ -50,6 +51,7 @@ foreach ($feeds as $feed) {
         $feed->name,
         $feed->idFeedIn,
         $feed->label,
+        $feed->description,
         $stats['accepted'],
         $feed->costPerLead,
         $feed->costPerLead * $stats['accepted'],
@@ -58,6 +60,7 @@ foreach ($feeds as $feed) {
 
 $rows[] = [
     'TOTAL',
+    '',
     '',
     '',
     $totalAccepted,
@@ -70,12 +73,12 @@ $spreadsheet->getActiveSheet()->fromArray($rows, null, 'A2');
 $totalRows = count($rows);
 if ($totalRows) {
     $spreadsheet->getActiveSheet()
-        ->getStyle('D2:D' . ($totalRows + 1))
+        ->getStyle('E2:E' . ($totalRows + 1))
         ->getNumberFormat()
         ->setFormatCode('#,##0');
 
     $spreadsheet->getActiveSheet()
-        ->getStyle('E2:F' . ($totalRows + 1))
+        ->getStyle('F2:G' . ($totalRows + 1))
         ->getNumberFormat()
         ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
 }
