@@ -32,40 +32,56 @@ $spreadsheet->getActiveSheet()
     ->setCellValue('B1', 'Feed ID')
     ->setCellValue('C1', 'Feed Label')
     ->setCellValue('D1', 'Feed Description')
-    ->setCellValue('E1', 'Accepted')
+    ->setCellValue('E1', 'EQ Accepted')
     ->setCellValue('F1', 'CPL')
-    ->setCellValue('G1', 'Cost');
+    ->setCellValue('G1', 'Net Cost')
+    ->setCellValue('H1', '100 Insure Accepted')
+    ->setCellValue('I1', 'Gross Cost')
+    ->setCellValue('J1', 'Cost Difference');
 
 $feeds = $leads->getInboundFeeds(null, 'active');
 
 $rows = [];
-$totalAccepted = 0;
-$totalCost = 0;
+$totalInboundAccepted = 0;
+$totalOutboundAccepted = 0;
+$totalNetCost = 0;
+$totalGrossCost = 0;
 foreach ($feeds as $feed) {
-    $stats = $leads->getInboundStatsRange($feed->idFeedIn, $dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'));
+    $inboundStats = $leads->getInboundStatsRange($feed->idFeedIn, $dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'));
+    $totalInboundAccepted += $inboundStats['accepted'];
+    $netCost = $feed->costPerLead * $inboundStats['accepted'];
+    $totalNetCost += $netCost;
 
-    $totalAccepted += $stats['accepted'];
-    $totalCost += $feed->costPerLead * $stats['accepted'];
+    $outboundStats = $leads->getStatsCorrelatedByPairing($feed->idFeedIn, 19, $dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'));
+    $totalOutboundAccepted += $outboundStats['accepted'] ?? 0;
+    $grossCost = $feed->costPerLead * ($outboundStats['accepted'] ?? 0);
+    $totalGrossCost += $grossCost;
 
     $rows[] = [
         $feed->name,
         $feed->idFeedIn,
         $feed->label,
         $feed->description,
-        $stats['accepted'],
+        $inboundStats['accepted'],
         $feed->costPerLead,
-        $feed->costPerLead * $stats['accepted'],
+        $netCost,
+        $outboundStats['accepted'] ?? '',
+        $grossCost,
+        $grossCost - $netCost,
     ];
 }
 
 $rows[] = [
-    'TOTAL',
+    'NET TOTAL',
     '',
     '',
     '',
-    $totalAccepted,
-    $totalAccepted > 0 ? $totalCost / $totalAccepted : 0,
-    $totalCost,
+    $totalInboundAccepted,
+    $totalInboundAccepted > 0 ? $totalNetCost / $totalInboundAccepted : 0,
+    $totalNetCost,
+    $totalOutboundAccepted,
+    $totalGrossCost,
+    $totalGrossCost - $totalNetCost,
 ];
 
 $spreadsheet->getActiveSheet()->fromArray($rows, null, 'A2');
@@ -78,7 +94,17 @@ if ($totalRows) {
         ->setFormatCode('#,##0');
 
     $spreadsheet->getActiveSheet()
+        ->getStyle('H2:H' . ($totalRows + 1))
+        ->getNumberFormat()
+        ->setFormatCode('#,##0');
+
+    $spreadsheet->getActiveSheet()
         ->getStyle('F2:G' . ($totalRows + 1))
+        ->getNumberFormat()
+        ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
+
+    $spreadsheet->getActiveSheet()
+        ->getStyle('I2:J' . ($totalRows + 1))
         ->getNumberFormat()
         ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
 }

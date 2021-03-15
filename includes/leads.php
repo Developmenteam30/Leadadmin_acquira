@@ -860,6 +860,36 @@ class Leads
         return $results;
     }
 
+    public function getStatsCorrelatedByPairing($idFeedIn, $idFeedOut, $startDate, $endDate)
+    {
+        $results = null;
+        $params = array();
+
+        try {
+
+            $sql = "SELECT fo.idFeedOut,fo.label,fo.description,SUM(sc.accepted) AS accepted,SUM(sc.revenuePerLead*sc.billable) AS revenue,SUM(sc.costPerLead*sc.billable) AS expense ";
+            $sql .= "FROM stats_correlated AS sc ";
+            $sql .= "JOIN feedout AS fo ON fo.idFeedOut = sc.idFeedOut ";
+            $sql .= "LEFT JOIN companies c ON c.idCompany = fo.idCompany ";
+            $sql .= "WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE) ";
+            $params[] = $startDate;
+            $params[] = $endDate;
+            $sql .= "AND sc.idFeedIn = ? ";
+            $params[] = $idFeedIn;
+            $sql .= "AND sc.idFeedOut = ? ";
+            $params[] = $idFeedOut;
+            $sql .= "GROUP BY sc.idFeedOut ";
+
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
+            $results = $query->fetch();
+        } catch (PDOException $e) {
+            $this->logError('Unable to get revenue stats correlated by pairing: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
     public function getRevenueStatsInbound($idFeedOut, $startDate, $endDate)
     {
         $results = null;
