@@ -93,9 +93,10 @@ class Display
 
             if (in_array($field['type'], array('text', 'number', 'tel', 'date', 'email', 'password', 'url'))) {
 
-                printf("\t<label data-for=\"%s\">%s</label>\n",
+                printf("\t<label data-for=\"%s\">%s%s</label>\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
-                    htmlentities($field['label'])
+                    htmlentities($field['label']),
+                    (!empty($field['required']) ? ' <span class="required">*</span> ' : '')
                 );
                 printf("\t<input class=\"form-control\" type=\"%s\" name=\"%s\" id=\"%s\" data-lpignore=\"true\" value=\"%s\"%s%s%s%s />\n",
                     htmlspecialchars($field['type'], ENT_QUOTES | ENT_HTML5),
@@ -110,9 +111,10 @@ class Display
 
             } elseif ('currency' == $field['type']) {
 
-                printf("\t<label data-for=\"%s\">%s</label>\n",
+                printf("\t<label data-for=\"%s\">%s%s</label>\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
-                    htmlentities($field['label'])
+                    htmlentities($field['label']),
+                    (!empty($field['required']) ? ' <span class="required">*</span> ' : '')
                 );
                 printf("\t<input class=\"form-control\" type=\"text\" name=\"%s\" id=\"%s\" pattern=\"^\\$?(([1-9](\\d*|\\d{0,2}(,\\d{3})*))|0)(\\.\\d{1,2})?$\" data-lpignore=\"true\" value=\"%s\"%s%s />\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
@@ -177,11 +179,12 @@ class Display
                 );
                 if (!empty($field['choices']) && is_array($field['choices'])) {
                     foreach ($field['choices'] as $key => $val) {
-                        printf("\t<input type=\"radio\" name=\"%s\" value=\"%s\"%s%s /> %s%s\n",
+                        printf("\t<input type=\"radio\" name=\"%s\" value=\"%s\"%s%s%s /> %s%s\n",
                             htmlspecialchars($field['id']),
                             htmlspecialchars($key),
-                            (!empty($field['value']) && $key == $field['value']) ? ' checked="checked"' : '',
+                            (isset($field['value']) && $key == $field['value']) ? ' checked="checked"' : '',
                             (!empty($field['required']) ? ' required="required" ' : ''),
+                            (!empty($field['readonly']) ? ' readonly' : ''),
                             htmlspecialchars($val),
                             (!empty($field['choice_append']) ? $field['choice_append'] : '')
                         );
@@ -190,9 +193,10 @@ class Display
 
             } elseif ('textarea' == $field['type']) {
 
-                printf("\t<label data-for=\"%s\">%s</label>\n",
+                printf("\t<label data-for=\"%s\">%s%s</label>\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
-                    htmlentities($field['label'])
+                    htmlentities($field['label']),
+                    (!empty($field['required']) ? ' <span class="required">*</span> ' : '')
                 );
                 printf("\t<textarea class=\"form-control\" name=\"%s\" id=\"%s\"%s>%s</textarea>\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
@@ -203,9 +207,10 @@ class Display
 
             } elseif ('select' == $field['type']) {
 
-                printf("\t<label data-for=\"%s\">%s</label>\n",
+                printf("\t<label data-for=\"%s\">%s%s</label>\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
-                    htmlentities($field['label'])
+                    htmlentities($field['label']),
+                    (!empty($field['required']) ? ' <span class="required">*</span> ' : '')
                 );
                 printf("\t<select class=\"form-control\" name=\"%s%s\" id=\"%s\"%s%s>\n",
                     htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),

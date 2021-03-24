@@ -118,6 +118,15 @@ if (isset($_REQUEST['a'])) {
                 $c = false;
             }
 
+            if ($c && !empty($_REQUEST['reimbursementPaymentDate'])) {
+                try {
+                    $paymentDate = new DateTime($_REQUEST['reimbursementPaymentDate']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid RGE payment date.';
+                    $c = false;
+                }
+            }
+
             if (1 == $type) {
                 for ($i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++) {
                     if (!empty($_REQUEST['loInvoiceAmount' . $i]) && is_numeric($_REQUEST['loInvoiceAmount' . $i]) === false) {
@@ -226,9 +235,11 @@ if (isset($_REQUEST['a'])) {
                     'ledgerMonth' => $ledgerMonth->format('Y-m-d'),
                     'invoiceAmount' => empty($_REQUEST['invoiceAmount']) ? 0.00 : $_REQUEST['invoiceAmount'],
                     'invoiceNum' => empty($_REQUEST['invoiceNum']) ? null : $_REQUEST['invoiceNum'],
-                    'billingCycleStart' => !isset( $billingCycleStart ) ? null : $billingCycleStart->format( 'Y-m-d' ),
-                    'billingCycleEnd' => !isset( $billingCycleEnd ) ? null : $billingCycleEnd->format( 'Y-m-d' ),
+                    'billingCycleStart' => !isset($billingCycleStart) ? null : $billingCycleStart->format('Y-m-d'),
+                    'billingCycleEnd' => !isset($billingCycleEnd) ? null : $billingCycleEnd->format('Y-m-d'),
                     'paymentAmount' => empty($_REQUEST['paymentAmount']) ? null : $_REQUEST['paymentAmount'],
+                    'isReimbursed' => !empty($_REQUEST['isReimbursed']) ? 1 : 0,
+                    'reimbursementPaymentDate' => empty($_REQUEST['reimbursementPaymentDate']) ? null : $_REQUEST['reimbursementPaymentDate'],
                     'commissionDate1' => !isset($commissionDate1) ? null : $commissionDate1->format('Y-m-d'),
                     'commissionAmount1' => empty($_REQUEST['commissionAmount1']) ? null : $_REQUEST['commissionAmount1'],
                     'commissionRevenue1' => empty($_REQUEST['commissionRevenue1']) ? null : $_REQUEST['commissionRevenue1'],
@@ -402,6 +413,15 @@ if (isset($_REQUEST['a'])) {
                 $c = false;
             }
 
+            if ($c && !empty($_REQUEST['reimbursementPaymentDate'])) {
+                try {
+                    $paymentDate = new DateTime($_REQUEST['reimbursementPaymentDate']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid RGE payment date.';
+                    $c = false;
+                }
+            }
+
             if (1 == $type) {
                 for ($i = 1; $i <= MAX_PHONE_LEADS_VENDORS; $i++) {
                     if (!empty($_REQUEST['loInvoiceAmount' . $i]) && is_numeric($_REQUEST['loInvoiceAmount' . $i]) === false) {
@@ -507,12 +527,14 @@ if (isset($_REQUEST['a'])) {
                     'verticalId' => empty($_REQUEST['verticalId']) ? null : $_REQUEST['verticalId'],
                     'paymentDate' => !isset($paymentDate) ? null : $paymentDate->format('Y-m-d'),
                     'paymentMethod' => empty($_REQUEST['paymentMethod']) ? null : $_REQUEST['paymentMethod'],
-                    'billingCycleStart' => !isset( $billingCycleStart ) ? null : $billingCycleStart->format( 'Y-m-d' ),
-                    'billingCycleEnd' => !isset( $billingCycleEnd ) ? null : $billingCycleEnd->format( 'Y-m-d' ),
+                    'billingCycleStart' => !isset($billingCycleStart) ? null : $billingCycleStart->format('Y-m-d'),
+                    'billingCycleEnd' => !isset($billingCycleEnd) ? null : $billingCycleEnd->format('Y-m-d'),
                     'ledgerMonth' => $ledgerMonth->format('Y-m-d'),
                     'invoiceAmount' => empty($_REQUEST['invoiceAmount']) ? 0.00 : $_REQUEST['invoiceAmount'],
                     'invoiceNum' => empty($_REQUEST['invoiceNum']) ? null : $_REQUEST['invoiceNum'],
                     'paymentAmount' => empty($_REQUEST['paymentAmount']) ? null : $_REQUEST['paymentAmount'],
+                    'isReimbursed' => !empty($_REQUEST['isReimbursed']) ? 1 : 0,
+                    'reimbursementPaymentDate' => empty($_REQUEST['reimbursementPaymentDate']) ? null : $_REQUEST['reimbursementPaymentDate'],
                     'commissionDate1' => !isset($commissionDate1) ? null : $commissionDate1->format('Y-m-d'),
                     'commissionAmount1' => empty($_REQUEST['commissionAmount1']) ? null : $_REQUEST['commissionAmount1'],
                     'commissionRevenue1' => empty($_REQUEST['commissionRevenue1']) ? null : $_REQUEST['commissionRevenue1'],
@@ -659,6 +681,7 @@ if (isset($_REQUEST['d'])) {
                     'label' => 'Ledger Month',
                     'type' => 'select',
                     'choices' => $ledgerMonths,
+                    'required' => true,
                 ),
                 /* Removed per #3314.
                 array(
@@ -685,9 +708,34 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'paymentAmount',
                     'label' => 'Payment Amount',
                     'type' => 'currency',
-                    'required' => true,
                 ),
             );
+
+            if ('EQ' === COMPANY_INITIALS) {
+                $fields[] = array(
+                    'type' => '_divider',
+                );
+
+                $fields[] = array(
+                    'id' => 'isReimbursed',
+                    'label' => 'Paid by RGE',
+                    'type' => 'radio',
+                    'choices' => array(
+                        '1' => 'Yes',
+                        '0' => 'No',
+                    ),
+                    'value' => 'no',
+                    'choice_append' => '&nbsp;&nbsp;',
+                );
+
+                $fields[] = array(
+                    'id' => 'reimbursementPaymentDate',
+                    'label' => 'RGE Date Paid',
+                    'type' => 'text',
+                    'autocomplete' => 'off',
+                );
+
+            }
 
             if (1 == $type) {
 
@@ -761,7 +809,7 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'userId1',
                     'label' => 'Salesperson 1',
                     'type' => 'select',
-                    'required' => true,
+                    'required' => false,
                     'placeholder' => 'Select a salesperson',
                     'choices' => $leads->getStaffUsers(),
                 ),
@@ -866,7 +914,7 @@ if (isset($_REQUEST['d'])) {
             ?>
 
             <script type="text/javascript">
-                $('#new_ledger input[name=paymentDate], #new_ledger input[name=commissionDate1], #new_ledger input[name=commissionDate2], #new_ledger input[name=commissionDate3], #new_ledger input[name=billingCycleStart], #new_ledger input[name=billingCycleEnd]').datepicker({
+                $('#new_ledger input[name=paymentDate], #new_ledger input[name=reimbursementPaymentDate], #new_ledger input[name=commissionDate1], #new_ledger input[name=commissionDate2], #new_ledger input[name=commissionDate3], #new_ledger input[name=billingCycleStart], #new_ledger input[name=billingCycleEnd]').datepicker({
                     // Consistent format with the HTML5 picker
                     dateFormat: 'yy-mm-dd'
                 });
@@ -1110,6 +1158,30 @@ if (isset($_REQUEST['d'])) {
                         'readonly' => true,
                     ),
                     array(
+                        'type' => '_divider',
+                        'active' => 'EQ' === COMPANY_INITIALS,
+                    ),
+                    array(
+                        'id' => 'isReimbursed',
+                        'label' => 'Paid by RGE',
+                        'type' => 'text',
+                        'value' => $entry->isReimbursed ? 'Yes' : 'No',
+                        'readonly' => true,
+                        'active' => 'EQ' === COMPANY_INITIALS,
+                    ),
+                    array(
+                        'id' => 'reimbursementPaymentDate',
+                        'label' => 'RGE Date Paid',
+                        'type' => 'text',
+                        'autocomplete' => 'off',
+                        'readonly' => true,
+                        'value' => $entry->reimbursementPaymentDate,
+                        'active' => 'EQ' === COMPANY_INITIALS,
+                    ),
+                    array(
+                        'type' => '_divider',
+                    ),
+                    array(
                         'id' => 'userId1',
                         'label' => 'Salesperson 1',
                         'type' => 'select',
@@ -1341,6 +1413,33 @@ if (isset($_REQUEST['d'])) {
                     ),
                 );
 
+                if ('EQ' === COMPANY_INITIALS) {
+                    $fields[] = array(
+                        'type' => '_divider',
+                    );
+
+                    $fields[] = array(
+                        'id' => 'isReimbursed',
+                        'label' => 'Paid by RGE',
+                        'type' => 'radio',
+                        'choices' => array(
+                            '1' => 'Yes',
+                            '0' => 'No',
+                        ),
+                        'value' => $entry->isReimbursed,
+                        'choice_append' => '&nbsp;&nbsp;',
+                    );
+
+                    $fields[] = array(
+                        'id' => 'reimbursementPaymentDate',
+                        'label' => 'RGE Date Paid',
+                        'type' => 'text',
+                        'autocomplete' => 'off',
+                        'value' => $entry->reimbursementPaymentDate,
+                    );
+
+                }
+
                 if (1 == $entry->type) {
                     $fields[] = array(
                         'type' => '_divider',
@@ -1420,7 +1519,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'userId1',
                         'label' => 'Salesperson 1',
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a salesperson',
                         'choices' => $leads->getStaffUsers(),
                         'value' => $entry->userId1,
@@ -1457,7 +1555,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'userId2',
                         'label' => 'Salesperson 2',
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a salesperson',
                         'choices' => $leads->getStaffUsers(),
                         'value' => $entry->userId2,
@@ -1494,7 +1591,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'userId3',
                         'label' => 'Salesperson 3',
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a salesperson',
                         'choices' => $leads->getStaffUsers(),
                         'value' => $entry->userId3,
@@ -1554,7 +1650,7 @@ if (isset($_REQUEST['d'])) {
                     });
 
                     $('#editledger').on('shown.bs.modal', function (e) {
-                        $('#editledger input[name=paymentDate], #editledger input[name=commissionDate1], #editledger input[name=commissionDate2], #editledger input[name=commissionDate3, #editledger input[name=billingCycleStart], #editledger input[name=billingCycleStart]]').datepicker({
+                        $('#editledger input[name=paymentDate], #editledger input[name=reimbursementPaymentDate], #editledger input[name=commissionDate1], #editledger input[name=commissionDate2], #editledger input[name=commissionDate3, #editledger input[name=billingCycleStart], #editledger input[name=billingCycleStart]]').datepicker({
                             // Consistent format with the HTML5 picker
                             dateFormat: 'yy-mm-dd'
                         });
@@ -1730,6 +1826,10 @@ include(INCLUDES . "c_header.php");
                             <th>Vendor</th><?php } ?>
                         <th>Payment Amount</th>
                         <th>Method</th>
+                        <?php if ('EQ' === COMPANY_INITIALS) { ?>
+                            <th>Paid by RGE</th>
+                            <th>Date Paid</th>
+                        <?php } ?>
                         <th>Salesperson</th>
                         <th>Commissions</th>
                         <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
@@ -1763,7 +1863,7 @@ include(INCLUDES . "c_header.php");
                                 <td data-tf-sortKey="<?php echo number_format($entry->invoiceAmount, 2); ?>">
                                     $<?php echo number_format($entry->invoiceAmount, 2); ?></td>
                                 <td><?php echo htmlentities($entry->invoiceNum); ?></td>
-                                <td><?php echo htmlentities( $entry->billingCycleStart ); ?><br/><?php echo htmlentities( $entry->billingCycleEnd ); ?></td>
+                                <td><?php echo htmlentities($entry->billingCycleStart); ?><br/><?php echo htmlentities($entry->billingCycleEnd); ?></td>
                                 <td><?php echo $entry->paymentDate; ?></td>
                                 <?php if (1 == $type) { ?>
                                     <td><?php echo htmlentities($entry->vendorCompanyName1); ?></td>
@@ -1771,19 +1871,41 @@ include(INCLUDES . "c_header.php");
                                 <td data-tf-sortKey="<?php echo number_format($entry->paymentAmount, 2); ?>">
                                     $<?php echo number_format($entry->paymentAmount, 2); ?></td>
                                 <td><?php echo htmlentities($entry->paymentMethod); ?></td>
+                                <?php if ('EQ' === COMPANY_INITIALS) { ?>
+                                    <td><?php echo $entry->isReimbursed ? 'Yes' : 'No'; ?></td>
+                                    <td><?php echo htmlentities($entry->reimbursementPaymentDate); ?></td>
+                                <?php } ?>
                                 <td><?php echo htmlentities($entry->fullName1); ?>
                                     <br/><?php echo htmlentities($entry->fullName2); ?></td>
                                 <td data-tf-sortKey="<?php echo number_format($entry->commissionAmount1,
-                                    2); ?>"><?php echo (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId1) ? '$' . number_format($entry->commissionAmount1,
-                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId1) && !empty($entry->commissionDate1) && !empty($entry->commissionAmount1)) {
+                                    2); ?>"><?php echo (LeadsSession::isValid([
+                                            LEADS_SESSION_LEVEL_MANAGER,
+                                            LEADS_SESSION_LEVEL_ADMIN,
+                                        ]) || LeadsSession::getUserId() == $entry->userId1) ? '$' . number_format($entry->commissionAmount1,
+                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([
+                                                LEADS_SESSION_LEVEL_MANAGER,
+                                                LEADS_SESSION_LEVEL_ADMIN,
+                                            ]) || LeadsSession::getUserId() == $entry->userId1) && !empty($entry->commissionDate1) && !empty($entry->commissionAmount1)) {
                                         echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
                                     } ?>
-                                    <br/><?php echo (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId2) ? '$' . number_format($entry->commissionAmount2,
-                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId2) && !empty($entry->commissionDate2) && !empty($entry->commissionAmount2)) {
+                                    <br/><?php echo (LeadsSession::isValid([
+                                            LEADS_SESSION_LEVEL_MANAGER,
+                                            LEADS_SESSION_LEVEL_ADMIN,
+                                        ]) || LeadsSession::getUserId() == $entry->userId2) ? '$' . number_format($entry->commissionAmount2,
+                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([
+                                                LEADS_SESSION_LEVEL_MANAGER,
+                                                LEADS_SESSION_LEVEL_ADMIN,
+                                            ]) || LeadsSession::getUserId() == $entry->userId2) && !empty($entry->commissionDate2) && !empty($entry->commissionAmount2)) {
                                         echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
                                     } ?>
-                                    <br/><?php echo (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId3) ? '$' . number_format($entry->commissionAmount3,
-                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId3) && !empty($entry->commissionDate3) && !empty($entry->commissionAmount3)) {
+                                    <br/><?php echo (LeadsSession::isValid([
+                                            LEADS_SESSION_LEVEL_MANAGER,
+                                            LEADS_SESSION_LEVEL_ADMIN,
+                                        ]) || LeadsSession::getUserId() == $entry->userId3) ? '$' . number_format($entry->commissionAmount3,
+                                            2) : '&nbsp;'; ?><?php if ((LeadsSession::isValid([
+                                                LEADS_SESSION_LEVEL_MANAGER,
+                                                LEADS_SESSION_LEVEL_ADMIN,
+                                            ]) || LeadsSession::getUserId() == $entry->userId3) && !empty($entry->commissionDate3) && !empty($entry->commissionAmount3)) {
                                         echo ' <img alt="Green checkmark" height="13" src="images/green_check.png" width="12" />';
                                     } ?></td>
                                 <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
@@ -1821,11 +1943,15 @@ include(INCLUDES . "c_header.php");
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
-                       <?php if (1 == $type) { ?>
+                        <?php if (1 == $type) { ?>
                             <td>&nbsp;</td>
                         <?php } ?>
                         <td>$<?php echo number_format($paymentTotal, 2); ?></td>
                         <td>&nbsp;</td>
+                        <?php if ('EQ' === COMPANY_INITIALS) { ?>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        <?php } ?>
                         <td>&nbsp;</td>
                         <td>$<?php echo number_format($commissionTotal, 2); ?></td>
                         <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
