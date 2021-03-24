@@ -718,7 +718,7 @@ if (isset($_REQUEST['d'])) {
 
                 $fields[] = array(
                     'id' => 'isReimbursed',
-                    'label' => 'Paid by RGE',
+                    'label' => (0 == $type) ? 'Paid by RGE' : 'Paid to RGE',
                     'type' => 'radio',
                     'choices' => array(
                         '1' => 'Yes',
@@ -1163,7 +1163,7 @@ if (isset($_REQUEST['d'])) {
                     ),
                     array(
                         'id' => 'isReimbursed',
-                        'label' => 'Paid by RGE',
+                        'label' => (0 == $entry->type) ? 'Paid by RGE' : 'Paid to RGE',
                         'type' => 'text',
                         'value' => $entry->isReimbursed ? 'Yes' : 'No',
                         'readonly' => true,
@@ -1420,7 +1420,7 @@ if (isset($_REQUEST['d'])) {
 
                     $fields[] = array(
                         'id' => 'isReimbursed',
-                        'label' => 'Paid by RGE',
+                        'label' => (0 == $entry->type) ? 'Paid by RGE' : 'Paid to RGE',
                         'type' => 'radio',
                         'choices' => array(
                             '1' => 'Yes',
@@ -1827,7 +1827,7 @@ include(INCLUDES . "c_header.php");
                         <th>Payment Amount</th>
                         <th>Method</th>
                         <?php if ('EQ' === COMPANY_INITIALS) { ?>
-                            <th>Paid by RGE</th>
+                            <th>Paid <?php if(0 == $entry->type) { ?>by<?php } else {?>to<?php }?> RGE</th>
                             <th>Date Paid</th>
                         <?php } ?>
                         <th>Salesperson</th>
