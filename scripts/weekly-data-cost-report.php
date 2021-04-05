@@ -28,16 +28,18 @@ $dateEnd = new DateTime('Sunday last week');
 $spreadsheet = new Spreadsheet();
 $spreadsheet->setActiveSheetIndex(0);
 $spreadsheet->getActiveSheet()
-    ->setCellValue('A1', 'Company Name')
-    ->setCellValue('B1', 'Feed ID')
-    ->setCellValue('C1', 'Feed Label')
-    ->setCellValue('D1', 'Feed Description')
-    ->setCellValue('E1', 'EQ Accepted')
-    ->setCellValue('F1', 'CPL')
-    ->setCellValue('G1', 'Net Cost')
-    ->setCellValue('H1', '100 Insure Accepted')
-    ->setCellValue('I1', 'Gross Cost')
-    ->setCellValue('J1', 'Cost Difference');
+    ->setCellValue('A1', COMPANY_INITIALS . ' Weekly Data Cost Report (' . $dateStart->format('m/d/Y') . ' - ' . $dateEnd->format('m/d/Y') . ') - Week ' . $dateStart->format('W'));
+$spreadsheet->getActiveSheet()
+    ->setCellValue('A2', 'Company Name')
+    ->setCellValue('B2', 'Feed ID')
+    ->setCellValue('C2', 'Feed Label')
+    ->setCellValue('D2', 'Feed Description')
+    ->setCellValue('E2', 'EQ Accepted')
+    ->setCellValue('F2', 'CPL')
+    ->setCellValue('G2', 'Net Cost')
+    ->setCellValue('H2', '100 Insure Accepted')
+    ->setCellValue('I2', 'Gross Cost')
+    ->setCellValue('J2', 'Cost Difference');
 
 $feeds = $leads->getInboundFeeds(null, 'active');
 
@@ -84,12 +86,12 @@ $rows[] = [
     $totalGrossCost - $totalNetCost,
 ];
 
-$spreadsheet->getActiveSheet()->fromArray($rows, null, 'A2');
+$spreadsheet->getActiveSheet()->fromArray($rows, null, 'A3');
 
 $totalRows = count($rows);
 if ($totalRows) {
     $spreadsheet->getActiveSheet()
-        ->getStyle('E2:E' . ($totalRows + 1))
+        ->getStyle('E3:E' . ($totalRows + 1))
         ->getNumberFormat()
         ->setFormatCode('#,##0');
 
@@ -99,12 +101,12 @@ if ($totalRows) {
         ->setFormatCode('#,##0');
 
     $spreadsheet->getActiveSheet()
-        ->getStyle('F2:G' . ($totalRows + 1))
+        ->getStyle('F3:G' . ($totalRows + 1))
         ->getNumberFormat()
         ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
 
     $spreadsheet->getActiveSheet()
-        ->getStyle('I2:J' . ($totalRows + 1))
+        ->getStyle('I3:J' . ($totalRows + 1))
         ->getNumberFormat()
         ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
 }
@@ -113,13 +115,17 @@ if ($totalRows) {
 $spreadsheet->getActiveSheet()->getStyle('A' . ($totalRows + 1) . ':' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(1))) . ($totalRows + 1))->getFont()->setBold(true);
 
 try {
+    $spreadsheet->getActiveSheet()->mergeCells('A1:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2))) . '1');
+    $spreadsheet->getActiveSheet()->getStyle('A1')->getFont()->setSize(20)->setBold(true);
+    $spreadsheet->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
     // Add header colors and formatting
-    $spreadsheet->getActiveSheet()->getStyle('A1:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(1))) . '1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0095FF');
-    $spreadsheet->getActiveSheet()->getStyle('A1:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(1))) . '1')->getFont()->getColor()->setARGB(Color::COLOR_WHITE);
-    $spreadsheet->getActiveSheet()->getStyle('A1:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(1))) . '1')->getFont()->setBold(true);
+    $spreadsheet->getActiveSheet()->getStyle('A2:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2))) . '2')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF0095FF');
+    $spreadsheet->getActiveSheet()->getStyle('A2:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2))) . '2')->getFont()->getColor()->setARGB(Color::COLOR_WHITE);
+    $spreadsheet->getActiveSheet()->getStyle('A2:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2))) . '2')->getFont()->setBold(true);
 
     // Add header filters
-    $spreadsheet->getActiveSheet()->setAutoFilter($spreadsheet->getActiveSheet()->calculateWorksheetDimension());
+    $spreadsheet->getActiveSheet()->setAutoFilter('A2:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2))) . '2');
 
     // Auto size columns
     for ($col = 1; $col <= Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn()); ++$col) {
@@ -127,10 +133,10 @@ try {
     }
 
     // Freeze top row
-    $spreadsheet->getActiveSheet()->freezePane('A2');
+    $spreadsheet->getActiveSheet()->freezePane('A3');
 
     // Reset selected cell
-    $spreadsheet->getActiveSheet()->setSelectedCell('A2');
+    $spreadsheet->getActiveSheet()->setSelectedCell('A3');
 
 } catch (Exception $e) {
     echo "PHPSpreadsheet Exception: " . $e->getMessage();
@@ -153,8 +159,9 @@ try {
 
     $emails = explode(',', WEEKLY_DATA_COST_EMAILS);
     foreach ($emails as $email) {
-        $mail->addAddress($email);
+        // $mail->addAddress($email);
     }
+    $mail->addAddress('ryan@playnicetogether.com');
     $mail->addAttachment($filename, COMPANY_INITIALS . ' Weekly Data Cost Report ' . $dateEnd->format('Y-m-d') . '.xlsx');
 
     $mail->send();
