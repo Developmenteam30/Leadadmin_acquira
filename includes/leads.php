@@ -3705,28 +3705,29 @@ class Leads
         $this->db->commit();
     }
 
-    public function inboundCheckDuplicates($idFeedIn, $column, $requestValues, $dedupeAcross)
+    public function inboundCheckDuplicates($idFeedIn, $column, $requestValues, $dedupeAcross, $lookbackPeriod)
     {
-
-        $days = 120;
+        if (empty($lookbackPeriod) || is_numeric($lookbackPeriod) === false || $lookbackPeriod < 0) {
+            $lookbackPeriod = 120;
+        }
 
         try {
             switch ($dedupeAcross) {
                 case 'all':
-                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND idFeedIn = ? AND " . $this->quoteIdentifier($column) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1");
+                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND idFeedIn = ? AND " . $this->quoteIdentifier($column) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$lookbackPeriod} DAY) LIMIT 1");
                     $query->execute(array(
                         $idFeedIn,
                         !empty($requestValues[$column]) ? $requestValues[$column] : '',
                     ));
                     break;
                 case 'allGlobal':
-                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND " . $this->quoteIdentifier($column) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1");
+                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND " . $this->quoteIdentifier($column) . " = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$lookbackPeriod} DAY) LIMIT 1");
                     $query->execute(array(
                         !empty($requestValues[$column]) ? $requestValues[$column] : '',
                     ));
                     break;
                 case 'url':
-                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND idFeedIn = ? AND " . $this->quoteIdentifier($column) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1");
+                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND idFeedIn = ? AND " . $this->quoteIdentifier($column) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$lookbackPeriod} DAY) LIMIT 1");
                     $query->execute(array(
                         $idFeedIn,
                         !empty($requestValues[$column]) ? $requestValues[$column] : '',
@@ -3734,21 +3735,22 @@ class Leads
                     ));
                     break;
                 case 'urlGlobal':
-                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND " . $this->quoteIdentifier($column) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1");
+                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND " . $this->quoteIdentifier($column) . " = ? AND url = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$lookbackPeriod} DAY) LIMIT 1");
                     $query->execute(array(
                         !empty($requestValues[$column]) ? $requestValues[$column] : '',
                         !empty($requestValues['url']) ? $this->parseUrl($requestValues['url']) : '',
                     ));
                     break;
                 case 'listcode':
-                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND idFeedIn = ? AND " . $this->quoteIdentifier($column) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1");
+                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND idFeedIn = ? AND " . $this->quoteIdentifier($column) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$lookbackPeriod} DAY) LIMIT 1");
                     $query->execute(array(
                         $idFeedIn,
                         !empty($requestValues[$column]) ? $requestValues[$column] : '',
                         !empty($requestValues['listcode']) ? $requestValues['listcode'] : '',
                     ));
+                    break;
                 case 'listcodeGlobal':
-                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND " . $this->quoteIdentifier($column) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$days} DAY) LIMIT 1");
+                    $query = $this->db->prepare("SELECT 1 FROM data_inbound WHERE result IS NULL AND " . $this->quoteIdentifier($column) . " = ? AND listcode = ? AND timestamp >= DATE_SUB(NOW(), INTERVAL {$lookbackPeriod} DAY) LIMIT 1");
                     $query->execute(array(
                         !empty($requestValues[$column]) ? $requestValues[$column] : '',
                         !empty($requestValues['listcode']) ? $requestValues['listcode'] : '',

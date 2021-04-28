@@ -1378,8 +1378,7 @@ class ProcessLeads
         }
 
         if ($feedParams->dedupeEmail && !empty($data['email'])) {
-            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'email', $data,
-                $feedParams->dedupeAcross);
+            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'email', $data, $feedParams->dedupeAcross, $feedParams->lookbackPeriod);
             if ($dupeCount === null) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Database failure - could not check duplicate email.';
@@ -1390,8 +1389,7 @@ class ProcessLeads
         }
 
         if ($feedParams->dedupeLandline && !empty($data['landline'])) {
-            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'landline', $data,
-                $feedParams->dedupeAcross);
+            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'landline', $data, $feedParams->dedupeAcross, $feedParams->lookbackPeriod);
             if ($dupeCount === null) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Database failure - could not check duplicate landline.';
@@ -1402,8 +1400,7 @@ class ProcessLeads
         }
 
         if ($feedParams->dedupeCellphone && !empty($data['cellphone'])) {
-            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'cellphone', $data,
-                $feedParams->dedupeAcross);
+            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'cellphone', $data, $feedParams->dedupeAcross, $feedParams->lookbackPeriod);
             if ($dupeCount === null) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Database failure - could not check duplicate cellphone.';
