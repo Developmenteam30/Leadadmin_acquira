@@ -725,14 +725,14 @@ if (isset($_REQUEST['a'])) {
                 if (empty($idCompany)) {
                     $idCompany = -9999;
                 }
-                if (!$leads->checkInboundFeedAccess($idCompany, $_REQUEST['idFeedOut'])) {
+                if (!$leads->checkInboundFeedAccess($idCompany, $_REQUEST['feedIds'][0] ?? -1)) {
                     $c = false;
                     $result['error'] = 'Sorry, you do not have access to this feed.';
                 }
             }
 
             if ($c) {
-                $feed = $leads->getOutboundFeed($_REQUEST['idFeedOut']);
+                $feed = $leads->getOutboundFeed($_REQUEST['feedIds'][0] ?? -1);
                 if ($feed === false) {
                     $c = false;
                     $result['error'] = 'Database failure - could not fetch feed information.';
@@ -1990,7 +1990,7 @@ if (isset($_REQUEST['d'])) {
                 ?>
                 <p>Exporting Data from Feed (ID:<?php echo $feed->idFeedOut; ?>) <?php echo $feed->label; ?></p>
                 <form id="form-export">
-                    <input type="hidden" name="idFeedOut" value="<?php echo $feed->idFeedOut; ?>"/>
+                    <input type="hidden" name="feedIds[]" value="<?php echo $feed->idFeedOut; ?>"/>
                     <input type="hidden" name="a" value="exportData"/>
                     <input type="hidden" name="label"
                            value="<?php echo htmlspecialchars($feed->label, ENT_QUOTES); ?>"/>

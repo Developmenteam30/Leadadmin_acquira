@@ -6205,7 +6205,7 @@ class Leads
         return $cnt;
     }
 
-    public function exportInboundRecords($idFeedIn, $settings)
+    public function exportInboundRecords($settings)
     {
 
         $result = array(
@@ -6214,32 +6214,19 @@ class Leads
             'fileLink' => null,
         );
 
-        $feed = $this->getInboundFeed($idFeedIn);
-        if (!$feed) {
-            $result['reason'] = 'Not a valid incoming feed.';
-
-            return $result;
-        }
-
-        // We always need the timestamp column so we can order the records
-        if (!in_array('timestamp', $settings['columns'])) {
-            $settings['columns'][] = 'timestamp';
-        }
-
-        if (!empty($settings['includeRejects'])) {
-            $settings['columns'][] = 'result';
-        }
-
-        // Fix column names
-        foreach ($settings['columns'] as $key => $column) {
-            if ('stamp' == $column) {
-                $settings['columns'][$key] = 'leadstamp';
-            }
-        }
-
         $jobId = time();
 
-        $fileLink = 'exports/' . $idFeedIn . "_" . $jobId . ".csv";
+        // Some columns have special SQL query equivalents.
+        $columnMappings = [
+            'timestamp' => 'CONVERT_TZ(i.timestamp,?,?) AS timestampConverted',
+            'leadstamp' => 'CONVERT_TZ(i.leadstamp,?,?)',
+            'cpl' => 'fi.costPerLead',
+            'inbound_company' => 'fic.name AS inbound_company',
+            'inbound_label' => 'fi.label AS inbound_label',
+            'inbound_description' => 'fi.description AS inbound_description',
+        ];
+
+        $fileLink = "exports/inbound_{$jobId}.csv";
         $filePath = ADMIN_ROOT . $fileLink;
         $file = fopen($filePath, 'w');
         if (!$file) {
@@ -6249,6 +6236,11 @@ class Leads
         }
 
         fputcsv($file, $settings['columns']);
+
+        // Timestamp must be included in the query in order to sort the results
+        if (!empty($settings['limit']) && !in_array('timestamp', $settings['columns'])) {
+            $settings['columns'][] = 'timestamp';
+        }
 
         $subParams = [];
         $archiveDate = new \DateTime($settings['dateStart'] . ' 00:00:00');
@@ -6261,25 +6253,47 @@ class Leads
             if ($comma) {
                 $subSql .= ', ';
             }
-            $subSql .= $this->quoteIdentifier($column);
             $comma = true;
+
+            // Legacy column name
+            if ('stamp' === $column) {
+                $column = 'leadstamp';
+            }
+
+            $subSql .= $columnMappings[$column] ?? "`i`." . $this->quoteIdentifier($column);
+
+            if (in_array($column, ['leadstamp', 'timestamp'])) {
+                $subParams[] = DB_TIMEZONE;
+                $subParams[] = LOCAL_TIMEZONE;
+            }
         }
-        $subSql .= " FROM data_inbound WHERE idFeedIn = ? ";
-        $subParams[] = $idFeedIn;
+        $subSql .= " FROM data_inbound i ";
+        $subSql .= "JOIN feedinc fi ON i.idFeedIn = fi.idFeedIn ";
+        $subSql .= "JOIN companies fic ON fi.idCompany = fic.idCompany ";
+        $subSql .= "WHERE 1=1 ";
+
+        if (!empty($settings['feedIds']) && is_array($settings['feedIds'])) {
+            $subSql .= "AND i.idFeedIn IN (" . substr(str_repeat('?,', sizeOf($settings['feedIds'])), 0, -1) . ") ";
+            foreach ($settings['feedIds'] as $feedId) {
+                $subParams[] = $feedId;
+            }
+        } else {
+            $subSql .= "AND fi.status = 'active' ";
+        }
 
         if (empty($settings['includeRejects'])) {
-            $subSql .= "AND result IS NULL ";
+            $subSql .= "AND i.result IS NULL ";
         }
 
         if (!empty($settings['dateStart']) && strtotime($settings['dateStart']) !== false) {
-            $subSql .= "AND timestamp >= CONVERT_TZ(?,?,?) ";
+            $subSql .= "AND i.timestamp >= CONVERT_TZ(?,?,?) ";
             $subParams[] = date('Y-m-d', strtotime($settings['dateStart'])) . ' 00:00:00';
             $subParams[] = LOCAL_TIMEZONE;
             $subParams[] = DB_TIMEZONE;
         }
 
         if (!empty($settings['dateEnd']) && strtotime($settings['dateEnd']) !== false) {
-            $subSql .= "AND timestamp <= CONVERT_TZ(?,?,?) ";
+            $subSql .= "AND i.timestamp <= CONVERT_TZ(?,?,?) ";
             $subParams[] = date('Y-m-d', strtotime($settings['dateEnd'])) . ' 23:59:59';
             $subParams[] = LOCAL_TIMEZONE;
             $subParams[] = DB_TIMEZONE;
@@ -6294,7 +6308,7 @@ class Leads
                     if ($orFlag) {
                         $subSql .= " OR ";
                     }
-                    $subSql .= "url = ?";
+                    $subSql .= "i.url = ?";
                     $subParams[] = $url;
                     $orFlag = true;
                 }
@@ -6311,14 +6325,14 @@ class Leads
                     if ($orFlag) {
                         $subSql .= " OR ";
                     }
-                    $subSql .= "email LIKE ?";
+                    $subSql .= "i.email LIKE ?";
                     $subParams[] = '%@' . $email;
                     $orFlag = true;
                 }
             }
             $subSql .= ")";
         }
-        $subSql .= ") UNION ";
+        $subSql .= ") UNION ALL ";
 
         $sql = "SELECT * FROM ( ";
         $sql .= $subSql;
@@ -6333,7 +6347,7 @@ class Leads
                 $tableExists = $query->fetchAll();
 
                 if (!empty($tableExists)) {
-                    $sql .= str_replace(' FROM data_inbound WHERE ', ' FROM archive.data_inbound_' . $archiveDate->format('Ym') . ' WHERE ', $subSql);
+                    $sql .= str_replace(' FROM data_inbound AS ', ' FROM archive.data_inbound_' . $archiveDate->format('Ym') . ' AS ', $subSql);
                     $params = array_merge($params, $subParams);
                 }
 
@@ -6348,10 +6362,10 @@ class Leads
             }
         } while ($archiveDate->format('Ym') <= $dateEnd->format('Ym'));
 
-        $sql = substr($sql, 0, -6); // Remove the last UNION statement
+        $sql = substr($sql, 0, -10); // Remove the last UNION statement
         $sql .= " ) AS recs ";
         if (!empty($settings['limit'])) {
-            $sql .= "ORDER BY recs.timestamp ";
+            $sql .= "ORDER BY recs.timestampConverted ";
             $sql .= "LIMIT " . intval($settings['limit']);
         }
 
@@ -6385,7 +6399,7 @@ class Leads
         return $result;
     }
 
-    public function exportOutboundRecords($idFeedOut, $settings)
+    public function exportOutboundRecords($settings)
     {
 
         $result = array(
@@ -6394,16 +6408,26 @@ class Leads
             'fileLink' => null,
         );
 
-        $feed = $this->getOutboundFeed($idFeedOut);
-        if (!$feed) {
-            $result['reason'] = 'Not a valid outbound feed.';
-
-            return $result;
-        }
-
         $jobId = time();
 
-        $fileLink = 'exports/' . $idFeedOut . "_" . $jobId . ".csv";
+        // Some columns have special SQL query equivalents.
+        $columnMappings = [
+            'url' => 'IFNULL(o.url,i.url) AS urlOutbound',
+            'timestamp' => 'CONVERT_TZ(o.timestamp,?,?) AS timestampConverted',
+            'status' => "IF(o.accepted = 1,'Accepted','Rejected') AS status",
+            'response' => 'o.result',
+            'leadstamp' => 'CONVERT_TZ(i.leadstamp,?,?)',
+            'cpl' => 'IFNULL(fo.costPerLeadOverride,fi.costPerLead) AS costPerLead',
+            'rpl' => 'fo.revenuePerLead',
+            'inbound_company' => 'fic.name AS inbound_company',
+            'inbound_label' => 'fi.label AS inbound_label',
+            'inbound_description' => 'fi.description AS inbound_description',
+            'outbound_company' => 'foc.name AS outbound_company',
+            'outbound_label' => 'fo.label AS outbound_label',
+            'outbound_description' => 'fo.description AS outbound_description',
+        ];
+
+        $fileLink = "exports/outbound_{$jobId}.csv";
         $filePath = ADMIN_ROOT . $fileLink;
         $file = fopen($filePath, 'w');
         if (!$file) {
@@ -6412,145 +6436,123 @@ class Leads
             return $result;
         }
 
-        fputcsv($file, array(
-            'url',
-            'email',
-            'fname',
-            'lname',
-            'addr',
-            'addr2',
-            'city',
-            'state',
-            'zip',
-            'country',
-            'dob',
-            'gender',
-            'landline',
-            'cellphone',
-            'timestamp',
-            'ip',
-            'status',
-            'response',
-            'leadstamp',
-            'listcode',
-        ));
+        fputcsv($file, $settings['columns']);
 
-        $archiveDate = new \DateTime($settings['dateStart'] . ' 00:00:00');
-        $dateStart = new \DateTime($settings['dateStart'] . ' 00:00:00');
-        $dateEnd = new \DateTime($settings['dateEnd'] . ' 23:59:59');
-
-        $sql = "SELECT * FROM ( ";
-
-        if (!empty($settings['includeRejects'])) {
-            $sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,i.ip,IF(o.accepted = 1,'Accepted','Rejected') AS status,o.result,CONVERT_TZ(i.leadstamp,?,?),i.listcode ";
-            $params[] = DB_TIMEZONE;
-            $params[] = LOCAL_TIMEZONE;
-            $params[] = DB_TIMEZONE;
-            $params[] = LOCAL_TIMEZONE;
-            $sql .= "FROM data_outbound AS o ";
-            $sql .= "INNER JOIN data_inbound i ON i.idRecord = o.idRecord ";
-            $sql .= "WHERE o.idFeedOut = ? ";
-            $params[] = $idFeedOut;
-            $sql .= "AND o.timestamp >= CONVERT_TZ(?,?,?) ";
-            $params[] = $dateStart->format('Y-m-d H:i:s');
-            $params[] = LOCAL_TIMEZONE;
-            $params[] = DB_TIMEZONE;
-            $sql .= "AND o.timestamp <= CONVERT_TZ(?,?,?) ";
-            $params[] = $dateEnd->format('Y-m-d H:i:s');
-            $params[] = LOCAL_TIMEZONE;
-            $params[] = DB_TIMEZONE;
-
-            if (!empty($settings['urlList']) && is_array($settings['urlList'])) {
-                $orFlag = false;
-
-                $sql .= "AND (";
-                foreach ($settings['urlList'] as $url) {
-                    if (!empty($url)) {
-                        if ($orFlag) {
-                            $sql .= " OR ";
-                        }
-                        $sql .= "url = ?";
-                        $params[] = $url;
-                        $orFlag = true;
-                    }
-                }
-                $sql .= ")";
-            }
-
-            if (!empty($settings['emailList']) && is_array($settings['emailList'])) {
-                $orFlag = false;
-
-                $sql .= "AND (";
-                foreach ($settings['emailList'] as $email) {
-                    if (!empty($email)) {
-                        if ($orFlag) {
-                            $sql .= " OR ";
-                        }
-                        $sql .= "email LIKE ?";
-                        $params[] = ' % @' . $email;
-                        $orFlag = true;
-                    }
-                }
-                $sql .= ")";
-            }
-
-            $sql .= ") UNION ";
+        // Timestamp must be included in the query in order to sort the results
+        if (!empty($settings['limit']) && !in_array('timestamp', $settings['columns'])) {
+            $settings['columns'][] = 'timestamp';
         }
 
+        $subParams = [];
+        $archiveDate = new \DateTime($settings['dateStart'] . ' 00:00:00');
+        $dateEnd = new \DateTime($settings['dateEnd'] . ' 23:59:59');
+
+        // Pull from the data_outbound table first
+        $subSql = "( SELECT ";
+        $comma = false;
+        foreach ($settings['columns'] as $column) {
+            if ($comma) {
+                $subSql .= ', ';
+            }
+            $comma = true;
+
+            $subSql .= $columnMappings[$column] ?? $this->quoteIdentifier($column);
+
+            if (in_array($column, ['leadstamp', 'timestamp'])) {
+                $subParams[] = DB_TIMEZONE;
+                $subParams[] = LOCAL_TIMEZONE;
+            }
+        }
+        $subSql .= " FROM data_outbound AS o ";
+        $subSql .= "JOIN data_inbound i ON i.idRecord = o.idRecord ";
+        $subSql .= "JOIN feedinc fi ON i.idFeedIn = fi.idFeedIn ";
+        $subSql .= "JOIN feedout fo ON o.idFeedOut = fo.idFeedOut ";
+        $subSql .= "JOIN companies fic ON fi.idCompany = fic.idCompany ";
+        $subSql .= "JOIN companies foc ON fo.idCompany = foc.idCompany ";
+        $subSql .= "WHERE 1=1 ";
+
+        if (!empty($settings['feedIds']) && is_array($settings['feedIds'])) {
+            $subSql .= "AND o.idFeedOut IN (" . substr(str_repeat('?,', sizeOf($settings['feedIds'])), 0, -1) . ") ";
+            foreach ($settings['feedIds'] as $feedId) {
+                $subParams[] = $feedId;
+            }
+        } else {
+            $subSql .= "AND fo.status = 'active' ";
+        }
+
+        if (empty($settings['includeRejects'])) {
+            $subSql .= "AND o.accepted = 1 ";
+        }
+
+        if (!empty($settings['dateStart']) && strtotime($settings['dateStart']) !== false) {
+            $subSql .= "AND o.timestamp >= CONVERT_TZ(?,?,?) ";
+            $subParams[] = date('Y-m-d', strtotime($settings['dateStart'])) . ' 00:00:00';
+            $subParams[] = LOCAL_TIMEZONE;
+            $subParams[] = DB_TIMEZONE;
+        }
+
+        if (!empty($settings['dateEnd']) && strtotime($settings['dateEnd']) !== false) {
+            $subSql .= "AND o.timestamp <= CONVERT_TZ(?,?,?) ";
+            $subParams[] = date('Y-m-d', strtotime($settings['dateEnd'])) . ' 23:59:59';
+            $subParams[] = LOCAL_TIMEZONE;
+            $subParams[] = DB_TIMEZONE;
+        }
+
+        if (!empty($settings['urlList']) && is_array($settings['urlList'])) {
+            $orFlag = false;
+
+            $subSql .= "AND (";
+            foreach ($settings['urlList'] as $url) {
+                if (!empty($url)) {
+                    if ($orFlag) {
+                        $subSql .= " OR ";
+                    }
+                    $subSql .= "i.url = ?";
+                    $subParams[] = $url;
+                    $orFlag = true;
+                }
+            }
+            $subSql .= ")";
+        }
+
+        if (!empty($settings['emailList']) && is_array($settings['emailList'])) {
+            $orFlag = false;
+
+            $subSql .= "AND (";
+            foreach ($settings['emailList'] as $email) {
+                if (!empty($email)) {
+                    if ($orFlag) {
+                        $subSql .= " OR ";
+                    }
+                    $subSql .= "i.email LIKE ?";
+                    $subParams[] = '%@' . $email;
+                    $orFlag = true;
+                }
+            }
+            $subSql .= ")";
+        }
+        $subSql .= ") UNION ALL ";
+
+        $sql = "SELECT * FROM ( ";
+        $sql .= $subSql;
+        $params = $subParams;
+
+        // Loop through the same query, substituting the main table with the archive table for that month
         do {
-            $sql .= "( SELECT IFNULL(o.url,i.url) AS urlOutbound,i.email,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,i.ip,IF(o.accepted = 1,'Accepted','Rejected') AS status,o.result,CONVERT_TZ(i.leadstamp,?,?) AS leadstampConverted,i.listcode ";
-            $params[] = DB_TIMEZONE;
-            $params[] = LOCAL_TIMEZONE;
-            $params[] = DB_TIMEZONE;
-            $params[] = LOCAL_TIMEZONE;
-            $sql .= "FROM archive." . $this->quoteIdentifier('data_outbound_' . $archiveDate->format('Ym')) . " o ";
-            $sql .= "INNER JOIN data_inbound i ON i.idRecord = o.idRecord ";
-            $sql .= "WHERE o.idFeedOut = ? ";
-            $params[] = $idFeedOut;
-            $sql .= "AND o.timestamp >= CONVERT_TZ(?,?,?) ";
-            $params[] = $dateStart->format('Y-m-d H:i:s');
-            $params[] = LOCAL_TIMEZONE;
-            $params[] = DB_TIMEZONE;
-            $sql .= "AND o.timestamp <= CONVERT_TZ(?,?,?) ";
-            $params[] = $dateEnd->format('Y-m-d H:i:s');
-            $params[] = LOCAL_TIMEZONE;
-            $params[] = DB_TIMEZONE;
+            try {
+                // Check if an archive table exists for this month
+                $query = $this->db->prepare("SHOW TABLES FROM `archive` LIKE 'data_outbound_" . $archiveDate->format('Ym') . "'");
+                $query->execute();
+                $tableExists = $query->fetchAll();
 
-            if (!empty($settings['urlList']) && is_array($settings['urlList'])) {
-                $orFlag = false;
-
-                $sql .= "AND (";
-                foreach ($settings['urlList'] as $url) {
-                    if (!empty($url)) {
-                        if ($orFlag) {
-                            $sql .= " OR ";
-                        }
-                        $sql .= "url = ?";
-                        $params[] = $url;
-                        $orFlag = true;
-                    }
+                if (!empty($tableExists)) {
+                    $sql .= str_replace(' FROM data_outbound AS ', ' FROM archive.data_outbound_' . $archiveDate->format('Ym') . ' AS ', $subSql);
+                    $params = array_merge($params, $subParams);
                 }
-                $sql .= ")";
+
+            } catch (PDOException $e) {
+                $this->logError('Unable to check if outbound archive table exists: ' . $e->getMessage());
             }
-
-            if (!empty($settings['emailList']) && is_array($settings['emailList'])) {
-                $orFlag = false;
-
-                $sql .= "AND (";
-                foreach ($settings['emailList'] as $email) {
-                    if (!empty($email)) {
-                        if ($orFlag) {
-                            $sql .= " OR ";
-                        }
-                        $sql .= "email LIKE ?";
-                        $params[] = ' % @' . $email;
-                        $orFlag = true;
-                    }
-                }
-                $sql .= ")";
-            }
-
-            $sql .= ") UNION ";
 
             try {
                 $archiveDate->add(new \DateInterval(('P1M')));
@@ -6559,10 +6561,10 @@ class Leads
             }
         } while ($archiveDate->format('Ym') <= $dateEnd->format('Ym'));
 
-        $sql = substr($sql, 0, -6); // Remove the last UNION statement
+        $sql = substr($sql, 0, -10); // Remove the last UNION statement
         $sql .= " ) AS recs ";
-        $sql .= "ORDER BY recs.timestampConverted ";
         if (!empty($settings['limit'])) {
+            $sql .= "ORDER BY recs.timestampConverted ";
             $sql .= "LIMIT " . intval($settings['limit']);
         }
 
@@ -6570,10 +6572,10 @@ class Leads
             $this->unsetBufferedQuery();
 
             $result['query'] = $sql;
-            $query = $this->db->Prepare($sql);
-            $query->execute($params);
+            $sql = $this->db->Prepare($sql);
+            $sql->execute($params);
             $cnt = 0;
-            while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+            while ($row = $sql->fetch(PDO::FETCH_ASSOC)) {
                 $cnt++;
                 fputcsv($file, $row);
             }

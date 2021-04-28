@@ -177,7 +177,7 @@ if ('clear-outbound-queue' === $job->type) {
     $fields = unserialize($job->fields);
     $status = 'Unknown error.';
 
-    if (empty($job->destination) || empty($fields['columns'])) {
+    if (empty($fields['columns'])) {
 
         $leads->updateJob($job->jobId, array(
             'status' => 'error',
@@ -189,7 +189,7 @@ if ('clear-outbound-queue' === $job->type) {
 
         print "Exporting incoming records for: {$job->destination}\n";
 
-        $result = $leads->exportInboundRecords($job->destination, $fields);
+        $result = $leads->exportInboundRecords($fields);
 
         if ($result['success'] !== true) {
 
@@ -217,18 +217,24 @@ if ('clear-outbound-queue' === $job->type) {
         return;
     }
 
-    $feedIn = $leads->getInboundFeed($job->destination);
-    $feedCompany = $leads->getCompany($feedIn->idCompany);
-
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: export-incoming\r\n";
     $body .= "\r\n";
-    $body .= "Company: {$feedCompany->name}\r\n";
-    $body .= "Feed ID: {$job->destination}\r\n";
-    $body .= "Feed Label: {$feedIn->label}\r\n";
-    $body .= "Feed Description: {$feedIn->description}\r\n";
+    if (empty($fields['feedIds'])) {
+        $body .= "Company: ALL\r\n";
+        $body .= "Feed ID: ALL\r\n";
+        $body .= "Feed Label: ALL\r\n";
+        $body .= "Feed Description: ALL\r\n";
+    } else {
+        $feedIn = $leads->getInboundFeed($job->destination);
+        $feedCompany = $leads->getCompany($feedIn->idCompany);
+        $body .= "Company: {$feedCompany->name}\r\n";
+        $body .= "Feed ID: {$job->destination}\r\n";
+        $body .= "Feed Label: {$feedIn->label}\r\n";
+        $body .= "Feed Description: {$feedIn->description}\r\n";
+    }
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if (isset($result['cnt'])) {
@@ -255,39 +261,27 @@ if ('clear-outbound-queue' === $job->type) {
     $fields = unserialize($job->fields);
     $status = 'Unknown error.';
 
-    if (empty($job->destination)) {
+    print "Exporting outgoing records for: {$job->destination}\n";
+
+    $result = $leads->exportOutboundRecords($fields);
+
+    if ($result['success'] !== true) {
 
         $leads->updateJob($job->jobId, array(
             'status' => 'error',
-            'message' => 'Missing required fields',
+            'message' => $result['reason'],
         ));
-        $status = 'ERROR: Missing required fields.';
+        $status = $result['reason'];
 
     } else {
 
-        print "Exporting outgoing records for: {$job->destination}\n";
-
-        $result = $leads->exportOutboundRecords($job->destination, $fields);
-
-        if ($result['success'] !== true) {
-
-            $leads->updateJob($job->jobId, array(
-                'status' => 'error',
-                'message' => $result['reason'],
-            ));
-            $status = $result['reason'];
-
-        } else {
-
-            $leads->updateJob($job->jobId, array(
-                'status' => 'finished',
-                'records' => $result['cnt'],
-                'filename' => $result['fileLink'],
-                'message' => null,
-            ));
-            $status = "Successful";
-        }
-
+        $leads->updateJob($job->jobId, array(
+            'status' => 'finished',
+            'records' => $result['cnt'],
+            'filename' => $result['fileLink'],
+            'message' => null,
+        ));
+        $status = "Successful";
     }
 
     $user = $leads->getUser($job->idUser);
@@ -295,18 +289,24 @@ if ('clear-outbound-queue' === $job->type) {
         return;
     }
 
-    $feedOut = $leads->getOutboundFeed($job->destination);
-    $feedCompany = $leads->getCompany($feedOut->idCompany);
-
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
     $body .= "Job Type: export-outgoing\r\n";
     $body .= "\r\n";
-    $body .= "Company: {$feedCompany->name}\r\n";
-    $body .= "Feed ID: {$job->destination}\r\n";
-    $body .= "Feed Label: {$feedOut->label}\r\n";
-    $body .= "Feed Description: {$feedOut->description}\r\n";
+    if (empty($fields['feedIds'])) {
+        $body .= "Company: ALL\r\n";
+        $body .= "Feed ID: ALL\r\n";
+        $body .= "Feed Label: ALL\r\n";
+        $body .= "Feed Description: ALL\r\n";
+    } else {
+        $feedOut = $leads->getOutboundFeed($job->destination);
+        $feedCompany = $leads->getCompany($feedOut->idCompany);
+        $body .= "Company: {$feedCompany->name}\r\n";
+        $body .= "Feed ID: {$job->destination}\r\n";
+        $body .= "Feed Label: {$feedOut->label}\r\n";
+        $body .= "Feed Description: {$feedOut->description}\r\n";
+    }
     $body .= "\r\n";
     $body .= "Job Status: {$status}\r\n";
     if (isset($result['cnt'])) {
@@ -365,7 +365,7 @@ if ('clear-outbound-queue' === $job->type) {
         }
 
         $cnt = 0;
-        foreach ($worksheet->getRowIterator() AS $row) {
+        foreach ($worksheet->getRowIterator() as $row) {
             $cellIterator = $row->getCellIterator();
             $raw_data = [];
             foreach ($cellIterator as $cell) {
@@ -592,7 +592,7 @@ if ('clear-outbound-queue' === $job->type) {
         );
 
         $cnt = 0;
-        foreach ($worksheet->getRowIterator() AS $row) {
+        foreach ($worksheet->getRowIterator() as $row) {
             $cellIterator = $row->getCellIterator();
             $raw_data = [];
             foreach ($cellIterator as $cell) {
@@ -890,7 +890,7 @@ if ('clear-outbound-queue' === $job->type) {
         );
 
         $cnt = 0;
-        foreach ($worksheet->getRowIterator() AS $row) {
+        foreach ($worksheet->getRowIterator() as $row) {
             $cellIterator = $row->getCellIterator();
             $raw_data = [];
             foreach ($cellIterator as $cell) {
@@ -1018,7 +1018,7 @@ if ('clear-outbound-queue' === $job->type) {
         );
 
         $cnt = 0;
-        foreach ($worksheet->getRowIterator() AS $row) {
+        foreach ($worksheet->getRowIterator() as $row) {
             $cellIterator = $row->getCellIterator();
             $raw_data = [];
             foreach ($cellIterator as $cell) {
