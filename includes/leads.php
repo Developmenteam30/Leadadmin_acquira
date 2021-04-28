@@ -3330,6 +3330,23 @@ class Leads
         return null;
     }
 
+    public function getOutboundPopulation($idFeedIn)
+    {
+        $results = null;
+
+        try {
+            $query = $this->db->prepare("SELECT idFeedOut FROM feedPopulation fp WHERE idFeedIn = ? AND idFeedOut IN (SELECT idFeedOut FROM feedout WHERE idCompany = 12)");
+            $query->execute(array($idFeedIn));
+            $results = $query->fetch(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get feed populations: ' . $e->getMessage());
+
+            return false;
+        }
+
+        return $results;
+    }
+
     public function retireOutboundFeed($idFeedOut)
     {
         if (empty($idFeedOut)) {
