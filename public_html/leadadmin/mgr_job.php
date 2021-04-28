@@ -93,7 +93,7 @@ if( isset( $_REQUEST['d'] ) ) {
 	exit;
 }
 
-$title = 'Upload Job Status';
+$title = 'Batch Job Status';
 include(INCLUDES."c_header.php");
 
 ?>
@@ -112,7 +112,7 @@ if( !empty( $_REQUEST['jobId'] ) ) {
 	}
 
 ?>
-<h1>Upload Job Status</h1>
+<h1>Batch Job Status</h1>
 <p><strong>Job ID:</strong> <?php echo htmlentities( $_REQUEST['jobId'] ); ?></p>
 <p><strong>Status:</strong> <span id="status">Pending - please wait</span></p>
 

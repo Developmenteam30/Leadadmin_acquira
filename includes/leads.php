@@ -6425,6 +6425,10 @@ class Leads
             'outbound_company' => 'foc.name AS outbound_company',
             'outbound_label' => 'fo.label AS outbound_label',
             'outbound_description' => 'fo.description AS outbound_description',
+            'city' => 'i.city',
+            'state' => 'i.state',
+            'zip' => 'i.zip',
+            'country' => 'i.country',
         ];
 
         $fileLink = "exports/outbound_{$jobId}.csv";
