@@ -1616,9 +1616,9 @@ if (isset($_REQUEST['d'])) {
                                         style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All
                                 </button>
                                 <br>
+                                <?php $recordFields[] = 'result'; ?>
                                 <?php foreach ($recordFields as $f) { ?>
-                                    <input class="export-check" type='checkbox' name='columns[]'
-                                           value='<?php echo $f; ?>'/> <?php echo $f; ?>
+                                    <label style="margin-right: 1.5em;"><input class="export-check" type='checkbox' name='columns[]' value='<?php echo $f; ?>'/>&nbsp;<?php echo $f; ?></label>
                                 <?php } ?>
                             </td>
                         </tr>

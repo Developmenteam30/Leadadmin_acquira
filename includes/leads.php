@@ -6267,7 +6267,7 @@ class Leads
                 $subParams[] = LOCAL_TIMEZONE;
             }
         }
-        $subSql .= " FROM data_inbound i ";
+        $subSql .= " FROM data_inbound AS i ";
         $subSql .= "JOIN feedinc fi ON i.idFeedIn = fi.idFeedIn ";
         $subSql .= "JOIN companies fic ON fi.idCompany = fic.idCompany ";
         $subSql .= "WHERE 1=1 ";
