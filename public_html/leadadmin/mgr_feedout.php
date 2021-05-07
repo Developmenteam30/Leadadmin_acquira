@@ -1514,7 +1514,11 @@ if (isset($_REQUEST['d'])) {
                             <p>
                                 <?php
                                 reset($feedCategories);
-                                $firstKey = key($feedCategories);
+                                if('EQ' == COMPANY_INITIALS) {
+                                    $firstKey = 'phone'; // EQ defaults to phone
+                                } else {
+                                    $firstKey = key($feedCategories);
+                                }
                                 foreach ($feedCategories as $categoryKey => $categoryVal) {
                                     printf('<input type="radio" name="feedCategory" value="%s"%s/> %s<br/>',
                                         Display::escHtml($categoryKey),
