@@ -14,3 +14,9 @@ Whoever POSTs the lead first gets credit.  POST reject the other lead as a dupli
 # TODO
 
 - Is allowed fields even being checked properly?
+
+# Testing
+
+https://dev.qmleads.com/live/64/livefeed.php?pswd=v3fB9PnwQNVm9NVo&url=www.rscs.org&ip=1.2.3.4&stamp=2018-08-16&email=test@test1.com&landline=2125551212&cellphone=2125551212&ping=1&email=ham@ham.com
+
+https://dev.qmleads.com/live/64/livefeed.php?pswd=v3fB9PnwQNVm9NVo&url=www.rscs.org&ip=1.2.3.4&stamp=2018-08-16&email=test@test1.com&landline=2125551212&cellphone=2125551212&ping=0&email=ham@ham.com&authorization=
