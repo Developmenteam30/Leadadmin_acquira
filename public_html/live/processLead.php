@@ -3,6 +3,9 @@ require_once("../../includes/c_config.php");
 require_once(INCLUDES . 'leads.php');
 require_once(INCLUDES . 'Array2XML.php');
 require_once(INCLUDES . 'processLeads.php');
+include(INCLUDES . "vendor/autoload.php");
+
+use Firebase\JWT\JWT;
 
 function showResultAndDie($result)
 {
@@ -94,32 +97,81 @@ if (!empty($feedParams->paused)) {
     showResultAndDie($result);
 }
 
+if (!empty($_REQUEST['ping']) && 'phone-preping' !== $feedParams->feedCategory) {
+    $result['reason'] = 'This feed is not authorized for PING access.';
+    $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $_REQUEST, $statsDay, $result['reason'], null);
+    showResultAndDie($result);
+}
+
 $validateResult = ProcessLeads::validateIncomingData($feedParams, $_REQUEST);
 
-if ($validateResult['valid']) {
+if (!empty($_REQUEST['ping'])) {
 
-    $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $_REQUEST, $statsDay, null);
-    if (null === $inboundId) {
-        $result['reason'] = 'Database error while trying to add your record.';
-    } else {
-        $pushResponse = ProcessLeads::pushIncomingData($feedParams, $_REQUEST, $inboundId);
-        if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
-            $result['reason'] = $pushResponse['reason'];
-        } else {
-            $result['success'] = true;
-            $result['reason'] = 'Successfully inserted new record.';
-            if (!empty($pushResponse['fields']) && is_array($pushResponse['fields'])) {
-                foreach ($pushResponse['fields'] as $key => $val) {
-                    $result[$key] = $val;
-                }
-            }
+    if ($validateResult['valid']) {
+
+        $payload = array(
+            'iss' => 'https://' . POSTING_URL,
+            'aud' => 'https://' . POSTING_URL,
+            'iat' => time(),
+            'nbf' => time(),
+            'idFeedIn' => $feedParams->idFeedIn,
+        );
+
+        if (!empty($feedParams->pingTimeout)) {
+            $payload['exp'] = time() + $feedParams->pingTimeout;
         }
+
+        foreach ($_REQUEST as $field => $val) {
+            if (in_array($field, ['pswd', 'ping'])) {
+                continue;
+            }
+            $payload['ping_' . $field] = $val;
+        }
+
+        try {
+            $result['authorization'] = JWT::encode($payload, HASH_SALT);
+            $result['success'] = true;
+            $result['reason'] = 'Successful ping.';
+        } catch (Exception $e) {
+            $result['reason'] = 'Error creating JWT';
+        }
+
+    } else {
+
+        // Only need to log the record (and the stats record) for rejections.
+        $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $_REQUEST, $statsDay, $validateResult['errors'][0], null);
+        $result['reason'] = $validateResult['errors'][0];
+
     }
 
 } else {
 
-    $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $_REQUEST, $statsDay, $validateResult['errors'][0], null);
-    $result['reason'] = $validateResult['errors'][0];
+    if ($validateResult['valid']) {
+
+        $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $_REQUEST, $statsDay, null);
+        if (null === $inboundId) {
+            $result['reason'] = 'Database error while trying to add your record.';
+        } else {
+            $pushResponse = ProcessLeads::pushIncomingData($feedParams, $_REQUEST, $inboundId);
+            if (isset($pushResponse['reason']) && $pushResponse['reason'] !== null) {
+                $result['reason'] = $pushResponse['reason'];
+            } else {
+                $result['success'] = true;
+                $result['reason'] = 'Successfully inserted new record.';
+                if (!empty($pushResponse['fields']) && is_array($pushResponse['fields'])) {
+                    foreach ($pushResponse['fields'] as $key => $val) {
+                        $result[$key] = $val;
+                    }
+                }
+            }
+        }
+
+    } else {
+
+        $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $_REQUEST, $statsDay, $validateResult['errors'][0], null);
+        $result['reason'] = $validateResult['errors'][0];
+
+    }
 
 }
 

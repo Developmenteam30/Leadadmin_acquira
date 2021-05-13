@@ -3648,8 +3648,7 @@ class Leads
                 'city' => empty($fields['city']) ? null : substr($fields['city'], 0, 75),
                 'state' => empty($fields['state']) ? null : substr($fields['state'], 0, 25),
                 'zip' => empty($fields['zip']) ? null : substr($fields['zip'], 0, 20),
-                'dob' => (empty($fields['dob']) || '0000-00-00' == $fields['dob']) ? null : gmdate('Y-m-d',
-                    strtotime($fields['dob'])),
+                'dob' => (empty($fields['dob']) || '0000-00-00' == $fields['dob']) ? null : gmdate('Y-m-d', strtotime($fields['dob'])),
                 'gender' => empty($fields['gender']) ? null : substr($fields['gender'], 0, 10),
                 'landline' => empty($fields['landline']) ? null : substr($fields['landline'], 0, 20),
                 'cellphone' => empty($fields['cellphone']) ? null : substr($fields['cellphone'], 0, 20),
@@ -3662,9 +3661,9 @@ class Leads
                 'custom4' => empty($fields['custom4']) ? null : substr($fields['custom4'], 0, 255),
                 'custom5' => empty($fields['custom5']) ? null : substr($fields['custom5'], 0, 255),
                 'custom6' => empty($fields['custom6']) ? null : substr($fields['custom6'], 0, 255),
-                'timestamp' => empty($fields['timestampOverride']) ? gmdate('Y-m-d H:i:s') : gmdate('Y-m-d H:i:s',
-                    strtotime($fields['timestampOverride'])),
+                'timestamp' => empty($fields['timestampOverride']) ? gmdate('Y-m-d H:i:s') : gmdate('Y-m-d H:i:s', strtotime($fields['timestampOverride'])),
                 'customFields' => empty($customFields) ? null : json_encode($customFields),
+                'ping' => !empty($fields['ping']) ? 1 : 0,
             ));
         } catch (Leads_PDOException $e) {
             $this->db->rollBack();
@@ -7572,30 +7571,31 @@ SQL;
         $cnt = 0;
         $recordId = 0;
 
-        $startDate = new \DateTime('2017-09-01 00:00:00');
+        $startDate = new \DateTime('2021-02-01 00:00:00');
         $endDate = new \DateTime('2014-06-01 00:00:00');
         $tableDate = clone $startDate;
 
-        try {
 
-            while ($tableDate >= $endDate) {
+        while ($tableDate >= $endDate) {
+
+            try {
 
                 $table = $this->quoteIdentifier('data_inbound_' . $tableDate->format('Ym'));
 
                 print date('c') . ' ' . $table . PHP_EOL;
 
                 //$query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD INDEX cellphone (cellphone) USING BTREE, ADD INDEX landline (landline) USING BTREE, ADD COLUMN custom1 VARCHAR(255), ADD COLUMN custom2 VARCHAR(255),ADD COLUMN custom3 VARCHAR(255),ADD COLUMN custom4 VARCHAR(255),ADD COLUMN custom5 VARCHAR(255),ADD COLUMN custom6 VARCHAR(255), ADD COLUMN leadId VARCHAR(255);" );
-                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD customFields json NULL");
+                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD ping TINYINT UNSIGNED DEFAULT 0");
 //                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1, ADD COLUMN isBillable TINYINT UNSIGNED DEFAULT 1, ADD COLUMN url VARCHAR(255)");
 //                $query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1" );
                 $query->execute();
 
-                $tableDate->sub(new \DateInterval(('P1M')));
-
+            } catch (PDOException $e) {
+                $this->logError('Unable to archive inbound accepted: ' . $e->getMessage());
             }
 
-        } catch (PDOException $e) {
-            $this->logError('Unable to archive inbound accepted: ' . $e->getMessage());
+            $tableDate->sub(new \DateInterval(('P1M')));
+
         }
 
         return $cnt;

@@ -119,7 +119,7 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'If using the state filter feature, at least one state must be selected.';
             }
 
-            if ($c && empty($_REQUEST['allowedFields']) || !is_array($_REQUEST['allowedFields'])) {
+            if ($c && (empty($_REQUEST['allowedFields']) || !is_array($_REQUEST['allowedFields']))) {
                 // Must allow some fields, or the feed is worthless isn't it
                 $c = false;
                 $result['error'] = 'You must allow at least one field to be processed.';
@@ -131,8 +131,7 @@ if (isset($_REQUEST['a'])) {
                     foreach ($_REQUEST['required'] as $f) {
                         switch ($f) {
                             case "phone":
-                                if (!in_array('landline', $_REQUEST['allowedFields']) || !in_array('cellphone',
-                                        $_REQUEST['allowedFields'])) {
+                                if (!in_array('landline', $_REQUEST['allowedFields']) || !in_array('cellphone', $_REQUEST['allowedFields'])) {
                                     $c = false;
                                     $result['error'] = 'If phone is selected, both landline and cellphone must be allowed fields.';
                                 }
@@ -148,6 +147,56 @@ if (isset($_REQUEST['a'])) {
                             break;
                         }
                     }
+                }
+            }
+
+            if ('phone-preping' === $_REQUEST['feedCategory']) {
+                if ($c && (empty($_REQUEST['allowedPingFields']) || !is_array($_REQUEST['allowedPingFields']))) {
+                    // Must allow some fields, or the feed is worthless isn't it
+                    $c = false;
+                    $result['error'] = 'You must allow at least one PING field to be processed.';
+                }
+
+                if ($c) {
+                    //Make sure that any required fields are also allowed
+                    if (!empty($_REQUEST['requiredPingFields'])) {
+                        foreach ($_REQUEST['requiredPingFields'] as $f) {
+                            switch ($f) {
+                                case "phone":
+                                    if (!in_array('landline', $_REQUEST['allowedPingFields']) || !in_array('cellphone', $_REQUEST['allowedFields'])) {
+                                        $c = false;
+                                        $result['error'] = 'If phone is selected, both landline and cellphone must be allowed PING fields.';
+                                    }
+                                    break;
+
+                                default:
+                                    if (!in_array($f, $_REQUEST['allowedFields'])) {
+                                        $c = false;
+                                        $result['error'] = "If {$f} is a required PING field, then that field must be an allowed PING field as well.";
+                                    }
+                            }
+                            if (!$c) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Force authorization field for ping/post
+            if ('phone-preping' === $_REQUEST['feedCategory']) {
+                if (!in_array('authorization', $_REQUEST['allowedFields'])) {
+                    $_REQUEST['allowedFields'][] = 'authorization';
+                }
+                if (!in_array('authorization', $_REQUEST['required'])) {
+                    $_REQUEST['required'][] = 'authorization';
+                }
+            } else {
+                if (in_array('authorization', $_REQUEST['allowedFields'])) {
+                    $_REQUEST['allowedFields'] = array_diff($_REQUEST['allowedFields'], ['authorization']);
+                }
+                if (in_array('authorization', $_REQUEST['required'])) {
+                    $_REQUEST['required'] = array_diff($_REQUEST['required'], ['authorization']);
                 }
             }
 
@@ -204,6 +253,18 @@ if (isset($_REQUEST['a'])) {
             if ($c && (intval($_REQUEST['lookbackPeriod']) < 0 || intval($_REQUEST['lookbackPeriod']) > 120)) {
                 $c = false;
                 $result['error'] = 'Please select a valid value for the lookback period.';
+            }
+
+            if ('phone-preping' === $_REQUEST['feedCategory']) {
+                if ($c && !empty($_REQUEST['pingTimeout']) && is_numeric($_REQUEST['pingTimeout']) === false) {
+                    $c = false;
+                    $result['error'] = 'Please enter a numeric value for the ping timeout.';
+                }
+
+                if ($c && !empty($_REQUEST['pingTimeout']) && intval($_REQUEST['pingTimeout']) < 0) {
+                    $c = false;
+                    $result['error'] = 'Please enter a positive value the ping timeout.';
+                }
             }
 
             if ($c && !empty($_REQUEST['chokePercent']) && is_numeric($_REQUEST['chokePercent']) === false) {
@@ -280,8 +341,9 @@ if (isset($_REQUEST['a'])) {
                         'description' => empty($_REQUEST['description']) ? null : $_REQUEST['description'],
                         'idCompany' => empty($_REQUEST['idCompany']) ? null : $_REQUEST['idCompany'],
                         'required' => empty($_REQUEST['required']) ? null : implode(';', $_REQUEST['required']),
-                        'allowedFields' => empty($_REQUEST['allowedFields']) ? null : implode(';',
-                            $_REQUEST['allowedFields']),
+                        'allowedFields' => empty($_REQUEST['allowedFields']) ? null : implode(';', $_REQUEST['allowedFields']),
+                        'requiredPingFields' => empty($_REQUEST['requiredPingFields']) ? null : implode(';', $_REQUEST['requiredPingFields']),
+                        'allowedPingFields' => empty($_REQUEST['allowedPingFields']) ? null : implode(';', $_REQUEST['allowedPingFields']),
                         'password' => genFeedPass(),
                         'dedupeEmail' => empty($_REQUEST['dedupeEmail']) ? 0 : 1,
                         'dedupeLandline' => empty($_REQUEST['dedupeLandline']) ? 0 : 1,
@@ -306,14 +368,14 @@ if (isset($_REQUEST['a'])) {
                         'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                         'notifyThresholdCount' => empty($_REQUEST['notifyThresholdCount']) ? 0 : $_REQUEST['notifyThresholdCount'],
                         'notifyThresholdTime' => !empty($notifyThresholdTime) ? $notifyThresholdTime->format('H:i:s') : null,
-                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',',
-                            $_REQUEST['notifyThresholdDays']),
+                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',', $_REQUEST['notifyThresholdDays']),
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                         'pauseMessage' => empty($_REQUEST['pauseMessage']) ? null : trim($_REQUEST['pauseMessage']),
                         'filterTypeDNCScrub' => json_encode($dncScrub),
                         'timezone' => $_REQUEST['timezone'],
                         'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                         'lookbackPeriod' => empty($_REQUEST['lookbackPeriod']) ? 120 : $_REQUEST['lookbackPeriod'],
+                        'pingTimeout' => empty($_REQUEST['pingTimeout']) ? 0 : $_REQUEST['pingTimeout'],
                     ));
 
                     if (null === $idFeedIn) {
@@ -373,6 +435,88 @@ if (isset($_REQUEST['a'])) {
                     $result['error'] = 'Please select the feed timezone from the list.';
                 }
 
+                if ($c && (empty($_REQUEST['allowedFields']) || !is_array($_REQUEST['allowedFields']))) {
+                    // Must allow some fields, or the feed is worthless isn't it
+                    $c = false;
+                    $result['error'] = 'You must allow at least one field to be processed.';
+                }
+
+                if ($c) {
+                    //Make sure that any required fields are also allowed
+                    if (!empty($_REQUEST['required'])) {
+                        foreach ($_REQUEST['required'] as $f) {
+                            switch ($f) {
+                                case "phone":
+                                    if (!in_array('landline', $_REQUEST['allowedFields']) || !in_array('cellphone', $_REQUEST['allowedFields'])) {
+                                        $c = false;
+                                        $result['error'] = 'If phone is selected, both landline and cellphone must be allowed fields.';
+                                    }
+                                    break;
+
+                                default:
+                                    if (!in_array($f, $_REQUEST['allowedFields'])) {
+                                        $c = false;
+                                        $result['error'] = "If {$f} is a required field, then that field must be allowed as well.";
+                                    }
+                            }
+                            if (!$c) {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if ('phone-preping' === $_REQUEST['feedCategory']) {
+                    if ($c && (empty($_REQUEST['allowedPingFields']) || !is_array($_REQUEST['allowedPingFields']))) {
+                        // Must allow some fields, or the feed is worthless isn't it
+                        $c = false;
+                        $result['error'] = 'You must allow at least one PING field to be processed.';
+                    }
+
+                    if ($c) {
+                        //Make sure that any required fields are also allowed
+                        if (!empty($_REQUEST['requiredPingFields'])) {
+                            foreach ($_REQUEST['requiredPingFields'] as $f) {
+                                switch ($f) {
+                                    case "phone":
+                                        if (!in_array('landline', $_REQUEST['allowedPingFields']) || !in_array('cellphone', $_REQUEST['allowedFields'])) {
+                                            $c = false;
+                                            $result['error'] = 'If phone is selected, both landline and cellphone must be allowed PING fields.';
+                                        }
+                                        break;
+
+                                    default:
+                                        if (!in_array($f, $_REQUEST['allowedFields'])) {
+                                            $c = false;
+                                            $result['error'] = "If {$f} is a required PING field, then that field must be an allowed PING field as well.";
+                                        }
+                                }
+                                if (!$c) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                // Force authorization field for ping/post
+                if ('phone-preping' === $_REQUEST['feedCategory']) {
+                    if (!in_array('authorization', $_REQUEST['allowedFields'])) {
+                        $_REQUEST['allowedFields'][] = 'authorization';
+                    }
+                    if (!in_array('authorization', $_REQUEST['required'])) {
+                        $_REQUEST['required'][] = 'authorization';
+                    }
+                } else {
+                    if (in_array('authorization', $_REQUEST['allowedFields'])) {
+                        $_REQUEST['allowedFields'] = array_diff($_REQUEST['allowedFields'], ['authorization']);
+                    }
+                    if (in_array('authorization', $_REQUEST['required'])) {
+                        $_REQUEST['required'] = array_diff($_REQUEST['required'], ['authorization']);
+                    }
+                }
+
                 if ($c && !empty($_REQUEST['dailyLimit']) && is_numeric($_REQUEST['dailyLimit']) === false) {
                     $c = false;
                     $result['error'] = 'Please enter a numeric value for the daily limit.';
@@ -391,6 +535,18 @@ if (isset($_REQUEST['a'])) {
                 if ($c && (intval($_REQUEST['lookbackPeriod']) < 0 || intval($_REQUEST['lookbackPeriod']) > 120)) {
                     $c = false;
                     $result['error'] = 'Please select a valid value for the lookback period.';
+                }
+
+                if ('phone-preping' === $_REQUEST['feedCategory']) {
+                    if ($c && !empty($_REQUEST['pingTimeout']) && is_numeric($_REQUEST['pingTimeout']) === false) {
+                        $c = false;
+                        $result['error'] = 'Please enter a numeric value for the ping timeout.';
+                    }
+
+                    if ($c && !empty($_REQUEST['pingTimeout']) && intval($_REQUEST['pingTimeout']) < 0) {
+                        $c = false;
+                        $result['error'] = 'Please enter a positive value the ping timeout.';
+                    }
                 }
 
                 if ($c && !empty($_REQUEST['chokePercent']) && is_numeric($_REQUEST['chokePercent']) === false) {
@@ -454,8 +610,9 @@ if (isset($_REQUEST['a'])) {
                         'description' => empty($_REQUEST['description']) ? null : $_REQUEST['description'],
                         'idCompany' => empty($_REQUEST['idCompany']) ? null : $_REQUEST['idCompany'],
                         'required' => empty($_REQUEST['required']) ? null : implode(';', $_REQUEST['required']),
-                        'allowedFields' => empty($_REQUEST['allowedFields']) ? null : implode(';',
-                            $_REQUEST['allowedFields']),
+                        'allowedFields' => empty($_REQUEST['allowedFields']) ? null : implode(';', $_REQUEST['allowedFields']),
+                        'requiredPingFields' => empty($_REQUEST['requiredPingFields']) ? null : implode(';', $_REQUEST['requiredPingFields']),
+                        'allowedPingFields' => empty($_REQUEST['allowedPingFields']) ? null : implode(';', $_REQUEST['allowedPingFields']),
                         'dedupeEmail' => empty($_REQUEST['dedupeEmail']) ? 0 : 1,
                         'dedupeLandline' => empty($_REQUEST['dedupeLandline']) ? 0 : 1,
                         'dedupeCellphone' => empty($_REQUEST['dedupeCellphone']) ? 0 : 1,
@@ -479,14 +636,14 @@ if (isset($_REQUEST['a'])) {
                         'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                         'notifyThresholdCount' => empty($_REQUEST['notifyThresholdCount']) ? 0 : $_REQUEST['notifyThresholdCount'],
                         'notifyThresholdTime' => !empty($notifyThresholdTime) ? $notifyThresholdTime->format('H:i:s') : null,
-                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',',
-                            $_REQUEST['notifyThresholdDays']),
+                        'notifyThresholdDays' => empty($_REQUEST['notifyThresholdDays']) ? null : implode(',', $_REQUEST['notifyThresholdDays']),
                         'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                         'pauseMessage' => empty($_REQUEST['pauseMessage']) ? null : trim($_REQUEST['pauseMessage']),
                         'filterTypeDNCScrub' => json_encode($dncScrub),
                         'timezone' => $_REQUEST['timezone'],
                         'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                         'lookbackPeriod' => empty($_REQUEST['lookbackPeriod']) ? 120 : $_REQUEST['lookbackPeriod'],
+                        'pingTimeout' => empty($_REQUEST['pingTimeout']) ? 0 : $_REQUEST['pingTimeout'],
                     ));
 
                     if (null === $status) {
@@ -644,8 +801,9 @@ if (isset($_REQUEST['d'])) {
             }
             $selectedRequired = explode(";", $feed->required);
             $selectedAllowedFields = explode(";", $feed->allowedFields);
-            $selectedNotifyThresholdDays = !empty($feed->notifyThresholdDays) ? explode(",",
-                $feed->notifyThresholdDays) : array();
+            $selectedRequiredPingFields = explode(";", $feed->requiredPingFields);
+            $selectedAllowedPingFields = explode(";", $feed->allowedPingFields);
+            $selectedNotifyThresholdDays = !empty($feed->notifyThresholdDays) ? explode(",", $feed->notifyThresholdDays) : array();
 
         case 'dialog_newfeed':
             if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF])) {
@@ -690,6 +848,7 @@ if (isset($_REQUEST['d'])) {
                 'timezone',
                 'timeskew',
                 'lookbackPeriod',
+                'pingTimeout',
             );
             foreach ($feedProps as $feedProp) {
                 if (isset($feed)) {
@@ -734,6 +893,12 @@ if (isset($_REQUEST['d'])) {
             }
             if (!isset($selectedAllowedFields)) {
                 $selectedAllowedFields = $recordFields;
+            }
+            if (!isset($selectedRequiredPingFields)) {
+                $selectedRequiredPingFields = [];
+            }
+            if (!isset($selectedAllowedPingFields)) {
+                $selectedAllowedPingFields = [];
             }
             if (!isset($selectedNotifyThresholdDays)) {
                 $selectedNotifyThresholdDays = array();
@@ -881,8 +1046,38 @@ if (isset($_REQUEST['d'])) {
                             </p>
                         </td>
                     </tr>
+                    <tr class="preping-row" <?php if ('phone-preping' !== $feed_feedCategory) {
+                        print ' style="display:none;"';
+                    } ?>>
+                        <td>Required PING Fields</p></td>
+                        <td>
+                            <?php foreach ($leads->getInboundFields() as $f) { ?>
+                                <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                                                                               name='requiredPingFields[]'
+                                                                                               value='<?php echo Display::escHtml($f->fieldName); ?>'
+                                                                                               <?php if (in_array($f->fieldName,
+                                                                                                   $selectedRequiredPingFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                </label>
+                            <?php } ?>
+                        </td>
+                    </tr>
+                    <tr class="preping-row" <?php if ('phone-preping' !== $feed_feedCategory) {
+                        print ' style="display:none;"';
+                    } ?>>
+                        <td>Allowed PING Fields</p></td>
+                        <td>
+                            <?php foreach ($leads->getInboundFields() as $f) { ?>
+                                <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                                                                               name='allowedPingFields[]'
+                                                                                               value='<?php echo Display::escHtml($f->fieldName); ?>'
+                                                                                               <?php if (in_array($f->fieldName,
+                                                                                                   $selectedAllowedPingFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                </label>
+                            <?php } ?>
+                        </td>
+                    </tr>
                     <tr>
-                        <td>Required Fields</p></td>
+                        <td>Required POST Fields</p></td>
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
                                 <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
@@ -895,7 +1090,7 @@ if (isset($_REQUEST['d'])) {
                         </td>
                     </tr>
                     <tr>
-                        <td>Allowed Fields</p></td>
+                        <td>Allowed POST Fields</p></td>
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
                                 <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
@@ -1199,6 +1394,23 @@ if (isset($_REQUEST['d'])) {
                                 <input type='text' name='rejectOldLeadsMaxAge' id='rejectOldLeadsMaxAge'
                                        value='<?php echo Display::escHtml($feed_rejectOldLeadsMaxAge); ?>'
                                        class='input-long'/>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr class="preping-row" <?php if ('phone-preping' !== $feed_feedCategory) {
+                        print ' style="display:none;"';
+                    } ?>>
+                        <td>Ping/Post Timeout</p></td>
+                        <td>
+                            <p>Enter the maximum number of <strong>seconds</strong> allowed between a PING and a POST. If a PING record is not POSTed in this time period, the POST will be rejected. To disable the timeout
+                                feature, set to
+                                0.</p>
+                            <p>300 seconds = 5 minutes<br/>
+                                3600 seconds = 1 hour<br/>
+                                86400 seconds = 1 day
+                            </p>
+                            <p>
+                                <input type='text' name='pingTimeout' id='pingTimeout' value='<?php echo Display::escHtml($feed_pingTimeout); ?>' class='input-long'/>
                             </p>
                         </td>
                     </tr>
@@ -2633,6 +2845,15 @@ include(INCLUDES . "c_header.php");
             let dates = myValue.split('|', 2);
             $('input[name="statsStart"]').val(dates[0]);
             $('input[name="statsEnd"]').val(dates[1]);
+        }
+    });
+
+    $('body').on('change', 'input[name="feedCategory"]', function (event) {
+        var value = $(this).val();
+        if (value === 'phone-preping') {
+            $('.preping-row').slideDown();
+        } else {
+            $('.preping-row').slideUp();
         }
     });
 

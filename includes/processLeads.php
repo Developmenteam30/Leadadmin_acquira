@@ -3,6 +3,9 @@
 require_once('c_config.php');
 require_once(INCLUDES . '_f_validation.php');
 require_once(INCLUDES . 'f_site.php');
+include(INCLUDES . "vendor/autoload.php");
+
+use Firebase\JWT\JWT;
 
 class ProcessLeads
 {
@@ -1249,8 +1252,13 @@ class ProcessLeads
         $result['valid'] = true;
         $result['errors'] = array();
 
-        $requiredFields = explode(';', $feedParams->required);
-        $allowedFields = explode(';', $feedParams->allowedFields);
+        if (!empty($_REQUEST['ping']) && 'phone-preping' === $feedParams->feedCategory) {
+            $requiredFields = explode(';', $feedParams->requiredPingFields);
+            $allowedFields = explode(';', $feedParams->allowedPingFields);
+        } else {
+            $requiredFields = explode(';', $feedParams->required);
+            $allowedFields = explode(';', $feedParams->allowedFields);
+        }
 
         // Special handling for TurnTwo feed that cannot change what URL value is being sent to us
         if (!empty($data['url']) && 'www.5minutemoney.co.uk,www.5minutemoney.co.uk' == $data['url']) {
@@ -1309,6 +1317,27 @@ class ProcessLeads
                         $result['errors'][] = $requiredKey . ' is a required field, and may not be empty.';
                     }
                     break;
+            }
+        }
+
+        // Verify JWT token
+        if (empty($_REQUEST['ping']) && 'phone-preping' === $feedParams->feedCategory) {
+            try {
+                $fields = JWT::decode($_REQUEST['authorization'] ?? '', HASH_SALT, array('HS256'));
+
+                foreach ($fields as $field => $val) {
+                    if (strpos($field, 'ping_') !== 0) {
+                        continue;
+                    }
+                    $field = substr($field, 5);
+                    if(empty($_REQUEST[$field]) || $_REQUEST[$field] !== $val) {
+                        $result['valid'] = false;
+                        $result['errors'][] = "Authorization: Field mismatch {$field}";
+                    }
+                }
+            } catch (Exception $e) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Authorization: ' . $e->getMessage();
             }
         }
 

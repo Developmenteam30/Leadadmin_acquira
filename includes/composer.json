@@ -9,6 +9,7 @@
     "ext-pcntl": "*",
     "ext-simplexml": "*",
     "ext-sysvsem": "*",
-    "phpmailer/phpmailer": "^6.3"
+    "phpmailer/phpmailer": "^6.3",
+    "firebase/php-jwt": "^5.2"
   }
 }
