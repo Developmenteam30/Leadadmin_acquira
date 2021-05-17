@@ -5672,11 +5672,22 @@ class Leads
 
 
         do {
-            $sql .= str_replace("FROM data_outbound",
-                "FROM archive." . $this->quoteIdentifier('data_outbound_' . $dateStart->format('Ym')), $baseSql);
-            $params[] = DB_TIMEZONE;
-            $params[] = LOCAL_TIMEZONE;
-            $params[] = $recordId;
+
+            try {
+                // Check if an archive table exists for this month
+                $query = $this->db->prepare("SHOW TABLES FROM `archive` LIKE 'data_outbound_" . $dateStart->format('Ym') . "'");
+                $query->execute();
+                $tableExists = $query->fetchAll();
+
+                if (!empty($tableExists)) {
+                    $sql .= str_replace("FROM data_outbound", "FROM archive." . $this->quoteIdentifier('data_outbound_' . $dateStart->format('Ym')), $baseSql);
+                    $params[] = DB_TIMEZONE;
+                    $params[] = LOCAL_TIMEZONE;
+                    $params[] = $recordId;
+                }
+            } catch (PDOException $e) {
+                $this->logError('Unable to check if outbound archive table exists: ' . $e->getMessage());
+            }
 
             try {
                 $dateStart->add(new \DateInterval(('P1M')));
