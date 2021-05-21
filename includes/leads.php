@@ -28,7 +28,7 @@ class Leads
         try {
             $this->db = new PDO('mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME,
                 $GLOBALS['connxSettings']['insertUpdate']['u'], $GLOBALS['connxSettings']['insertUpdate']['p'],
-                array(\PDO::ATTR_PERSISTENT => $persistent));
+                array(PDO::ATTR_PERSISTENT => $persistent));
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
 
@@ -84,8 +84,6 @@ class Leads
         } catch (PDOException $e) {
             throw new Leads_PDOException('Unable to insert record', null, $e);
         }
-
-        return null;
     }
 
     private function replaceRow($table, array $data, $logError = true)
@@ -107,8 +105,6 @@ class Leads
         } catch (PDOException $e) {
             throw new Leads_PDOException('Unable to replace record', null, $e);
         }
-
-        return null;
     }
 
     private function update($table, array $data, array $where = array())
@@ -142,8 +138,6 @@ class Leads
         } catch (PDOException $e) {
             throw new Leads_PDOException('Unable to update table', null, $e);
         }
-
-        return null;
     }
 
     public function setBufferedQuery()
@@ -194,7 +188,7 @@ class Leads
             $query = $this->db->prepare("SELECT CONNECTION_ID()");
             $query->execute();
             $results = $query->fetchColumn();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->logError('Unable to get connection ID: ' . $e->getMessage());
         }
 
@@ -286,8 +280,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getUser($idUser)
@@ -342,7 +334,7 @@ class Leads
         return $results;
     }
 
-    public function getStaffUsers($format = \PDO::FETCH_KEY_PAIR, $forceAll = false, $idUser = null)
+    public function getStaffUsers($format = PDO::FETCH_KEY_PAIR, $forceAll = false, $idUser = null)
     {
         $results = null;
 
@@ -375,7 +367,7 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT idUser,fullName FROM users WHERE level = ? AND idUser NOT IN (2, 5, 63, 67) ORDER BY username");
             $query->execute(array(LEADS_SESSION_LEVEL_STAFF));
-            $results = $query->fetchAll(\PDO::FETCH_KEY_PAIR);
+            $results = $query->fetchAll(PDO::FETCH_KEY_PAIR);
         } catch (PDOException $e) {
             $this->logError('Unable to get dashboard revenue users: ' . $e->getMessage());
         }
@@ -470,8 +462,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function setExpectationValues($userId, $month, $existingBusinessAmount, $newBusinessAmount)
@@ -495,7 +485,7 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT existingBusinessAmount,newBusinessAmount FROM forecast_expectations WHERE userId = ? AND expectationMonth = ?");
             $query->execute(array($userId, $month . '01'));
-            $results = $query->fetch(\PDO::FETCH_OBJ);
+            $results = $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get expectation value: ' . $e->getMessage());
         }
@@ -707,7 +697,7 @@ class Leads
 
             $query = $this->db->prepare($sql);
             $query->execute($params);
-            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get forecasts: ' . $e->getMessage());
         }
@@ -745,7 +735,7 @@ class Leads
 
             $query = $this->db->prepare($sql);
             $query->execute($params);
-            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get revenue stats company: ' . $e->getMessage());
         }
@@ -852,7 +842,7 @@ class Leads
 
             $query = $this->db->prepare($sql);
             $query->execute($params);
-            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get revenue stats outbound: ' . $e->getMessage());
         }
@@ -913,7 +903,7 @@ class Leads
 
             $query = $this->db->prepare($sql);
             $query->execute($params);
-            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get revenue stats inbound: ' . $e->getMessage());
         }
@@ -945,70 +935,50 @@ class Leads
 
     public function addLedger($fields)
     {
-
-        $ledgerId = null;
-
         try {
-            $ledgerId = $this->insertRow('ledger', $fields);
+            return $this->insertRow('ledger', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add ledger entry: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $ledgerId;
     }
 
     public function addLedgerVendor($fields)
     {
-
-        $ledgerId = null;
-
         try {
-            $ledgerId = $this->insertRow('ledger_vendors', $fields);
+            return $this->insertRow('ledger_vendors', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add ledger vendor entry: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $ledgerId;
     }
 
     public function replaceLedgerVendor($fields)
     {
-
-        $ledgerId = null;
-
         try {
-            $ledgerId = $this->replaceRow('ledger_vendors', $fields);
+            return $this->replaceRow('ledger_vendors', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to replace ledger vendor entry: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $ledgerId;
     }
 
     public function addOfflineLedger($fields)
     {
-
-        $ledgerId = null;
-
         try {
-            $ledgerId = $this->insertRow('ledger_offline', $fields);
+            return $this->insertRow('ledger_offline', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add offline ledger entry: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $ledgerId;
     }
 
     public function deleteLedger($ledgerId)
@@ -1017,7 +987,7 @@ class Leads
         try {
             $query = $this->db->prepare("DELETE FROM ledger WHERE ledgerId = ?");
             $query->execute(array($ledgerId));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logError('Unable to delete ledger entry: ' . $e->getMessage());
 
             return null;
@@ -1032,7 +1002,7 @@ class Leads
         try {
             $query = $this->db->prepare("DELETE FROM ledger_offline WHERE ledgerId = ?");
             $query->execute(array($ledgerId));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logError('Unable to delete offline ledger entry: ' . $e->getMessage());
 
             return null;
@@ -1047,7 +1017,7 @@ class Leads
         try {
             $query = $this->db->prepare("DELETE FROM ledger_phones WHERE ledgerId = ?");
             $query->execute(array($ledgerId));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logError('Unable to delete phones ledger entry: ' . $e->getMessage());
 
             return null;
@@ -1071,8 +1041,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function updateOfflineLedger($ledgerId, $fields)
@@ -1090,25 +1058,18 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function addPhoneLedger($fields)
     {
-
-        $ledgerId = null;
-
         try {
-            $ledgerId = $this->insertRow('ledger_phones', $fields);
+            return $this->insertRow('ledger_phones', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add phone ledger entry: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $ledgerId;
     }
 
     public function updatePhoneLedger($ledgerId, $fields)
@@ -1126,42 +1087,30 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function addPhoneLedgerVendor($fields)
     {
-
-        $ledgerId = null;
-
         try {
-            $ledgerId = $this->insertRow('ledger_phones_vendors', $fields);
+            return $this->insertRow('ledger_phones_vendors', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add phone ledger vendor entry: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $ledgerId;
     }
 
     public function replacePhoneLedgerVendor($fields)
     {
-
-        $ledgerId = null;
-
         try {
-            $ledgerId = $this->replaceRow('ledger_phones_vendors', $fields);
+            return $this->replaceRow('ledger_phones_vendors', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to replace phone ledger vendor entry: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $ledgerId;
     }
 
     public function getLedgerById($ledgerId)
@@ -1957,19 +1906,14 @@ class Leads
 
     public function addOpportunity($fields)
     {
-
-        $opportunityId = null;
-
         try {
-            $opportunityId = $this->insertRow('opportunities', $fields);
+            return $this->insertRow('opportunities', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add opportunity: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $opportunityId;
     }
 
     public function updateOpportunity($opportunityId, $fields)
@@ -1987,8 +1931,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getOpportunities($status = null)
@@ -2040,19 +1982,14 @@ class Leads
 
     public function addOpportunityNote($fields)
     {
-
-        $noteId = null;
-
         try {
-            $noteId = $this->insertRow('opportunities_notes', $fields);
+            return $this->insertRow('opportunities_notes', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add opportunity note: ' . $pdoException->getMessage());
 
             return false;
         }
-
-        return $noteId;
     }
 
     public function getOpportunityNotes($opportunityId)
@@ -2072,19 +2009,14 @@ class Leads
 
     public function addInsertionOrder($fields)
     {
-
-        $prospectId = null;
-
         try {
-            $prospectId = $this->insertRow('insertion_orders', $fields);
+            return $this->insertRow('insertion_orders', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add insertion order: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $prospectId;
     }
 
     public function getInsertionOrder($orderId)
@@ -2180,19 +2112,14 @@ class Leads
 
     public function addProspect($fields)
     {
-
-        $prospectId = null;
-
         try {
-            $prospectId = $this->insertRow('prospects', $fields);
+            return $this->insertRow('prospects', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add prospect: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $prospectId;
     }
 
     public function updateProspect($prospectId, $fields)
@@ -2210,8 +2137,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getProspects($status = null, $userId = null)
@@ -2340,19 +2265,14 @@ class Leads
 
     public function addProspectNote($fields)
     {
-
-        $noteId = null;
-
         try {
-            $noteId = $this->insertRow('prospects_notes', $fields);
+            return $this->insertRow('prospects_notes', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add prospect note: ' . $pdoException->getMessage());
 
             return false;
         }
-
-        return $noteId;
     }
 
     public function getProspectNotes($prospectId)
@@ -2372,19 +2292,14 @@ class Leads
 
     public function addCredential($fields)
     {
-
-        $credentialId = null;
-
         try {
-            $credentialId = $this->insertRow('credentials', $fields);
+            return $this->insertRow('credentials', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add credential: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $credentialId;
     }
 
     public function updateCredential($credentialId, $fields)
@@ -2441,19 +2356,14 @@ class Leads
 
     public function addCompany($fields)
     {
-
-        $companyId = null;
-
         try {
-            $companyId = $this->insertRow('companies', $fields);
+            return $this->insertRow('companies', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add company: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $companyId;
     }
 
     public function updateCompany($idCompany, $fields)
@@ -2471,8 +2381,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getCompany($idCompany)
@@ -2661,19 +2569,14 @@ class Leads
 
     public function addCompanyNote($fields)
     {
-
-        $noteId = null;
-
         try {
-            $noteId = $this->insertRow('companies_notes', $fields);
+            return $this->insertRow('companies_notes', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add company note: ' . $pdoException->getMessage());
 
             return false;
         }
-
-        return $noteId;
     }
 
     public function getCompanyNotes($companyId)
@@ -2693,19 +2596,14 @@ class Leads
 
     public function addVertical($fields)
     {
-
-        $verticalId = null;
-
         try {
-            $verticalId = $this->insertRow('verticals', $fields);
+            return $this->insertRow('verticals', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add vertical: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $verticalId;
     }
 
     public function checkVerticalName($name, $divisionId, $verticalId = null)
@@ -2760,8 +2658,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getDivisionVerticals($divisionId, $format = PDO::FETCH_KEY_PAIR)
@@ -2922,19 +2818,14 @@ class Leads
 
     public function addField($fields)
     {
-
-        $verticalId = null;
-
         try {
-            $verticalId = $this->insertRow('fields', $fields);
+            return $this->insertRow('fields', $fields);
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add field: ' . $pdoException->getMessage());
 
             return null;
         }
-
-        return $verticalId;
     }
 
     public function updateField($fieldId, $fields)
@@ -2966,7 +2857,7 @@ class Leads
                 $query = $this->db->prepare("SELECT * FROM fields ORDER BY REPLACE(fieldName,'c_','')");
                 $query->execute();
             }
-            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get field list: ' . $e->getMessage());
         }
@@ -2985,7 +2876,7 @@ class Leads
                 $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom') ORDER BY REPLACE(fieldName,'c_','')");
             }
             $query->execute();
-            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound field list: ' . $e->getMessage());
         }
@@ -3044,25 +2935,19 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getInboundFeed($idFeedIn)
     {
-        $results = array();
-
         try {
             $query = $this->db->prepare("SELECT f.*,c.name AS companyName,DATE_FORMAT(notifyThresholdTime,'%l:%i%p') AS notifyThresholdTimeFormatted FROM feedinc f LEFT JOIN companies c ON c.idCompany = f.idCompany WHERE f.idFeedIn = ?");
             $query->execute(array($idFeedIn));
-            $results = $query->fetch(PDO::FETCH_OBJ);
+            return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound feed info: ' . $e->getMessage());
 
             return null;
         }
-
-        return $results;
     }
 
     public function getInboundFeedLabel($label)
@@ -3159,8 +3044,6 @@ class Leads
 
     public function getInboundPopulationSettings($idFeedIn, $enabled = true, $descending = true)
     {
-        $results = array();
-
         try {
             $sql = "SELECT fp.*, fo.label, fo.dailyLimit, fo.delay, fo.description, fo.delayDump, fo.processingSchedule, fo.revenuePerLead, fo.costPerLeadOverride, fo.cron, fo.xmlDTD, c.name ";
             $sql .= "FROM feedPopulation fp ";
@@ -3174,14 +3057,12 @@ class Leads
 //			$sql .= "ORDER BY fp.waterfallPriority DESC";
             $query = $this->db->prepare($sql);
             $query->execute(array($idFeedIn, $idFeedIn));
-            $results = $query->fetchAll(PDO::FETCH_OBJ);
+            return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound population settings: ' . $e->getMessage());
 
             return false;
         }
-
-        return $results;
     }
 
     public function addOutboundFeed($fields)
@@ -3220,15 +3101,10 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getPopulationStatus($idFeedOut)
     {
-        $results = array();
-        $status = 'Error';
-
         try {
             $query = $this->db->prepare("SELECT enabled FROM feedPopulation WHERE idFeedOut = ?");
             $query->execute(array($idFeedOut));
@@ -3256,42 +3132,32 @@ class Leads
 
             return 'Error';
         }
-
-        return $status;
     }
 
     public function getPopulationSetting($idAssoc)
     {
-        $results = array();
-
         try {
             $query = $this->db->prepare("SELECT * FROM feedPopulation WHERE idAssoc = ?");
             $query->execute(array($idAssoc));
-            $results = $query->fetch(PDO::FETCH_OBJ);
+            return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get feed population: ' . $e->getMessage());
 
             return false;
         }
-
-        return $results;
     }
 
     public function getPopulations($idFeedOut)
     {
-        $results = array();
-
         try {
             $query = $this->db->prepare("SELECT * FROM feedPopulation WHERE idFeedOut = ?");
             $query->execute(array($idFeedOut));
-            $results = $query->fetchAll(PDO::FETCH_OBJ);
+            return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get feed populations: ' . $e->getMessage());
 
             return false;
         }
-
-        return $results;
     }
 
     public function addPopulation($fields)
@@ -3307,6 +3173,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add population: ' . $pdoException->getMessage());
+            return null;
         }
     }
 
@@ -3328,19 +3195,15 @@ class Leads
 
     public function getOutboundPopulation($idFeedIn)
     {
-        $results = null;
-
         try {
             $query = $this->db->prepare("SELECT idFeedOut FROM feedPopulation fp WHERE idFeedIn = ? AND idFeedOut IN (SELECT idFeedOut FROM feedout WHERE idCompany = 12)");
             $query->execute(array($idFeedIn));
-            $results = $query->fetch(PDO::FETCH_OBJ);
+            return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get feed populations: ' . $e->getMessage());
 
             return false;
         }
-
-        return $results;
     }
 
     public function retireOutboundFeed($idFeedOut)
@@ -3475,7 +3338,7 @@ class Leads
         try {
             $query = $this->db->prepare($sql);
             $query->execute();
-            while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+            while ($row = $query->fetch(PDO::FETCH_OBJ)) {
 
                 $staticFieldsJSON = new stdClass();
                 $varFieldsJSON = new stdClass();
@@ -3941,7 +3804,7 @@ class Leads
 
             $query = $this->db->prepare("INSERT IGNORE INTO archive." . $table . "(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted) SELECT idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?");
             $query->execute(array($row->idRecord, $feedOut->idFeedOut));
-            $rows = $query->rowCount();
+            $query->rowCount();
 
             $query = $this->db->prepare("DELETE FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?");
             $query->execute(array($row->idRecord, $feedOut->idFeedOut));
@@ -3971,7 +3834,7 @@ class Leads
             $query = $this->db->prepare($query);
             $query->execute(array($feedOut->idFeedOut));
 
-            while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+            while ($row = $query->fetch(PDO::FETCH_OBJ)) {
                 print $row->idRecord . ':' . $row->result;
 
                 if (empty($row->result) || preg_match('/Code: \d{3}1\]/', $row->result)) {
@@ -3992,6 +3855,8 @@ class Leads
 
             return $result;
         }
+
+        return null;
     }
 
     public function fixWaterfallStats($idFeedOut)
@@ -4009,7 +3874,7 @@ class Leads
             $query = $this->db->prepare($query);
             $query->execute(array($feedOut->idFeedOut));
 
-            while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+            while ($row = $query->fetch(PDO::FETCH_OBJ)) {
                 print "Record: [{$row->idRecord}]\n";
 
                 $feedIn = $this->getInboundFeed($row->idFeedIn);
@@ -4066,6 +3931,8 @@ class Leads
 
             return $result;
         }
+
+        return null;
     }
 
     public function toggleBillable($row, $billable)
@@ -4208,7 +4075,7 @@ class Leads
         try {
             $query = $this->db->prepare($query);
             $query->execute(array($idCompany));
-            $results = $query->fetchAll(\PDO::FETCH_OBJ);
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get outbound company mappings by inbound company: ' . $e->getMessage());
         }
@@ -4222,14 +4089,12 @@ class Leads
             $query = $this->db->prepare("SELECT * FROM invoices WHERE date = ? AND idCompany = ?");
             $query->execute(array($date, $idCompany));
 
-            return $query->fetch(\PDO::FETCH_OBJ);
+            return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get invoice details: ' . $e->getMessage());
 
             return false;
         }
-
-        return null;
     }
 
     public function getInvoiceNumber($date, $idCompany)
@@ -4698,8 +4563,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getJob($jobId)
@@ -4714,8 +4577,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getJobs($idCompany = null)
@@ -4742,8 +4603,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getJobsTimestamp()
@@ -4767,8 +4626,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function fixInboundJobTimestamp($jobId, $timestamp)
@@ -4842,7 +4699,7 @@ class Leads
         } catch (PDOException $e) {
             $this->logError('Unable to get pending job: ' . $e->getMessage());
 
-            return;
+            return null;
         }
 
         try {
@@ -4900,9 +4757,7 @@ class Leads
 
     public function retryOutboundRejections($idFeedOut, $date)
     {
-        $count = 0;
-
-        $localDate = new \DateTime($date, new DateTimeZone(LOCAL_TIMEZONE));
+        $localDate = new DateTime($date, new DateTimeZone(LOCAL_TIMEZONE));
 
         // Timestamps in data_outbound may need to be converted to a different timezone
         $utcStart = new DateTime($date . ' 00:00:00', new DateTimeZone(LOCAL_TIMEZONE));
@@ -5318,8 +5173,8 @@ class Leads
     {
         $params = array();
 
-        $dateStart = new \DateTime();
-        $dateEnd = new \DateTime('2014-06-01');
+        $dateStart = new DateTime();
+        $dateEnd = new DateTime('2014-06-01');
 
         $checkSql = $this->db->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)");
 
@@ -5381,8 +5236,8 @@ class Leads
             }
 
             try {
-                $dateStart->sub(new \DateInterval(('P1M')));
-            } catch (\Exception $e) {
+                $dateStart->sub(new DateInterval(('P1M')));
+            } catch (Exception $e) {
                 break;
             }
         } while ($dateStart->format('Ym') >= $dateEnd->format('Ym'));
@@ -5395,7 +5250,7 @@ class Leads
             $query = $this->db->prepare($sql);
             $query->execute($params);
 
-            return $query->fetchAll(\PDO::FETCH_OBJ);
+            return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             echo $e->getMessage();
             $this->logError('Unable to get inbound record search results: ' . $e->getMessage());
@@ -5406,11 +5261,9 @@ class Leads
 
     public function homeownerExportArchived()
     {
-        $params = array();
-
-        //$dateStart = new \DateTime('2014-06-01');
-        $dateStart = new \DateTime('2018-01-01');
-        //$dateEnd = new \DateTime();
+        //$dateStart = new DateTime('2014-06-01');
+        $dateStart = new DateTime('2018-01-01');
+        //$dateEnd = new DateTime();
         $dateEnd = new DateTime('2018-07-31');
 
         $checkSql = $this->db->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)");
@@ -5465,7 +5318,7 @@ class Leads
                     $query->bindValue(':dayEnd', $dateStart->format('Y-m-t') . ' 23:59:59');
 
                     $query->execute();
-                    while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
+                    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
                         fputcsv($file, $row);
                     }
 
@@ -5475,8 +5328,8 @@ class Leads
                 $this->setBufferedQuery();
 
                 try {
-                    $dateStart->add(new \DateInterval(('P1M')));
-                } catch (\Exception $e) {
+                    $dateStart->add(new DateInterval(('P1M')));
+                } catch (Exception $e) {
                     break;
                 }
             } while ($dateStart->format('Ym') <= $dateEnd->format('Ym'));
@@ -5493,11 +5346,9 @@ class Leads
 
     public function homeownerExportArchivedSpecial($phoneSuppression, $emailSuppression, $zips, $limit)
     {
-        $params = array();
-
-        //$dateStart = new \DateTime('2014-06-01');
-        $dateStart = new \DateTime('2018-01-01');
-        //$dateEnd = new \DateTime();
+        //$dateStart = new DateTime('2014-06-01');
+        $dateStart = new DateTime('2018-01-01');
+        //$dateEnd = new DateTime();
         $dateEnd = new DateTime('2020-01-08');
 
         $file = fopen(ADMIN_ROOT . 'exports/homeowner_' . time() . '.csv', 'w');
@@ -5543,7 +5394,7 @@ class Leads
 
                     $query = $this->db->prepare($sql);
                     $query->execute();
-                    while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
+                    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
                         if (in_array($row['zip'], $zips) && !in_array($row['email'],
                                 $emailSuppression) && !in_array($row['landline'],
                                 $phoneSuppression) && !in_array($row['cellphone'], $phoneSuppression)) {
@@ -5556,8 +5407,8 @@ class Leads
                 $this->setBufferedQuery();
 
                 try {
-                    $dateStart->add(new \DateInterval(('P1M')));
-                } catch (\Exception $e) {
+                    $dateStart->add(new DateInterval(('P1M')));
+                } catch (Exception $e) {
                     break;
                 }
             } while ($dateStart->format('Ym') <= $dateEnd->format('Ym'));
@@ -5574,11 +5425,9 @@ class Leads
 
     public function homeownerExportCurrent()
     {
-        $params = array();
-
-        //$dateStart = new \DateTime('2014-06-01');
-        $dateStart = new \DateTime('2018-07-01');
-        //$dateEnd = new \DateTime();
+        //$dateStart = new DateTime('2014-06-01');
+        $dateStart = new DateTime('2018-07-01');
+        //$dateEnd = new DateTime();
         $dateEnd = new DateTime('2018-09-30');
 
         // Establish our baseline SQL that we'll change in the loop
@@ -5623,15 +5472,15 @@ class Leads
                 $query->bindValue(':dayEnd', $dateStart->format('Y-m-t') . ' 23:59:59');
 
                 $query->execute();
-                while ($row = $query->fetch(\PDO::FETCH_ASSOC)) {
+                while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
                     fputcsv($file, $row);
                 }
 
                 fclose($file);
 
                 try {
-                    $dateStart->add(new \DateInterval(('P1M')));
-                } catch (\Exception $e) {
+                    $dateStart->add(new DateInterval(('P1M')));
+                } catch (Exception $e) {
                     break;
                 }
             } while ($dateStart->format('Ym') <= $dateEnd->format('Ym'));
@@ -5650,9 +5499,9 @@ class Leads
     {
         $params = array();
 
-        $dateStart = new \DateTime();
-        $dateStart->sub(new \DateInterval(('P1Y')));
-        $dateEnd = new \DateTime();
+        $dateStart = new DateTime();
+        $dateStart->sub(new DateInterval(('P1Y')));
+        $dateEnd = new DateTime();
 
         // Establish our baseline SQL that we'll change in the loop
         $baseSql = "( SELECT fo.label,o.idFeedOut,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,co.name AS companyName ";
@@ -5688,8 +5537,8 @@ class Leads
             }
 
             try {
-                $dateStart->add(new \DateInterval(('P1M')));
-            } catch (\Exception $e) {
+                $dateStart->add(new DateInterval(('P1M')));
+            } catch (Exception $e) {
                 break;
             }
         } while ($dateStart->format('Ym') <= $dateEnd->format('Ym'));
@@ -5704,7 +5553,7 @@ class Leads
             $query = $this->db->prepare($sql);
             $query->execute($params);
 
-            return $query->fetchAll(\PDO::FETCH_OBJ);
+            return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             echo $e->getMessage();
             $this->logError('Unable to get outbound record search by id results: ' . $e->getMessage());
@@ -5718,10 +5567,10 @@ class Leads
         $results = array();
         $params = array();
 
-        $archiveDate = new \DateTime($dateStartIn);
-        $dateStart = new \DateTime($dateStartIn);
-        $dateEnd = new \DateTime($dateEndIn);
-        $today = new \DateTime();
+        $archiveDate = new DateTime($dateStartIn);
+        $dateStart = new DateTime($dateStartIn);
+        $dateEnd = new DateTime($dateEndIn);
+        $today = new DateTime();
         if ($dateEnd > $today) {
             $dateEnd = $today;
         }
@@ -5755,8 +5604,8 @@ class Leads
             //$sql .= "LIMIT " . intval( $offset ) . ",100";
 
             try {
-                $archiveDate->add(new \DateInterval(('P1M')));
-            } catch (\Exception $e) {
+                $archiveDate->add(new DateInterval(('P1M')));
+            } catch (Exception $e) {
                 break;
             }
         } while ($archiveDate->format('Ym') <= $dateEnd->format('Ym'));
@@ -5771,9 +5620,9 @@ class Leads
             $query = $this->db->prepare($sql);
             $query->execute($params);
             if (!empty($idRecord)) {
-                $results = $query->fetch(\PDO::FETCH_OBJ);
+                $results = $query->fetch(PDO::FETCH_OBJ);
             } else {
-                $results = $query->fetchAll(\PDO::FETCH_OBJ);
+                $results = $query->fetchAll(PDO::FETCH_OBJ);
             }
         } catch (PDOException $e) {
             echo $e->getMessage();
@@ -5788,9 +5637,9 @@ class Leads
         $results = array();
         $params = array();
 
-        $archiveDate = new \DateTime($dateStartIn);
-        $dateStart = new \DateTime($dateStartIn);
-        $dateEnd = new \DateTime($dateEndIn);
+        $archiveDate = new DateTime($dateStartIn);
+        $dateStart = new DateTime($dateStartIn);
+        $dateEnd = new DateTime($dateEndIn);
 
         $sql = "SELECT * FROM ( ";
 
@@ -5818,8 +5667,8 @@ class Leads
             echo $archiveDate->format('Y-m-d') . ' ' . $dateStart->format('Y-m-d H:i:s') . ' - ' . $dateEnd->format('Y-m-d H:i:s') . PHP_EOL;
 
             try {
-                $archiveDate->add(new \DateInterval(('P1M')));
-            } catch (\Exception $e) {
+                $archiveDate->add(new DateInterval(('P1M')));
+            } catch (Exception $e) {
                 break;
             }
         } while ($archiveDate->format('Ym') <= $dateEnd->format('Ym'));
@@ -5834,9 +5683,9 @@ class Leads
             $query = $this->db->prepare($sql);
             $query->execute($params);
             if (!empty($idRecord)) {
-                $results = $query->fetch(\PDO::FETCH_OBJ);
+                $results = $query->fetch(PDO::FETCH_OBJ);
             } else {
-                $results = $query->fetchAll(\PDO::FETCH_OBJ);
+                $results = $query->fetchAll(PDO::FETCH_OBJ);
             }
         } catch (PDOException $e) {
             echo $e->getMessage();
@@ -5956,15 +5805,15 @@ class Leads
             $querySelect = $this->db->prepare("SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND result IS NOT NULL AND result NOT LIKE 'Third-party rejection [%1]' AND idRecord > :idRecord ORDER BY idRecord LIMIT 1");
             $querySelect->bindValue(':tzLocal', LOCAL_TIMEZONE);
             $querySelect->bindValue(':tzServer', DB_TIMEZONE);
-            $querySelect->bindParam(':idRecord', $recordId, \PDO::PARAM_INT);
+            $querySelect->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
             $querySelect->bindColumn(1, $recordId);
 
             $queryDelete = $this->db->prepare("DELETE FROM data_inbound WHERE idRecord = :idRecord");
-            $queryDelete->bindParam(':idRecord', $recordId, \PDO::PARAM_INT);
+            $queryDelete->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
 
             do {
                 $querySelect->execute();
-                $row = $querySelect->fetch(\PDO::FETCH_BOUND);
+                $row = $querySelect->fetch(PDO::FETCH_BOUND);
 
                 if (true === $row) {
                     if ($cnt % 1000 === 0) {
@@ -5998,19 +5847,19 @@ class Leads
             $querySelect = $this->db->prepare("SELECT /*!40001 SQL_NO_CACHE */ idRecord,idFeedOut FROM data_outbound FORCE INDEX(`recordid`) WHERE timestamp <= CONVERT_TZ(DATE_SUB(NOW(),INTERVAL 90 DAY),:tzLocal,:tzServer) AND processed = 1 AND accepted = 0 AND ( idRecord > :idRecordOne OR ( idRecord = :idRecordTwo AND idFeedOut >= :idFeedOut ) ) ORDER BY idRecord,idFeedOut LIMIT 1");
             $querySelect->bindValue(':tzLocal', LOCAL_TIMEZONE);
             $querySelect->bindValue(':tzServer', DB_TIMEZONE);
-            $querySelect->bindParam(':idRecordOne', $recordId, \PDO::PARAM_INT);
-            $querySelect->bindParam(':idRecordTwo', $recordId, \PDO::PARAM_INT);
-            $querySelect->bindParam(':idFeedOut', $idFeedOut, \PDO::PARAM_INT);
+            $querySelect->bindParam(':idRecordOne', $recordId, PDO::PARAM_INT);
+            $querySelect->bindParam(':idRecordTwo', $recordId, PDO::PARAM_INT);
+            $querySelect->bindParam(':idFeedOut', $idFeedOut, PDO::PARAM_INT);
             $querySelect->bindColumn(1, $recordId);
             $querySelect->bindColumn(2, $idFeedOut);
 
             $queryDelete = $this->db->prepare("DELETE FROM data_outbound WHERE idRecord = :idRecord AND idFeedOut = :idFeedOut");
-            $queryDelete->bindParam(':idRecord', $recordId, \PDO::PARAM_INT);
-            $queryDelete->bindParam(':idFeedOut', $idFeedOut, \PDO::PARAM_INT);
+            $queryDelete->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
+            $queryDelete->bindParam(':idFeedOut', $idFeedOut, PDO::PARAM_INT);
 
             do {
                 $querySelect->execute();
-                $row = $querySelect->fetch(\PDO::FETCH_BOUND);
+                $row = $querySelect->fetch(PDO::FETCH_BOUND);
 
                 if (true === $row) {
                     if ($cnt % 1000 === 0) {
@@ -6038,10 +5887,10 @@ class Leads
         $cnt = 0;
         $recordId = 0;
 
-        $startDate = new \DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
-        $today = new \DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
+        $startDate = new DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
+        $today = new DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
         try {
-            $startDate->sub(new \DateInterval('P3M'));
+            $startDate->sub(new DateInterval('P3M'));
             $startDate->modify('first day of this month')->setTime(0, 0, 0);
             $endDate = clone $startDate;
             $endDate->setDate($startDate->format('Y'), $startDate->format('m'), $today->format('d'))->setTime(23, 59,
@@ -6063,20 +5912,20 @@ class Leads
             $querySelect = $this->db->prepare("SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1");
             $querySelect->bindValue(':startDate', $startDate->format('Y-m-d H:i:s'));
             $querySelect->bindValue(':endDate', $endDate->format('Y-m-d H:i:s'));
-            $querySelect->bindParam(':idRecord', $recordId, \PDO::PARAM_INT);
+            $querySelect->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
             $querySelect->bindColumn(1, $recordId);
 
             $queryInsert = $this->db->prepare("INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idRecord = :idRecord");
-            $queryInsert->bindParam(':idRecord', $recordId, \PDO::PARAM_INT);
+            $queryInsert->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
 
             $queryDelete = $this->db->prepare("DELETE FROM data_inbound WHERE idRecord = :idRecord");
-            $queryDelete->bindParam(':idRecord', $recordId, \PDO::PARAM_INT);
+            $queryDelete->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
 
             $this->beginTransaction();
 
             do {
                 $querySelect->execute();
-                $row = $querySelect->fetch(\PDO::FETCH_BOUND);
+                $row = $querySelect->fetch(PDO::FETCH_BOUND);
 
                 if (true === $row) {
                     if ($cnt % 1000 === 0) {
@@ -6137,8 +5986,6 @@ class Leads
 
     public function clearOutboundQueue($idFeedOut, $label)
     {
-        $rows = null;
-
         try {
             $this->lockTables("feedout WRITE, data_outbound WRITE");
         } catch (Leads_PDOException $e) {
@@ -6195,8 +6042,8 @@ class Leads
 
                 if ($rowCount > 0) {
                     $query = $this->db->prepare("UPDATE feedout SET queued = queued - :rowCount WHERE idFeedOut = :idFeedOut");
-                    $query->bindValue(':rowCount', $rowCount, \PDO::PARAM_INT);
-                    $query->bindValue(':idFeedOut', $idFeedOut, \PDO::PARAM_INT);
+                    $query->bindValue(':rowCount', $rowCount, PDO::PARAM_INT);
+                    $query->bindValue(':idFeedOut', $idFeedOut, PDO::PARAM_INT);
                     $query->execute();
                 }
 
@@ -6251,8 +6098,8 @@ class Leads
         }
 
         $subParams = [];
-        $archiveDate = new \DateTime($settings['dateStart'] . ' 00:00:00');
-        $dateEnd = new \DateTime($settings['dateEnd'] . ' 23:59:59');
+        $archiveDate = new DateTime($settings['dateStart'] . ' 00:00:00');
+        $dateEnd = new DateTime($settings['dateEnd'] . ' 23:59:59');
 
         // Pull from the data_inbound table first
         $subSql = "( SELECT ";
@@ -6364,8 +6211,8 @@ class Leads
             }
 
             try {
-                $archiveDate->add(new \DateInterval(('P1M')));
-            } catch (\Exception $e) {
+                $archiveDate->add(new DateInterval(('P1M')));
+            } catch (Exception $e) {
                 break;
             }
         } while ($archiveDate->format('Ym') <= $dateEnd->format('Ym'));
@@ -6456,8 +6303,8 @@ class Leads
         }
 
         $subParams = [];
-        $archiveDate = new \DateTime($settings['dateStart'] . ' 00:00:00');
-        $dateEnd = new \DateTime($settings['dateEnd'] . ' 23:59:59');
+        $archiveDate = new DateTime($settings['dateStart'] . ' 00:00:00');
+        $dateEnd = new DateTime($settings['dateEnd'] . ' 23:59:59');
 
         // Pull from the data_outbound table first
         $subSql = "( SELECT ";
@@ -6567,8 +6414,8 @@ class Leads
             }
 
             try {
-                $archiveDate->add(new \DateInterval(('P1M')));
-            } catch (\Exception $e) {
+                $archiveDate->add(new DateInterval(('P1M')));
+            } catch (Exception $e) {
                 break;
             }
         } while ($archiveDate->format('Ym') <= $dateEnd->format('Ym'));
@@ -6619,16 +6466,12 @@ class Leads
         $filePath = ADMIN_ROOT . $fileLink;
         $file = fopen($filePath, 'w');
         if (!$file) {
-            $result['reason'] = 'Unable to create CSV file.';
-
             return;
         }
 
         try {
 
             $this->unsetBufferedQuery();
-
-            $fields = array();
 
             $query = $this->db->query("SELECT url,ip,leadstamp,email FROM data_inbound WHERE email LIKE '%@comcast.net' AND result IS NULL");
             while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
@@ -6655,16 +6498,12 @@ class Leads
         $filePath = ADMIN_ROOT . $fileLink;
         $file = fopen($filePath, 'w');
         if (!$file) {
-            $result['reason'] = 'Unable to create CSV file.';
-
             return;
         }
 
         try {
 
             $this->unsetBufferedQuery();
-
-            $fields = array();
 
             $query = $this->db->query("SELECT url,ip,leadstamp,email FROM data_inbound WHERE ( email LIKE '%@att.net' OR email LIKE '%@bellsouth.net' OR email LIKE '%@earthlink.net' ) AND result IS NULL");
             while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
@@ -6701,8 +6540,6 @@ class Leads
         } finally {
             $this->setBufferedQuery();
         }
-
-        return null;
     }
 
     public function fixStatsCorrelated()
@@ -6713,19 +6550,19 @@ class Leads
 
         $query = $this->db->prepare("SELECT idFeedIn,costPerLead FROM feedinc WHERE costPerLead > 0");
         $query->execute();
-        while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+        while ($row = $query->fetch(PDO::FETCH_OBJ)) {
             $queryIn->execute(array($row->costPerLead, $row->idFeedIn));
         }
 
         $query = $this->db->prepare("SELECT idFeedOut,revenuePerLead FROM feedout WHERE revenuePerLead > 0");
         $query->execute();
-        while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+        while ($row = $query->fetch(PDO::FETCH_OBJ)) {
             $queryOut->execute(array($row->revenuePerLead, $row->idFeedOut));
         }
 
         $query = $this->db->prepare("SELECT idFeedOut,costPerLeadOverride FROM feedout WHERE costPerLeadOverride IS NOT NULL");
         $query->execute();
-        while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+        while ($row = $query->fetch(PDO::FETCH_OBJ)) {
             $queryOutCpl->execute(array($row->costPerLeadOverride, $row->idFeedOut));
         }
 
@@ -6735,7 +6572,6 @@ class Leads
     {
 
         $idRecord = 760666734;
-        $rowCount = 0;
 
         $statsQuery = $this->db->prepare('INSERT INTO stats_correlated(idFeedIn,idFeedOut,url,stamp,costPerLead,revenuePerLead,accepted,billable) VALUES(?,?,?,?,?,?,1,1) ON DUPLICATE KEY UPDATE accepted = accepted + 1, billable = billable + 1, costPerLead = ?, revenuePerLead = ?');
 
@@ -6751,7 +6587,7 @@ class Leads
         do {
             $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, $idRecord));
             $rowCount = $query->rowCount();
-            while ($rowCount > 0 && $row = $query->fetch(\PDO::FETCH_OBJ)) {
+            while ($rowCount > 0 && $row = $query->fetch(PDO::FETCH_OBJ)) {
 
                 $costPerLead = !empty($row->costPerLeadOverride) ? $row->costPerLeadOverride : (!empty($row->costPerLead) ? $row->costPerLead : 0.00);
                 $revenuePerLead = !empty($row->revenuePerLead) ? $row->revenuePerLead : 0.00;
@@ -6828,7 +6664,7 @@ class Leads
 
             $query = $this->db->prepare("SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE o.processed = 0 AND o.idFeedOut = ?");
             $query->execute(array($idFeedOut));
-            while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+            while ($row = $query->fetch(PDO::FETCH_OBJ)) {
                 fputcsv($file, array(
                     $row->url,
                     $row->ip,
@@ -6872,7 +6708,7 @@ class Leads
 
         $feed = $this->getOutboundFeed($idFeedOut);
         if (!$feed) {
-            return;
+            return null;
         }
 
         try {
@@ -6897,8 +6733,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getOutboundQueuePreview($idFeedOut)
@@ -6913,7 +6747,7 @@ class Leads
             $query = $this->db->prepare($sql);
             $query->execute(array(DB_TIMEZONE, LOCAL_TIMEZONE, $idFeedOut));
 
-            return $query->fetchAll(\PDO::FETCH_OBJ);
+            return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get outbound queue preview: ' . $e->getMessage());
 
@@ -6926,7 +6760,7 @@ class Leads
 
         $feed = $this->getOutboundFeed($idFeedOut);
         if (!$feed) {
-            return;
+            return null;
         }
 
         $lockName = 'READQUEUE_' . $idFeedOut;
@@ -6959,7 +6793,7 @@ class Leads
                 foreach ($rows as $row) {
 
                     try {
-                        $status = $this->update('data_outbound',
+                        $this->update('data_outbound',
                             array(
                                 'processed' => -2,
                             ),
@@ -7019,7 +6853,7 @@ class Leads
             return null;
         }
 
-        $date = new \DateTime();
+        $date = new DateTime();
         for ($i = 0; $i < 6; $i++) {
             try {
                 // Check if an archive table exists for this month
@@ -7040,7 +6874,7 @@ class Leads
 
                 return null;
             }
-            $date->sub(new \DateInterval('P1M'));
+            $date->sub(new DateInterval('P1M'));
         }
 
         return false;
@@ -7064,8 +6898,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getInboundRecord($idRecord)
@@ -7128,7 +6960,7 @@ class Leads
 
             $query = $this->db->prepare("SELECT i.* FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord WHERE processed = 1 AND o.idFeedOut = ? AND o.accepted = 0");
             $query->execute();
-            while ($row = $query->fetch(\PDO::FETCH_OBJ)) {
+            while ($row = $query->fetch(PDO::FETCH_OBJ)) {
                 fputcsv($file, array(
                     $row->url,
                     $row->ip,
@@ -7226,7 +7058,7 @@ class Leads
             $table .= '_phones';
         }
         try {
-            $idSuppression = $this->insertRow($table, array(
+            $this->insertRow($table, array(
                 'idCompany' => empty($idCompany) ? 0 : $idCompany,
                 $type => $value,
             ));
@@ -7415,7 +7247,6 @@ class Leads
                 }
             }
         } catch (PDOException $e) {
-            $result['reason'] = 'DB query error.';
             $this->logError('Unable to get get supression records for validation: ' . $e->getMessage());
         }
     }
@@ -7486,9 +7317,6 @@ class Leads
 
         } catch (PDOException $e) {
             $this->logError('Unable to reset queued stats: ' . $e->getMessage());
-        } catch (Leads_PDOException $e) {
-            $pdoException = $e->getPrevious();
-            $this->logError('Unable to lock/unlock tables: ' . $pdoException->getMessage());
         } finally {
             $this->unlockTables();
         }
@@ -7578,10 +7406,9 @@ SQL;
     public function alterArchiveTables()
     {
         $cnt = 0;
-        $recordId = 0;
 
-        $startDate = new \DateTime('2021-02-01 00:00:00');
-        $endDate = new \DateTime('2014-06-01 00:00:00');
+        $startDate = new DateTime('2021-02-01 00:00:00');
+        $endDate = new DateTime('2014-06-01 00:00:00');
         $tableDate = clone $startDate;
 
 
@@ -7603,7 +7430,7 @@ SQL;
                 $this->logError('Unable to archive inbound accepted: ' . $e->getMessage());
             }
 
-            $tableDate->sub(new \DateInterval(('P1M')));
+            $tableDate->sub(new DateInterval(('P1M')));
 
         }
 
@@ -7654,7 +7481,7 @@ SQL;
             $header .= "X-Mailer: PHP5\n";
             $header .= "X-Priority: 3\n";
             $header .= "Return-Path: <" . $from . ">\n";
-            $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+            @mail($to, $subject, $body, $header, "-f {$from}");
         }
     }
 
@@ -7663,7 +7490,7 @@ SQL;
         try {
             $query = $this->db->prepare("TRUNCATE php_sessions");
             $query->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->logError('Unable to truncate sessions: ' . $e->getMessage());
 
             return null;
@@ -7680,7 +7507,7 @@ SQL;
 
             $query = $this->db->prepare("ALTER TABLE data_outbound ENGINE=InnoDB");
             $query->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->logError('Unable to free table space: ' . $e->getMessage());
 
             return null;
@@ -7694,7 +7521,7 @@ SQL;
         try {
             $query = $this->db->prepare("DELETE o FROM data_outbound o LEFT JOIN data_inbound i ON i.idRecord = o.idRecord WHERE i.idRecord IS NULL;");
             $query->execute();
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             $this->logError('Unable to prune orphaned outbound records: ' . $e->getMessage());
 
             return null;
