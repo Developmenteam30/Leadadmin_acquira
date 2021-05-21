@@ -130,7 +130,7 @@ include(INCLUDES . "c_header.php");
 
                 <?php foreach ($records as $record) { ?>
                     <tr>
-                        <td><?php echo Display::escHtml($record->label); ?> (#<?php echo Display::escHtml($record->idFeedIn); ?>)</td>
+                        <td><?php echo Display::escHtml($record->companyName); ?> - <?php echo Display::escHtml($record->label); ?> (#<?php echo Display::escHtml($record->idFeedIn); ?>)</td>
                         <td><?php echo Display::escHtml($record->email); ?></td>
                         <td><?php echo Display::escHtml($record->timestampConverted); ?></td>
                         <td><?php echo Display::escHtml($record->url); ?></td>
@@ -160,8 +160,9 @@ include(INCLUDES . "c_header.php");
                                 print '<p><strong>Outgoing Responses:</strong></p>';
                                 print '<ul>';
                                 foreach ($outboundRecords as $outboundRecord) {
-                                    printf('<li>%s: %s (#%s) Response: %s</li>',
+                                    printf('<li>%s: %s - %s (#%s) Response: %s</li>',
                                         Display::escHtml($outboundRecord->timestampConverted),
+                                        Display::escHtml($outboundRecord->companyName),
                                         Display::escHtml($outboundRecord->label),
                                         Display::escHtml($outboundRecord->idFeedOut),
                                         Display::escHtml(!empty($outboundRecord->result) ? $outboundRecord->result : '<LEGACY SUCCESS RESPONSE>')

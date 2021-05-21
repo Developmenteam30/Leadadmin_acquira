@@ -5328,11 +5328,12 @@ class Leads
         $checkSql = $this->db->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)");
 
         // Establish our baseline SQL that we'll change in the loop
-        $baseSql = "( SELECT fi.label,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.result ";
+        $baseSql = "( SELECT fi.label,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.result,ci.name as companyName ";
         $params[] = DB_TIMEZONE;
         $params[] = LOCAL_TIMEZONE;
         $baseSql .= "FROM data_inbound AS i ";
         $baseSql .= "LEFT JOIN feedinc fi ON fi.idFeedIn = i.idFeedIn ";
+        $baseSql .= "LEFT JOIN companies ci ON fi.idCompany = ci.idCompany ";
         $baseSql .= "WHERE 1=1 ";
         if (!empty($email)) {
             $baseSql .= "AND i.email = ? ";
@@ -5658,11 +5659,12 @@ class Leads
         $dateEnd = new \DateTime();
 
         // Establish our baseline SQL that we'll change in the loop
-        $baseSql = "( SELECT fo.label,o.idFeedOut,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result ";
+        $baseSql = "( SELECT fo.label,o.idFeedOut,CONVERT_TZ(o.timestamp,?,?) AS timestampConverted,o.result,co.name AS companyName ";
         $params[] = DB_TIMEZONE;
         $params[] = LOCAL_TIMEZONE;
         $baseSql .= "FROM data_outbound AS o ";
         $baseSql .= "LEFT JOIN feedout fo ON fo.idFeedOut = o.idFeedOut ";
+        $baseSql .= "LEFT JOIN companies co ON fo.idCompany = co.idCompany ";
         $baseSql .= "WHERE o.idRecord = ? ";
         $params[] = $recordId;
         $baseSql .= ") UNION ";
