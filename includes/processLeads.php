@@ -1426,6 +1426,19 @@ class ProcessLeads
                 $result['valid'] = false;
                 $result['errors'][] = 'Duplicate landline phone.';
             }
+
+            // We need to check both landline and cellphone, so make a temporary copy of the data fields and assign the opposite value.
+            $dataCopy = $data;
+            $dataCopy['cellphone'] = $data['landline'];
+            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'cellphone', $dataCopy, $feedParams->dedupeAcross, $feedParams->lookbackPeriod);
+            unset($dataCopy);
+            if ($dupeCount === null) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Database failure - could not check duplicate landline.';
+            } elseif ($dupeCount === true) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Duplicate phone.';
+            }
         }
 
         if ($feedParams->dedupeCellphone && !empty($data['cellphone'])) {
@@ -1436,6 +1449,19 @@ class ProcessLeads
             } elseif ($dupeCount === true) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Duplicate cellphone.';
+            }
+
+            // We need to check both landline and cellphone, so make a temporary copy of the data fields and assign the opposite value.
+            $dataCopy = $data;
+            $dataCopy['landline'] = $data['cellphone'];
+            $dupeCount = $leads->inboundCheckDuplicates($feedParams->idFeedIn, 'landline', $dataCopy, $feedParams->dedupeAcross, $feedParams->lookbackPeriod);
+            unset($dataCopy);
+            if ($dupeCount === null) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Database failure - could not check duplicate cellphone.';
+            } elseif ($dupeCount === true) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Duplicate phone.';
             }
         }
 
