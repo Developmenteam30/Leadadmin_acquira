@@ -3015,17 +3015,17 @@ class Leads
             return null;
         }
 
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $idFeedIn = $this->insertRow('feedinc', $fields);
         } catch (Leads_PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add inbound record: ' . $pdoException->getMessage());
         }
 
-        $this->db->commit();
+        $this->commit();
 
         return $idFeedIn;
     }
@@ -3191,17 +3191,17 @@ class Leads
             return null;
         }
 
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $idFeedOut = $this->insertRow('feedout', $fields);
         } catch (Leads_PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add outbound feed: ' . $pdoException->getMessage());
         }
 
-        $this->db->commit();
+        $this->commit();
 
         return $idFeedOut;
     }
@@ -3303,13 +3303,11 @@ class Leads
 
         try {
             $idAssoc = $this->insertRow('feedPopulation', $fields);
+            return $idAssoc;
         } catch (Leads_PDOException $e) {
-            $this->db->rollBack();
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add population: ' . $pdoException->getMessage());
         }
-
-        return $idAssoc;
     }
 
     public function updatePopulation($idAssoc, $fields)
@@ -3326,8 +3324,6 @@ class Leads
 
             return null;
         }
-
-        return null;
     }
 
     public function getOutboundPopulation($idFeedIn)
@@ -3353,13 +3349,13 @@ class Leads
             return false;
         }
 
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $query = $this->db->prepare("UPDATE feedout SET cron = '0', status = 'retired' WHERE idFeedOut = ?");
             $query->execute(array($idFeedOut));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to update feedout retired status: ' . $e->getMessage());
 
             return false;
@@ -3369,13 +3365,13 @@ class Leads
             $query = $this->db->prepare("UPDATE feedPopulation SET enabled = '0' WHERE idFeedOut = ?");
             $query->execute(array($idFeedOut));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to update feedPopulation retired status: ' . $e->getMessage());
 
             return false;
         }
 
-        $this->db->commit();
+        $this->commit();
 
         return true;
     }
@@ -3622,7 +3618,7 @@ class Leads
     public function inboundAdd($idFeedIn, $fields, $statsDay, $error = null, $jobId = null)
     {
         $this->db->query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $customFields = [];
@@ -3666,7 +3662,7 @@ class Leads
                 'ping' => !empty($fields['ping']) ? 1 : 0,
             ));
         } catch (Leads_PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add inbound record: ' . $pdoException->getMessage());
 
@@ -3681,26 +3677,26 @@ class Leads
             }
             $query->execute(array($idFeedIn, $this->parseUrl($fields['url'] ?? null), $statsDay));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to insert stats_inbound record: ' . $e->getMessage());
 
             return null;
         }
 
-        $this->db->commit();
+        $this->commit();
 
         return $idRecord;
     }
 
     public function inboundProcess($idRecord, $idFeedIn, $url, $statsDay, $error = null)
     {
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $query = $this->db->prepare('UPDATE data_inbound SET result = ? WHERE idRecord = ?');
             $query->execute(array($error, $idRecord));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to update data_inbound record: ' . $e->getMessage());
 
             return;
@@ -3711,14 +3707,14 @@ class Leads
                 $query = $this->db->prepare('UPDATE stats_inbound SET accepted = accepted - 1, rejected = rejected + 1 WHERE idFeedIn = ? AND url = ? AND stamp = ?');
                 $query->execute(array($idFeedIn, $this->parseUrl($url), $statsDay));
             } catch (PDOException $e) {
-                $this->db->rollBack();
+                $this->rollBack();
                 $this->logError('Unable to update stats_inbound record: ' . $e->getMessage());
 
                 return;
             }
         }
 
-        $this->db->commit();
+        $this->commit();
     }
 
     public function inboundCheckDuplicates($idFeedIn, $column, $requestValues, $dedupeAcross, $lookbackPeriod)
@@ -3796,7 +3792,7 @@ class Leads
         $processed = 0,
         $urlRewritten = false
     ) {
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $status = $this->insertRow('data_outbound', array(
@@ -3808,7 +3804,7 @@ class Leads
                 'url' => !empty($url) ? $this->parseUrl($url) : null,
             ));
         } catch (Leads_PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add outbound record: ' . $pdoException->getMessage());
 
@@ -3819,7 +3815,7 @@ class Leads
             $query = $this->db->prepare("REPLACE INTO url_mapping(timestamp,idFeedIn,idFeedOut,url) VALUES(NOW(), ?, ?, ?)");
             $query->execute(array($idFeedIn, $idFeedOut, $this->parseUrl($url)));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to add URL mapping: ' . $e->getMessage());
 
             return null;
@@ -3831,14 +3827,14 @@ class Leads
                 $query = $this->db->prepare("UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?");
                 $query->execute(array($idFeedOut));
             } catch (PDOException $e) {
-                $this->db->rollBack();
+                $this->rollBack();
                 $this->logError('Unable to add to queue count: ' . $e->getMessage());
 
                 return null;
             }
         }
 
-        $this->db->commit();
+        $this->commit();
 
         return $status;
     }
@@ -3850,7 +3846,7 @@ class Leads
             $query = $this->db->prepare("UPDATE feedout SET queued = queued + 1 WHERE idFeedOut = ?");
             $query->execute(array($idFeedOut));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to add to queue count: ' . $e->getMessage());
 
             return null;
@@ -3864,7 +3860,7 @@ class Leads
             return null;
         }
 
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $query = $this->db->prepare('UPDATE data_outbound SET timestamp = NOW(), processed = 1, accepted = ?, isBillable = ?, result = ? WHERE idRecord = ? AND idFeedOut = ?');
@@ -3876,7 +3872,7 @@ class Leads
                 $feedOut->idFeedOut,
             ));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to update data_outbound record: ' . $e->getMessage());
 
             return null;
@@ -3890,7 +3886,7 @@ class Leads
             }
             $query->execute(array($feedOut->idFeedOut, $this->parseUrl($row->url), date('Y-m-d')));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to insert stats_outbound record: ' . $e->getMessage());
 
             return null;
@@ -3921,7 +3917,7 @@ class Leads
                         $revenuePerLead,
                     ));
                 } catch (PDOException $e) {
-                    $this->db->rollBack();
+                    $this->rollBack();
                     $this->logError('Unable to insert stats_correllated record: ' . $e->getMessage());
 
                     return null;
@@ -3933,7 +3929,7 @@ class Leads
             $query = $this->db->prepare("UPDATE feedout SET queued = queued - 1 WHERE idFeedOut = ?");
             $query->execute(array($feedOut->idFeedOut));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to subtract from queue count: ' . $e->getMessage());
 
             return null;
@@ -3950,13 +3946,13 @@ class Leads
             $query = $this->db->prepare("DELETE FROM data_outbound WHERE idRecord = ? AND idFeedOut = ?");
             $query->execute(array($row->idRecord, $feedOut->idFeedOut));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to archive record: ' . $e->getMessage());
 
             return null;
         }
 
-        $this->db->commit();
+        $this->commit();
 
         return true;
     }
@@ -4085,13 +4081,13 @@ class Leads
             return null;
         }
 
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $query = $this->db->prepare('UPDATE archive.' . $this->quoteIdentifier('data_outbound_' . $archiveDate) . ' SET isBillable = ? WHERE idRecord = ? AND idFeedOut = ?');
             $query->execute(array(!empty($billable) ? 1 : 0, $row->idRecord, $row->idFeedOut));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to toggle billable on data_outbound record: ' . $e->getMessage());
 
             return null;
@@ -4109,7 +4105,7 @@ class Leads
                 $statsDate,
             ));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to toggle billable on stats_outbound record: ' . $e->getMessage());
 
             return null;
@@ -4128,13 +4124,13 @@ class Leads
                 $statsDate,
             ));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to toggle billable on stats_correlated record: ' . $e->getMessage());
 
             return null;
         }
 
-        $this->db->commit();
+        $this->commit();
 
         return true;
     }
@@ -4781,7 +4777,7 @@ class Leads
             $query = $this->db->prepare('UPDATE data_inbound SET timestamp = ? WHERE timestamp IS NULL AND jobId = ?');
             $query->execute(array($timestamp, $jobId));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to update data_inbound job timestamp: ' . $e->getMessage());
 
             return;
@@ -4794,7 +4790,7 @@ class Leads
             $query = $this->db->prepare('UPDATE data_inbound SET timestamp = ? WHERE timestamp IS NULL AND idRecord = ?');
             $query->execute(array($timestamp, $idRecord));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to update data_inbound record timestamp: ' . $e->getMessage());
 
             return;
@@ -4915,14 +4911,14 @@ class Leads
         $utcEnd = new DateTime($date . ' 23:59:59', new DateTimeZone(LOCAL_TIMEZONE));
         $utcEnd->setTimeZone(new DateTimeZone(DB_TIMEZONE));
 
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $query = $this->db->prepare("INSERT IGNORE INTO data_outbound(idRecord, idFeedIn, idFeedOut, `timestamp`, `result`, idRecordLegacy, processed, isBillable, url, accepted) SELECT idRecord, idFeedIn, idFeedOut, NULL, NULL, idRecordLegacy, 0, 0, url, 0 FROM archive.data_outbound_" . $localDate->format('Ym') . " WHERE accepted = 0 AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?");
             $query->execute(array($idFeedOut, $utcStart->format('c'), $utcEnd->format('c')));
             $count = $query->rowCount();
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to retry outbound rejections (1): ' . $e->getMessage());
 
             return null;
@@ -4933,7 +4929,7 @@ class Leads
                 $query = $this->db->prepare("DELETE FROM archive.data_outbound_" . $localDate->format('Ym') . " WHERE accepted = 0 AND processed = 1 AND idFeedOut = ? AND timestamp >= ? AND timestamp <= ?");
                 $query->execute(array($idFeedOut, $utcStart->format('c'), $utcEnd->format('c')));
             } catch (PDOException $e) {
-                $this->db->rollBack();
+                $this->rollBack();
                 $this->logError('Unable to retry outbound rejections (2): ' . $e->getMessage());
 
                 return null;
@@ -4943,7 +4939,7 @@ class Leads
                 $query = $this->db->prepare("UPDATE feedout SET queued = queued + ? WHERE idFeedOut = ?");
                 $query->execute(array($count, $idFeedOut));
             } catch (PDOException $e) {
-                $this->db->rollBack();
+                $this->rollBack();
                 $this->logError('Unable to retry outbound rejections (3): ' . $e->getMessage());
 
                 return null;
@@ -4953,14 +4949,14 @@ class Leads
                 $query = $this->db->prepare("UPDATE stats_outbound SET rejected = 0 WHERE idFeedOut = ? AND stamp = ?");
                 $query->execute(array($idFeedOut, $date));
             } catch (PDOException $e) {
-                $this->db->rollBack();
+                $this->rollBack();
                 $this->logError('Unable to retry outbound rejections (4): ' . $e->getMessage());
 
                 return null;
             }
         }
 
-        $this->db->commit();
+        $this->commit();
 
         return $count;
     }
@@ -5296,7 +5292,7 @@ class Leads
             $query = $this->db->prepare("REPLACE INTO notifications_companies VALUES (?,NOW())");
             $query->execute(array($companyId));
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to update company notification: ' . $e->getMessage());
 
             return null;
@@ -6084,7 +6080,7 @@ class Leads
 
                 if (true === $row) {
                     if ($cnt % 1000 === 0) {
-                        $this->db->commit();
+                        $this->commit();
                         print date('c') . " Archiving inbound {$recordId}\n";
                         $this->beginTransaction();
                     }
@@ -6190,7 +6186,7 @@ class Leads
         try {
 
             do {
-                $this->db->beginTransaction();
+                $this->beginTransaction();
 
                 $query = $this->db->prepare("DELETE FROM data_outbound WHERE idFeedOut = ? AND processed = 0 LIMIT 1000");
                 $query->execute(array($idFeedOut));
@@ -6204,7 +6200,7 @@ class Leads
                     $query->execute();
                 }
 
-                $this->db->commit();
+                $this->commit();
 
                 usleep(50000);
 
@@ -6772,7 +6768,7 @@ class Leads
                         $revenuePerLead,
                     ));
                 } catch (PDOException $e) {
-                    $this->db->rollBack();
+                    $this->rollBack();
                     $this->logError('Unable to insert stats_correllated backfill record: ' . $e->getMessage());
 
                     return null;
@@ -7445,7 +7441,7 @@ class Leads
             return;
         }
 
-        $this->db->beginTransaction();
+        $this->beginTransaction();
 
         try {
             $query = $this->db->prepare("SELECT SUM(IF(o.accepted = 1,1,0)) AS accepted,SUM(IF(o.accepted = 0,1,0)) AS rejected,SUM(o.isBillable) AS billable FROM data_outbound o INNER JOIN data_inbound i ON i.idRecord = o.idRecord INNER JOIN feedout f ON f.idFeedOut = o.idFeedOut WHERE o.idFeedOut = ? AND o.processed = 1 AND o.timestamp >= ? AND o.timestamp <= ? AND i.url = ?");
@@ -7464,11 +7460,11 @@ class Leads
                 ));
             }
         } catch (PDOException $e) {
-            $this->db->rollBack();
+            $this->rollBack();
             $this->logError('Unable to reset outbound stats: ' . $e->getMessage());
         }
 
-        $this->db->commit();
+        $this->commit();
 
     }
 

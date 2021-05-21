@@ -489,7 +489,7 @@ if (isset($_REQUEST['a'])) {
                 ));
 
                 if (empty($idAssoc)) {
-                    $result['error'] = 'Database failure, could not create population.';
+                    $result['error'] = 'Database failure, could not create population.  Are you sure this is not a duplicate population?';
                     break;
                 }
 
