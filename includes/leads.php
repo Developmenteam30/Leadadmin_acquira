@@ -2942,6 +2942,7 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT f.*,c.name AS companyName,DATE_FORMAT(notifyThresholdTime,'%l:%i%p') AS notifyThresholdTimeFormatted FROM feedinc f LEFT JOIN companies c ON c.idCompany = f.idCompany WHERE f.idFeedIn = ?");
             $query->execute(array($idFeedIn));
+
             return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound feed info: ' . $e->getMessage());
@@ -3057,6 +3058,7 @@ class Leads
 //			$sql .= "ORDER BY fp.waterfallPriority DESC";
             $query = $this->db->prepare($sql);
             $query->execute(array($idFeedIn, $idFeedIn));
+
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get inbound population settings: ' . $e->getMessage());
@@ -3139,6 +3141,7 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT * FROM feedPopulation WHERE idAssoc = ?");
             $query->execute(array($idAssoc));
+
             return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get feed population: ' . $e->getMessage());
@@ -3152,6 +3155,7 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT * FROM feedPopulation WHERE idFeedOut = ?");
             $query->execute(array($idFeedOut));
+
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get feed populations: ' . $e->getMessage());
@@ -3169,10 +3173,12 @@ class Leads
 
         try {
             $idAssoc = $this->insertRow('feedPopulation', $fields);
+
             return $idAssoc;
         } catch (Leads_PDOException $e) {
             $pdoException = $e->getPrevious();
             $this->logError('Unable to add population: ' . $pdoException->getMessage());
+
             return null;
         }
     }
@@ -3198,6 +3204,7 @@ class Leads
         try {
             $query = $this->db->prepare("SELECT idFeedOut FROM feedPopulation fp WHERE idFeedIn = ? AND idFeedOut IN (SELECT idFeedOut FROM feedout WHERE idCompany = 12)");
             $query->execute(array($idFeedIn));
+
             return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get feed populations: ' . $e->getMessage());
@@ -5107,6 +5114,50 @@ class Leads
         }
 
         return $cnt;
+    }
+
+    public function getNotifyInterval1Feeds()
+    {
+        $notifyInterval = $this->getConfiguration('notify_interval_1');
+
+        try {
+            $query = $this->db->prepare("SELECT f.label,f.description,f.idFeedIn,n.url,lastTime,c.name as companyName FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn LEFT JOIN companies c ON c.idCompany = f.idCompany WHERE lastTime < DATE_SUB(NOW(), INTERVAL ? HOUR) AND notifyTime = 0");
+            $query->execute(array($notifyInterval));
+
+            return $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get feeds for notify interval 1: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    public function getNotifyInterval2Feeds()
+    {
+        $notifyInterval = $this->getConfiguration('notify_interval_2');
+
+        try {
+            $query = $this->db->prepare("SELECT f.label,f.description,f.idFeedIn,n.url,lastTime,c.name as companyName FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn LEFT JOIN companies c ON c.idCompany = f.idCompany WHERE lastTime < DATE_SUB(NOW(), INTERVAL ? HOUR) AND notifyTime < DATE_ADD(lastTime, INTERVAL ? HOUR)");
+            $query->execute(array($notifyInterval));
+
+            return $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get feeds for notify interval 2: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    public function updateNotification($idFeedIn, $url)
+    {
+        try {
+            $query = $this->db->prepare("UPDATE notifications SET notifyTime = NOW() WHERE url = ? AND idFeedIn = ?");
+            $query->execute(array($url, $idFeedIn));
+        } catch (PDOException $e) {
+            $this->logError('Unable to update notification ' . $e->getMessage());
+
+            return null;
+        }
     }
 
     public function getCompanySalesNotifications()
