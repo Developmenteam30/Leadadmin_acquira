@@ -5138,7 +5138,7 @@ class Leads
 
         try {
             $query = $this->db->prepare("SELECT f.label,f.description,f.idFeedIn,n.url,lastTime,c.name as companyName FROM notifications n LEFT JOIN feedinc f ON f.idFeedIn = n.idFeedIn LEFT JOIN companies c ON c.idCompany = f.idCompany WHERE lastTime < DATE_SUB(NOW(), INTERVAL ? HOUR) AND notifyTime < DATE_ADD(lastTime, INTERVAL ? HOUR)");
-            $query->execute(array($notifyInterval));
+            $query->execute(array($notifyInterval, $notifyInterval));
 
             return $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
