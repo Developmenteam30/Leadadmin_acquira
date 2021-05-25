@@ -10,7 +10,6 @@ require_once(INCLUDES . 'leads.php');
 function sendNotification($feed, $hours)
 {
     $to = MANAGER_EMAIL;
-    $to = ADMINISTRATOR_EMAIL;
     $subject = 'Dormant URL notification - ' . str_replace('.', '*', $feed->url);
     $body = "\nThe following URL has gone dormant for more than {$hours} hours:\n\n";
     $body .= "URL: " . str_replace('.', '*', $feed->url) . "\n\n";
