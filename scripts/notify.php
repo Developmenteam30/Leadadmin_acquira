@@ -10,6 +10,7 @@ require_once(INCLUDES . 'leads.php');
 function sendNotification($feed, $hours)
 {
     $to = MANAGER_EMAIL;
+    $to = ADMINISTRATOR_EMAIL;
     $subject = 'Dormant URL notification - ' . str_replace('.', '*', $feed->url);
     $body = "\nThe following URL has gone dormant for more than {$hours} hours:\n\n";
     $body .= "URL: " . str_replace('.', '*', $feed->url) . "\n\n";
@@ -34,21 +35,25 @@ function sendNotification($feed, $hours)
 }
 
 $leads = Leads::getInstance();
-$notifyInterval1 = $leads->getConfiguration('notify_interval_1');
-$notifyInterval2 = $leads->getConfiguration('notify_interval_2');
 
-$feeds = $leads->getNotifyInterval1Feeds();
-if (!empty($feeds) && is_array($feeds)) {
-    foreach ($feeds as $feed) {
-        sendNotification($feed, $notifyInterval1);
-        $leads->updateNotification($feed->idFeedIn, $feed->url);
+$notifyInterval1 = $leads->getConfiguration('notify_interval_1');
+if (!empty($notifyInterval1)) {
+    $feeds = $leads->getNotifyInterval1Feeds();
+    if (!empty($feeds) && is_array($feeds)) {
+        foreach ($feeds as $feed) {
+            sendNotification($feed, $notifyInterval1);
+            $leads->updateNotification($feed->idFeedIn, $feed->url);
+        }
     }
 }
 
-$feeds = $leads->getNotifyInterval2Feeds();
-if (!empty($feeds) && is_array($feeds)) {
-    foreach ($feeds as $feed) {
-        sendNotification($feed, $notifyInterval2);
-        $leads->updateNotification($feed->idFeedIn, $feed->url);
+$notifyInterval2 = $leads->getConfiguration('notify_interval_2');
+if (!empty($notifyInterval2)) {
+    $feeds = $leads->getNotifyInterval2Feeds();
+    if (!empty($feeds) && is_array($feeds)) {
+        foreach ($feeds as $feed) {
+            sendNotification($feed, $notifyInterval2);
+            $leads->updateNotification($feed->idFeedIn, $feed->url);
+        }
     }
 }
