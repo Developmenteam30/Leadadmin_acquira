@@ -41,7 +41,7 @@ $feeds = $leads->getNotifyInterval1Feeds();
 if (!empty($feeds) && is_array($feeds)) {
     foreach ($feeds as $feed) {
         sendNotification($feed, $notifyInterval1);
-        $leads->updateNotification($feed, $feed->url);
+        $leads->updateNotification($feed->feedId, $feed->url);
     }
 }
 
@@ -49,6 +49,6 @@ $feeds = $leads->getNotifyInterval2Feeds();
 if (!empty($feeds) && is_array($feeds)) {
     foreach ($feeds as $feed) {
         sendNotification($feed, $notifyInterval2);
-        $leads->updateNotification($feed, $feed->url);
+        $leads->updateNotification($feed->feedId, $feed->url);
     }
 }
