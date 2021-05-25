@@ -14,7 +14,7 @@ function sendNotification($feed, $hours)
     $body = "\nThe following URL has gone dormant for more than {$hours} hours:\n\n";
     $body .= "URL: " . str_replace('.', '*', $feed->url) . "\n\n";
     $body .= "Company: {$feed->companyName}\r\n";
-    $body .= "Feed ID: {$feed->feedId}\r\n";
+    $body .= "Feed ID: {$feed->idFeedIn}\r\n";
     $body .= "Feed Label: {$feed->label}\r\n";
     $body .= "Feed Description: {$feed->description}\r\n";
     $body .= "Last seen time: {$feed->lastTime}\n\n";
@@ -41,7 +41,7 @@ $feeds = $leads->getNotifyInterval1Feeds();
 if (!empty($feeds) && is_array($feeds)) {
     foreach ($feeds as $feed) {
         sendNotification($feed, $notifyInterval1);
-        $leads->updateNotification($feed->feedId, $feed->url);
+        $leads->updateNotification($feed->idFeedIn, $feed->url);
     }
 }
 
@@ -49,6 +49,6 @@ $feeds = $leads->getNotifyInterval2Feeds();
 if (!empty($feeds) && is_array($feeds)) {
     foreach ($feeds as $feed) {
         sendNotification($feed, $notifyInterval2);
-        $leads->updateNotification($feed->feedId, $feed->url);
+        $leads->updateNotification($feed->idFeedIn, $feed->url);
     }
 }
