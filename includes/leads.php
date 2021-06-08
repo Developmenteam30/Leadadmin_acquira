@@ -197,12 +197,12 @@ class Leads
 
     public function beginTransaction()
     {
-        return $this->db->beginTransaction();
+        return !$this->db->inTransaction() && $this->db->beginTransaction();
     }
 
     public function commit()
     {
-        return $this->db->inTransaction() ? $this->db->commit() : false;
+        return $this->db->inTransaction() && $this->db->commit();
     }
 
     public function inTransaction()
@@ -212,7 +212,7 @@ class Leads
 
     public function rollBack()
     {
-        return $this->db->inTransaction() ? $this->db->rollBack() : false;
+        return $this->db->inTransaction() && $this->db->rollBack();
     }
 
     public function getConfiguration($config_key)
@@ -5938,47 +5938,46 @@ class Leads
         $cnt = 0;
         $recordId = 0;
 
-        $startDate = new DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
-        $today = new DateTime('now', new DateTimeZone(LOCAL_TIMEZONE));
+        $endDate = new DateTime('now', new DateTimeZone(DB_TIMEZONE));
         try {
-            $startDate->sub(new DateInterval('P3M'));
-            $startDate->modify('first day of this month')->setTime(0, 0, 0);
-            $endDate = clone $startDate;
-            $endDate->setDate($startDate->format('Y'), $startDate->format('m'), $today->format('d'))->setTime(23, 59,
-                59);
+            $endDate->sub(new DateInterval('P90D'))->setTime(23, 59, 59);
         } catch (Exception $e) {
             die('Date Error: ' . $e->getMessage());
         }
 
         try {
 
-            $table = $this->quoteIdentifier('data_inbound_' . $startDate->format('Ym'));
-            $this->db->query("CREATE TABLE IF NOT EXISTS archive." . $table . " LIKE data_inbound");
+            $lastTable = '';
+            echo 'Archiving records before: ' . $endDate->format('Y-m-d H:i:s') . PHP_EOL;
 
-            $startDate->setTimeZone(new DateTimeZone(DB_TIMEZONE));
-            $endDate->setTimeZone(new DateTimeZone(DB_TIMEZONE));
-            echo $startDate->format('Y-m-d H:i:s') . ' to ' . $endDate->format('Y-m-d H:i:s') . PHP_EOL;
-
-            //$querySelect = $this->db->prepare( "SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE result IS NULL AND timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1" );
-            $querySelect = $this->db->prepare("SELECT /*!40001 SQL_NO_CACHE */ idRecord FROM data_inbound WHERE timestamp >= :startDate AND timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1");
-            $querySelect->bindValue(':startDate', $startDate->format('Y-m-d H:i:s'));
+            $querySelect = $this->db->prepare("SELECT idRecord, CONCAT('data_inbound_', DATE_FORMAT(`timestamp`,'%Y%m')) AS `table` FROM data_inbound WHERE timestamp <= :endDate AND idRecord > :idRecord ORDER BY idRecord LIMIT 1");
             $querySelect->bindValue(':endDate', $endDate->format('Y-m-d H:i:s'));
             $querySelect->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
             $querySelect->bindColumn(1, $recordId);
-
-            $queryInsert = $this->db->prepare("INSERT IGNORE INTO archive." . $table . " SELECT * FROM data_inbound WHERE idRecord = :idRecord");
-            $queryInsert->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
+            $querySelect->bindColumn(2, $table);
 
             $queryDelete = $this->db->prepare("DELETE FROM data_inbound WHERE idRecord = :idRecord");
             $queryDelete->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
-
-            $this->beginTransaction();
 
             do {
                 $querySelect->execute();
                 $row = $querySelect->fetch(PDO::FETCH_BOUND);
 
                 if (true === $row) {
+                    if ($lastTable !== $table) {
+                        $lastTable = $table;
+
+                        $this->commit();
+
+                        print "\tCHECKING ARCHIVE TABLE: {$table}\n";
+                        $this->db->query("CREATE TABLE IF NOT EXISTS archive." . $this->quoteIdentifier($table) . " LIKE data_inbound");
+
+                        $queryInsert = $this->db->prepare("INSERT IGNORE INTO archive." . $this->quoteIdentifier($table) . " SELECT * FROM data_inbound WHERE idRecord = :idRecord");
+                        $queryInsert->bindParam(':idRecord', $recordId, PDO::PARAM_INT);
+
+                        $this->beginTransaction();
+                    }
+
                     if ($cnt % 1000 === 0) {
                         $this->commit();
                         print date('c') . " Archiving inbound {$recordId}\n";
@@ -5992,8 +5991,6 @@ class Leads
                 }
 
                 $cnt++;
-
-                //usleep( 5000 );
 
             } while (!empty($row));
 
