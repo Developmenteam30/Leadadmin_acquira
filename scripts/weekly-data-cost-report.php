@@ -37,9 +37,8 @@ $spreadsheet->getActiveSheet()
     ->setCellValue('E2', 'EQ Accepted')
     ->setCellValue('F2', 'CPL')
     ->setCellValue('G2', 'Net Cost')
-    ->setCellValue('H2', '100 Insure Accepted')
-    ->setCellValue('I2', 'Gross Cost')
-    ->setCellValue('J2', 'Cost Difference');
+    ->setCellValue('H2', 'Gross Cost')
+    ->setCellValue('I2', 'Cost Difference');
 
 $feeds = $leads->getInboundFeeds(null, 'active');
 
@@ -67,7 +66,6 @@ foreach ($feeds as $feed) {
         $inboundStats['accepted'],
         $feed->costPerLead,
         $netCost,
-        $outboundStats['accepted'] ?? '',
         $grossCost,
         $grossCost - $netCost,
     ];
@@ -81,7 +79,6 @@ $rows[] = [
     $totalInboundAccepted,
     $totalInboundAccepted > 0 ? $totalNetCost / $totalInboundAccepted : 0,
     $totalNetCost,
-    $totalOutboundAccepted,
     $totalGrossCost,
     $totalGrossCost - $totalNetCost,
 ];
@@ -91,28 +88,23 @@ $spreadsheet->getActiveSheet()->fromArray($rows, null, 'A3');
 $totalRows = count($rows);
 if ($totalRows) {
     $spreadsheet->getActiveSheet()
-        ->getStyle('E3:E' . ($totalRows + 1))
+        ->getStyle('E3:E' . ($totalRows + 2))
         ->getNumberFormat()
         ->setFormatCode('#,##0');
 
     $spreadsheet->getActiveSheet()
-        ->getStyle('H2:H' . ($totalRows + 1))
-        ->getNumberFormat()
-        ->setFormatCode('#,##0');
-
-    $spreadsheet->getActiveSheet()
-        ->getStyle('F3:G' . ($totalRows + 1))
+        ->getStyle('F3:G' . ($totalRows + 2))
         ->getNumberFormat()
         ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
 
     $spreadsheet->getActiveSheet()
-        ->getStyle('I3:J' . ($totalRows + 1))
+        ->getStyle('H3:I' . ($totalRows + 2))
         ->getNumberFormat()
         ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
 }
 
 // Bold the last row
-$spreadsheet->getActiveSheet()->getStyle('A' . ($totalRows + 1) . ':' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(1))) . ($totalRows + 1))->getFont()->setBold(true);
+$spreadsheet->getActiveSheet()->getStyle('A' . ($totalRows + 2) . ':' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2))) . ($totalRows + 2))->getFont()->setBold(true);
 
 try {
     $spreadsheet->getActiveSheet()->mergeCells('A1:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2))) . '1');
@@ -128,7 +120,7 @@ try {
     $spreadsheet->getActiveSheet()->setAutoFilter('A2:' . Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2))) . '2');
 
     // Auto size columns
-    for ($col = 1; $col <= Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn()); ++$col) {
+    for ($col = 1; $col <= Coordinate::columnIndexFromString($spreadsheet->getActiveSheet()->getHighestDataColumn(2)); ++$col) {
         $spreadsheet->getActiveSheet()->getColumnDimensionByColumn($col)->setAutoSize(true);
     }
 
@@ -159,8 +151,9 @@ try {
 
     $emails = explode(',', WEEKLY_DATA_COST_EMAILS);
     foreach ($emails as $email) {
-        $mail->addAddress($email);
+       // $mail->addAddress($email);
     }
+    $mail->addAddress('ryan@playnicetogether.com');
     $mail->addAttachment($filename, COMPANY_INITIALS . ' Weekly Data Cost Report ' . $dateEnd->format('Y-m-d') . '.xlsx');
 
     $mail->send();
