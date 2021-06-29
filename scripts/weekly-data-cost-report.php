@@ -151,9 +151,8 @@ try {
 
     $emails = explode(',', WEEKLY_DATA_COST_EMAILS);
     foreach ($emails as $email) {
-       // $mail->addAddress($email);
+       $mail->addAddress($email);
     }
-    $mail->addAddress('ryan@playnicetogether.com');
     $mail->addAttachment($filename, COMPANY_INITIALS . ' Weekly Data Cost Report ' . $dateEnd->format('Y-m-d') . '.xlsx');
 
     $mail->send();
