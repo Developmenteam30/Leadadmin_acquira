@@ -1465,22 +1465,6 @@ class ProcessLeads
             }
         }
 
-        if (!empty($data['cellphone']) && !empty($feedParams->filterMojoMedia)) {
-            require_once(INCLUDES . 'mojoMedia.php');
-            if (($mmResult = mojoMedia::submitLead(array_merge($data, ['phone_number' => $data['cellphone']]))) !== true) {
-                $result['valid'] = false;
-                $result['errors'][] = 'Lead was rejected by our third-party filters [MM:' . $mmResult . ']';
-            }
-        }
-
-        if (!empty($data['landline']) && !empty($feedParams->filterMojoMedia)) {
-            require_once(INCLUDES . 'mojoMedia.php');
-            if (($mmResult = mojoMedia::submitLead(array_merge($data, ['phone_number' => $data['landline']]))) !== true) {
-                $result['valid'] = false;
-                $result['errors'][] = 'Lead was rejected by our third-party filters [MM:' . $mmResult . ']';
-            }
-        }
-
         return $result;
     }
 

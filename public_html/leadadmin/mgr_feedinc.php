@@ -371,7 +371,6 @@ if (isset($_REQUEST['a'])) {
                         'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                         'lookbackPeriod' => empty($_REQUEST['lookbackPeriod']) ? 120 : $_REQUEST['lookbackPeriod'],
                         'pingTimeout' => empty($_REQUEST['pingTimeout']) ? 0 : $_REQUEST['pingTimeout'],
-                        'filterMojoMedia' => !empty($_REQUEST['filterMojoMedia']) ? 1 : 0,
                     ));
 
                     if (null === $idFeedIn) {
@@ -639,7 +638,6 @@ if (isset($_REQUEST['a'])) {
                         'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                         'lookbackPeriod' => empty($_REQUEST['lookbackPeriod']) ? 120 : $_REQUEST['lookbackPeriod'],
                         'pingTimeout' => empty($_REQUEST['pingTimeout']) ? 0 : $_REQUEST['pingTimeout'],
-                        'filterMojoMedia' => !empty($_REQUEST['filterMojoMedia']) ? 1 : 0,
                     ));
 
                     if (null === $status) {
@@ -844,7 +842,6 @@ if (isset($_REQUEST['d'])) {
                 'timeskew',
                 'lookbackPeriod',
                 'pingTimeout',
-                'filterMojoMedia',
             );
             foreach ($feedProps as $feedProp) {
                 if (isset($feed)) {
@@ -1251,20 +1248,6 @@ if (isset($_REQUEST['d'])) {
                                     <?php } ?>
                                 </div>
                             </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Mojo Media Filter Options</p></td>
-                        <td>
-                            <p>
-                                When enabled, all incoming leads will be filtered through the Mojo Media Pre-Ping API.
-                            </p>
-                            <p>
-                                <input type="radio" name="filterMojoMedia" id="filterMojoMedia_disabled" value="0"<?php if (empty($feed_filterMojoMedia)) { ?> checked="checked"<?php } ?>/><label class="radio-label"
-                                        for="filterMojoMedia_disabled">Disabled</label><br/>
-                                <input type="radio" name="filterMojoMedia" id="filterMojoMedia_enabled" value="1"<?php if (!empty($feed_filterMojoMedia)) { ?> checked="checked"<?php } ?>/><label class="radio-label"
-                                        for="filterMojoMedia_enabled">Enabled</label><br/>
-                            </p>
                         </td>
                     </tr>
                     <tr>
