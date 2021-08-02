@@ -96,6 +96,38 @@ include(INCLUDES . "c_header.php");
             print '<option value=""></option>' . PHP_EOL;
             $years = array();
             $quarters = array();
+
+            $startDate = new \DateTime();
+            $value = $startDate->format('Y-m-d') . '|' . $startDate->format('Y-m-d');
+            printf('<option value="%s"%s>Today</option>' . PHP_EOL,
+                $value,
+                $statsQuick == $value ? ' selected="selected"' : ''
+            );
+
+            $startDate = new \DateTime();
+            $startDate->sub(new DateInterval(('P1D')));
+            $value = $startDate->format('Y-m-d') . '|' . $startDate->format('Y-m-d');
+            printf('<option value="%s"%s>Yesterday</option>' . PHP_EOL,
+                $value,
+                $statsQuick == $value ? ' selected="selected"' : ''
+            );
+
+            $startDate = new \DateTime("monday this week");
+            $endDate = new \DateTime("sunday this week");
+            $value = $startDate->format('Y-m-d') . '|' . $endDate->format('Y-m-d');
+            printf('<option value="%s"%s>This Week</option>' . PHP_EOL,
+                $value,
+                $statsQuick == $value ? ' selected="selected"' : ''
+            );
+
+            $startDate = new \DateTime("monday last week");
+            $endDate = new \DateTime("sunday last week");
+            $value = $startDate->format('Y-m-d') . '|' . $endDate->format('Y-m-d');
+            printf('<option value="%s"%s>Last Week</option>' . PHP_EOL,
+                $value,
+                $statsQuick == $value ? ' selected="selected"' : ''
+            );
+
             $startDate = new \DateTime();
             $endDate = new DateTime((date('Y') - 3) . '-01-01');
             do {
@@ -147,9 +179,9 @@ include(INCLUDES . "c_header.php");
                 }
                 ?>
             </select>
-            <input type="text" name="dateStart" value="<?php echo Display::escHtml($dateStart->format('Y-m-d')); ?>"> to <input type="text" name="dateEnd"
-                                                                                                                                value="<?php echo Display::escHtml($dateEnd->format('Y-m-d')); ?>"> <input
-                    class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/>
+            <input type="text" name="dateStart" value="<?php echo Display::escHtml($dateStart->format('Y-m-d')); ?>"> to
+            <input type="text" name="dateEnd" value="<?php echo Display::escHtml($dateEnd->format('Y-m-d')); ?>">
+            <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/>
         </p>
     </form>
 

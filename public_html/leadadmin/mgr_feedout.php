@@ -14,10 +14,6 @@ $status = !empty($_REQUEST['status']) ? $_REQUEST['status'] : null;
 require_once(INCLUDES . 'display.php');
 require_once(INCLUDES . 'f_site.php');
 
-$statsStart = !empty($_REQUEST['statsStart']) ? $_REQUEST['statsStart'] : date('Y-m-d');
-$statsEnd = !empty($_REQUEST['statsEnd']) ? $_REQUEST['statsEnd'] : date('Y-m-d');
-$statsQuick = $_REQUEST['statsQuick'] ?? '';
-
 $feedIn = $leads->getInboundFeed(1);
 $allAvailableFields = $leads->getFields();
 
@@ -3531,53 +3527,7 @@ include(INCLUDES . "c_header.php");
 
     <h2>Outgoing Feeds</h2>
 
-    <form method="get" class="pull-left">
-        <p>
-            <?php
-            print 'Quick Jump: <select id="statsQuick" name="statsQuick">' . PHP_EOL;
-            print '<option value=""></option>' . PHP_EOL;
-            $years = array();
-            $quarters = array();
-            $startDate = new \DateTime();
-            $endDate = new DateTime((date('Y') - 3) . '-01-01');
-            do {
-                $year = $startDate->format('Y');
-                $quarter = $year . '-Q' . ceil($startDate->format('m') / 3);
-                if (empty($years[$year])) {
-                    $value = $year . '-01-01' . '|' . $year . '-12-31';
-                    printf('<option value="%s"%s>%s</option>' . PHP_EOL,
-                        $value,
-                        $statsQuick == $value ? ' selected="selected"' : '',
-                        htmlentities($year . ' Year')
-                    );
-                    $years[$year] = true;
-                }
-                if (empty($quarters[$quarter])) {
-                    $value = Display::getQuarterStart($year, ceil($startDate->format('m') / 3)) . '|' . Display::getQuarterEnd($year, ceil($startDate->format('m') / 3));
-                    printf('<option value="%s"%s>%s</option>' . PHP_EOL,
-                        $value,
-                        $statsQuick == $value ? ' selected="selected"' : '',
-                        htmlentities(str_replace('-Q', ' Qtr ', $quarter))
-                    );
-                    $quarters[$quarter] = true;
-                }
-
-                $value = $startDate->format('Y-m-01') . '|' . $startDate->format('Y-m-t');
-                printf('<option value="%s"%s>%s</option>' . PHP_EOL,
-                    $value,
-                    $statsQuick == $value ? ' selected="selected"' : '',
-                    htmlentities($startDate->format('Y-m'))
-                );
-                $startDate->sub(new \DateInterval('P1M'));
-            } while ($startDate >= $endDate);
-            print '</select>' . PHP_EOL;
-            ?>
-            Set Dates: <input type="text" name="statsStart" value="<?php echo htmlentities(date('Y-m-d', strtotime($statsStart))); ?>"> to <input type="text" name="statsEnd"
-                                                                                                                                                  value="<?php echo htmlentities(date('Y-m-d', strtotime($statsEnd))); ?>">
-            <input class="btn btn-primary btn-xs nonLink" type="submit" name="submit" value="Update"/></p>
-        <input type="hidden" name="status" value="<?php echo Display::escHtml($status); ?>">
-    </form>
-
+    <?php require_once(INCLUDES . 'quick-jump.php'); ?>
 
     <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) { ?>
 
@@ -4043,20 +3993,6 @@ include(INCLUDES . "c_header.php");
     </div>
 
     <script type="text/javascript">
-
-        $('#statsQuick').on('change', function (e) {
-            let myValue = $(this).val() || '';
-            if (myValue !== '') {
-                let dates = myValue.split('|', 2);
-                $('input[name="statsStart"]').val(dates[0]);
-                $('input[name="statsEnd"]').val(dates[1]);
-            }
-        });
-
-        $('input[name="statsStart"], input[name="statsEnd"]').datepicker({
-            // Consistent format with the HTML5 picker
-            dateFormat: 'yy-mm-dd'
-        });
 
         $('#modal-save-newfeed').click(function (event) {
             event.preventDefault();
