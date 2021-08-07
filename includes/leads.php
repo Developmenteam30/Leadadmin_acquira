@@ -1,5 +1,8 @@
 <?php
 
+use ELIAS\Util;
+use Firebase\JWT\JWT;
+
 require_once('c_config.php');
 
 class Leads_PDOException extends PDOException
@@ -6158,9 +6161,8 @@ class Leads
             }
         }
 
-        $fileLink = "exports/inbound_{$jobId}.csv";
-        $filePath = ADMIN_ROOT . $fileLink;
-        $file = fopen($filePath, 'w');
+        $fileName = "inbound_{$jobId}.csv";
+        $file = fopen(FILES_DIR . $fileName, 'w');
         if (!$file) {
             $result['reason'] = 'Unable to create CSV file.';
 
@@ -6318,9 +6320,26 @@ class Leads
 
         fclose($file);
 
+        $token = array(
+            "iss" => SITE_URL,
+            "file" => $fileName,
+            "iat" => time(),
+            "exp" => time() + 60 * 60 * 24 * 30,
+        );
+
+        try {
+            $jwt = JWT::encode($token, HASH_SALT);
+            $fileLink = sprintf("https://%s/share/get/?token=%s" . PHP_EOL . PHP_EOL,
+                POSTING_URL,
+                urlencode($jwt)
+            );
+        } catch (\Exception $e) {
+            // Do nothing
+        }
+
         $result['success'] = true;
         $result['reason'] = 'Successfully exported data to file.';
-        $result['fileLink'] = $fileLink;
+        $result['fileLink'] = $fileLink ?? '';
         $result['cnt'] = $cnt;
 
         return $result;
@@ -6367,9 +6386,8 @@ class Leads
             }
         }
 
-        $fileLink = "exports/outbound_{$jobId}.csv";
-        $filePath = ADMIN_ROOT . $fileLink;
-        $file = fopen($filePath, 'w');
+        $fileName = "outbound_{$jobId}.csv";
+        $file = fopen(FILES_DIR . $fileName, 'w');
         if (!$file) {
             $result['reason'] = 'Unable to create CSV file.';
 
@@ -6530,9 +6548,26 @@ class Leads
 
         fclose($file);
 
+        $token = array(
+            "iss" => SITE_URL,
+            "file" => $fileName,
+            "iat" => time(),
+            "exp" => time() + 60 * 60 * 24 * 30,
+        );
+
+        try {
+            $jwt = JWT::encode($token, HASH_SALT);
+            $fileLink = sprintf("https://%s/share/get/?token=%s" . PHP_EOL . PHP_EOL,
+                POSTING_URL,
+                urlencode($jwt)
+            );
+        } catch (\Exception $e) {
+            // Do nothing
+        }
+
         $result['success'] = true;
         $result['reason'] = 'Successfully exported data to file.';
-        $result['fileLink'] = $fileLink;
+        $result['fileLink'] = $fileLink ?? '';
         $result['cnt'] = $cnt;
 
         return $result;

@@ -20,9 +20,9 @@ class Display
         $leads = Leads::getInstance();
         $errorList = $leads->getErrors();
         ?>
-		<div class="fr">
-			<a href="#" class="nonLink" onclick="closeContent(" errorList");" >Close [X]</a>
-		</div>
+        <div class="fr">
+            <a href="#" class="nonLink" onclick="closeContent(" errorList");" >Close [X]</a>
+        </div>
         <?php
 
         if ($errorList === null) {
@@ -394,27 +394,27 @@ class Display
 
             ?>
 
-			<table class="table table-bordered table-condensed table-striped-custom table-small-font dashboard-forecasts">
-				<thead>
-				<tr>
-					<th>&nbsp;</th>
-					<th colspan="5">Total Business</th>
-					<th colspan="2">New Business</th>
-					<th>&nbsp;</th>
-				</tr>
-				<tr>
-					<th>Employee</th>
-					<th>Prev Day</th>
-					<th>Today</th>
-					<th>Accrual MTD</th>
-					<th>Expectation</th>
-					<th>Projected MTD</th>
-					<th>Accrual MTD</th>
-					<th>Expectation</th>
-					<th>GP</th>
-				</tr>
-				</thead>
-				<tbody>
+            <table class="table table-bordered table-condensed table-striped-custom table-small-font dashboard-forecasts">
+                <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th colspan="5">Total Business</th>
+                    <th colspan="2">New Business</th>
+                    <th>&nbsp;</th>
+                </tr>
+                <tr>
+                    <th>Employee</th>
+                    <th>Prev Day</th>
+                    <th>Today</th>
+                    <th>Accrual MTD</th>
+                    <th>Expectation</th>
+                    <th>Projected MTD</th>
+                    <th>Accrual MTD</th>
+                    <th>Expectation</th>
+                    <th>GP</th>
+                </tr>
+                </thead>
+                <tbody>
                 <?php
                 $diffRange = intval($statsStartFOM->diff($statsEnd)->format("%a"));
                 $diffTotal = intval($statsStartFOM->diff($statsEndEOM)->format("%a")) + 1;
@@ -473,42 +473,42 @@ class Display
                     $totals['grossProfit'] += round(($existingRevenueMTD + $newRevenueMTD) - $accuralCostMTD);
 
                     ?>
-					<tr>
-						<td><?php echo htmlentities($fullName); ?></td>
-						<td class="text-right">$<?php echo number_format(round($amountYesterday), 0); ?></td>
-						<td class="text-right">$<?php echo number_format(round($amountToday), 0); ?></td>
-						<td class="text-right">$<?php echo number_format(round($existingRevenueMTD + $newRevenueMTD), 0); ?></td>
-						<td class="text-right">$<?php echo number_format(round($expectationValues->existingBusinessAmount ?? 0), 0); ?></td>
-						<td class="text-right<?php echo ($expectationValues->existingBusinessAmount ?? 0) > $projected ? ' bg-danger' : ''; ?>">$<?php echo number_format(round($projected), 0); ?></td>
-						<td class="text-right">$<?php echo number_format(round($newRevenueMTD), 0); ?></td>
-						<td class="text-right">$<?php echo number_format(round($expectationValues->newBusinessAmount ?? 0), 0); ?></td>
-						<td class="text-right">$<?php echo number_format(round(($existingRevenueMTD + $newRevenueMTD) - $accuralCostMTD), 0); ?></td>
-					</tr>
+                    <tr>
+                        <td><?php echo htmlentities($fullName); ?></td>
+                        <td class="text-right">$<?php echo number_format(round($amountYesterday), 0); ?></td>
+                        <td class="text-right">$<?php echo number_format(round($amountToday), 0); ?></td>
+                        <td class="text-right">$<?php echo number_format(round($existingRevenueMTD + $newRevenueMTD), 0); ?></td>
+                        <td class="text-right">$<?php echo number_format(round($expectationValues->existingBusinessAmount ?? 0), 0); ?></td>
+                        <td class="text-right<?php echo ($expectationValues->existingBusinessAmount ?? 0) > $projected ? ' bg-danger' : ''; ?>">$<?php echo number_format(round($projected), 0); ?></td>
+                        <td class="text-right">$<?php echo number_format(round($newRevenueMTD), 0); ?></td>
+                        <td class="text-right">$<?php echo number_format(round($expectationValues->newBusinessAmount ?? 0), 0); ?></td>
+                        <td class="text-right">$<?php echo number_format(round(($existingRevenueMTD + $newRevenueMTD) - $accuralCostMTD), 0); ?></td>
+                    </tr>
                     <?php
                 }
                 ?>
-				</tbody>
+                </tbody>
                 <?php
                 if (sizeOf($users) > 1) {
                     ?>
-					<tfoot>
-					<tr>
-						<td>TOTAL</td>
-						<td class="text-right">$<?php echo number_format($totals['prevDay'], 0); ?></td>
-						<td class="text-right">$<?php echo number_format($totals['today'], 0); ?></td>
-						<td class="text-right">$<?php echo number_format($totals['existingAccrual'], 0); ?></td>
-						<td class="text-right">$<?php echo number_format($totals['existingExpectation'], 0); ?></td>
-						<td class="text-right">$<?php echo number_format($totals['existingProjected'], 0); ?></td>
-						<td class="text-right">$<?php echo number_format($totals['newExpectation'], 0); ?></td>
-						<td class="text-right">$<?php echo number_format($totals['newAccural'], 0); ?></td>
-						<td class="text-right">$<?php echo number_format($totals['grossProfit'], 0); ?></td>
-					</tr>
-					</tfoot>
+                    <tfoot>
+                    <tr>
+                        <td>TOTAL</td>
+                        <td class="text-right">$<?php echo number_format($totals['prevDay'], 0); ?></td>
+                        <td class="text-right">$<?php echo number_format($totals['today'], 0); ?></td>
+                        <td class="text-right">$<?php echo number_format($totals['existingAccrual'], 0); ?></td>
+                        <td class="text-right">$<?php echo number_format($totals['existingExpectation'], 0); ?></td>
+                        <td class="text-right">$<?php echo number_format($totals['existingProjected'], 0); ?></td>
+                        <td class="text-right">$<?php echo number_format($totals['newExpectation'], 0); ?></td>
+                        <td class="text-right">$<?php echo number_format($totals['newAccural'], 0); ?></td>
+                        <td class="text-right">$<?php echo number_format($totals['grossProfit'], 0); ?></td>
+                    </tr>
+                    </tfoot>
 
                     <?php
                 }
                 ?>
-			</table>
+            </table>
 
             <?php
         }
@@ -567,4 +567,15 @@ class Display
         return $values;
     }
 
+    public static function sendNoCacheHeaders($includeNoIndex = true)
+    {
+        Header('Pragma: no-cache'); // HTTP/1.0
+        Header('Expires: ' . gmdate("D, d M Y H:i:s") . ' GMT'); // same date, expire immediately
+        Header('Last-Modified: ' . gmdate("D, d M Y H:i:s") . ' GMT'); // always modified
+        Header('Cache-Control: no-store');  // HTTP/1.1
+        Header('X-Nginx-Expires: off');
+        if ($includeNoIndex) {
+            Header('X-Robots-Tag: noindex');
+        }
+    }
 }
