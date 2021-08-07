@@ -15,7 +15,7 @@ require_once(INCLUDES . 'display.php');
 require_once(INCLUDES . 'f_site.php');
 
 $feedIn = $leads->getInboundFeed(1);
-$allAvailableFields = $leads->getFields();
+$allAvailableFields = $leads->getOutboundMappableFields();
 
 if (isset($_REQUEST['a'])) {
     Header('Content-Type: application/json');
@@ -241,7 +241,7 @@ if (isset($_REQUEST['a'])) {
 
                 $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-                if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+                if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                     $idCompany = LeadsSession::getCompanyId();
                     if (empty($idCompany)) {
                         $idCompany = -9999;
@@ -346,7 +346,7 @@ if (isset($_REQUEST['a'])) {
             $idAssoc = !empty($_REQUEST['idAssoc']) ? $_REQUEST['idAssoc'] : '';
             $action = !empty($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -572,7 +572,7 @@ if (isset($_REQUEST['a'])) {
             $result['error'] = 'Failed when attempting to manage feed params.';
 
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -631,12 +631,12 @@ if (isset($_REQUEST['a'])) {
             $c = true;
             $result['error'] = 'Failed when trying to import data.';
 
-            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $c = false;
                 $result['error'] = 'Sorry, you do not have permission to import legacy data.';
             }
 
-            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -716,7 +716,7 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Sorry, you do not have permission to export data.';
             }
 
-            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -757,12 +757,12 @@ if (isset($_REQUEST['a'])) {
             $c = true;
             $result['error'] = 'Failed when trying to retry outbound rejections.';
 
-            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $c = false;
                 $result['error'] = 'Sorry, you do not have permission to retry outbound rejections.';
             }
 
-            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if ($c && !LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -851,7 +851,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_testrecord':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1194,7 +1194,7 @@ if (isset($_REQUEST['d'])) {
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
             $idRecord = !empty($_REQUEST['idRecord']) ? $_REQUEST['idRecord'] : 0;
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1251,7 +1251,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_queue-preview':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1302,7 +1302,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_clearqueue':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1333,7 +1333,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_editfeed':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1451,7 +1451,7 @@ if (isset($_REQUEST['d'])) {
                 $selectedNotifyThresholdDays = array();
             }
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $companies = array($leads->getCompany($feed_idCompany));
             } else {
                 $companies = $leads->getCompanies();
@@ -1510,7 +1510,7 @@ if (isset($_REQUEST['d'])) {
                             <p>
                                 <?php
                                 reset($feedCategories);
-                                if('EQ' == COMPANY_INITIALS) {
+                                if ('EQ' == COMPANY_INITIALS) {
                                     $firstKey = 'phone'; // EQ defaults to phone
                                 } else {
                                     $firstKey = key($feedCategories);
@@ -1685,7 +1685,7 @@ if (isset($_REQUEST['d'])) {
                                         ?>
                                         <div>
                                             Field: <select name='valueMap[field][]'>
-                                                <?php foreach ($leads->getInboundFields(true) as $rF) { ?>
+                                                <?php foreach ($leads->getOutboundMappableFields(true) as $rF) { ?>
                                                     <option value='<?php echo Display::escHtml($rF->fieldName,
                                                         ENT_QUOTES); ?>' <?php if (isset($vF['field']) && $vF['field'] == $rF->fieldName) {
                                                         echo "selected='selected'";
@@ -1804,11 +1804,11 @@ if (isset($_REQUEST['d'])) {
                                                 value="<?php echo Display::escHtml($feed_notifyThresholdTimeFormatted); ?>"/>
                                 on<br/>
                                 <?php for ($i = 0; $i <= 6; $i++) { ?>
-                                    <label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox"
-                                                                                                   name="notifyThresholdDays[]"
-                                                                                                   value="<?php echo $i; ?>"
-                                                                                                   <?php if (in_array($i,
-                                                                                                       $selectedNotifyThresholdDays)){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?>
+                                    <label class="checkbox-label"><input type="checkbox"
+                                                                         name="notifyThresholdDays[]"
+                                                                         value="<?php echo $i; ?>"
+                                                                         <?php if (in_array($i,
+                                                                             $selectedNotifyThresholdDays)){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?>
                                     </label>
                                 <?php } ?>
                             </p>
@@ -1965,7 +1965,7 @@ if (isset($_REQUEST['d'])) {
                 die('Sorry, you do not have permission to export data.');
             }
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -1998,6 +1998,30 @@ if (isset($_REQUEST['d'])) {
                         <tr>
                             <td colspan='2'><p class='aCenter'>Export Settings</p></td>
                         </tr>
+                        <tr>
+                            <td>
+                                Columns
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary" id="exp-check-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Check All</button>
+                                <button type="button" class="btn btn-primary" id="exp-uncheck-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All</button>
+                                <br>
+                                <?php $fields = $leads->getOutboundExportableFields(); ?>
+                                <?php foreach ($fields as $f) { ?>
+                                    <label class="checkbox-label">
+                                        <input class="export-check" type='checkbox' name='columns[]' value='<?php echo Display::escHtml($f->fieldName); ?>'/>&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                    </label>
+                                <?php } ?>
+                            </td>
+                        </tr>
+                        <script>
+                            $('#exp-check-all').click(function () {
+                                $('.export-check').prop('checked', true);
+                            });
+                            $('#exp-uncheck-all').click(function () {
+                                $('.export-check').prop('checked', false);
+                            });
+                        </script>
                         <tr>
                             <td>
                                 Period
@@ -2075,11 +2099,11 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_import':
             $idFeedOut = $_REQUEST['idFeedOut'] ?? '';
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 die('Sorry, you do not have permission to import data.');
             }
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2185,7 +2209,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_upload':
             $idFeedOut = $_REQUEST['idFeedOut'];
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2380,11 +2404,11 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_retry_rejections':
             $idFeedOut = $_REQUEST['idFeedOut'] ?? '';
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 die('Sorry, you do not have permission to retry outbound rejections.');
             }
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2448,7 +2472,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_urlreport':
             $idFeedOut = !empty($_REQUEST['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -2692,7 +2716,7 @@ if (isset($_REQUEST['d'])) {
             ?>
             <div>
                 Field: <select name='valueMap[field][]'>
-                    <?php foreach ($leads->getInboundFields(true) as $rF) { ?>
+                    <?php foreach ($leads->getOutboundMappableFields(true) as $rF) { ?>
                         <option value='<?php echo Display::escHtml($rF->fieldName, ENT_QUOTES); ?>'><?php echo Display::escHtml($rF->fieldName); ?></option>
                     <?php } ?>
                 </select>
@@ -2762,7 +2786,7 @@ if (isset($_REQUEST['d'])) {
             }
             $feed = $leads->getOutboundFeed($popset_idFeedOut);
 
-            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $incomingFeeds = $leads->getInboundFeeds(null, 'active', null, $popset_idFeedIn);
             } else {
                 $idCompany = LeadsSession::getCompanyId();
@@ -3281,7 +3305,7 @@ if (isset($_REQUEST['d'])) {
         case 'dialog_editpopulation':
             $idFeedOut = !empty(['idFeedOut']) ? $_REQUEST['idFeedOut'] : 0;
 
-            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
                 $idCompany = LeadsSession::getCompanyId();
                 if (empty($idCompany)) {
                     $idCompany = -9999;
@@ -3529,7 +3553,7 @@ include(INCLUDES . "c_header.php");
 
     <?php require_once(INCLUDES . 'quick-jump.php'); ?>
 
-    <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) { ?>
+    <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) { ?>
 
         <form class="pull-right" id="status-select" method="get">
             <select id="status" name="status">
@@ -3572,7 +3596,7 @@ include(INCLUDES . "c_header.php");
 
         print "<h4>Outgoing $categoryVal Feeds</h4>" . PHP_EOL;
 
-        if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF,LEADS_SESSION_LEVEL_PPC])) {
+        if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
             $outgoingFeeds = $leads->getOutboundFeeds(null, $status, $categoryKey);
         } else {
             $idCompany = LeadsSession::getCompanyId();

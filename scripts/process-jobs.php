@@ -260,29 +260,6 @@ if ('clear-outbound-queue' === $job->type) {
 
     print "Exporting outgoing records for: {$job->destination}\n";
 
-    $fields['columns'] = [
-        'url',
-        'email',
-        'fname',
-        'lname',
-        'addr',
-        'addr2',
-        'city',
-        'state',
-        'zip',
-        'country',
-        'dob',
-        'gender',
-        'landline',
-        'cellphone',
-        'timestamp',
-        'ip',
-        'status',
-        'response',
-        'leadstamp',
-        'listcode',
-    ];
-
     $result = $leads->exportOutboundRecords($fields);
 
     if ($result['success'] !== true) {

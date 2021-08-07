@@ -982,7 +982,7 @@ if (isset($_REQUEST['d'])) {
                             } ?>>
                                 <p>Choose which states to include/exclude.</p>
                                 <p><?php foreach ($all_states as $abbr => $st) { ?>
-                                        <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                        <label class="checkbox-label"><input type='checkbox'
                                                                                                        name='filterStateChoice[]'
                                                                                                        value='<?php echo $abbr; ?>'<?php if (!empty($filterState_value->states) && in_array($abbr,
                                                     $filterState_value->states)) { ?> checked='checked'<?php } ?> />&nbsp;<?php echo $st; ?>
@@ -1041,7 +1041,7 @@ if (isset($_REQUEST['d'])) {
                         <td>Required PING Fields</p></td>
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
-                                <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                <label class="checkbox-label"><input type='checkbox'
                                                                                                name='requiredPingFields[]'
                                                                                                value='<?php echo Display::escHtml($f->fieldName); ?>'
                                                                                                <?php if (in_array($f->fieldName,
@@ -1056,7 +1056,7 @@ if (isset($_REQUEST['d'])) {
                         <td>Allowed PING Fields</p></td>
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
-                                <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                <label class="checkbox-label"><input type='checkbox'
                                                                                                name='allowedPingFields[]'
                                                                                                value='<?php echo Display::escHtml($f->fieldName); ?>'
                                                                                                <?php if (in_array($f->fieldName,
@@ -1069,7 +1069,7 @@ if (isset($_REQUEST['d'])) {
                         <td>Required POST Fields</p></td>
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
-                                <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                <label class="checkbox-label"><input type='checkbox'
                                                                                                name='required[]'
                                                                                                value='<?php echo Display::escHtml($f->fieldName); ?>'
                                                                                                <?php if (in_array($f->fieldName,
@@ -1082,7 +1082,7 @@ if (isset($_REQUEST['d'])) {
                         <td>Allowed POST Fields</p></td>
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
-                                <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                                <label class="checkbox-label"><input type='checkbox'
                                                                                                name='allowedFields[]'
                                                                                                value='<?php echo Display::escHtml($f->fieldName); ?>'
                                                                                                <?php if (in_array($f->fieldName,
@@ -1114,16 +1114,16 @@ if (isset($_REQUEST['d'])) {
                     <tr>
                         <td>Duplicate Filters</p></td>
                         <td>
-                            <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                            <label class="checkbox-label"><input type='checkbox'
                                                                                            name='dedupeEmail' value='1'
                                                                                            <?php if ($feed_dedupeEmail){ ?>checked='checked'<?php } ?> />&nbsp;Reject
                                 Duplicate Emails</label>
-                            <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                            <label class="checkbox-label"><input type='checkbox'
                                                                                            name='dedupeLandline'
                                                                                            value='1'
                                                                                            <?php if ($feed_dedupeLandline){ ?>checked='checked'<?php } ?> />&nbsp;Reject
                                 Duplicate Landline Numbers</label>
-                            <label style="margin-right:1.5em; font-weight: normal;"><input type='checkbox'
+                            <label class="checkbox-label"><input type='checkbox'
                                                                                            name='dedupeCellphone'
                                                                                            value='1'
                                                                                            <?php if ($feed_dedupeCellphone){ ?>checked='checked'<?php } ?> />&nbsp;Reject
@@ -1361,7 +1361,7 @@ if (isset($_REQUEST['d'])) {
                                                 value="<?php echo htmlentities($feed_notifyThresholdTimeFormatted); ?>"/>
                                 on<br/>
                                 <?php for ($i = 0; $i <= 6; $i++) { ?>
-                                    <label style="margin-right:1.5em; font-weight: normal;"><input type="checkbox"
+                                    <label class="checkbox-label"><input type="checkbox"
                                                                                                    name="notifyThresholdDays[]"
                                                                                                    value="<?php echo $i; ?>"
                                                                                                    <?php if (in_array($i,
@@ -1694,9 +1694,11 @@ if (isset($_REQUEST['d'])) {
                                         style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All
                                 </button>
                                 <br>
-                                <?php $recordFields[] = 'result'; ?>
-                                <?php foreach ($recordFields as $f) { ?>
-                                    <label style="margin-right: 1.5em;"><input class="export-check" type='checkbox' name='columns[]' value='<?php echo $f; ?>'/>&nbsp;<?php echo $f; ?></label>
+                                <?php $fields = $leads->getInboundFields(); ?>
+                                <?php foreach ($fields as $f) { ?>
+                                    <label class="checkbox-label">
+                                        <input class="export-check" type='checkbox' name='columns[]' value='<?php echo Display::escHtml($f->fieldName); ?>'/>&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                    </label>
                                 <?php } ?>
                             </td>
                         </tr>

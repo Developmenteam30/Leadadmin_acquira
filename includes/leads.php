@@ -2845,18 +2845,13 @@ class Leads
         }
     }
 
-    public function getFields($fieldType = null)
+    public function getAllFields()
     {
         $results = array();
 
         try {
-            if (!empty($fieldType)) {
-                $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType = ? ORDER BY REPLACE(fieldName,'c_','')");
-                $query->execute(array($fieldType));
-            } else {
-                $query = $this->db->prepare("SELECT * FROM fields ORDER BY REPLACE(fieldName,'c_','')");
-                $query->execute();
-            }
+            $query = $this->db->prepare("SELECT * FROM fields ORDER BY REPLACE(fieldName,'c_','')");
+            $query->execute();
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
             $this->logError('Unable to get field list: ' . $e->getMessage());
@@ -2865,16 +2860,42 @@ class Leads
         return $results;
     }
 
-    public function getInboundFields($includeOutbound = false)
+    public function getOutboundMappableFields()
     {
         $results = array();
 
         try {
-            if ($includeOutbound) {
-                $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','outbound') ORDER BY REPLACE(fieldName,'c_','')");
-            } else {
-                $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom') ORDER BY REPLACE(fieldName,'c_','')");
-            }
+            $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','derived','custom','outbound') AND fieldName NOT IN('authorization','pswd') ORDER BY REPLACE(fieldName,'c_','')");
+            $query->execute();
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get outbound mappable fields list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function getOutboundExportableFields()
+    {
+        $results = array();
+
+        try {
+            $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','outbound','outbound-export') AND fieldName NOT IN('authorization','pswd') ORDER BY REPLACE(fieldName,'c_','')");
+            $query->execute();
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get outbound mappable fields list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function getInboundFields()
+    {
+        $results = array();
+
+        try {
+            $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','inbound-export') AND fieldName NOT IN('authorization','pswd') ORDER BY REPLACE(fieldName,'c_','')");
             $query->execute();
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
@@ -6123,11 +6144,19 @@ class Leads
         $columnMappings = [
             'timestamp' => 'CONVERT_TZ(i.timestamp,?,?) AS timestampConverted',
             'leadstamp' => 'CONVERT_TZ(i.leadstamp,?,?)',
+            'stamp' => 'CONVERT_TZ(i.leadstamp,?,?)', // Legacy column name
             'cpl' => 'fi.costPerLead',
             'inbound_company' => 'fic.name AS inbound_company',
             'inbound_label' => 'fi.label AS inbound_label',
             'inbound_description' => 'fi.description AS inbound_description',
         ];
+
+        // Remap custom fields
+        foreach ($settings['columns'] as $column) {
+            if (strpos($column, 'c_') === 0) {
+                $columnMappings[$column] = sprintf('i.customFields->>"$.' . substr($column, 2) . '"');
+            }
+        }
 
         $fileLink = "exports/inbound_{$jobId}.csv";
         $filePath = ADMIN_ROOT . $fileLink;
@@ -6158,14 +6187,9 @@ class Leads
             }
             $comma = true;
 
-            // Legacy column name
-            if ('stamp' === $column) {
-                $column = 'leadstamp';
-            }
-
             $subSql .= $columnMappings[$column] ?? "`i`." . $this->quoteIdentifier($column);
 
-            if (in_array($column, ['leadstamp', 'timestamp'])) {
+            if (in_array($column, ['leadstamp', 'stamp', 'timestamp'])) {
                 $subParams[] = DB_TIMEZONE;
                 $subParams[] = LOCAL_TIMEZONE;
             }
@@ -6320,19 +6344,28 @@ class Leads
             'status' => "IF(o.accepted = 1,'Accepted','Rejected') AS status",
             'response' => 'o.result',
             'leadstamp' => 'CONVERT_TZ(i.leadstamp,?,?)',
-            'cpl' => 'IFNULL(fo.costPerLeadOverride,fi.costPerLead) AS costPerLead',
-            'rpl' => 'fo.revenuePerLead',
+            'stamp' => 'CONVERT_TZ(i.leadstamp,?,?)', // Legacy column name
+            'idFeedIn' => 'i.idFeedIn',
             'inbound_company' => 'fic.name AS inbound_company',
+            'inbound_cpl' => 'IFNULL(fo.costPerLeadOverride,fi.costPerLead) AS costPerLead',
             'inbound_label' => 'fi.label AS inbound_label',
             'inbound_description' => 'fi.description AS inbound_description',
             'outbound_company' => 'foc.name AS outbound_company',
             'outbound_label' => 'fo.label AS outbound_label',
             'outbound_description' => 'fo.description AS outbound_description',
+            'outbound_rpl' => 'fo.revenuePerLead',
             'city' => 'i.city',
             'state' => 'i.state',
             'zip' => 'i.zip',
             'country' => 'i.country',
         ];
+
+        // Remap custom fields
+        foreach ($settings['columns'] as $column) {
+            if (strpos($column, 'c_') === 0) {
+                $columnMappings[$column] = sprintf('i.customFields->>"$.' . substr($column, 2) . '"');
+            }
+        }
 
         $fileLink = "exports/outbound_{$jobId}.csv";
         $filePath = ADMIN_ROOT . $fileLink;
@@ -6343,12 +6376,12 @@ class Leads
             return $result;
         }
 
-        fputcsv($file, $settings['columns']);
-
         // Timestamp must be included in the query in order to sort the results
         if (!empty($settings['limit']) && !in_array('timestamp', $settings['columns'])) {
             $settings['columns'][] = 'timestamp';
         }
+
+        fputcsv($file, $settings['columns']);
 
         $subParams = [];
         $archiveDate = new DateTime($settings['dateStart'] . ' 00:00:00');
@@ -6365,7 +6398,7 @@ class Leads
 
             $subSql .= $columnMappings[$column] ?? $this->quoteIdentifier($column);
 
-            if (in_array($column, ['leadstamp', 'timestamp'])) {
+            if (in_array($column, ['leadstamp', 'stamp', 'timestamp'])) {
                 $subParams[] = DB_TIMEZONE;
                 $subParams[] = LOCAL_TIMEZONE;
             }

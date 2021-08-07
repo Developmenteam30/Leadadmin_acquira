@@ -222,7 +222,7 @@ include(INCLUDES . "c_header.php");
 	</p>
 
     <?php
-    $fields = $leads->getFields();
+    $fields = $leads->getAllFields();
 
     ?>
 	<table class="table table-bordered table-condensed table-striped">

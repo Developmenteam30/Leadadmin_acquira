@@ -106,20 +106,23 @@ if (isset($_REQUEST['d'])) {
                             Columns
                         </td>
                         <td>
-                            <button type="button" class="btn btn-primary" id="exp-check-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Check All</button>
-                            <button type="button" class="btn btn-primary" id="exp-uncheck-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All</button>
+                            <button type="button" class="btn btn-primary" id="exp-incoming-check-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Check All</button>
+                            <button type="button" class="btn btn-primary" id="exp-incoming-uncheck-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All</button>
                             <br>
-                            <?php foreach ($recordFields as $f) { ?>
-                                <input class="export-check" type='checkbox' name='columns[]' value='<?php echo $f; ?>'/> <?php echo $f; ?>
+                            <?php $fields = $leads->getInboundFields(); ?>
+                            <?php foreach ($fields as $f) { ?>
+                                <label class="checkbox-label">
+                                    <input class="export-incoming-check" type='checkbox' name='columns[]' value='<?php echo Display::escHtml($f->fieldName); ?>'/>&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                </label>
                             <?php } ?>
                         </td>
                     </tr>
                     <script>
-                        $('#exp-check-all').click(function () {
-                            $('.export-check').prop('checked', true);
+                        $('#exp-incoming-check-all').click(function () {
+                            $('.export-incoming-check').prop('checked', true);
                         });
-                        $('#exp-uncheck-all').click(function () {
-                            $('.export-check').prop('checked', false);
+                        $('#exp-incoming-uncheck-all').click(function () {
+                            $('.export-incoming-check').prop('checked', false);
                         });
                     </script>
                     <tr>
@@ -191,6 +194,30 @@ if (isset($_REQUEST['d'])) {
                     <tr>
                         <td colspan='2'><p class='aCenter'>Export Settings</p></td>
                     </tr>
+                    <tr>
+                        <td>
+                            Columns
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-primary" id="exp-outgoing-check-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Check All</button>
+                            <button type="button" class="btn btn-primary" id="exp-outgoing-uncheck-all" style="margin-bottom: 10px; padding: 3px 8px; background: #281840;">Uncheck All</button>
+                            <br>
+                            <?php $fields = $leads->getOutboundExportableFields(); ?>
+                            <?php foreach ($fields as $f) { ?>
+                                <label class="checkbox-label">
+                                    <input class="export-outgoing-check" type='checkbox' name='columns[]' value='<?php echo Display::escHtml($f->fieldName); ?>'/>&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                </label>
+                            <?php } ?>
+                        </td>
+                    </tr>
+                    <script>
+                        $('#exp-outgoing-check-all').click(function () {
+                            $('.export-outgoing-check').prop('checked', true);
+                        });
+                        $('#exp-outgoing-uncheck-all').click(function () {
+                            $('.export-outgoing-check').prop('checked', false);
+                        });
+                    </script>
                     <tr>
                         <td>
                             Period
@@ -284,6 +311,8 @@ include(INCLUDES . "c_header.php");
 <div class="container-fluid">
 
     <h2>Data Export</h2>
+
+    <p>Use this page to export records across ALL feeds for a given date range, either on the incoming side or the outgoing side.</p>
 
     <p><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export-incoming">Export Incoming Data</a></p>
 

@@ -57,6 +57,8 @@ if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF, L
                 array('name' => 'Field Management', 'url' => '/leadadmin/fields.php', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => '+Credentials Vault', 'url' => '/leadadmin/credentials-vault.php?status=active', 'level' => [LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]),
                 array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN),
+                array('name' => '*Data Export', 'url' => '/leadadmin/export.php', 'level' => LEADS_SESSION_LEVEL_ADMIN),
+                array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN),
                 array('name' => '*Audit Log', 'url' => '/leadadmin/audit-log.php', 'level' => LEADS_SESSION_LEVEL_ADMIN),
                 array('name' => '*User Management', 'url' => '/leadadmin/mgr_users.php', 'level' => LEADS_SESSION_LEVEL_ADMIN),
             ),
