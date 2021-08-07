@@ -6148,8 +6148,8 @@ class Leads
             'timestamp' => 'CONVERT_TZ(i.timestamp,?,?) AS timestampConverted',
             'leadstamp' => 'CONVERT_TZ(i.leadstamp,?,?)',
             'stamp' => 'CONVERT_TZ(i.leadstamp,?,?)', // Legacy column name
-            'cpl' => 'fi.costPerLead',
             'inbound_company' => 'fic.name AS inbound_company',
+            'inbound_cpl' => 'fi.costPerLead',
             'inbound_label' => 'fi.label AS inbound_label',
             'inbound_description' => 'fi.description AS inbound_description',
         ];
