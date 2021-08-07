@@ -19,9 +19,12 @@ if( !isset( $title ) ) {
 	<link rel="stylesheet" href="/leadadmin/libraries/bootstrap-toggle/bootstrap-toggle.min.css"/>
 	<link rel="stylesheet" href="/leadadmin/libraries/select2-4.0.3/dist/css/select2.min.css"/>
 	<link rel="stylesheet" href="/leadadmin/libraries/fine-uploader/fine-uploader-new.css"/>
-	<?php if( file_exists( SITE_ROOT . 'public_html/assets/css/admin.css' ) ) { ?>
-		<link href="/v<?php echo filemtime( SITE_ROOT . 'public_html/assets/css/admin.css' ); ?>/assets/css/admin.css" rel="stylesheet" type="text/css"/>
-	<?php } ?>
+    <?php if( file_exists( SITE_ROOT . 'public_html/assets/css/admin.css' ) ) { ?>
+        <link href="/v<?php echo filemtime( SITE_ROOT . 'public_html/assets/css/admin.css' ); ?>/assets/css/admin.css" rel="stylesheet" type="text/css"/>
+    <?php } ?>
+    <?php if( file_exists( SITE_ROOT . 'public_html/assets/css/branding.css' ) ) { ?>
+        <link href="/v<?php echo filemtime( SITE_ROOT . 'public_html/assets/css/branding.css' ); ?>/assets/css/branding.css" rel="stylesheet" type="text/css"/>
+    <?php } ?>
 	<script src="/leadadmin/libraries/jquery-2.2.3.min.js"></script>
 	<script src="/leadadmin/libraries/jquery-ui-1.11.4/jquery-ui.min.js"></script>
 	<script src="/leadadmin/libraries/bootstrap-3.3.6-dist/js/bootstrap.min.js"></script>
