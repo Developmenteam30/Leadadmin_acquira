@@ -563,7 +563,7 @@ if ('clear-outbound-queue' === $job->type) {
 
         // Override inbound feed settings.
         $feedParams = new stdClass();
-        $feedParams->idFeedIn = 136;
+        $feedParams->idFeedIn = INBOUND_FEEDID_MANUAL_UPLOAD;
         $feedParams->notifications = false;
         $feedParams->required = null;
         $feedParams->allowedFields = implode(";", $recordFields);
