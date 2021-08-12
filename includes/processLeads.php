@@ -975,7 +975,7 @@ class ProcessLeads
 
         switch ($fieldType) {
             case 'listcode':
-                if ($c && strlen($value) > 20) {
+                if ($c && strlen($value) > 255) {
                     $c = false;
                     $result['reason'] = 'List code (listcode) exceeds maximum allowed length.';
                 }
