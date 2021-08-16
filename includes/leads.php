@@ -2893,12 +2893,16 @@ class Leads
         return $results;
     }
 
-    public function getInboundFields()
+    public function getInboundFields($apiSpec = false)
     {
         $results = array();
 
         try {
-            $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','inbound-export') AND fieldName NOT IN('authorization','pswd') ORDER BY REPLACE(fieldName,'c_','')");
+            if($apiSpec) {
+                $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','inbound-export') ORDER BY REPLACE(fieldName,'c_','')");
+            } else {
+                $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','inbound-export') AND fieldName NOT IN('authorization','pswd') ORDER BY REPLACE(fieldName,'c_','')");
+            }
             $query->execute();
             $results = $query->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {

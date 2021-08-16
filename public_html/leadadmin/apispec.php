@@ -39,7 +39,7 @@ if ($_REQUEST['h'] !== hash('sha256', $feed->idFeedIn . HASH_SALT . $feed->passw
 
 $company = $leads->getCompany($feed->idCompany);
 
-$fields = $leads->getInboundFields();
+$fields = $leads->getInboundFields(true);
 
 function findField($feed, $fields, $field, $param)
 {
