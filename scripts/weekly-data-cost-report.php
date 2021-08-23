@@ -36,9 +36,7 @@ $spreadsheet->getActiveSheet()
     ->setCellValue('D2', 'Feed Description')
     ->setCellValue('E2', 'EQ Accepted')
     ->setCellValue('F2', 'CPL')
-    ->setCellValue('G2', 'Net Cost')
-    ->setCellValue('H2', 'Gross Cost')
-    ->setCellValue('I2', 'Cost Difference');
+    ->setCellValue('G2', 'Net Cost');
 
 $feeds = $leads->getInboundFeeds(null, 'active');
 
@@ -46,17 +44,11 @@ $rows = [];
 $totalInboundAccepted = 0;
 $totalOutboundAccepted = 0;
 $totalNetCost = 0;
-$totalGrossCost = 0;
 foreach ($feeds as $feed) {
     $inboundStats = $leads->getInboundStatsRange($feed->idFeedIn, $dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'));
     $totalInboundAccepted += $inboundStats['accepted'];
     $netCost = $feed->costPerLead * $inboundStats['accepted'];
     $totalNetCost += $netCost;
-
-    $outboundStats = $leads->getStatsCorrelatedByPairing($feed->idFeedIn, 19, $dateStart->format('Y-m-d'), $dateEnd->format('Y-m-d'));
-    $totalOutboundAccepted += $outboundStats['accepted'] ?? 0;
-    $grossCost = $feed->costPerLead * ($outboundStats['accepted'] ?? 0);
-    $totalGrossCost += $grossCost;
 
     $rows[] = [
         $feed->name,
@@ -66,8 +58,6 @@ foreach ($feeds as $feed) {
         $inboundStats['accepted'],
         $feed->costPerLead,
         $netCost,
-        $grossCost,
-        $grossCost - $netCost,
     ];
 }
 
@@ -79,8 +69,6 @@ $rows[] = [
     $totalInboundAccepted,
     $totalInboundAccepted > 0 ? $totalNetCost / $totalInboundAccepted : 0,
     $totalNetCost,
-    $totalGrossCost,
-    $totalGrossCost - $totalNetCost,
 ];
 
 $spreadsheet->getActiveSheet()->fromArray($rows, null, 'A3');
@@ -94,11 +82,6 @@ if ($totalRows) {
 
     $spreadsheet->getActiveSheet()
         ->getStyle('F3:G' . ($totalRows + 2))
-        ->getNumberFormat()
-        ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
-
-    $spreadsheet->getActiveSheet()
-        ->getStyle('H3:I' . ($totalRows + 2))
         ->getNumberFormat()
         ->setFormatCode(NumberFormat::FORMAT_CURRENCY_USD_SIMPLE);
 }
