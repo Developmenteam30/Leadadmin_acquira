@@ -91,6 +91,15 @@ if (isset($_REQUEST['a'])) {
                 }
             }
 
+            if (!empty($_REQUEST['dueDate'])) {
+                try {
+                    $dueDate = new DateTime($_REQUEST['dueDate']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid due date.';
+                    break;
+                }
+            }
+
             if (empty($_REQUEST['ledgerMonth'])) {
                 $result['error'] = 'Ledger month cannot be blank.';
                 break;
@@ -216,6 +225,7 @@ if (isset($_REQUEST['a'])) {
                 'invoiceAmount' => empty($_REQUEST['invoiceAmount']) ? null : $_REQUEST['invoiceAmount'],
                 'billingCycleStart' => !isset($billingCycleStart) ? null : $billingCycleStart->format('Y-m-d'),
                 'billingCycleEnd' => !isset($billingCycleEnd) ? null : $billingCycleEnd->format('Y-m-d'),
+                'dueDate' => !isset($dueDate) ? null : $dueDate->format('Y-m-d'),
                 'ledgerMonth' => $ledgerMonth->format('Y-m-d'),
                 'paymentDate' => !isset($paymentDate) ? null : $paymentDate->format('Y-m-d'),
                 'paymentMethod' => empty($_REQUEST['paymentMethod']) ? null : $_REQUEST['paymentMethod'],
@@ -346,6 +356,15 @@ if (isset($_REQUEST['a'])) {
                 }
             }
 
+            if (!empty($_REQUEST['dueDate'])) {
+                try {
+                    $dueDate = new DateTime($_REQUEST['dueDate']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid due date.';
+                    break;
+                }
+            }
+
             if (empty($_REQUEST['ledgerMonth'])) {
                 $result['error'] = 'Ledger month cannot be blank.';
                 break;
@@ -471,6 +490,7 @@ if (isset($_REQUEST['a'])) {
                 'invoiceAmount' => empty($_REQUEST['invoiceAmount']) ? null : $_REQUEST['invoiceAmount'],
                 'billingCycleStart' => !isset($billingCycleStart) ? null : $billingCycleStart->format('Y-m-d'),
                 'billingCycleEnd' => !isset($billingCycleEnd) ? null : $billingCycleEnd->format('Y-m-d'),
+                'dueDate' => !isset($dueDate) ? null : $dueDate->format('Y-m-d'),
                 'ledgerMonth' => $ledgerMonth->format('Y-m-d'),
                 'paymentDate' => !isset($paymentDate) ? null : $paymentDate->format('Y-m-d'),
                 'paymentMethod' => empty($_REQUEST['paymentMethod']) ? null : $_REQUEST['paymentMethod'],
@@ -599,7 +619,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'invoiceAmount',
                     'label' => 'Invoice Amount',
                     'type' => 'currency',
-                    'required' => true,
                 ),
                 array(
                     'id' => 'billingCycleStart',
@@ -614,10 +633,17 @@ if (isset($_REQUEST['d'])) {
                     'autocomplete' => 'off',
                 ),
                 array(
+                    'id' => 'dueDate',
+                    'label' => 'Due Date',
+                    'type' => 'text',
+                    'autocomplete' => 'off',
+                ),
+                array(
                     'id' => 'ledgerMonth',
                     'label' => 'Ledger Month',
                     'type' => 'select',
                     'choices' => $ledgerMonths,
+                    'required' => true,
                 ),
                 array(
                     'id' => 'paymentDate',
@@ -634,7 +660,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'paymentAmount',
                     'label' => 'Payment Amount',
                     'type' => 'currency',
-                    'required' => true,
                 ),
 
                 array(
@@ -645,7 +670,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'vendorCompanyId',
                     'label' => 'Vendor',
                     'type' => 'select',
-                    'required' => true,
                     'placeholder' => 'Select a vendor',
                     'choices' => $leads->getDivisionCompanies(4, null),
                 ),
@@ -663,7 +687,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'loInvoiceAmount',
                     'label' => 'LO Amount',
                     'type' => 'currency',
-                    'required' => true,
                 ),
                 array(
                     'id' => 'loPaymentDate',
@@ -680,7 +703,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'loPaymentAmount',
                     'label' => 'Payment Amount',
                     'type' => 'currency',
-                    'required' => true,
                 ),
 
                 array(
@@ -691,7 +713,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'userId1',
                     'label' => 'Salesperson 1',
                     'type' => 'select',
-                    'required' => true,
                     'placeholder' => 'Select a salesperson',
                     'choices' => $leads->getStaffUsers(),
                 ),
@@ -799,7 +820,7 @@ if (isset($_REQUEST['d'])) {
             ?>
 
             <script type="text/javascript">
-                $("#new_offlineledger input[name=orderDate], #new_offlineledger input[name=mailDate], #new_offlineledger input[name=paymentDate], #new_offlineledger input[name=loPaymentDate], #new_offlineledger input[name=commissionDate1], #new_offlineledger input[name=commissionDate2], #new_offlineledger input[name=commissionDate3], #new_offlineledger input[name=billingCycleStart], #new_offlineledger input[name=billingCycleEnd]").datepicker({
+                $("#new_offlineledger input[name=orderDate], #new_offlineledger input[name=mailDate], #new_offlineledger input[name=paymentDate], #new_offlineledger input[name=loPaymentDate], #new_offlineledger input[name=commissionDate1], #new_offlineledger input[name=commissionDate2], #new_offlineledger input[name=commissionDate3], #new_offlineledger input[name=billingCycleStart], #new_offlineledger input[name=billingCycleEnd], #new_offlineledger input[name=dueDate]").datepicker({
                     // Consistent format with the HTML5 picker
                     dateFormat: 'yy-mm-dd'
                 });
@@ -924,7 +945,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'invoiceAmount',
                         'label' => 'Invoice Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->invoiceAmount,
                         'readonly' => true,
                     ),
@@ -940,6 +960,13 @@ if (isset($_REQUEST['d'])) {
                         'label' => 'Billing Cycle End',
                         'type' => 'text',
                         'value' => $entry->billingCycleEnd,
+                        'readonly' => true,
+                    ),
+                    array(
+                        'id' => 'dueDate',
+                        'label' => 'Due Date',
+                        'type' => 'text',
+                        'value' => $entry->dueDate,
                         'readonly' => true,
                     ),
                     array(
@@ -968,7 +995,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'paymentAmount',
                         'label' => 'Payment Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->paymentAmount,
                         'readonly' => true,
                     ),
@@ -981,7 +1007,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'vendorCompanyId',
                         'label' => 'Vendor',
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a vendor',
                         'choices' => $leads->getDivisionCompanies(4, $entry->vendorCompanyId),
                         'value' => $entry->vendorCompanyId,
@@ -1005,7 +1030,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'loInvoiceAmount',
                         'label' => 'LO Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->loInvoiceAmount,
                         'readonly' => true,
                     ),
@@ -1040,7 +1064,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'userId1',
                         'label' => 'Salesperson 1',
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a salesperson',
                         'choices' => $leads->getStaffUsers(),
                         'value' => $entry->userId1,
@@ -1255,7 +1278,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'invoiceAmount',
                         'label' => 'Invoice Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->invoiceAmount,
                     ),
                     array(
@@ -1271,11 +1293,18 @@ if (isset($_REQUEST['d'])) {
                         'value' => $entry->billingCycleEnd,
                     ),
                     array(
+                        'id' => 'dueDate',
+                        'label' => 'Due Date',
+                        'type' => 'text',
+                        'value' => $entry->dueDate,
+                    ),
+                    array(
                         'id' => 'ledgerMonth',
                         'label' => 'Ledger Month',
                         'type' => 'select',
                         'choices' => $ledgerMonths,
                         'value' => $ledgerMonth->format('Ym'),
+                        'required' => true,
                     ),
                     array(
                         'id' => 'paymentDate',
@@ -1294,7 +1323,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'paymentAmount',
                         'label' => 'Payment Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->paymentAmount,
                     ),
 
@@ -1306,7 +1334,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'vendorCompanyId',
                         'label' => 'Vendor',
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a vendor',
                         'choices' => $leads->getDivisionCompanies(4, $entry->vendorCompanyId),
                         'value' => $entry->vendorCompanyId,
@@ -1327,7 +1354,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'loInvoiceAmount',
                         'label' => 'LO Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->loInvoiceAmount,
                     ),
                     array(
@@ -1347,7 +1373,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'loPaymentAmount',
                         'label' => 'Payment Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->loPaymentAmount,
                     ),
 
@@ -1359,7 +1384,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'userId1',
                         'label' => 'Salesperson 1',
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a salesperson',
                         'choices' => $leads->getStaffUsers(),
                         'value' => $entry->userId1,
@@ -1479,7 +1503,7 @@ if (isset($_REQUEST['d'])) {
 
                 <script type="text/javascript">
                     $('#editofflineledger').on('shown.bs.modal', function (e) {
-                        $("#edit_offlineledger input[name=orderDate], #edit_offlineledger input[name=mailDate], #edit_offlineledger input[name=paymentDate], #edit_offlineledger input[name=loPaymentDate], #edit_offlineledger input[name=commissionDate1], #edit_offlineledger input[name=commissionDate2], #edit_offlineledger input[name=commissionDate3], #edit_offlineledger input[name=billingCycleStart], #edit_offlineledger input[name=billingCycleEnd]").datepicker({
+                        $("#edit_offlineledger input[name=orderDate], #edit_offlineledger input[name=mailDate], #edit_offlineledger input[name=paymentDate], #edit_offlineledger input[name=loPaymentDate], #edit_offlineledger input[name=commissionDate1], #edit_offlineledger input[name=commissionDate2], #edit_offlineledger input[name=commissionDate3], #edit_offlineledger input[name=billingCycleStart], #edit_offlineledger input[name=billingCycleEnd], #edit_offlineledger input[name=dueDate]").datepicker({
                             // Consistent format with the HTML5 picker
                             dateFormat: 'yy-mm-dd'
                         });

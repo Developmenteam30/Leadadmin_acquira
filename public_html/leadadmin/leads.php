@@ -85,6 +85,15 @@ if (isset($_REQUEST['a'])) {
                 }
             }
 
+            if (!empty($_REQUEST['dueDate'])) {
+                try {
+                    $dueDate = new DateTime($_REQUEST['dueDate']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid due date.';
+                    break;
+                }
+            }
+
             if (empty($_REQUEST['ledgerMonth'])) {
                 $result['error'] = 'Ledger month cannot be blank.';
                 break;
@@ -209,6 +218,7 @@ if (isset($_REQUEST['a'])) {
                 'invoiceAmount' => empty($_REQUEST['invoiceAmount']) ? null : $_REQUEST['invoiceAmount'],
                 'billingCycleStart' => !isset($billingCycleStart) ? null : $billingCycleStart->format('Y-m-d'),
                 'billingCycleEnd' => !isset($billingCycleEnd) ? null : $billingCycleEnd->format('Y-m-d'),
+                'dueDate' => !isset($dueDate) ? null : $dueDate->format('Y-m-d'),
                 'ledgerMonth' => $ledgerMonth->format('Y-m-d'),
                 'paymentDate' => !isset($paymentDate) ? null : $paymentDate->format('Y-m-d'),
                 'paymentMethod' => empty($_REQUEST['paymentMethod']) ? null : $_REQUEST['paymentMethod'],
@@ -341,6 +351,15 @@ if (isset($_REQUEST['a'])) {
                 }
             }
 
+            if (!empty($_REQUEST['dueDate'])) {
+                try {
+                    $dueDate = new DateTime($_REQUEST['dueDate']);
+                } catch (Exception $e) {
+                    $result['error'] = 'Please enter a valid due date.';
+                    break;
+                }
+            }
+
             if (empty($_REQUEST['ledgerMonth'])) {
                 $result['error'] = 'Ledger month cannot be blank.';
                 break;
@@ -465,6 +484,7 @@ if (isset($_REQUEST['a'])) {
                 'invoiceAmount' => empty($_REQUEST['invoiceAmount']) ? null : $_REQUEST['invoiceAmount'],
                 'billingCycleStart' => !isset($billingCycleStart) ? null : $billingCycleStart->format('Y-m-d'),
                 'billingCycleEnd' => !isset($billingCycleEnd) ? null : $billingCycleEnd->format('Y-m-d'),
+                'dueDate' => !isset($dueDate) ? null : $dueDate->format('Y-m-d'),
                 'ledgerMonth' => $ledgerMonth->format('Y-m-d'),
                 'paymentDate' => !isset($paymentDate) ? null : $paymentDate->format('Y-m-d'),
                 'paymentMethod' => empty($_REQUEST['paymentMethod']) ? null : $_REQUEST['paymentMethod'],
@@ -582,7 +602,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'invoiceAmount',
                     'label' => 'Invoice Amount',
                     'type' => 'currency',
-                    'required' => true,
                 ),
                 array(
                     'id' => 'billingCycleStart',
@@ -597,10 +616,17 @@ if (isset($_REQUEST['d'])) {
                     'autocomplete' => 'off',
                 ),
                 array(
+                    'id' => 'dueDate',
+                    'label' => 'Due Date',
+                    'type' => 'text',
+                    'autocomplete' => 'off',
+                ),
+                array(
                     'id' => 'ledgerMonth',
                     'label' => 'Ledger Month',
                     'type' => 'select',
                     'choices' => $ledgerMonths,
+                    'required' => true,
                 ),
                 array(
                     'id' => 'paymentDate',
@@ -617,7 +643,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'paymentAmount',
                     'label' => 'Payment Amount',
                     'type' => 'currency',
-                    'required' => true,
                 ),
             );
 
@@ -638,7 +663,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'vendorCompanyId' . $i,
                     'label' => 'Vendor #' . $i,
                     'type' => 'select',
-                    'required' => true,
                     'placeholder' => 'Select a vendor',
                     'choices' => $leads->getDivisionCompanies(5, null),
                 );
@@ -651,7 +675,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'loInvoiceAmount' . $i,
                     'label' => 'LO Amount',
                     'type' => 'currency',
-                    'required' => true,
                 );
                 $fields[] = array(
                     'id' => 'loPaymentDate' . $i,
@@ -668,7 +691,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'loPaymentAmount' . $i,
                     'label' => 'Payment Amount',
                     'type' => 'currency',
-                    'required' => true,
                 );
 
                 $fields[] = array(
@@ -687,7 +709,6 @@ if (isset($_REQUEST['d'])) {
                 'id' => 'userId1',
                 'label' => 'Salesperson 1',
                 'type' => 'select',
-                'required' => true,
                 'placeholder' => 'Select a salesperson',
                 'choices' => $leads->getStaffUsers(),
             );
@@ -788,7 +809,7 @@ if (isset($_REQUEST['d'])) {
             ?>
 
             <script type="text/javascript">
-                $("#new_phoneledger input[name=orderDate], #new_phoneledger input[name=paymentDate], #new_phoneledger input[name=commissionDate1], #new_phoneledger input[name=commissionDate2], #new_phoneledger input[name=commissionDate3], #new_phoneledger input[name=billingCycleStart], #new_phoneledger input[name=billingCycleEnd]").datepicker({
+                $("#new_phoneledger input[name=orderDate], #new_phoneledger input[name=paymentDate], #new_phoneledger input[name=commissionDate1], #new_phoneledger input[name=commissionDate2], #new_phoneledger input[name=commissionDate3], #new_phoneledger input[name=billingCycleStart], #new_phoneledger input[name=billingCycleEnd], #new_phoneledger input[name=dueDate]").datepicker({
                     // Consistent format with the HTML5 picker
                     dateFormat: 'yy-mm-dd'
                 });
@@ -901,7 +922,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'invoiceAmount',
                         'label' => 'Invoice Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->invoiceAmount,
                         'readonly' => true,
                     ),
@@ -917,6 +937,13 @@ if (isset($_REQUEST['d'])) {
                         'label' => 'Billing Cycle End',
                         'type' => 'text',
                         'value' => $entry->billingCycleEnd,
+                        'readonly' => true,
+                    ),
+                    array(
+                        'id' => 'dueDate',
+                        'label' => 'Due Date',
+                        'type' => 'text',
+                        'value' => $entry->dueDate,
                         'readonly' => true,
                     ),
                     array(
@@ -945,7 +972,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'paymentAmount',
                         'label' => 'Payment Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->paymentAmount,
                         'readonly' => true,
                     ),
@@ -958,7 +984,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'userId1',
                         'label' => 'Salesperson 1',
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a salesperson',
                         'choices' => $leads->getStaffUsers(),
                         'value' => $entry->userId1,
@@ -1116,6 +1141,15 @@ if (isset($_REQUEST['d'])) {
                         'value' => $entry->clientCompanyId,
                     ),
                     array(
+                        'id' => 'verticalId',
+                        'label' => 'Vertical',
+                        'type' => 'select',
+                        'required' => true,
+                        'placeholder' => 'Select a vertical',
+                        'choices' => $leads->getDivisionVerticals(5),
+                        'value' => $entry->verticalId,
+                    ),
+                    array(
                         'id' => 'listName',
                         'label' => 'List Name',
                         'type' => 'text',
@@ -1144,7 +1178,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'invoiceAmount',
                         'label' => 'Invoice Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->invoiceAmount,
                     ),
                     array(
@@ -1160,11 +1193,18 @@ if (isset($_REQUEST['d'])) {
                         'value' => $entry->billingCycleEnd,
                     ),
                     array(
+                        'id' => 'dueDate',
+                        'label' => 'Due Date',
+                        'type' => 'text',
+                        'value' => $entry->dueDate,
+                    ),
+                    array(
                         'id' => 'ledgerMonth',
                         'label' => 'Ledger Month',
                         'type' => 'select',
                         'choices' => $ledgerMonths,
                         'value' => $ledgerMonth->format('Ym'),
+                        'required' => true,
                     ),
                     array(
                         'id' => 'paymentDate',
@@ -1183,7 +1223,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'paymentAmount',
                         'label' => 'Payment Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->paymentAmount,
                     ),
                 );
@@ -1200,7 +1239,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'vendorCompanyId' . $i,
                         'label' => 'Vendor #' . $i,
                         'type' => 'select',
-                        'required' => true,
                         'placeholder' => 'Select a vendor',
                         'choices' => $leads->getDivisionCompanies(5, null),
                         'value' => $entry->{'vendorCompanyId' . $i},
@@ -1215,7 +1253,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'loInvoiceAmount' . $i,
                         'label' => 'LO Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->{'loInvoiceAmount' . $i},
                     );
                     $fields[] = array(
@@ -1235,7 +1272,6 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'loPaymentAmount' . $i,
                         'label' => 'Payment Amount',
                         'type' => 'currency',
-                        'required' => true,
                         'value' => $entry->{'loPaymentAmount' . $i},
                     );
 
@@ -1256,7 +1292,6 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'userId1',
                     'label' => 'Salesperson 1',
                     'type' => 'select',
-                    'required' => true,
                     'placeholder' => 'Select a salesperson',
                     'choices' => $leads->getStaffUsers(),
                     'value' => $entry->userId1,
@@ -1384,7 +1419,7 @@ if (isset($_REQUEST['d'])) {
                         <?php } ?>
                     });
                     $('#editphoneledger').on('shown.bs.modal', function (e) {
-                        $("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2], #edit_phoneledger input[name=commissionDate3], #edit_phoneledger input[name=billingCycleStart], #edit_phoneledger input[name=billingCycleEnd]").datepicker({
+                        $("#edit_phoneledger input[name=orderDate], #edit_phoneledger input[name=paymentDate], #edit_phoneledger input[name=commissionDate1], #edit_phoneledger input[name=commissionDate2], #edit_phoneledger input[name=commissionDate3], #edit_phoneledger input[name=billingCycleStart], #edit_phoneledger input[name=billingCycleEnd], #edit_phoneledger input[name=dueDate]").datepicker({
                             // Consistent format with the HTML5 picker
                             dateFormat: 'yy-mm-dd'
                         });
@@ -1545,8 +1580,8 @@ include(INCLUDES . "c_header.php");
                         <th>Pmt Date</th>
                         <th>Pmt Mthd</th>
                         <th>Pmt Amt</th>
-                        <th>Salesperson 1</th>
-                        <th>Commissions 1</th>
+                        <!--                        <th>Salesperson 1</th>
+                                                <th>Commissions 1</th>-->
                         <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
                             <th rowspan="2" style="vertical-align: middle;">Options</th>
                         <?php } ?>
@@ -1561,8 +1596,8 @@ include(INCLUDES . "c_header.php");
                         <th>LO Pmt Date</th>
                         <th>LO Pmt Mthd</th>
                         <th>LO Pmt Amt</th>
-                        <th>Salesperson 2</th>
-                        <th>Commissions 2</th>
+                        <!--                        <th>Salesperson 2</th>
+                                                <th>Commissions 2</th>-->
                     </tr>
                     </thead>
                     <?php
@@ -1598,11 +1633,11 @@ include(INCLUDES . "c_header.php");
                                 <td><?php echo htmlentities($entry->paymentDate); ?></td>
                                 <td><?php echo htmlentities($entry->paymentMethod); ?></td>
                                 <td>$<?php echo number_format($entry->paymentAmount, 2); ?></td>
-                                <td><?php echo htmlentities($entry->fullName1); ?></td>
+                                <!--                                <td><?php echo htmlentities($entry->fullName1); ?></td>
                                 <td><?php echo (LeadsSession::isValid([
-                                            LEADS_SESSION_LEVEL_MANAGER,
-                                            LEADS_SESSION_LEVEL_ADMIN,
-                                        ]) || LeadsSession::getUserId() == $entry->userId1) ? '$' . number_format($entry->commissionAmount1, 2) : '&nbsp;'; ?></td>
+                                        LEADS_SESSION_LEVEL_MANAGER,
+                                        LEADS_SESSION_LEVEL_ADMIN,
+                                    ]) || LeadsSession::getUserId() == $entry->userId1) ? '$' . number_format($entry->commissionAmount1, 2) : '&nbsp;'; ?></td>-->
                                 <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
                                     <td class="text-center" rowspan="2" style="vertical-align: middle;">
                                         <div class="btn-group">
@@ -1630,11 +1665,11 @@ include(INCLUDES . "c_header.php");
                                 <td><?php echo htmlentities($entry->loPaymentDate1); ?></td>
                                 <td><?php echo htmlentities($entry->loPaymentMethod1); ?></td>
                                 <td>$<?php echo number_format($entry->loPaymentAmount1, 2); ?></td>
-                                <td><?php htmlentities($entry->fullName2); ?></td>
+                                <!--                                <td><?php echo htmlentities($entry->fullName2); ?></td>
                                 <td><?php echo (LeadsSession::isValid([
-                                            LEADS_SESSION_LEVEL_MANAGER,
-                                            LEADS_SESSION_LEVEL_ADMIN,
-                                        ]) || LeadsSession::getUserId() == $entry->userId2) ? '$' . number_format($entry->commissionAmount2, 2) : '&nbsp;'; ?></td>
+                                        LEADS_SESSION_LEVEL_MANAGER,
+                                        LEADS_SESSION_LEVEL_ADMIN,
+                                    ]) || LeadsSession::getUserId() == $entry->userId2) ? '$' . number_format($entry->commissionAmount2, 2) : '&nbsp;'; ?></td>-->
                             </tr>
                             </tbody>
                             <?php
@@ -1654,8 +1689,8 @@ include(INCLUDES . "c_header.php");
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>$<?php echo number_format($paymentTotal, 2); ?></td>
-                        <td>&nbsp;</td>
-                        <td rowspan="2">$<?php echo number_format($commissionTotal, 2); ?></td>
+                        <!--                        <td>&nbsp;</td>
+                        <td rowspan="2">$<?php echo number_format($commissionTotal, 2); ?></td>-->
                         <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
                             <td>&nbsp;</td>
                         <?php } ?>
@@ -1671,9 +1706,9 @@ include(INCLUDES . "c_header.php");
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>$<?php echo number_format($loPaymentTotal, 2); ?></td>
-                        <td>&nbsp;</td>
+                        <!--                        <td>&nbsp;</td>
                         <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) { ?>
-                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>-->
                         <?php } ?>
                     </tr>
                     </tfoot>
