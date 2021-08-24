@@ -83,6 +83,15 @@ input.input-long {
 	width: 300px !important;
 }
 
+.modal-lg select.input-full-width {
+	width: 700px !important;
+	max-width: none !important;
+}
+
+.modal-dialog select.input-full-width + .select2-container {
+	max-width: none !important;
+}
+
 .navbar-custom {
 	background-image: linear-gradient();
 	background-image: -o-linear-gradient(bottom, rgb(40, 25, 64) 1%, rgb(68, 42, 109) 25%, rgb(90, 56, 144) 50%);

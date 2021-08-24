@@ -2823,7 +2823,7 @@ if (isset($_REQUEST['d'])) {
                             </p>
                             <div id="selectIndividual">
                                 <p>
-                                    <select name="idFeedIn">
+                                    <select name="idFeedIn" class="input-full-width">
                                         <option></option>
                                         <?php
                                         $lastCompany = '';
@@ -2839,8 +2839,7 @@ if (isset($_REQUEST['d'])) {
                                                 <?php if ($fI->idFeedIn == $popset_idFeedIn) {
                                                     echo "selected='selected'";
                                                 } ?>
-                                            >(<?php echo $fI->idFeedIn; ?>
-                                                ) <?php echo Display::escHtml($fI->label); ?></option>
+                                            >(<?php echo $fI->idFeedIn; ?>) <?php echo Display::escHtml($fI->label); ?> [<?php echo Display::escHtml($fI->description); ?>]</option>
                                             <?php
                                             if ($lastCompany !== $fI->name) {
                                                 $lastCompany = $fI->name;
@@ -2852,11 +2851,8 @@ if (isset($_REQUEST['d'])) {
                                 </p>
                             </div>
                             <div id="selectCategory">
-                                <p>Using a feed category population will cause ALL active incoming feeds from the
-                                    selected category to populate this outgoing feed.</p>
-                                <p style="color: red; background: yellow; font-weight: bold;">If you using a feed
-                                    category population, it is
-                                    HIGHLY recommended that you use the "Standard Queue" queue type.</p>
+                                <p>Using a feed category population will cause ALL active incoming feeds from the selected category to populate this outgoing feed.</p>
+                                <p style="color: red; background: yellow; font-weight: bold;">If you using a feed category population, it is HIGHLY recommended that you use the "Standard Queue" queue type.</p>
                                 <p>
                                     <?php
                                     foreach ($feedCategories as $categoryKey => $categoryVal) {
@@ -3458,7 +3454,8 @@ if (isset($_REQUEST['d'])) {
                                         Category: <?php echo Display::escHtml($popSet->feedCategory); ?>
                                     <?php } else { ?>
                                         Company: <?php echo Display::escHtml($cacheFeedIn[$popSet->idFeedIn]->companyName ?? ''); ?><br/>
-                                        Feed: (<?php echo $popSet->idFeedIn; ?>) <?php echo Display::escHtml($cacheFeedIn[$popSet->idFeedIn]->label); ?>
+                                        Feed: (<?php echo $popSet->idFeedIn; ?>) <?php echo Display::escHtml($cacheFeedIn[$popSet->idFeedIn]->label); ?><br/>
+                                        Description: <?php echo Display::escHtml($cacheFeedIn[$popSet->idFeedIn]->description); ?>
                                     <?php } ?>
                                 </p>
                             </td>
