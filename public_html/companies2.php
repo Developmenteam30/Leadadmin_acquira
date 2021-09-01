@@ -101,7 +101,8 @@ if (isset($_REQUEST['a'])) {
                     'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
                     'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                 ));
-                if ($idCompany === null) {
+                //var_dump($leads);
+                if (null === $idCompany) {
                     $c = false;
                     $result['error'] = 'Error adding this company to the database.';
                 } else {
