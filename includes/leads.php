@@ -7562,7 +7562,7 @@ SQL;
     {
 
         $stamp = date('Y-m-d H:i:s');
-        $errfile = fopen(SITE_ROOT . DS. 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a');
+        $errfile = fopen(SITE_ROOT . DS. 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a'); // Add . DS . here
         if ($errfile) {
             fwrite($errfile, $stamp . ' ' . $message . PHP_EOL);
             //fwrite($errfile, $stamp . ' REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL);
@@ -7583,9 +7583,9 @@ SQL;
 
         if ($email) {
             // Limit notification emails to one per minute to prevent flooding
-            $time = @file_get_contents(SITE_ROOT . DS . "error" . DIRECTORY_SEPARATOR . "email-stamp");
+            $time = @file_get_contents(SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp"); // Add . DS . here
             if ($time === false || ($time < (time() - 60))) {
-                file_put_contents(SITE_ROOT . DS . "error" . DIRECTORY_SEPARATOR . "email-stamp", time());
+                file_put_contents(SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp", time()); // Add . DS . here
             } else {
                 return;
             }
