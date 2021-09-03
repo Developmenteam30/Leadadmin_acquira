@@ -7562,7 +7562,7 @@ SQL;
     {
 
         $stamp = date('Y-m-d H:i:s');
-        $errfile = fopen(SITE_ROOT . DS. 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a'); // Add . DS . here
+        $errfile = fopen(SITE_ROOT . 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a'); // Add . DS . here
         if ($errfile) {
             fwrite($errfile, $stamp . ' ' . $message . PHP_EOL);
             //fwrite($errfile, $stamp . ' REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL);
