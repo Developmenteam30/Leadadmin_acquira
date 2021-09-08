@@ -37,6 +37,11 @@ if (isset($_REQUEST['a'])) {
                 }
             }
 
+            if ($c && !empty($_REQUEST['costPerLead']) && is_numeric($_REQUEST['costPerLead']) === false) {
+                $c = false;
+                $result['error'] = 'Please enter a numeric value for the cost per lead.';
+            }
+
             if ($c && !empty($_REQUEST['main_email']) && !filter_var($_REQUEST['main_email'], FILTER_VALIDATE_EMAIL)) {
                 $c = false;
                 $result['error'] = 'Please enter a valid email address for the Main Contact.';
@@ -72,7 +77,6 @@ if (isset($_REQUEST['a'])) {
                         }
                     }
                 }
-
                 $idCompany = $leads->addCompany(array(
                     'name' => trim($_REQUEST['name']),
                     'note' => empty($_REQUEST['note']) ? null : trim($_REQUEST['note']),
@@ -100,8 +104,9 @@ if (isset($_REQUEST['a'])) {
                     'isPublisher' => $isPublisher ? 1 : 0,
                     'isAdvertiser' => $isAdvertiser ? 1 : 0,
                     'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
+                    'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                 ));
-                if (null === $idCompany) {
+                if ($idCompany === null) {
                     $c = false;
                     $result['error'] = 'Error adding this company to the database.';
                 } else {
@@ -146,6 +151,11 @@ if (isset($_REQUEST['a'])) {
             if ($c && empty($_REQUEST['status'])) {
                 $c = false;
                 $result['error'] = 'Please select a company status.';
+            }
+
+            if ($c && !empty($_REQUEST['costPerLead']) && is_numeric($_REQUEST['costPerLead']) === false) {
+                $c = false;
+                $result['error'] = 'Please enter a numeric value for the cost per lead.';
             }
 
             if ($c && !empty($_REQUEST['main_email']) && !filter_var($_REQUEST['main_email'], FILTER_VALIDATE_EMAIL)) {
@@ -212,6 +222,7 @@ if (isset($_REQUEST['a'])) {
                     'isPublisher' => $isPublisher ? 1 : 0,
                     'isAdvertiser' => $isAdvertiser ? 1 : 0,
                     'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
+                    'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                 ));
 
                 if ($alterCompanyResult === false) {
@@ -381,6 +392,11 @@ if (isset($_REQUEST['d'])) {
                         'monthly_net15' => 'Monthly Net 15',
                         'monthly_net30' => 'Monthly Net 30',
                     ),
+                ),
+                array(
+                    'id' => 'costPerLead',
+                    'label' => 'Cost Per Lead',
+                    'type' => 'text',
                 ),
                 array(
                     'id' => 'accountManager',
@@ -730,6 +746,12 @@ if (isset($_REQUEST['d'])) {
                             'monthly_net30' => 'Monthly Net 30',
                         ),
                         'value' => $company->paymentTerms,
+                    ),
+                    array(
+                        'id' => 'costPerLead',
+                        'label' => 'Cost Per Lead',
+                        'type' => 'text',
+                        'value' => $company->costPerLead,
                     ),
                     array(
                         'id' => 'accountManager',
