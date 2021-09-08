@@ -1531,7 +1531,7 @@ class Leads
             if (!empty($distinctColumn) && empty($distinctValue)) {
                 $sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
             } else {
-                $sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,lv.loPaymentDate AS paymentDate,lv.loPaymentMethod AS paymentMethod,l.ledgerMonth,lv.loInvoiceAmount AS invoiceAmount,lv.loInvoiceNum AS invoiceNum,lv.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId,'-',lv.indexId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_vendors' AS source,lv.indexId,clv.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementPaymentDate ";
+                $sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,lv.loPaymentDate AS paymentDate,lv.loPaymentMethod AS paymentMethod,l.ledgerMonth,lv.loInvoiceAmount AS invoiceAmount,lv.loInvoiceNum AS invoiceNum,lv.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId,'-',lv.indexId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_vendors' AS source,lv.indexId,clv.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementDate ";
             }
             $sql .= "FROM ledger l ";
             $sql .= "LEFT JOIN ledger_vendors lv ON l.ledgerId = lv.ledgerId ";
@@ -1564,7 +1564,7 @@ class Leads
             if (!empty($distinctColumn) && empty($distinctValue)) {
                 $sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
             } else {
-                $sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger' AS source,0 AS indexId,c.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementPaymentDate ";
+                $sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger' AS source,0 AS indexId,c.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementDate ";
             }
             $sql .= "FROM ledger l ";
             $sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
@@ -1628,7 +1628,7 @@ class Leads
             if (!empty($distinctColumn) && empty($distinctValue)) {
                 $sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
             } else {
-                $sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.loPaymentDate AS paymentDate,l.loPaymentMethod AS paymentMethod,l.ledgerMonth,l.loInvoiceAmount AS invoiceAmount,l.loInvoiceNum AS invoiceNum,l.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,0 AS type,l.userId1,l.userId2,l.userId3,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_offline' AS source,0 AS indexId,c.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementPaymentDate ";
+                $sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.loPaymentDate AS paymentDate,l.loPaymentMethod AS paymentMethod,l.ledgerMonth,l.loInvoiceAmount AS invoiceAmount,l.loInvoiceNum AS invoiceNum,l.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,0 AS type,l.userId1,l.userId2,l.userId3,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_offline' AS source,0 AS indexId,c.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementDate ";
             }
             $sql .= "FROM ledger_offline l ";
             $sql .= "LEFT JOIN companies c ON l.vendorCompanyId = c.idCompany ";
@@ -1656,7 +1656,7 @@ class Leads
             if (!empty($distinctColumn) && empty($distinctValue)) {
                 $sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
             } else {
-                $sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,lv.loPaymentDate AS paymentDate,lv.loPaymentMethod AS paymentMethod,l.ledgerMonth,lv.loInvoiceAmount AS invoiceAmount,lv.loInvoiceNum AS invoiceNum,lv.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,0 AS type,l.userId1,l.userId2,l.userId3,CONCAT('L',l.ledgerId,'-',lv.indexId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_phones' AS source,lv.indexId,clv.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementPaymentDate ";
+                $sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,lv.loPaymentDate AS paymentDate,lv.loPaymentMethod AS paymentMethod,l.ledgerMonth,lv.loInvoiceAmount AS invoiceAmount,lv.loInvoiceNum AS invoiceNum,lv.loPaymentAmount AS paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,0 AS type,l.userId1,l.userId2,l.userId3,CONCAT('L',l.ledgerId,'-',lv.indexId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_phones' AS source,lv.indexId,clv.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,,l.dueDate,l.reimbursementDate ";
             }
             $sql .= "FROM ledger_phones l ";
             $sql .= "LEFT JOIN ledger_phones_vendors lv ON l.ledgerId = lv.ledgerId ";
@@ -1688,7 +1688,7 @@ class Leads
             if (!empty($distinctColumn) && empty($distinctValue)) {
                 $sql .= "SELECT DISTINCT(" . $distinctColumn . ") AS month ";
             } else {
-                $sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger' AS source,0 AS indexId,clv.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementPaymentDate ";
+                $sql .= "SELECT l.ledgerId,l.divisionId,l.companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,l.type,l.userId1,l.userId2,l.userId3,CONCAT(IF(l.type=1,'A','P'),l.ledgerId) AS entryId,c.name AS companyName,d.name AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger' AS source,0 AS indexId,clv.name AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementDate ";
             }
             $sql .= "FROM ledger l ";
             $sql .= "LEFT JOIN companies c ON l.companyId = c.idCompany ";
@@ -1719,7 +1719,7 @@ class Leads
             if (!empty($distinctColumn) && empty($distinctValue)) {
                 $sql .= "SELECT DISTINCT(" . $distinctColumn . ") as month ";
             } else {
-                $sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,1 AS type,l.userId1,l.userId2,l.userId3,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_offline' AS source,0 AS indexId,'' AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementPaymentDate ";
+                $sql .= "SELECT l.ledgerId,4 AS divisionId,c.idCompany AS companyId,6 AS verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,1 AS type,l.userId1,l.userId2,l.userId3,CONCAT('O',l.ledgerId) AS entryId,c.name AS companyName,'Offline' AS divisionName,'Offline Vertical' AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_offline' AS source,0 AS indexId,'' AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementDate ";
             }
             $sql .= "FROM ledger_offline l ";
             $sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
@@ -1747,7 +1747,7 @@ class Leads
             if (!empty($distinctColumn) && empty($distinctValue)) {
                 $sql .= "SELECT DISTINCT(" . $distinctColumn . ") as month ";
             } else {
-                $sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,1 AS type,l.userId1,l.userId2,l.userId3,CONCAT('L',l.ledgerId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_phones' AS source,0 AS indexId,'' AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementPaymentDate ";
+                $sql .= "SELECT l.ledgerId,5 AS divisionId,c.idCompany AS companyId,l.verticalId,l.paymentDate,l.paymentMethod,l.ledgerMonth,l.invoiceAmount,l.invoiceNum,l.paymentAmount,l.commissionAmount1,l.commissionDate1,l.commissionAmount2,l.commissionDate2,l.commissionAmount3,l.commissionDate3,1 AS type,l.userId1,l.userId2,l.userId3,CONCAT('L',l.ledgerId) AS entryId,c.name AS companyName,'Leads' AS divisionName,v.name AS verticalName,u1.fullName AS fullName1,u2.fullName AS fullName2,u3.fullName AS fullName3,'ledger_phones' AS source,0 AS indexId,'' AS vendorCompanyName,l.billingCycleStart,l.billingCycleEnd,l.dueDate,l.reimbursementDate ";
             }
             $sql .= "FROM ledger_phones l ";
             $sql .= "LEFT JOIN companies c ON l.clientCompanyId = c.idCompany ";
@@ -7562,7 +7562,7 @@ SQL;
     {
 
         $stamp = date('Y-m-d H:i:s');
-        $errfile = fopen(SITE_ROOT . 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a'); // Add . DS . here
+        $errfile = fopen(SITE_ROOT . 'error' . DIRECTORY_SEPARATOR . 'leads-log', 'a');
         if ($errfile) {
             fwrite($errfile, $stamp . ' ' . $message . PHP_EOL);
             //fwrite($errfile, $stamp . ' REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL);
@@ -7583,9 +7583,9 @@ SQL;
 
         if ($email) {
             // Limit notification emails to one per minute to prevent flooding
-            $time = @file_get_contents(SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp"); // Add . DS . here
+            $time = @file_get_contents(SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp");
             if ($time === false || ($time < (time() - 60))) {
-                file_put_contents(SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp", time()); // Add . DS . here
+                file_put_contents(SITE_ROOT . "error" . DIRECTORY_SEPARATOR . "email-stamp", time());
             } else {
                 return;
             }
