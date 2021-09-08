@@ -493,9 +493,13 @@ if (isset($_REQUEST['a'])) {
 
                 $result['status'] = 1;
                 $result['error'] = 'Successfully created new population parameter.';
-                break;
 
             } else {
+
+                if (empty($_REQUEST['idAssoc'])) {
+                    $result['error'] = 'The feed population ID is missing.';
+                    break;
+                }
 
                 $dbResult = $leads->updatePopulation($_REQUEST['idAssoc'], array(
                     'populationType' => $_REQUEST['populationType'],
@@ -524,10 +528,33 @@ if (isset($_REQUEST['a'])) {
 
                 $result['status'] = 1;
                 $result['error'] = 'Successfully edited this population parameter.';
-                break;
 
             }
             break;
+
+        case "deletePopulation":
+
+            if (empty($_REQUEST['idAssoc'])) {
+                $result['error'] = 'The feed population ID is missing.';
+                break;
+            }
+
+            $dbResult = $leads->updatePopulation($_REQUEST['idAssoc'], array(
+                'enabled' => 0,
+                'isArchived' => 1,
+            ));
+
+            if (empty($dbResult)) {
+                $result['error'] = 'Database failure, could not delete population.';
+                break;
+            }
+
+            $leads->auditLog('FEEDOUT:POP:DELETE', $_REQUEST['idAssoc']);
+
+            $result['status'] = 1;
+            $result['error'] = 'Successfully deleted this population parameter.';
+            break;
+
         case "managePopulationParam":
             $c = true;
             $result['error'] = 'Failed when attempting to manage population params.';
@@ -2736,6 +2763,7 @@ if (isset($_REQUEST['d'])) {
                 <?php
                 exit;
             }
+
         case 'dialog_newpopsetting':
             if (empty($mode)) {
                 $mode = 'new';
@@ -2753,6 +2781,7 @@ if (isset($_REQUEST['d'])) {
                 'queueType',
                 'startDate',
                 'waterfallPriority',
+                'isArchived',
             );
             foreach ($populationProperties as $pP) {
                 if (isset($popset)) {
@@ -2839,7 +2868,8 @@ if (isset($_REQUEST['d'])) {
                                                 <?php if ($fI->idFeedIn == $popset_idFeedIn) {
                                                     echo "selected='selected'";
                                                 } ?>
-                                            >(<?php echo $fI->idFeedIn; ?>) <?php echo Display::escHtml($fI->label); ?> [<?php echo Display::escHtml($fI->description); ?>]</option>
+                                            >(<?php echo $fI->idFeedIn; ?>) <?php echo Display::escHtml($fI->label); ?> [<?php echo Display::escHtml($fI->description); ?>]
+                                            </option>
                                             <?php
                                             if ($lastCompany !== $fI->name) {
                                                 $lastCompany = $fI->name;
@@ -2881,7 +2911,7 @@ if (isset($_REQUEST['d'])) {
                                        id='filterTypeUrl_disabled'
                                        value=''
                                     <?php if (
-                                    empty($popset_filterTypeUrl)
+                                        empty($popset_filterTypeUrl)
                                     ) { ?>
                                         checked='checked'
                                     <?php } ?>
@@ -2961,7 +2991,7 @@ if (isset($_REQUEST['d'])) {
                                        id='filterTypeEmail_disabled'
                                        value=''
                                     <?php if (
-                                    empty($popset_filterTypeEmail)
+                                        empty($popset_filterTypeEmail)
                                     ) { ?>
                                         checked='checked'
                                     <?php } ?>
@@ -3034,7 +3064,7 @@ if (isset($_REQUEST['d'])) {
                                        id='filterTypeListcode_disabled'
                                        value=''
                                     <?php if (
-                                    empty($popset_filterTypeListcode)
+                                        empty($popset_filterTypeListcode)
                                     ) { ?>
                                         checked='checked'
                                     <?php } ?>
@@ -3267,6 +3297,27 @@ if (isset($_REQUEST['d'])) {
             <?php
             break;
 
+        case 'dialog_deletepopsetting':
+            $idAssoc = !empty($_REQUEST['idAssoc']) ? $_REQUEST['idAssoc'] : 0;
+            $popset = $leads->getPopulationSetting($idAssoc);
+            $feedIn = $leads->getInboundFeed($popset->idFeedIn);
+            ?>
+            <p>Are you sure that you want to delete this population?</p>
+
+            <?php if ('category' == $popset->populationType) { ?>
+            Category: <?php echo Display::escHtml($popset->feedCategory); ?>
+        <?php } else { ?>
+            Company: <?php echo Display::escHtml($feedIn->companyName ?? ''); ?><br/>
+            Feed: (<?php echo $popset->idFeedIn; ?>) <?php echo Display::escHtml($feedIn->label); ?><br/>
+            Description: <?php echo Display::escHtml($feedIn->description); ?>
+        <?php } ?>
+            <form id="delete_pop">
+                <input type='hidden' name='idAssoc' value="<?php echo $popset->idAssoc; ?>"/>
+                <input type="hidden" name="a" value="deletePopulation"/>
+            </form>
+            <?php
+            break;
+
         case 'element_filter':
             $t = $_REQUEST['options']['type'];
             ?>
@@ -3495,6 +3546,11 @@ if (isset($_REQUEST['d'])) {
                                         data-backdrop="static" data-target="#modal-editpop"
                                         data-feed-id="<?php echo $feed->idFeedOut; ?>"
                                         data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Edit
+                                </button>
+                                <button type="button" class="btn btn-danger btn-xs" data-toggle="modal"
+                                        data-backdrop="static" data-target="#modal-deletepop"
+                                        data-feed-id="<?php echo $feed->idFeedOut; ?>"
+                                        data-assoc-id="<?php echo $popSet->idAssoc; ?>" data-dismiss="modal">Delete
                                 </button>
                             </td>
                         </tr>
@@ -3996,6 +4052,23 @@ include(INCLUDES . "c_header.php");
         </div>
     </div>
 
+    <div class="modal fade" id="modal-deletepop" tabindex="-1" role="dialog" aria-labelledby="deletepop_title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="deletepop_title">Delete a population parameter</h4>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button id="modal-save-deletepop" type="button" class="btn btn-danger">YES</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">NO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-export" tabindex="-1" role="dialog" aria-labelledby="modal-export_title">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -4105,6 +4178,26 @@ include(INCLUDES . "c_header.php");
                 data: {
                     'd': 'dialog_editpopulation',
                     'idFeedOut': idFeedOut
+                },
+                success: function (data) {
+                    modal.find('.modal-body').html(data);
+                }
+            });
+        });
+
+        $('#modal-deletepop').on('show.bs.modal', function (e) {
+            var modal = $(this);
+            var idFeedOut = $(e.relatedTarget).data('feed-id');
+            var idAssoc = $(e.relatedTarget).data('assoc-id');
+
+            $.ajax({
+                cache: false,
+                type: 'POST',
+                url: 'mgr_feedout.php',
+                data: {
+                    'd': 'dialog_deletepopsetting',
+                    'idFeedOut': idFeedOut,
+                    'idAssoc': idAssoc
                 },
                 success: function (data) {
                     modal.find('.modal-body').html(data);
@@ -4429,6 +4522,25 @@ include(INCLUDES . "c_header.php");
                 if (result.status === 1) {
                     // window.location.reload(true);
                     $('#modal-editpop').modal('hide');
+                } else {
+                    alert(result.error);
+                }
+            });
+        });
+
+        $('#modal-save-deletepop').click(function (event) {
+            event.preventDefault();
+            let data = $("#delete_pop").serialize();
+            console.log(data)
+
+            var response = $.ajax({
+                url: "mgr_feedout.php",
+                type: "POST",
+                async: true,
+                data: data
+            }).done(function (result) {
+                if (result.status === 1) {
+                    $('#modal-deletepop').modal('hide');
                 } else {
                     alert(result.error);
                 }
