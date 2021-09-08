@@ -2898,7 +2898,7 @@ class Leads
         $results = array();
 
         try {
-            if($apiSpec) {
+            if ($apiSpec) {
                 $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','inbound-export') ORDER BY REPLACE(fieldName,'c_','')");
             } else {
                 $query = $this->db->prepare("SELECT * FROM fields WHERE fieldType IN('system','custom','inbound-export') AND fieldName NOT IN('authorization','pswd') ORDER BY REPLACE(fieldName,'c_','')");
@@ -3082,6 +3082,7 @@ class Leads
             if ($enabled) {
                 $sql .= " AND fp.enabled = '1' ";
             }
+            $sql .= "AND fp.isArchived = 0 ";
             $sql .= "ORDER BY fp.waterfallPriority " . ($descending ? "DESC" : "ASC") . ",FIELD(fp.queueType,'livedata','waterfallLimitLive','waterfall','waterfallLimit','queue')";
 //			$sql .= "ORDER BY fp.waterfallPriority DESC";
             $query = $this->db->prepare($sql);
@@ -3181,7 +3182,7 @@ class Leads
     public function getPopulations($idFeedOut)
     {
         try {
-            $query = $this->db->prepare("SELECT * FROM feedPopulation WHERE idFeedOut = ?");
+            $query = $this->db->prepare("SELECT * FROM feedPopulation WHERE idFeedOut = ? AND isArchived = 0");
             $query->execute(array($idFeedOut));
 
             return $query->fetchAll(PDO::FETCH_OBJ);

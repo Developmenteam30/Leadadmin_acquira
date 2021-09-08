@@ -482,7 +482,6 @@ if (isset($_REQUEST['a'])) {
                     'queueType' => !empty($_REQUEST['queueType']) ? $_REQUEST['queueType'] : 'livedata',
                     'startDate' => !empty($_REQUEST['startDate']) ? $_REQUEST['startDate'] : null,
                     'waterfallPriority' => !empty($_REQUEST['waterfallPriority']) ? $_REQUEST['waterfallPriority'] : 0,
-                    'isArchived' => 0
                 ));
 
                 if (empty($idAssoc)) {
@@ -494,42 +493,14 @@ if (isset($_REQUEST['a'])) {
 
                 $result['status'] = 1;
                 $result['error'] = 'Successfully created new population parameter.';
-                break;
 
-            } 
-            elseif ($action == 'delete'){
-                $dbResult = $leads->updatePopulation($_REQUEST['idAssoc'], array(
-                    'populationType' => $_REQUEST['populationType'],
-                    'idFeedIn' => 'individual' === $_REQUEST['populationType'] ? $_REQUEST['idFeedIn'] : null,
-                    'feedCategory' => 'category' === $_REQUEST['populationType'] ? $_REQUEST['feedCategory'] : null,
-                    'idFeedOut' => $_REQUEST['idFeedOut'],
-                    'filterTypeUrl' => !empty($_REQUEST['filterTypeUrl']) ? $_REQUEST['filterTypeUrl'] : null,
-                    'filterUrl' => !empty($filterUrl) ? $filterUrl : null,
-                    'filterTypeEmail' => !empty($_REQUEST['filterTypeEmail']) ? $_REQUEST['filterTypeEmail'] : null,
-                    'filterEmail' => !empty($filterEmail) ? $filterEmail : null,
-                    'filterTypeListcode' => !empty($_REQUEST['filterTypeListcode']) ? $_REQUEST['filterTypeListcode'] : null,
-                    'filterListcode' => !empty($filterListcode) ? $filterListcode : null,
-                    'forceUrlList' => !empty($forceUrlList) ? $forceUrlList : null,
-                    'forceUrl' => !empty($_REQUEST['forceUrl']) ? 1 : 0,
-                    'queueType' => !empty($_REQUEST['queueType']) ? $_REQUEST['queueType'] : 'livedata',
-                    'startDate' => !empty($_REQUEST['startDate']) ? $_REQUEST['startDate'] : null,
-                    'waterfallPriority' => !empty($_REQUEST['waterfallPriority']) ? $_REQUEST['waterfallPriority'] : 0,
-                    'isArchived' => !empty($_REQUEST['isArchived']) ? $_REQUEST['isArchived'] : 0,
-                ));
+            } else {
 
-                if (empty($dbResult)) {
-                    $result['error'] = 'Database failure, could not delete population.';
+                if (empty($_REQUEST['idAssoc'])) {
+                    $result['error'] = 'The feed population ID is missing.';
                     break;
                 }
 
-                $leads->auditLog('FEEDOUT:POP:DELETE', $_REQUEST['idAssoc']);
-
-                $result['status'] = 1;
-                $result['error'] = 'Successfully deleted this population parameter.';
-                break;
-            }
-            else {
-
                 $dbResult = $leads->updatePopulation($_REQUEST['idAssoc'], array(
                     'populationType' => $_REQUEST['populationType'],
                     'idFeedIn' => 'individual' === $_REQUEST['populationType'] ? $_REQUEST['idFeedIn'] : null,
@@ -546,7 +517,6 @@ if (isset($_REQUEST['a'])) {
                     'queueType' => !empty($_REQUEST['queueType']) ? $_REQUEST['queueType'] : 'livedata',
                     'startDate' => !empty($_REQUEST['startDate']) ? $_REQUEST['startDate'] : null,
                     'waterfallPriority' => !empty($_REQUEST['waterfallPriority']) ? $_REQUEST['waterfallPriority'] : 0,
-                    'isArchived' => 0
                 ));
 
                 if (empty($dbResult)) {
@@ -558,10 +528,33 @@ if (isset($_REQUEST['a'])) {
 
                 $result['status'] = 1;
                 $result['error'] = 'Successfully edited this population parameter.';
-                break;
 
             }
             break;
+
+        case "deletePopulation":
+
+            if (empty($_REQUEST['idAssoc'])) {
+                $result['error'] = 'The feed population ID is missing.';
+                break;
+            }
+
+            $dbResult = $leads->updatePopulation($_REQUEST['idAssoc'], array(
+                'enabled' => 0,
+                'isArchived' => 1,
+            ));
+
+            if (empty($dbResult)) {
+                $result['error'] = 'Database failure, could not delete population.';
+                break;
+            }
+
+            $leads->auditLog('FEEDOUT:POP:DELETE', $_REQUEST['idAssoc']);
+
+            $result['status'] = 1;
+            $result['error'] = 'Successfully deleted this population parameter.';
+            break;
+
         case "managePopulationParam":
             $c = true;
             $result['error'] = 'Failed when attempting to manage population params.';
@@ -2770,7 +2763,7 @@ if (isset($_REQUEST['d'])) {
                 <?php
                 exit;
             }
-       
+
         case 'dialog_newpopsetting':
             if (empty($mode)) {
                 $mode = 'new';
@@ -2788,7 +2781,7 @@ if (isset($_REQUEST['d'])) {
                 'queueType',
                 'startDate',
                 'waterfallPriority',
-                'isArchived'
+                'isArchived',
             );
             foreach ($populationProperties as $pP) {
                 if (isset($popset)) {
@@ -2875,7 +2868,8 @@ if (isset($_REQUEST['d'])) {
                                                 <?php if ($fI->idFeedIn == $popset_idFeedIn) {
                                                     echo "selected='selected'";
                                                 } ?>
-                                            >(<?php echo $fI->idFeedIn; ?>) <?php echo Display::escHtml($fI->label); ?> [<?php echo Display::escHtml($fI->description); ?>]</option>
+                                            >(<?php echo $fI->idFeedIn; ?>) <?php echo Display::escHtml($fI->label); ?> [<?php echo Display::escHtml($fI->description); ?>]
+                                            </option>
                                             <?php
                                             if ($lastCompany !== $fI->name) {
                                                 $lastCompany = $fI->name;
@@ -2917,7 +2911,7 @@ if (isset($_REQUEST['d'])) {
                                        id='filterTypeUrl_disabled'
                                        value=''
                                     <?php if (
-                                    empty($popset_filterTypeUrl)
+                                        empty($popset_filterTypeUrl)
                                     ) { ?>
                                         checked='checked'
                                     <?php } ?>
@@ -2997,7 +2991,7 @@ if (isset($_REQUEST['d'])) {
                                        id='filterTypeEmail_disabled'
                                        value=''
                                     <?php if (
-                                    empty($popset_filterTypeEmail)
+                                        empty($popset_filterTypeEmail)
                                     ) { ?>
                                         checked='checked'
                                     <?php } ?>
@@ -3070,7 +3064,7 @@ if (isset($_REQUEST['d'])) {
                                        id='filterTypeListcode_disabled'
                                        value=''
                                     <?php if (
-                                    empty($popset_filterTypeListcode)
+                                        empty($popset_filterTypeListcode)
                                     ) { ?>
                                         checked='checked'
                                     <?php } ?>
@@ -3304,118 +3298,26 @@ if (isset($_REQUEST['d'])) {
             break;
 
         case 'dialog_deletepopsetting':
-            $mode = 'delete';
             $idAssoc = !empty($_REQUEST['idAssoc']) ? $_REQUEST['idAssoc'] : 0;
             $popset = $leads->getPopulationSetting($idAssoc);
-
-            $populationProperties = array(
-                'idAssoc',
-                'idFeedOut',
-                'idFeedIn',
-                'populationType',
-                'feedCategory',
-                'filterTypeUrl',
-                'filterTypeEmail',
-                'filterTypeListcode',
-                'forceUrl',
-                'queueType',
-                'startDate',
-                'waterfallPriority',
-            );
-            foreach ($populationProperties as $pP) {
-                ${"popset_" . $pP} = $popset->$pP;
-            }
-
-            $explodableProperties = array(
-                'filterUrl',
-                'filterEmail',
-                'filterListcode',
-                'forceUrlList',
-            );
-            foreach ($explodableProperties as $eP) {
-                if (is_null($popset->$eP)) {
-                    ${"popset_" . $eP} = null;
-                } else {
-                    ${"popset_" . $eP} = explode(";", $popset->$eP);
-                }                  
-            }
-            $feed = $leads->getOutboundFeed($popset_idFeedOut);
-
-            if (LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) {
-                $incomingFeeds = $leads->getInboundFeeds(null, 'active', null, $popset_idFeedIn);
-            } else {
-                $idCompany = LeadsSession::getCompanyId();
-                if (empty($idCompany)) {
-                    $idCompany = -9999;
-                }
-                $incomingFeeds = $leads->getInboundFeeds($idCompany, 'active');
-            }
-           
+            $feedIn = $leads->getInboundFeed($popset->idFeedIn);
             ?>
-                <p>Are you sure that you want to delete this record?</p>
-                <form id="delete_pop">
-                    <input type='hidden' name='idAssoc' value="<?php echo $popset_idAssoc; ?>" />
-                    <input type='hidden' name='idFeedOut' value="<?php echo $popset_idFeedOut; ?>" />
-                    <input type='hidden' name='idFeedIn' value="<?php echo $popset_idFeedIn; ?>" />
-                    <input type='hidden' name='populationType' value="<?php echo $popset_populationType; ?>" />
-                    <input type='hidden' name='feedCategory' value="<?php echo $popset_feedCategory; ?>" />
-                    <?php 
-                        if (!is_null($popset_filterUrl)){
-                            for ($i = 0; $i <= count($popset_filterUrl); $i++){
-                                echo "<input type='hidden' name='filterUrl[$i]' value='$popset_filterUrl[$i]' />";
-                            }
-                        }
-                        else {
-                            echo "<input type='hidden' name='filterUrl' value='$popset_filterUrl' />";
-                        }
-    
-                    ?>
-                    <?php 
-                        if (!is_null($popset_filterEmail)){
-                            for ($i = 0; $i < count($popset_filterEmail); $i++){
-                                echo "<input type='hidden' name='filterEmail[$i]' value=$popset_filterEmail[$i] />";
-                            }
-                        }
-                        else {
-                            echo "<input type='hidden' name='filterEmail' value='$popset_filterEmail' />";
-                        }
-                    ?>
-                    <?php 
-                        if (!is_null($popset_filterListcode)){
-                            for ($i = 0; $i < count($popset_filterListcode); $i++){
-                                echo "<input type='hidden' name='filterListcode[$i]' value=$popset_filterListcode[$i] />";
-                            }
-                        }
-                        else {
-                            echo "<input type='hidden' name='filterListcode' value='$popset_filterListcode' />";
-                        }
-                    ?>
-                    <?php 
-                        if (!is_null($popset_forceUrlList)){
-                            for ($i = 0; $i < count($popset_forceUrlList); $i++){
-                                echo "<input type='hidden' name='forceUrlList[$i]' value=$popset_forceUrlList[$i] />";
-                            }
-                        }
-                        else {
-                            echo "<input type='hidden' name='forceUrlList' value='$popset_forceUrlList' />";
-                        }
-                    ?>
+            <p>Are you sure that you want to delete this population?</p>
 
-    
-                    <input type='hidden' name='filterTypeUrl' value="<?php echo $popset_filterTypeUrl; ?>" />
-                    <input type='hidden' name='filterTypeEmail' value="<?php echo $popset_filterTypeEmail; ?>" />
-                    <input type='hidden' name='filterTypeListcode' value="<?php echo $popset_filterTypeListcode; ?>" />
-                    <input type='hidden' name='forceUrl' value="<?php echo $popset_forceUrl; ?>" />
-                    <input type='hidden' name='queueType' value="<?php echo $popset_queueType; ?>" />
-                    <input type='hidden' name='startDate' value="<?php echo $popset_startDate; ?>" />
-                    <input type='hidden' name='waterfallPriority' value="<?php echo $popset_waterfallPriority; ?>" />
-                    <input type="hidden" name="isArchived" value="1"/>
-                    <input type="hidden" name="a" value="managePopulation"/>
-                    <input type="hidden" name="action" value="<?php echo $mode; ?>"/>
-                </form>
+            <?php if ('category' == $popset->populationType) { ?>
+            Category: <?php echo Display::escHtml($popset->feedCategory); ?>
+        <?php } else { ?>
+            Company: <?php echo Display::escHtml($feedIn->companyName ?? ''); ?><br/>
+            Feed: (<?php echo $popset->idFeedIn; ?>) <?php echo Display::escHtml($feedIn->label); ?><br/>
+            Description: <?php echo Display::escHtml($feedIn->description); ?>
+        <?php } ?>
+            <form id="delete_pop">
+                <input type='hidden' name='idAssoc' value="<?php echo $popset->idAssoc; ?>"/>
+                <input type="hidden" name="a" value="deletePopulation"/>
+            </form>
             <?php
             break;
-        
+
         case 'element_filter':
             $t = $_REQUEST['options']['type'];
             ?>
@@ -3506,7 +3408,6 @@ if (isset($_REQUEST['d'])) {
                     <tbody>
                     <?php
                     foreach ($populationSettings as $popSet) {
-                        if ($popSet->isArchived == 1) continue;
                         if (!isset($cacheFeedIn[$popSet->idFeedIn])) {
                             $cacheFeedIn[$popSet->idFeedIn] = $leads->getInboundFeed($popSet->idFeedIn);
                             if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_STAFF]) && $cacheFeedIn[$popSet->idFeedIn]->idCompany != $idCompany) {
