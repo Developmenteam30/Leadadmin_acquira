@@ -278,6 +278,31 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Please enter a numeric value for the cost per lead.';
             }
 
+            if ($c && !empty($_REQUEST['minimumBirthAge']) && is_numeric($_REQUEST['minimumBirthAge']) === false) {
+                $c = false;
+                $result['error'] = 'Please enter a numeric value for the minimum age.';
+            }
+
+            if ($c && !empty($_REQUEST['maximumBirthAge']) && is_numeric($_REQUEST['maximumBirthAge']) === false) {
+                $c = false;
+                $result['error'] = 'Please enter a numeric value for the maximum age.';
+            }
+
+            if ($c && empty($_REQUEST['maximumBirthAge']) && !empty($_REQUEST['minimumBirthAge'])) {
+                $c = false;
+                $result['error'] = 'You have a numeric value for minimum age so you must have a numeric value for the maximum age too.';
+            }
+
+            if ($c && empty($_REQUEST['minimumBirthAge']) && !empty($_REQUEST['maximumBirthAge'])) {
+                $c = false;
+                $result['error'] = 'You have a numeric value for maximum age so you must have a numeric value for the minimum age too.';
+            }
+
+            if ($c && !empty($_REQUEST['maximumBirthAge']) && $_REQUEST['maximumBirthAge'] <= $_REQUEST['minimumBirthAge']){
+                $c = false;
+                $result['error'] = 'The maximum age should be larger than the minimum age.';
+            }
+
             if ($c && !empty($_REQUEST['notifyThresholdCount']) && is_numeric($_REQUEST['notifyThresholdCount']) === false) {
                 $c = false;
                 $result['error'] = 'Please enter a numeric value for the notification threshold amount.';
@@ -367,6 +392,8 @@ if (isset($_REQUEST['a'])) {
                         'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                         'lookbackPeriod' => empty($_REQUEST['lookbackPeriod']) ? 120 : $_REQUEST['lookbackPeriod'],
                         'pingTimeout' => empty($_REQUEST['pingTimeout']) ? 0 : $_REQUEST['pingTimeout'],
+                        'minimumBirthAge' => empty($_REQUEST['minimumBirthAge']) ? 0 : $_REQUEST['minimumBirthAge'],
+                        'maximumBirthAge' => empty($_REQUEST['maximumBirthAge']) ? 0 : $_REQUEST['maximumBirthAge'],
                     ));
 
                     if (null === $idFeedIn) {
@@ -555,6 +582,31 @@ if (isset($_REQUEST['a'])) {
                     $result['error'] = 'Please enter a numeric value for the cost per lead.';
                 }
 
+                if ($c && !empty($_REQUEST['minimumBirthAge']) && is_numeric($_REQUEST['minimumBirthAge']) === false) {
+                    $c = false;
+                    $result['error'] = 'Please enter a numeric value for the minimum age.';
+                }
+    
+                if ($c && !empty($_REQUEST['maximumBirthAge']) && is_numeric($_REQUEST['maximumBirthAge']) === false) {
+                    $c = false;
+                    $result['error'] = 'Please enter a numeric value for the maximum age.';
+                }
+    
+                if ($c && empty($_REQUEST['maximumBirthAge']) && !empty($_REQUEST['minimumBirthAge'])) {
+                    $c = false;
+                    $result['error'] = 'You have a numeric value for minimum age so you must have a numeric value for the maximum age too.';
+                }
+    
+                if ($c && empty($_REQUEST['minimumBirthAge']) && !empty($_REQUEST['maximumBirthAge'])) {
+                    $c = false;
+                    $result['error'] = 'You have a numeric value for maximum age so you must have a numeric value for the minimum age too.';
+                }
+    
+                if ($c && !empty($_REQUEST['maximumBirthAge']) && $_REQUEST['maximumBirthAge'] <= $_REQUEST['minimumBirthAge']){
+                    $c = false;
+                    $result['error'] = 'The maximum age should be larger than the minimum age.';
+                }    
+
                 if ($c && !empty($_REQUEST['notifyThresholdCount']) && is_numeric($_REQUEST['notifyThresholdCount']) === false) {
                     $c = false;
                     $result['error'] = 'Please enter a numeric value for the notification threshold amount.';
@@ -634,6 +686,8 @@ if (isset($_REQUEST['a'])) {
                         'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                         'lookbackPeriod' => empty($_REQUEST['lookbackPeriod']) ? 120 : $_REQUEST['lookbackPeriod'],
                         'pingTimeout' => empty($_REQUEST['pingTimeout']) ? 0 : $_REQUEST['pingTimeout'],
+                        'minimumBirthAge' => empty($_REQUEST['minimumBirthAge']) ? 0 : $_REQUEST['minimumBirthAge'],
+                        'maximumBirthAge' => empty($_REQUEST['maximumBirthAge']) ? 0 : $_REQUEST['maximumBirthAge'],
                     ));
 
                     if (null === $status) {
@@ -838,6 +892,8 @@ if (isset($_REQUEST['d'])) {
                 'timeskew',
                 'lookbackPeriod',
                 'pingTimeout',
+                'minimumBirthAge', 
+                'maximumBirthAge',
             );
             foreach ($feedProps as $feedProp) {
                 if (isset($feed)) {
@@ -1397,7 +1453,7 @@ if (isset($_REQUEST['d'])) {
                         </td>
                     </tr>
                     <tr>
-                        <td>Feed Status</p></td>
+                        <td><p>Feed Status</p></td>
                         <td>
                             <p>
                                 <input type='radio' name='status' id='status_active' value='active'
@@ -1408,6 +1464,26 @@ if (isset($_REQUEST['d'])) {
                                 (Hidden)<br/>
                                 <input type='radio' name='status' id='status_retired' value='retired'
                                        <?php if ('retired' == $feed_status) { ?>checked='checked'<?php } ?>/> Retired
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Minimum Birth Age</p></td>
+                        <td>
+                        <p>Required if there's a maximum birth age. Must be smaller than maximum age.</p>
+                            <p>
+                                <input type="text" name="minimumBirthAge" id="minimumBirthAge"
+                                       value="" />
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p>Maximum Birth Age</p></td>
+                        <td>
+                            <p>Required if there's a minimum birth age. Must be larger than minimum age.</p>
+                            <p>
+                                <input type="text" name="maximumBirthAge" id="maximumBirthAge"
+                                       value="" />
                             </p>
                         </td>
                     </tr>
