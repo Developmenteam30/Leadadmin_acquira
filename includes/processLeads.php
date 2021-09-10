@@ -1171,14 +1171,24 @@ class ProcessLeads
                 break;
 
             case 'dob':
-                if ($c
-                    && (
-                        strtotime($value) == -1
-                        || strtotime($value) == false
-                    )
-                ) {
+                if ($c && strtotime($value) == -1 || strtotime($value) == false){
                     $c = false;
                     $result['reason'] = 'Date of Birth (dob) is invalid.';
+
+                    if ($c && !empty($feedParams->minimumBirthAge) && !empty($feedParams->maximumBirthAge)){
+                        $now = new DateTime();
+                        $born = strtotime($value);
+                        $diff = $now->getTimestamp() - $born;
+                        $years = round($diff/60/60/24/365);
+                        if ($years < $feedParams->minimumBirthAge){
+                            $c = false;
+                            $result['reason'] = 'Date of Birth (dob) is too young.';
+                        }
+                        elseif ($years > $feedParams->maximumBirthAge){
+                            $c = false;
+                            $result['reason'] = 'Date of Birth (dob) is too old.';
+                        }
+                    }
                 }
                 break;
 
