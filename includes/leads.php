@@ -4601,11 +4601,23 @@ class Leads
         }
     }
 
-    public function getJob($jobId)
+    public function getJob($jobId, $idUser = null)
     {
         try {
-            $query = $this->db->prepare("SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username FROM jobs j LEFT JOIN users u ON j.idUser = u.idUser LEFT JOIN feedinc f ON j.destination = f.idFeedIn WHERE j.jobId = ?");
-            $query->execute(array($jobId));
+            $params = array();
+            $sql = "SELECT j.jobId,j.status,j.timestamp,f.label,j.fields,j.filename,j.records,u.username ";
+            $sql .= "FROM jobs j ";
+            $sql .= "LEFT JOIN users u ON j.idUser = u.idUser ";
+            $sql .= "LEFT JOIN feedinc f ON j.destination = f.idFeedIn ";
+            $sql .= "WHERE j.jobId = ?";
+            $params[] = $jobId;
+            if(!empty($idUser)) {
+                $sql .= "AND j.idUser = ? ";
+                $params[] = $idUser;
+            }
+
+            $query = $this->db->prepare($sql);
+            $query->execute($params);
 
             return $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
@@ -4615,7 +4627,7 @@ class Leads
         }
     }
 
-    public function getJobs($idCompany = null)
+    public function getJobs($idCompany = null, $idUser = null)
     {
         try {
             $params = array();
@@ -4623,10 +4635,15 @@ class Leads
             $sql .= "FROM jobs j ";
             $sql .= "LEFT JOIN users u ON j.idUser = u.idUser ";
             $sql .= "LEFT JOIN feedinc f ON j.destination = f.idFeedIn ";
+            $sql .= "WHERE 1=1 ";
             if (!empty($idCompany)) {
-                $sql .= "WHERE j.type = 'feedinc' ";
-                $sql .= "AND destination IN (SELECT idFeedIn FROM feedinc WHERE idCompany = ?)";
+                $sql .= "AND j.type = 'feedinc' ";
+                $sql .= "AND j.destination IN (SELECT idFeedIn FROM feedinc WHERE idCompany = ?)";
                 $params[] = $idCompany;
+            }
+            if(!empty($idUser)) {
+                $sql .= "AND j.idUser = ? ";
+                $params[] = $idUser;
             }
             $sql .= "ORDER BY j.jobId DESC LIMIT 100";
 
