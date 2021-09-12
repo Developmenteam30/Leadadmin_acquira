@@ -3527,6 +3527,14 @@ class Leads
                 }
             }
 
+            $rawData = [
+                'remoteAddress' => $_SERVER['REMOTE_ADDR'] ?? '',
+                'requestMethod' => $_SERVER['REQUEST_METHOD'] ?? '',
+                'requestUrl' => parse_url($_SERVER['SCRIPT_URI'] ?? '', PHP_URL_SCHEME) . '://' . parse_url($_SERVER['SCRIPT_URI'] ?? '', PHP_URL_HOST) . parse_url($_SERVER['SCRIPT_URI'] ?? '', PHP_URL_PATH),
+                'getParams' => $_GET ?? [],
+                'postParams' => $_POST ?? [],
+            ];
+
             $idRecord = $this->insertRow('data_inbound', array(
                 'idFeedIn' => $idFeedIn,
                 'listcode' => empty($fields['listcode']) ? null : substr($fields['listcode'], 0, 20),
@@ -3559,6 +3567,7 @@ class Leads
                 'timestamp' => empty($fields['timestampOverride']) ? gmdate('Y-m-d H:i:s') : gmdate('Y-m-d H:i:s', strtotime($fields['timestampOverride'])),
                 'customFields' => empty($customFields) ? null : json_encode($customFields),
                 'ping' => !empty($fields['ping']) ? 1 : 0,
+                'rawData' => json_encode($rawData),
             ));
         } catch (Leads_PDOException $e) {
             $this->rollBack();
@@ -7545,8 +7554,9 @@ SQL;
     {
         $cnt = 0;
 
-        $startDate = new DateTime('2021-05-01 00:00:00');
-        $endDate = new DateTime('2014-06-01 00:00:00');
+        $startDate = new DateTime('2021-06-01 00:00:00');
+        //$endDate = new DateTime('2014-06-01 00:00:00'); // Qatalyst
+        $endDate = new DateTime('2020-07-01 00:00:00'); // Expect Quest
         $tableDate = clone $startDate;
 
 
@@ -7560,7 +7570,8 @@ SQL;
 
                 //$query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD INDEX cellphone (cellphone) USING BTREE, ADD INDEX landline (landline) USING BTREE, ADD COLUMN custom1 VARCHAR(255), ADD COLUMN custom2 VARCHAR(255),ADD COLUMN custom3 VARCHAR(255),ADD COLUMN custom4 VARCHAR(255),ADD COLUMN custom5 VARCHAR(255),ADD COLUMN custom6 VARCHAR(255), ADD COLUMN leadId VARCHAR(255);" );
                 //$query = $this->db->prepare("ALTER TABLE archive.{$table} ADD ping TINYINT UNSIGNED DEFAULT 0");
-                $query = $this->db->prepare("ALTER TABLE archive.{$table} MODIFY COLUMN listcode varchar(255)");
+                //$query = $this->db->prepare("ALTER TABLE archive.{$table} MODIFY COLUMN listcode varchar(255)");
+                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD COLUMN rawData json NULL");
 //                $query = $this->db->prepare("ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1, ADD COLUMN isBillable TINYINT UNSIGNED DEFAULT 1, ADD COLUMN url VARCHAR(255)");
 //                $query = $this->db->prepare( "ALTER TABLE archive.{$table} ADD COLUMN accepted TINYINT UNSIGNED DEFAULT 1" );
                 $query->execute();
