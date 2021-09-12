@@ -1171,7 +1171,7 @@ class ProcessLeads
                 break;
 
             case 'dob':
-                if ($c && strtotime($value) == -1 || strtotime($value) == false) {
+                if ($c && (strtotime($value) == -1 || strtotime($value) == false)) {
                     $c = false;
                     $result['reason'] = 'Date of Birth (dob) is invalid.';
                 }
