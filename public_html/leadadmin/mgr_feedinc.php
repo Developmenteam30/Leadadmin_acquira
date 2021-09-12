@@ -288,19 +288,9 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Please enter a numeric value for the maximum age.';
             }
 
-            if ($c && empty($_REQUEST['maximumBirthAge']) && !empty($_REQUEST['minimumBirthAge'])) {
+            if ($c && !empty($_REQUEST['minimumBirthAge']) && !empty($_REQUEST['maximumBirthAge']) && $_REQUEST['maximumBirthAge'] <= $_REQUEST['minimumBirthAge']) {
                 $c = false;
-                $result['error'] = 'You have a numeric value for minimum age so you must have a numeric value for the maximum age too.';
-            }
-
-            if ($c && empty($_REQUEST['minimumBirthAge']) && !empty($_REQUEST['maximumBirthAge'])) {
-                $c = false;
-                $result['error'] = 'You have a numeric value for maximum age so you must have a numeric value for the minimum age too.';
-            }
-
-            if ($c && !empty($_REQUEST['maximumBirthAge']) && $_REQUEST['maximumBirthAge'] <= $_REQUEST['minimumBirthAge']){
-                $c = false;
-                $result['error'] = 'The maximum age should be larger than the minimum age.';
+                $result['error'] = 'The maximum age must be larger than the minimum age.';
             }
 
             if ($c && !empty($_REQUEST['notifyThresholdCount']) && is_numeric($_REQUEST['notifyThresholdCount']) === false) {
@@ -392,8 +382,8 @@ if (isset($_REQUEST['a'])) {
                         'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                         'lookbackPeriod' => empty($_REQUEST['lookbackPeriod']) ? 120 : $_REQUEST['lookbackPeriod'],
                         'pingTimeout' => empty($_REQUEST['pingTimeout']) ? 0 : $_REQUEST['pingTimeout'],
-                        'minimumBirthAge' => empty($_REQUEST['minimumBirthAge']) ? 0 : $_REQUEST['minimumBirthAge'],
-                        'maximumBirthAge' => empty($_REQUEST['maximumBirthAge']) ? 0 : $_REQUEST['maximumBirthAge'],
+                        'minimumBirthAge' => empty($_REQUEST['minimumBirthAge']) ? null : $_REQUEST['minimumBirthAge'],
+                        'maximumBirthAge' => empty($_REQUEST['maximumBirthAge']) ? null : $_REQUEST['maximumBirthAge'],
                     ));
 
                     if (null === $idFeedIn) {
@@ -586,26 +576,16 @@ if (isset($_REQUEST['a'])) {
                     $c = false;
                     $result['error'] = 'Please enter a numeric value for the minimum age.';
                 }
-    
+
                 if ($c && !empty($_REQUEST['maximumBirthAge']) && is_numeric($_REQUEST['maximumBirthAge']) === false) {
                     $c = false;
                     $result['error'] = 'Please enter a numeric value for the maximum age.';
                 }
-    
-                if ($c && empty($_REQUEST['maximumBirthAge']) && !empty($_REQUEST['minimumBirthAge'])) {
+
+                if ($c && !empty($_REQUEST['minimumBirthAge']) && !empty($_REQUEST['maximumBirthAge']) && $_REQUEST['maximumBirthAge'] <= $_REQUEST['minimumBirthAge']) {
                     $c = false;
-                    $result['error'] = 'You have a numeric value for minimum age so you must have a numeric value for the maximum age too.';
+                    $result['error'] = 'The maximum age must be larger than the minimum age.';
                 }
-    
-                if ($c && empty($_REQUEST['minimumBirthAge']) && !empty($_REQUEST['maximumBirthAge'])) {
-                    $c = false;
-                    $result['error'] = 'You have a numeric value for maximum age so you must have a numeric value for the minimum age too.';
-                }
-    
-                if ($c && !empty($_REQUEST['maximumBirthAge']) && $_REQUEST['maximumBirthAge'] <= $_REQUEST['minimumBirthAge']){
-                    $c = false;
-                    $result['error'] = 'The maximum age should be larger than the minimum age.';
-                }    
 
                 if ($c && !empty($_REQUEST['notifyThresholdCount']) && is_numeric($_REQUEST['notifyThresholdCount']) === false) {
                     $c = false;
@@ -686,8 +666,8 @@ if (isset($_REQUEST['a'])) {
                         'timeskew' => empty($_REQUEST['timeskew']) ? null : $_REQUEST['timeskew'],
                         'lookbackPeriod' => empty($_REQUEST['lookbackPeriod']) ? 120 : $_REQUEST['lookbackPeriod'],
                         'pingTimeout' => empty($_REQUEST['pingTimeout']) ? 0 : $_REQUEST['pingTimeout'],
-                        'minimumBirthAge' => empty($_REQUEST['minimumBirthAge']) ? 0 : $_REQUEST['minimumBirthAge'],
-                        'maximumBirthAge' => empty($_REQUEST['maximumBirthAge']) ? 0 : $_REQUEST['maximumBirthAge'],
+                        'minimumBirthAge' => empty($_REQUEST['minimumBirthAge']) ? null : $_REQUEST['minimumBirthAge'],
+                        'maximumBirthAge' => empty($_REQUEST['maximumBirthAge']) ? null : $_REQUEST['maximumBirthAge'],
                     ));
 
                     if (null === $status) {
@@ -892,7 +872,7 @@ if (isset($_REQUEST['d'])) {
                 'timeskew',
                 'lookbackPeriod',
                 'pingTimeout',
-                'minimumBirthAge', 
+                'minimumBirthAge',
                 'maximumBirthAge',
             );
             foreach ($feedProps as $feedProp) {
@@ -1039,8 +1019,8 @@ if (isset($_REQUEST['d'])) {
                                 <p>Choose which states to include/exclude.</p>
                                 <p><?php foreach ($all_states as $abbr => $st) { ?>
                                         <label class="checkbox-label"><input type='checkbox'
-                                                                                                       name='filterStateChoice[]'
-                                                                                                       value='<?php echo $abbr; ?>'<?php if (!empty($filterState_value->states) && in_array($abbr,
+                                                                             name='filterStateChoice[]'
+                                                                             value='<?php echo $abbr; ?>'<?php if (!empty($filterState_value->states) && in_array($abbr,
                                                     $filterState_value->states)) { ?> checked='checked'<?php } ?> />&nbsp;<?php echo $st; ?>
                                         </label>
                                     <?php } ?></p>
@@ -1098,10 +1078,10 @@ if (isset($_REQUEST['d'])) {
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
                                 <label class="checkbox-label"><input type='checkbox'
-                                                                                               name='requiredPingFields[]'
-                                                                                               value='<?php echo Display::escHtml($f->fieldName); ?>'
-                                                                                               <?php if (in_array($f->fieldName,
-                                                                                                   $selectedRequiredPingFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                                                     name='requiredPingFields[]'
+                                                                     value='<?php echo Display::escHtml($f->fieldName); ?>'
+                                                                     <?php if (in_array($f->fieldName,
+                                                                         $selectedRequiredPingFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
                                 </label>
                             <?php } ?>
                         </td>
@@ -1113,10 +1093,10 @@ if (isset($_REQUEST['d'])) {
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
                                 <label class="checkbox-label"><input type='checkbox'
-                                                                                               name='allowedPingFields[]'
-                                                                                               value='<?php echo Display::escHtml($f->fieldName); ?>'
-                                                                                               <?php if (in_array($f->fieldName,
-                                                                                                   $selectedAllowedPingFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                                                     name='allowedPingFields[]'
+                                                                     value='<?php echo Display::escHtml($f->fieldName); ?>'
+                                                                     <?php if (in_array($f->fieldName,
+                                                                         $selectedAllowedPingFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
                                 </label>
                             <?php } ?>
                         </td>
@@ -1126,10 +1106,10 @@ if (isset($_REQUEST['d'])) {
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
                                 <label class="checkbox-label"><input type='checkbox'
-                                                                                               name='required[]'
-                                                                                               value='<?php echo Display::escHtml($f->fieldName); ?>'
-                                                                                               <?php if (in_array($f->fieldName,
-                                                                                                   $selectedRequired)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                                                     name='required[]'
+                                                                     value='<?php echo Display::escHtml($f->fieldName); ?>'
+                                                                     <?php if (in_array($f->fieldName,
+                                                                         $selectedRequired)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
                                 </label>
                             <?php } ?>
                         </td>
@@ -1139,10 +1119,10 @@ if (isset($_REQUEST['d'])) {
                         <td>
                             <?php foreach ($leads->getInboundFields() as $f) { ?>
                                 <label class="checkbox-label"><input type='checkbox'
-                                                                                               name='allowedFields[]'
-                                                                                               value='<?php echo Display::escHtml($f->fieldName); ?>'
-                                                                                               <?php if (in_array($f->fieldName,
-                                                                                                   $selectedAllowedFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
+                                                                     name='allowedFields[]'
+                                                                     value='<?php echo Display::escHtml($f->fieldName); ?>'
+                                                                     <?php if (in_array($f->fieldName,
+                                                                         $selectedAllowedFields)){ ?>checked='checked'<?php } ?> />&nbsp;<?php echo Display::escHtml($f->fieldName); ?>
                                 </label>
                             <?php } ?>
                         </td>
@@ -1171,18 +1151,18 @@ if (isset($_REQUEST['d'])) {
                         <td>Duplicate Filters</p></td>
                         <td>
                             <label class="checkbox-label"><input type='checkbox'
-                                                                                           name='dedupeEmail' value='1'
-                                                                                           <?php if ($feed_dedupeEmail){ ?>checked='checked'<?php } ?> />&nbsp;Reject
+                                                                 name='dedupeEmail' value='1'
+                                                                 <?php if ($feed_dedupeEmail){ ?>checked='checked'<?php } ?> />&nbsp;Reject
                                 Duplicate Emails</label>
                             <label class="checkbox-label"><input type='checkbox'
-                                                                                           name='dedupeLandline'
-                                                                                           value='1'
-                                                                                           <?php if ($feed_dedupeLandline){ ?>checked='checked'<?php } ?> />&nbsp;Reject
+                                                                 name='dedupeLandline'
+                                                                 value='1'
+                                                                 <?php if ($feed_dedupeLandline){ ?>checked='checked'<?php } ?> />&nbsp;Reject
                                 Duplicate Landline Numbers</label>
                             <label class="checkbox-label"><input type='checkbox'
-                                                                                           name='dedupeCellphone'
-                                                                                           value='1'
-                                                                                           <?php if ($feed_dedupeCellphone){ ?>checked='checked'<?php } ?> />&nbsp;Reject
+                                                                 name='dedupeCellphone'
+                                                                 value='1'
+                                                                 <?php if ($feed_dedupeCellphone){ ?>checked='checked'<?php } ?> />&nbsp;Reject
                                 Duplicate Cellphone Numbers</label>
                         </td>
                     </tr>
@@ -1237,7 +1217,7 @@ if (isset($_REQUEST['d'])) {
                                    id='filterTypeUrl_disabled'
                                    value=''
                                 <?php if (
-                                empty($feed_filterTypeUrl)
+                                    empty($feed_filterTypeUrl)
                                 ) { ?>
                                     checked='checked'
                                 <?php } ?>
@@ -1418,10 +1398,10 @@ if (isset($_REQUEST['d'])) {
                                 on<br/>
                                 <?php for ($i = 0; $i <= 6; $i++) { ?>
                                     <label class="checkbox-label"><input type="checkbox"
-                                                                                                   name="notifyThresholdDays[]"
-                                                                                                   value="<?php echo $i; ?>"
-                                                                                                   <?php if (in_array($i,
-                                                                                                       $selectedNotifyThresholdDays)){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?>
+                                                                         name="notifyThresholdDays[]"
+                                                                         value="<?php echo $i; ?>"
+                                                                         <?php if (in_array($i,
+                                                                             $selectedNotifyThresholdDays)){ ?>checked="checked"<?php } ?> />&nbsp;<?php echo $dowMap[$i]; ?>
                                     </label>
                                 <?php } ?>
                             </p>
@@ -1468,22 +1448,14 @@ if (isset($_REQUEST['d'])) {
                         </td>
                     </tr>
                     <tr>
-                        <td><p>Minimum Birth Age</p></td>
+                        <td><p>Date of Birth Restrictions</p></td>
                         <td>
-                        <p>Required if there's a maximum birth age. Must be smaller than maximum age.</p>
-                            <p>
-                                <input type="text" name="minimumBirthAge" id="minimumBirthAge"
-                                       value="" />
+                            <p>If either or both of these values are set, the system will calculate the age of the person based on the DOB passed and reject if the age falls outside these values.</p>
+                            <p><label for="minimumBirthAge">Minimum Birth Age:</label>
+                                <input type="text" name="minimumBirthAge" id="minimumBirthAge" value="<?php echo Display::escHtml($feed_minimumBirthAge); ?>"/>
                             </p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><p>Maximum Birth Age</p></td>
-                        <td>
-                            <p>Required if there's a minimum birth age. Must be larger than minimum age.</p>
-                            <p>
-                                <input type="text" name="maximumBirthAge" id="maximumBirthAge"
-                                       value="" />
+                            <p><label for="maximumBirthAge">Maximum Birth Age:</label>
+                                <input type="text" name="maximumBirthAge" id="maximumBirthAge" value="<?php echo Display::escHtml($feed_maximumBirthAge); ?>"/>
                             </p>
                         </td>
                     </tr>

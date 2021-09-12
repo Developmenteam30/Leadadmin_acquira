@@ -1176,18 +1176,22 @@ class ProcessLeads
                     $result['reason'] = 'Date of Birth (dob) is invalid.';
                 }
 
-                if ($c && !empty($feedParams->minimumBirthAge) && !empty($feedParams->maximumBirthAge)) {
-                    $now = new DateTime('now');
-                    $born = new DateTime($value);
-                    $diff = $born->diff($now);
-                    $years = intval($diff->format('%y'));
+                if ($c && (!empty($feedParams->minimumBirthAge) || !empty($feedParams->maximumBirthAge))) {
+                    try {
+                        $now = new DateTime('now');
+                        $born = new DateTime($value);
+                        $diff = $born->diff($now);
+                        $years = intval($diff->format('%y'));
 
-                    if ($years < $feedParams->minimumBirthAge) {
-                        $c = false;
-                        $result['reason'] = 'Date of Birth (dob) is too young.';
-                    } elseif ($years > $feedParams->maximumBirthAge) {
-                        $c = false;
-                        $result['reason'] = 'Date of Birth (dob) is too old.';
+                        if (!empty($feedParams->minimumBirthAge) && $years < $feedParams->minimumBirthAge) {
+                            $c = false;
+                            $result['reason'] = 'Date of Birth (dob) is too young.';
+                        } elseif (!empty($feedParams->maximumBirthAge) && $years > $feedParams->maximumBirthAge) {
+                            $c = false;
+                            $result['reason'] = 'Date of Birth (dob) is too old.';
+                        }
+                    } catch (Exception $e) {
+                        // Do nothing
                     }
                 }
                 break;
