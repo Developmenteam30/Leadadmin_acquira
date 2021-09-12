@@ -3530,7 +3530,7 @@ class Leads
             $rawData = [
                 'remoteAddress' => $_SERVER['REMOTE_ADDR'] ?? '',
                 'requestMethod' => $_SERVER['REQUEST_METHOD'] ?? '',
-                'requestUrl' => parse_url($_SERVER['SCRIPT_URI'] ?? '', PHP_URL_SCHEME) . '://' . parse_url($_SERVER['SCRIPT_URI'] ?? '', PHP_URL_HOST) . parse_url($_SERVER['SCRIPT_URI'] ?? '', PHP_URL_PATH),
+                'requestUrl' => !empty($_SERVER['SCRIPT_URI']) ? parse_url($_SERVER['SCRIPT_URI'], PHP_URL_SCHEME) . '://' . parse_url($_SERVER['SCRIPT_URI'], PHP_URL_HOST) . parse_url($_SERVER['SCRIPT_URI'], PHP_URL_PATH) : '',
                 'getParams' => $_GET ?? [],
                 'postParams' => $_POST ?? [],
             ];
