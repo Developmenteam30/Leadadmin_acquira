@@ -1915,11 +1915,12 @@ include(INCLUDES . "c_header.php");
                     </thead>
                     <tbody>
                     <?php
-                    $invoiceTotal = $paymentTotal = $commissionTotal = 0;
+                    $invoiceTotal = $paymentTotal = $commissionTotal = $reimbursementTotal = 0;
                     foreach ($entries as $entry) {
                         if (substr($entry->ledgerMonth, 0, 7) == $month) {
                             $invoiceTotal += $entry->invoiceAmount;
                             $paymentTotal += $entry->paymentAmount;
+                            $reimbursementTotal += $entry->reimbursementAmount;
                             if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) || LeadsSession::getUserId() == $entry->userId1) {
                                 $commissionTotal += $entry->commissionAmount1;
                             }
@@ -2031,7 +2032,7 @@ include(INCLUDES . "c_header.php");
                         <?php if ('EQ' === COMPANY_INITIALS) { ?>
                             <td>&nbsp;</td>
                             <td>&nbsp;</td>
-                            <td>&nbsp;</td>
+                            <td>$<?= number_format($reimbursementTotal, 2); ?></td>
                         <?php } ?>
                         <!--                    <td>&nbsp;</td>
                         <td>$<?php echo number_format($commissionTotal, 2); ?></td> -->
