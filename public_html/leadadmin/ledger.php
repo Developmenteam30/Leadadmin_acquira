@@ -129,7 +129,7 @@ if (isset($_REQUEST['a'])) {
 
             if ($c && !empty($_REQUEST['reimbursementPaymentDate'])) {
                 try {
-                    $paymentDate = new DateTime($_REQUEST['reimbursementPaymentDate']);
+                    $reimbursementPaymentDate = new DateTime($_REQUEST['reimbursementPaymentDate']);
                 } catch (Exception $e) {
                     $result['error'] = 'Please enter a valid RGE payment date.';
                     $c = false;
@@ -259,7 +259,7 @@ if (isset($_REQUEST['a'])) {
                     'dueDate' => !isset($dueDate) ? null : $dueDate->format('Y-m-d'),
                     'paymentAmount' => empty($_REQUEST['paymentAmount']) ? null : $_REQUEST['paymentAmount'],
                     'isReimbursed' => !empty($_REQUEST['isReimbursed']) ? 1 : 0,
-                    'reimbursementPaymentDate' => empty($_REQUEST['reimbursementPaymentDate']) ? null : $_REQUEST['reimbursementPaymentDate'],
+                    'reimbursementPaymentDate' => !isset($reimbursementPaymentDate) ? null : $reimbursementPaymentDate->format('Y-m-d'),
                     'reimbursementAmount' => empty($_REQUEST['reimbursementAmount']) ? null : $_REQUEST['reimbursementAmount'],
                     'commissionDate1' => !isset($commissionDate1) ? null : $commissionDate1->format('Y-m-d'),
                     'commissionAmount1' => empty($_REQUEST['commissionAmount1']) ? null : $_REQUEST['commissionAmount1'],
@@ -445,7 +445,7 @@ if (isset($_REQUEST['a'])) {
 
             if ($c && !empty($_REQUEST['reimbursementPaymentDate'])) {
                 try {
-                    $paymentDate = new DateTime($_REQUEST['reimbursementPaymentDate']);
+                    $reimbursementPaymentDate = new DateTime($_REQUEST['reimbursementPaymentDate']);
                 } catch (Exception $e) {
                     $result['error'] = 'Please enter a valid RGE payment date.';
                     $c = false;
@@ -575,7 +575,7 @@ if (isset($_REQUEST['a'])) {
                     'invoiceNum' => empty($_REQUEST['invoiceNum']) ? null : $_REQUEST['invoiceNum'],
                     'paymentAmount' => empty($_REQUEST['paymentAmount']) ? null : $_REQUEST['paymentAmount'],
                     'isReimbursed' => !empty($_REQUEST['isReimbursed']) ? 1 : 0,
-                    'reimbursementPaymentDate' => empty($_REQUEST['reimbursementPaymentDate']) ? null : $_REQUEST['reimbursementPaymentDate'],
+                    'reimbursementPaymentDate' => !isset($reimbursementPaymentDate) ? null : $reimbursementPaymentDate->format('Y-m-d'),
                     'reimbursementAmount' => empty($_REQUEST['reimbursementAmount']) ? null : $_REQUEST['reimbursementAmount'],
                     'commissionDate1' => !isset($commissionDate1) ? null : $commissionDate1->format('Y-m-d'),
                     'commissionAmount1' => empty($_REQUEST['commissionAmount1']) ? null : $_REQUEST['commissionAmount1'],
