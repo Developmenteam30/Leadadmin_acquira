@@ -766,6 +766,11 @@ if (isset($_REQUEST['a'])) {
                 }
             }
 
+            if ($c && (empty($_REQUEST['columns']) || !is_array($_REQUEST['columns']))) {
+                $c = false;
+                $result['error'] = 'Please select at least one column to export.';
+            }
+
             if ($c) {
                 $jobId = $leads->addJob('export-outgoing', $feed->idFeedOut, serialize($_REQUEST), '', 0);
                 if (null === $jobId) {
