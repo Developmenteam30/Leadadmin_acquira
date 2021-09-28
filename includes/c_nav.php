@@ -50,7 +50,7 @@ if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF, L
             'name' => 'Admin',
             'level' => LEADS_SESSION_LEVEL_STAFF,
             'menu' => array(
-                array('name' => 'System Error Codes', 'url' => '/assets/pdf/Qatalyst%20Error%20Codes.pdf', 'level' => LEADS_SESSION_LEVEL_STAFF),
+                array('name' => 'System Error Codes', 'url' => '/assets/pdf/System%20Error%20Codes.pdf', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN),
                 array('name' => 'Record Search', 'url' => '/leadadmin/record-search.php', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => 'Vertical Management', 'url' => '/leadadmin/verticals.php', 'level' => LEADS_SESSION_LEVEL_STAFF),

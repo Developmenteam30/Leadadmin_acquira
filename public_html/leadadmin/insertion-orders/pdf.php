@@ -317,7 +317,7 @@ if (1 == $order->includeBankingInfo) {
         setLightOnDark($pdf);
         $pdf->Cell(98, 7, 'FOR BENEFIT OF', 1, 0, 'L', true);
         setDarkOnLight($pdf);
-        $pdf->Cell(98, 7, 'Qatalyst, Inc.', 1, 1, 'L');
+        $pdf->Cell(98, 7, COMPANY_LEGAL_NAME, 1, 1, 'L');
 
     } else {
 

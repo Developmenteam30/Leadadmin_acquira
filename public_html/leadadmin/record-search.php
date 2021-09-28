@@ -40,7 +40,7 @@ include(INCLUDES . "c_header.php");
     <h2>Record Search</h2>
     <p>Fill out any or all of the fields below to perform an "AND" search against all of the fields that are filled in.</p>
     <p>Searches will be performed against the entire archive of data back to June 2014.</p>
-    <?php if ('Qatalyst' === CONFIG_COMPANY_NAME) { ?>
+    <?php if ('Q' === COMPANY_INITIALS) { ?>
         <p>We started keeping inbound rejected records on 5/1/2018 and outbound rejected records on 9/1/2018. Before these dates, only accepted records were logged and available for searching.</p>
     <?php } ?>
     <p>Results are limited to the first 500 matching entries and are sorted with the most recent entries on top.</p>
