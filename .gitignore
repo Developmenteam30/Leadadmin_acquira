@@ -5,6 +5,7 @@ pushLead/lockfiles/
 uploads/
 includes/vendor/
 includes/c_config.php
+includes/c_header.php
 includes/f_site.php
 public_html/assets/css/branding.css
 public_html/leadadmin/images/Q-isolated.jpg

@@ -462,6 +462,17 @@ div.logoContainer {
 	text-align: center;
 }
 
+.modal-search {
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+.cell {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	border-bottom: 1px solid #ccc;
+}
+
 @media (min-width: 768px) {
 	.modal-xl {
 		width: 90%;
