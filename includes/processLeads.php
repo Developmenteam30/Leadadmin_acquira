@@ -1171,7 +1171,7 @@ class ProcessLeads
                 break;
 
             case 'dob':
-                if ($c && !empty($value) && !preg_match('~^[0-9]{4}-[0-9]{2}-[0-9]{2}$~', $value) && !preg_match('~^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$~', $value)) {
+                if ($c && !empty($value) && !preg_match('~^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$~', $value) && !preg_match('~^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$~', $value)) {
                     $c = false;
                     $result['reason'] = 'Date of Birth (dob) must be in the format YYYY-MM-DD.';
                 }
