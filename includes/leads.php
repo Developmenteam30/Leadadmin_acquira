@@ -5285,7 +5285,7 @@ class Leads
         $checkSql = $this->db->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)");
 
         // Establish our baseline SQL that we'll change in the loop
-        $baseSql = "( SELECT fi.label,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.result,i.rawData,ci.name as companyName ";
+        $baseSql = "( SELECT fi.label,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.result,i.rawData,i.custom1,i.custom2,i.custom3,i.custom4,i.custom5,i.custom6,ci.name as companyName ";
         $params[] = DB_TIMEZONE;
         $params[] = LOCAL_TIMEZONE;
         $baseSql .= "FROM data_inbound AS i ";
