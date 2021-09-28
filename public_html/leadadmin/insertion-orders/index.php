@@ -27,10 +27,6 @@ if (isset($_REQUEST['a'])) {
 
             $userId = LeadsSession::getUserId();
             if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
-                if (empty($_REQUEST['userId'])) {
-                    $result['error'] = 'Please select a salesperson from the list.';
-                    break;
-                }
                 $userId = empty($_REQUEST['userId']) ? null : $_REQUEST['userId'];
             }
 
@@ -172,10 +168,6 @@ if (isset($_REQUEST['a'])) {
 
             $userId = LeadsSession::getUserId();
             if (LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN])) {
-                if (empty($_REQUEST['userId'])) {
-                    $result['error'] = 'Please select a salesperson from the list.';
-                    break;
-                }
                 $userId = empty($_REQUEST['userId']) ? null : $_REQUEST['userId'];
             }
 
@@ -319,7 +311,7 @@ if (isset($_REQUEST['d'])) {
             $fields = array(
                 array(
                     'id' => 'orderType',
-                    'label' => 'Qatalyst Order Type',
+                    'label' => COMPANY_INITIALS . ' Order Type',
                     'type' => 'radio',
                     'choices' => array(
                         'publisher' => 'Publisher (Seller)',
@@ -336,7 +328,6 @@ if (isset($_REQUEST['d'])) {
                     'placeholder' => 'Select a salesperson',
                     'choices' => $leads->getStaffUsers(),
                     'active' => LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) ? true : false,
-                    'required' => true,
                 ),
                 array(
                     'id' => 'companyId',
@@ -357,12 +348,14 @@ if (isset($_REQUEST['d'])) {
                     'label' => 'Start Date',
                     'type' => 'text',
                     'autocomplete' => 'off',
+                    'required' => true,
                 ),
                 array(
                     'id' => 'endDate',
                     'label' => 'End Date',
                     'type' => 'text',
                     'autocomplete' => 'off',
+                    'required' => true,
                 ),
                 array(
                     'id' => 'paymentTerms',
@@ -381,7 +374,7 @@ if (isset($_REQUEST['d'])) {
                 ),
                 array(
                     'id' => 'callReporting',
-                    'label' => 'Call Reporting',
+                    'label' => 'Reporting',
                     'type' => 'radio',
                     'choices' => array(
                         'publisher' => 'Provided by Publisher',
@@ -412,26 +405,31 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'deliveryMethod',
                     'label' => 'Delivery Method',
                     'type' => 'text',
+                    'required' => true,
                 ),
                 array(
                     'id' => 'qty',
                     'label' => 'Qty Ordered',
                     'type' => 'text',
+                    'required' => true,
                 ),
                 array(
                     'id' => 'did',
                     'label' => 'DID',
                     'type' => 'text',
+                    'required' => true,
                 ),
                 array(
                     'id' => 'deliveryDays',
                     'label' => 'Delivery Days',
                     'type' => 'text',
+                    'required' => true,
                 ),
                 array(
                     'id' => 'callHours',
                     'label' => 'Call Hours',
                     'type' => 'text',
+                    'required' => true,
                 ),
                 array(
                     'id' => 'notes',
@@ -620,7 +618,7 @@ if (isset($_REQUEST['d'])) {
             $fields = array(
                 array(
                     'id' => 'orderType',
-                    'label' => 'Qatalyst Order Type',
+                    'label' => COMPANY_INITIALS . ' Order Type',
                     'type' => 'radio',
                     'choices' => array(
                         'publisher' => 'Publisher (Seller)',
@@ -637,7 +635,6 @@ if (isset($_REQUEST['d'])) {
                     'placeholder' => 'Select a salesperson',
                     'choices' => $leads->getStaffUsers(),
                     'active' => LeadsSession::isValid([LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]) ? true : false,
-                    'required' => true,
                     'value' => $order->userId,
                 ),
                 array(
@@ -663,6 +660,7 @@ if (isset($_REQUEST['d'])) {
                     'type' => 'text',
                     'autocomplete' => 'off',
                     'value' => $order->startDate,
+                    'required' => true,
                 ),
                 array(
                     'id' => 'endDate',
@@ -670,6 +668,7 @@ if (isset($_REQUEST['d'])) {
                     'type' => 'text',
                     'autocomplete' => 'off',
                     'value' => $order->endDate,
+                    'required' => true,
                 ),
                 array(
                     'id' => 'paymentTerms',
@@ -689,7 +688,7 @@ if (isset($_REQUEST['d'])) {
                 ),
                 array(
                     'id' => 'callReporting',
-                    'label' => 'Call Reporting',
+                    'label' => 'Reporting',
                     'type' => 'radio',
                     'choices' => array(
                         'publisher' => 'Provided by Publisher',
@@ -724,6 +723,7 @@ if (isset($_REQUEST['d'])) {
                     'label' => 'Delivery Method',
                     'type' => 'text',
                     'value' => $order->deliveryMethod,
+                    'required' => true,
 
                 ),
                 array(
@@ -731,6 +731,7 @@ if (isset($_REQUEST['d'])) {
                     'label' => 'Qty Ordered',
                     'type' => 'text',
                     'value' => $order->qty,
+                    'required' => true,
 
                 ),
                 array(
@@ -738,6 +739,7 @@ if (isset($_REQUEST['d'])) {
                     'label' => 'DID',
                     'type' => 'text',
                     'value' => $order->did,
+                    'required' => true,
 
                 ),
                 array(
@@ -745,6 +747,7 @@ if (isset($_REQUEST['d'])) {
                     'label' => 'Delivery Days',
                     'type' => 'text',
                     'value' => $order->deliveryDays,
+                    'required' => true,
 
                 ),
                 array(
@@ -752,6 +755,7 @@ if (isset($_REQUEST['d'])) {
                     'label' => 'Call Hours',
                     'type' => 'text',
                     'value' => $order->callHours,
+                    'required' => true,
 
                 ),
                 array(

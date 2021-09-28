@@ -28,7 +28,7 @@ if (empty($order)) {
 function setLightOnDark($pdf)
 {
     $pdf->SetTextColor(255, 255, 255);
-    $pdf->SetFillColor(90, 56, 144);
+    $pdf->SetFillColor(BRANDING_RGB1, BRANDING_RGB2, BRANDING_RGB3);
 }
 
 function setDarkOnLight($pdf)
@@ -165,13 +165,13 @@ if ('publisher' === $order->orderType) {
 $pdf->Ln();
 setDarkOnLight($pdf);
 
-$pdf->SetFont('Arial', 'U');
-// $pdf->Cell(0, 7, 'Pursuant to the Insertion Order to which this Exhibit "A" is attached,', 0, 1, 'C');
-// $pdf->Cell(0, 7, 'Seller agrees to sell to Buyer, Data, based on the criteria/qualifications below.', 0, 1, 'C');
-$pdf->Cell(0, 7, 'By signing this Insertion Order, you agree to accept and be bound to all', 0, 1, 'C');
-$pdf->Cell(0, 7, 'the terms and conditions set forth in the Qatalyst Ping Post Purchase', 0, 1, 'C');
-$pdf->Cell(0, 7, 'Terms and Condition Agreement located at https://www.qatalystinc.com/ping-post-terms/', 0, 1, 'C');
-$pdf->SetFont('Arial', '');
+if ('Q' === COMPANY_INITIALS) {
+    $pdf->SetFont('Arial', 'U');
+    $pdf->Cell(0, 7, 'By signing this Insertion Order, you agree to accept and be bound to all', 0, 1, 'C');
+    $pdf->Cell(0, 7, 'the terms and conditions set forth in the Qatalyst Ping Post Purchase', 0, 1, 'C');
+    $pdf->Cell(0, 7, 'Terms and Condition Agreement located at https://www.qatalystinc.com/ping-post-terms/', 0, 1, 'C');
+    $pdf->SetFont('Arial', '');
+}
 
 // ROW
 $pdf->Ln();
@@ -180,7 +180,7 @@ $pdf->Cell(39.2, 7, 'Product Type', 1, 0, 'C', 'true');
 $pdf->Cell(39.2, 7, 'Start Date', 1, 0, 'C', 'true');
 $pdf->Cell(39.2, 7, 'End Date', 1, 0, 'C', 'true');
 $pdf->Cell(39.2, 7, 'Payment Terms', 1, 0, 'C', 'true');
-$pdf->Cell(39.2, 7, 'Call Reporting', 1, 1, 'C', 'true');
+$pdf->Cell(39.2, 7, 'Reporting', 1, 1, 'C', 'true');
 
 $pdf->SetFont('Arial', '', 10);
 setDarkOnLight($pdf);
@@ -226,7 +226,6 @@ setDarkOnLight($pdf);
 $pdf->MultiCell(0, 7, $order->notes, 1, 'L');
 
 $files = Display::findFilesRecurse(FILES_DIR . 'insertion-orders' . DIRECTORY_SEPARATOR . $order->orderId);
-//var_dump($files);
 
 if (!empty($files)) {
     $pdf->Ln();
@@ -246,7 +245,7 @@ setDarkOnLight($pdf);
 $pdf->SetFont('Arial', 'B');
 $pdf->Cell(0, 7, 'IN WITNESS WHEREOF,', 0, 1, 'C');
 $pdf->SetFont('Arial', '');
-$pdf->Cell(0, 7, 'the parites hereto have caused this Agreement', 0, 1, 'C');
+$pdf->Cell(0, 7, 'the parties hereto have caused this Agreement', 0, 1, 'C');
 $pdf->Cell(0, 7, 'to be duly executed as of the date set forth below.', 0, 1, 'C');
 $pdf->SetFont('Arial', '');
 
@@ -297,27 +296,27 @@ if (1 == $order->includeBankingInfo) {
         setLightOnDark($pdf);
         $pdf->Cell(98, 7, 'BANK', 1, 0, 'L', 'true');
         setDarkOnLight($pdf);
-        $pdf->Cell(98, 7, 'CHASE', 1, 1, 'L');
+        $pdf->Cell(98, 7, BANK_NAME, 1, 1, 'L');
 
         setLightOnDark($pdf);
         $pdf->Cell(98, 7, 'OFFICE', 1, 0, 'L', true);
         setDarkOnLight($pdf);
-        $pdf->Cell(98, 7, '4625 Gulf Blvd. St. Pete Beach, FL 33706', 1, 1, 'L');
+        $pdf->Cell(98, 7, BANK_ADDRESS, 1, 1, 'L');
 
         setLightOnDark($pdf);
         $pdf->Cell(98, 7, 'ROUTING NUMBER', 1, 0, 'L', true);
         setDarkOnLight($pdf);
-        $pdf->Cell(98, 7, '267084131', 1, 1, 'L');
+        $pdf->Cell(98, 7, BANK_ROUTING, 1, 1, 'L');
 
         setLightOnDark($pdf);
         $pdf->Cell(98, 7, 'ACCOUNT NUMBER', 1, 0, 'L', true);
         setDarkOnLight($pdf);
-        $pdf->Cell(98, 7, '855959016', 1, 1, 'L');
+        $pdf->Cell(98, 7, BANK_ACCOUNT, 1, 1, 'L');
 
         setLightOnDark($pdf);
         $pdf->Cell(98, 7, 'FOR BENEFIT OF', 1, 0, 'L', true);
         setDarkOnLight($pdf);
-        $pdf->Cell(98, 7, 'Qatalyst, Inc.', 1, 1, 'L');
+        $pdf->Cell(98, 7, COMPANY_LEGAL_NAME, 1, 1, 'L');
 
     } else {
 
@@ -353,10 +352,14 @@ if (1 == $order->includeBankingInfo) {
 if (1 == $order->includeW9) {
 
     if ('publisher' === $order->orderType) {
-        // include w9 file
+        $file = SITE_ROOT . '/public_html/assets/pdf/W9-' . COMPANY_INITIALS . '.pdf';
     } else {
+        $file = SITE_ROOT . '/public_html/assets/pdf/fw9.pdf';
+    }
+
+    if (file_exists($file)) {
         // get the page count
-        $pageCount = $pdf->setSourceFile(SITE_ROOT . '/public_html/assets/pdf/fw9.pdf');
+        $pageCount = $pdf->setSourceFile($file);
         // iterate through all pages
         for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
             // import a page

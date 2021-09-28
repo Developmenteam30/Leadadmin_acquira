@@ -326,7 +326,7 @@ if (isset($_REQUEST['a'])) {
                     $result['error'] = 'Sorry, you do not have permission to add new feeds.';
                 }
 
-                if ($c && 'Qatalyst' === CONFIG_COMPANY_NAME) {
+                if ($c && 'Q' === COMPANY_INITIALS) {
                     //Label can not be already used
                     $checkResult = $leads->checkInboundFeedLabelExists($_REQUEST['label']);
                     if (true === $checkResult) {
@@ -426,7 +426,7 @@ if (isset($_REQUEST['a'])) {
                         $result['error'] = 'Sorry, you do not have access to this feed.';
                     }
                 }
-                if ($c && $_REQUEST['label'] != $feed->label && 'Qatalyst' === CONFIG_COMPANY_NAME) { //Label is being altered.
+                if ($c && $_REQUEST['label'] != $feed->label && 'Q' === COMPANY_INITIALS) { //Label is being altered.
 
                     if ($c) {
                         //Label can not be already used
@@ -938,7 +938,7 @@ if (isset($_REQUEST['d'])) {
                         <td>Feed Label</p></td>
                         <td>
                             <input type="hidden" name="idFeedIn" id="idFeedIn" value="<?php echo $feed_idFeedIn; ?>"/>
-                            <?php if ('Qatalyst' === CONFIG_COMPANY_NAME && !empty($idFeedIn) && $idFeedIn < 123) { ?>
+                            <?php if ('Q' === COMPANY_INITIALS && !empty($idFeedIn) && $idFeedIn < 123) { ?>
                                 <input type="hidden" name="label" id="label"
                                        value="<?php echo Display::escHtml($feed_label); ?>"/><?php echo Display::escHtml($feed_label); ?>
                                 <br/>(Cannot modify incoming feed labels created before 5/24/18)

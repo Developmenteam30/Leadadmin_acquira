@@ -1,7 +1,7 @@
 <?php
 require_once( INCLUDES . 'session.php' );
 
-$name = 'Qatalyst Client';
+$name = CONFIG_COMPANY_NAME . ' Client';
 $user = $leads->getUser( LeadsSession::getUserId() );
 if( !empty( $user->username ) ) {
 	$name = $user->username;
