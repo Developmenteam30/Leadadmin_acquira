@@ -103,11 +103,25 @@ include(INCLUDES . "c_header.php");
                 <tr>
                     <th>Incoming Feed</th>
                     <th>Email</th>
+                    <th>Timestamp</th>
+                    <th>URL</th>
                     <th>First Name</th>
                     <th>Last Name</th>
                     <th>Lead Timestamp</th>
                     <th>IP Address</th>
                     <th>DOB</th>
+                    <th rowspan="3">Actions</th>
+                </tr>
+                <tr>
+                    <th>Address 1</th>
+                    <th>Address 2</th>
+                    <th>City</th>
+                    <th>State</th>
+                    <th>Zipcode</th>
+                    <th>Country</th>
+                    <th>Landline</th>
+                    <th>Cellphone</th>
+                    <th>Gender</th>
                 </tr>
                 <tr>
                     <th colspan="9">Incoming and Outgoing Responses</th>
@@ -115,25 +129,37 @@ include(INCLUDES . "c_header.php");
                 </thead>
                 <tbody>
 
-                <?php $counter = 0; foreach ($records as $key => $value) { $counter++; ?>
+                <?php foreach ($records as $record) { ?>
                     <tr>
-                        <td><?php echo Display::escHtml($value->companyName); ?> - <?php echo Display::escHtml($value->label); ?> (#<?php echo Display::escHtml($value->idFeedIn); ?>)</td>
-                        <td><?php echo Display::escHtml($value->email); ?></td>
-                        <td><?php echo Display::escHtml($value->fname); ?></td>
-                        <td><?php echo Display::escHtml($value->lname); ?></td>
-                        <td><?php echo Display::escHtml($value->leadstamp); ?></td>
-                        <td><?php echo Display::escHtml($value->ip); ?></td>
-                        <td><?php echo Display::escHtml($value->dob); ?></td>
-                        <td>
-
-                            <button type="button" value="<?php echo $counter ?>" data-toggle="modal" data-backdrop="static" data-target="#search">View Details</button>
+                        <td><?php echo Display::escHtml($record->companyName); ?> - <?php echo Display::escHtml($record->label); ?> (#<?php echo Display::escHtml($record->idFeedIn); ?>)</td>
+                        <td><?php echo Display::escHtml($record->email); ?></td>
+                        <td><?php echo Display::escHtml($record->timestampConverted); ?></td>
+                        <td><?php echo Display::escHtml($record->url); ?></td>
+                        <td><?php echo Display::escHtml($record->fname); ?></td>
+                        <td><?php echo Display::escHtml($record->lname); ?></td>
+                        <td><?php echo Display::escHtml($record->leadstamp); ?></td>
+                        <td><?php echo Display::escHtml($record->ip); ?></td>
+                        <td><?php echo Display::escHtml($record->dob); ?></td>
+                        <td rowspan="3" class="text-center">
+                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-backdrop="static" data-target="#record-details-<?= Display::escHtml($record->idRecord); ?>">View Details</button>
                         </td>
                     </tr>
                     <tr>
+                        <td><?php echo Display::escHtml($record->addr); ?>&nbsp;</td>
+                        <td><?php echo Display::escHtml($record->addr2); ?></td>
+                        <td><?php echo Display::escHtml($record->city); ?></td>
+                        <td><?php echo Display::escHtml($record->state); ?></td>
+                        <td><?php echo Display::escHtml($record->zip); ?></td>
+                        <td><?php echo Display::escHtml($record->country); ?></td>
+                        <td><?php echo Display::escHtml($record->landline); ?></td>
+                        <td><?php echo Display::escHtml($record->cellphone); ?></td>
+                        <td><?php echo Display::escHtml($record->gender); ?></td>
+                    </tr>
+                    <tr>
                         <td colspan="9">
-                            <p><strong>Incoming Response</strong>: <?php echo Display::escHtml($value->result ?? 'Success'); ?></p>
+                            <p><strong>Incoming Response</strong>: <?php echo Display::escHtml($record->result ?? 'Success'); ?></p>
                             <?php
-                            $outboundRecords = $leads->outboundRecordSearchById($value->idRecord);
+                            $outboundRecords = $leads->outboundRecordSearchById($record->idRecord);
                             if (!empty($outboundRecords)) {
                                 print '<p><strong>Outgoing Responses:</strong></p>';
                                 print '<ul>';
@@ -153,38 +179,93 @@ include(INCLUDES . "c_header.php");
                             ?>
                         </td>
                     </tr>
-                    <div style="display:none" class="modal fade" id="search" tabindex="-1" role="dialog" aria-labelledby="search_title">
-                        <div class="modal-dialog modal-lg" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
-                                    </button>
-                                    <h4 class="modal-title" id="search_title">Search Results</h4>
-                                </div>
-                                <div class="modal-search">
-                                    <?php 
-                                        foreach ($records[$counter] as $key => $value){
-                                            echo "<div class='row cell'>
-                                                        <div class='col-sm-4 text-right px-3 py-5'>
-                                                            <div>".$key."</div>
-                                                        </div>
-                                                        <div class='col-sm-8 px-3 py-5'>
-                                                            <div>".$value."</div>
-                                                        </div>
-                                                    </div>";
-                                        }
-                                    ?>
-                                   
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 <?php } ?>
                 </tbody>
             </table>
+
+            <?php foreach ($records as $record) { ?>
+                <div style="display:none" class="modal fade" id="record-details-<?= Display::escHtml($record->idRecord); ?>" tabindex="-1" role="dialog"
+                     aria-labelledby="record-details-title-<?= Display::escHtml($record->idRecord); ?>">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title" id="record-details-title-<?= Display::escHtml($record->idRecord); ?>">Record Details</h4>
+                            </div>
+                            <div class="modal-search">
+                                <?php
+                                if (!empty($record->rawData)) {
+                                    $json = json_decode($record->rawData);
+                                    echo "<h4>Raw Header Fields</h4>";
+
+                                    foreach ($json as $key => $value) {
+                                        if (is_array($value) || is_object($value)) {
+                                            continue;
+                                        }
+                                        echo "<div class='row cell'>
+                                                        <div class='col-sm-4 text-right px-3 py-5'>
+                                                            <div>" . Display::escHtml($key) . "</div>
+                                                        </div>
+                                                        <div class='col-sm-8 px-3 py-5'>
+                                                            <div>" . Display::escHtml($value) . "</div>
+                                                        </div>
+                                                    </div>";
+                                    }
+
+                                    if(!empty($json->getParams)) {
+                                        echo "<h4>Raw GET Fields</h4>";
+                                    }
+                                    foreach ($json->getParams as $key => $value) {
+                                        echo "<div class='row cell'>
+                                                        <div class='col-sm-4 text-right px-3 py-5'>
+                                                            <div>" . Display::escHtml($key) . "</div>
+                                                        </div>
+                                                        <div class='col-sm-8 px-3 py-5'>
+                                                            <div>" . Display::escHtml($value) . "</div>
+                                                        </div>
+                                                    </div>";
+                                    }
+
+                                    if(!empty($json->postParams)) {
+                                        echo "<h4>Raw POST Fields</h4>";
+                                    }
+                                    foreach ($json->postParams as $key => $value) {
+                                        echo "<div class='row cell'>
+                                                        <div class='col-sm-4 text-right px-3 py-5'>
+                                                            <div>" . Display::escHtml($key) . "</div>
+                                                        </div>
+                                                        <div class='col-sm-8 px-3 py-5'>
+                                                            <div>" . Display::escHtml($value) . "</div>
+                                                        </div>
+                                                    </div>";
+                                    }
+                                    echo "<h4>JSON String</h4>
+                                           <code>" . Display::escHtml($record->rawData) . "</code><br/>";
+                                } else {
+                                    echo "<h4>Database Fields (Legacy Record)</h4>";
+                                    foreach ($record as $key => $value) {
+                                        echo "<div class='row cell'>
+                                                <div class='col-sm-4 text-right px-3 py-5'>
+                                                    <div>" . Display::escHtml($key) . "</div>
+                                                </div>
+                                                <div class='col-sm-8 px-3 py-5'>
+                                                    <div>" . Display::escHtml($value) . "</div>
+                                                </div>
+                                            </div>";
+                                    }
+                                }
+                                ?>
+                                <br/>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php } ?>
+
             <?php
         } else {
             print '<p>No records found.</p>' . PHP_EOL;
@@ -192,12 +273,5 @@ include(INCLUDES . "c_header.php");
     }
     ?>
 </div>
-
-
-<script type="text/javascript">
-    $('#search').on('click', function (e) {
-        var modal = $(this);
-    });
-</script>
 </body>
 </html>

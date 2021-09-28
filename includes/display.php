@@ -270,19 +270,9 @@ class Display
 
             } elseif ('button' == $field['type']) {
 
-                if ($field['data-toggle'] !== 'modal'){
-                    printf("\t<input type=\"button\" value=\"%s\" />\n",
-                        htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5)
-                    );
-                }
-                else {
-                    printf("\t<input type=\"button\" value=\"%s\" data-toggle=\"%s\" data-backdrop=\"%s\" data-target=\"%s\" />\n",
-                        htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5),
-                        htmlspecialchars($field['data-toggle'], ENT_QUOTES | ENT_HTML5),
-                        htmlspecialchars($field['data-backdrop'], ENT_QUOTES | ENT_HTML5),
-                        htmlspecialchars($field['data-target'], ENT_QUOTES | ENT_HTML5),
-                    );
-                }
+                printf("\t<input type=\"button\" value=\"%s\" />\n",
+                    htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5)
+                );
 
             } elseif ('hidden' == $field['type']) {
 
