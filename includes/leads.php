@@ -2027,7 +2027,7 @@ class Leads
         $results = array();
 
         try {
-            $sql = "SELECT o.*,c.*,c.name AS companyName,v.name AS verticalName,u.fullName,u.email,o.paymentTerms ";
+            $sql = "SELECT o.*,c.*,c.name AS companyName,v.name AS verticalName,u.fullName,u.email,o.paymentTerms,o.costPerLead ";
             $sql .= "FROM insertion_orders AS o ";
             $sql .= "LEFT JOIN users u ON o.userId = u.idUser ";
             $sql .= "LEFT JOIN companies c ON c.idCompany = o.companyId ";
