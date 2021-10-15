@@ -2,9 +2,6 @@
 
 include("../../includes/c_config.php");
 
-require_once(INCLUDES . 'session.php');
-LeadsSession::requireAccess(LEADS_SESSION_LEVEL_STAFF);
-
 require_once(INCLUDES . 'leads.php');
 require_once(INCLUDES . 'display.php');
 
@@ -17,6 +14,7 @@ if (empty($_REQUEST['h'])) {
 }
 
 $leads = Leads::getInstance();
+
 $feed = $leads->getInboundFeed($_REQUEST['idFeedIn']);
 if (empty($feed)) {
     die('ERROR: Feed not found.');
@@ -36,6 +34,7 @@ function findField($feed, $fields, $field, $param)
         if (isset($val->fieldName) && $val->fieldName == $field && isset($val->$param)) {
             if (preg_match('/^custom[1-6]$/', $field)) {
                 $label = $field . 'Label';
+
                 return $val->$param . (!empty($feed->$label) ? ': ' . $feed->$label : '');
             } elseif ('pswd' === $field && 'fieldDescription' === $param) {
                 return $feed->password;
@@ -53,10 +52,10 @@ $allowedArray = explode(';', $feed->allowedFields);
 
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-US" prefix="og: http://ogp.me/ns#">
 <head>
-	<title>FTP Specifications - <?php echo $company->name; ?></title>
-	<style type="text/css">
+    <title>FTP Specifications - <?php echo $company->name; ?></title>
+    <style type="text/css">
 		<!--
 		body {
 			font-family: Verdana, sans-serif;
@@ -68,7 +67,7 @@ $allowedArray = explode(';', $feed->allowedFields);
 		}
 
 		td p {
-			margin-bottom: 0in
+			margin-bottom: 0;
 		}
 
 		p {
@@ -87,7 +86,7 @@ $allowedArray = explode(';', $feed->allowedFields);
 		}
 
 		-->
-	</style>
+    </style>
 </head>
 <body>
 
@@ -110,30 +109,30 @@ $allowedArray = explode(';', $feed->allowedFields);
 <p>Files must be submitted in a tab-delimited format (.txt, .tsv, or .csv). All columns must be included in the file. If you do not have data for a particular column, please include it with an empty value.</p>
 
 <table>
-	<thead>
-	<tr>
-		<td>Field</td>
-		<td>Type</td>
-		<td>Required</td>
-		<td>Format</td>
-		<td>Notes</td>
-	</tr>
-	</thead>
-	<tbody>
+    <thead>
+    <tr>
+        <td>Field</td>
+        <td>Type</td>
+        <td>Required</td>
+        <td>Format</td>
+        <td>Notes</td>
+    </tr>
+    </thead>
+    <tbody>
     <?php
     foreach ($allowedArray as $allowed) {
         ?>
-		<tr>
-			<td><?php echo Display::escHtml($allowed); ?></td>
-			<td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldDefinition')); ?></td>
-			<td><?php echo in_array($allowed, $requiredArray) ? 'Yes' : 'No'; ?></td>
-			<td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldFormat')); ?></td>
-			<td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldDescription')); ?></td>
-		</tr>
+        <tr>
+            <td><?php echo Display::escHtml($allowed); ?></td>
+            <td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldDefinition')); ?></td>
+            <td><?php echo in_array($allowed, $requiredArray) ? 'Yes' : 'No'; ?></td>
+            <td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldFormat')); ?></td>
+            <td><?php echo Display::escHtml(findField($feed, $fields, $allowed, 'fieldDescription')); ?></td>
+        </tr>
         <?php
     }
     ?>
-	</tbody>
+    </tbody>
 </table>
 
 </body>
