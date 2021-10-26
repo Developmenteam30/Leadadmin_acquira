@@ -1617,8 +1617,8 @@ if (isset($_REQUEST['d'])) {
                                         The original lead timestamps will be altered when using this option.</strong>
                                 </p>
                                 <p><input type="number" name="splitDelay" min="0" value=""/></p>
-                                <p>In order for this feature to work propertly, the outbound feeds accepting this data
-                                    must be setup with a feed delay of 1 minute or greater.
+                                <p>In order for this feature to work properly, the outbound feeds accepting this data
+                                    must be setup with a feed delay of 1 minute or greater AND the population must be setup as a "Standard Queue".
                                     <?php
                                     $feeds = $leads->getInboundPopulationSettings($idFeedIn, true);
                                     if (empty($feeds)) {
@@ -1626,11 +1626,12 @@ if (isset($_REQUEST['d'])) {
                                     } else {
                                         print 'The following feeds are setup to receive this data:</p><ul>';
                                         foreach ($feeds as $feed) {
-                                            printf('<li>%s: %s (%s) - Feed Delay: %s</li>' . PHP_EOL,
+                                            printf('<li>%s: %s (%s) - Feed Delay: %s - Queue Type: %s</li>' . PHP_EOL,
                                                 Display::escHtml($feed->idFeedOut),
                                                 Display::escHtml($feed->label),
                                                 Display::escHtml($feed->description),
-                                                empty($feed->delay) ? '<span style="color:red; font-weight:bold">ERROR: NO DELAY SET</span>' : ('<span style="color:green; font-weight:bold"> ' . Display::escHtml(($feed->delay % (60 * 24)) == 0 ? ($feed->delay / (60 * 24) . ' Days') : ($feed->delay . ' Minutes')) . '</span>')
+                                                empty($feed->delay) ? '<span style="color:red; font-weight:bold">ERROR: NO DELAY SET</span>' : ('<span style="color:green; font-weight:bold"> ' . Display::escHtml(($feed->delay % (60 * 24)) == 0 ? ($feed->delay / (60 * 24) . ' Days') : ($feed->delay . ' Minutes')) . '</span>'),
+                                                ('queue' !== $feed->queueType ? '<span style="color:red; font-weight:bold">ERROR: WRONG QUEUE TYPE' : '<span style="color:green; font-weight:bold">QUEUE TYPE ') . ' (' . Display::escHtml(strtoupper($feed->queueType)) . ')</span>'
                                             );
                                         }
                                         print '</ul>';
