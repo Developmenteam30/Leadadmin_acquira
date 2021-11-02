@@ -388,8 +388,6 @@ if ('clear-outbound-queue' === $job->type) {
                             } else {
                                 $data['stamp'] = date("Y-m-d H:i:s", strtotime($raw_data[$col]));
                             }
-                        } elseif ('dob' == $field) {
-                            $data['dob'] = date("Y-m-d", strtotime($raw_data[$col]));
                         } else {
                             $data[$field] = $raw_data[$col];
                         }
