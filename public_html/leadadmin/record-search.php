@@ -314,7 +314,7 @@ include(INCLUDES . "c_header.php");
                                 </div>
                                 <div class="modal-search">
                                     <?php
-                                    if (!empty($record->rawData)) {
+                                    if (!empty($record->jobId) && !empty($record->rawData)) {
                                         $json = json_decode($record->rawData);
                                         echo "<h4>Raw Header Fields</h4>";
 
