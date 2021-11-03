@@ -231,10 +231,14 @@ include(INCLUDES . "c_header.php");
                 $saveHtml .= sprintf('<td>%s</td>' . PHP_EOL,
                     htmlentities($stat['url'])
                 );
-                $saveHtml .= sprintf('<td>%s</td>' . PHP_EOL,
+                $saveHtml .= sprintf('<td><a href="record-search.php?startDate=%s&amp;idFeedIn=%s&amp;status=accepted&amp;submit=Search">%s</a></td>' . PHP_EOL,
+                    urlencode($statsStart),
+                    urlencode($incomingFeed->idFeedIn),
                     number_format($stat['accepted'], 0)
                 );
-                $saveHtml .= sprintf('<td>%s</td>' . PHP_EOL,
+                $saveHtml .= sprintf('<td><a href="record-search.php?startDate=%s&amp;idFeedIn=%s&amp;status=rejected&amp;submit=Search">%s</a></td>' . PHP_EOL,
+                    urlencode($statsStart),
+                    urlencode($incomingFeed->idFeedIn),
                     number_format($stat['rejected'], 0)
                 );
                 $saveHtml .= '</tr>' . PHP_EOL;

@@ -2310,9 +2310,11 @@ include(INCLUDES . "c_header.php");
                                        data-onstyle="success" data-off="Paused" data-offstyle="danger"
                                        data-feed-id="<?php echo $feed->idFeedIn; ?>" type="checkbox"/></td>
                             </td>
-                            <td class="text-right"><?php echo $feed->dailyCount; ?></td>
                             <td class="text-right"><a
-                                        href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn); ?>&amp;label=<?php echo urlencode($feed->label); ?>"
+                                        href="record-search.php?startDate=<?php echo urlencode($statsStart); ?>&amp;idFeedIn=<?php echo urlencode($feed->idFeedIn); ?>&amp;status=accepted&amp;viewType=condensed&amp;submit=Search"
+                                        target="_blank"><?php echo $feed->dailyCount; ?></a></td>
+                            <td class="text-right"><a
+                                        href="record-search.php?startDate=<?php echo urlencode($statsStart); ?>&amp;idFeedIn=<?php echo urlencode($feed->idFeedIn); ?>&amp;status=rejected&amp;viewType=condensed&amp;submit=Search"
                                         target="_blank"><?php echo $feed->dailyCountInvalid; ?></a></td>
                             <td class="text-center">
                                 <?php if (LeadsSession::isValid([LEADS_SESSION_LEVEL_CLIENT_DASHBOARD, LEADS_SESSION_LEVEL_STAFF, LEADS_SESSION_LEVEL_PPC])) { ?>

@@ -285,7 +285,9 @@ class Display
             } elseif ('submit' == $field['type']) {
 
                 printf("\t<label></label>\n");
-                printf("\t<input class=\"btn btn-primary\" type=\"submit\" value=\"%s\" />\n",
+                printf("\t<input class=\"btn btn-primary\" name=\"%s\" id=\"%s\" type=\"submit\" value=\"%s\" />\n",
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
+                    htmlspecialchars($field['id'], ENT_QUOTES | ENT_HTML5),
                     htmlspecialchars($field['label'], ENT_QUOTES | ENT_HTML5)
                 );
 

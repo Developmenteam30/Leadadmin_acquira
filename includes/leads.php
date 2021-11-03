@@ -3530,7 +3530,8 @@ class Leads
             $rawData = [
                 'remoteAddress' => $_SERVER['REMOTE_ADDR'] ?? '',
                 'requestMethod' => $_SERVER['REQUEST_METHOD'] ?? '',
-                'requestUrl' => !empty($_SERVER['SCRIPT_URI']) ? parse_url($_SERVER['SCRIPT_URI'], PHP_URL_SCHEME) . '://' . parse_url($_SERVER['SCRIPT_URI'], PHP_URL_HOST) . parse_url($_SERVER['SCRIPT_URI'], PHP_URL_PATH) : '',
+                'requestUrl' => !empty($_SERVER['SCRIPT_URI']) ? parse_url($_SERVER['SCRIPT_URI'], PHP_URL_SCHEME) . '://' . parse_url($_SERVER['SCRIPT_URI'], PHP_URL_HOST) . parse_url($_SERVER['SCRIPT_URI'],
+                        PHP_URL_PATH) : '',
                 'getParams' => $_GET ?? [],
                 'postParams' => $_POST ?? [],
             ];
@@ -4620,7 +4621,7 @@ class Leads
             $sql .= "LEFT JOIN feedinc f ON j.destination = f.idFeedIn ";
             $sql .= "WHERE j.jobId = ?";
             $params[] = $jobId;
-            if(!empty($idUser)) {
+            if (!empty($idUser)) {
                 $sql .= "AND j.idUser = ? ";
                 $params[] = $idUser;
             }
@@ -4650,7 +4651,7 @@ class Leads
                 $sql .= "AND j.destination IN (SELECT idFeedIn FROM feedinc WHERE idCompany = ?)";
                 $params[] = $idCompany;
             }
-            if(!empty($idUser)) {
+            if (!empty($idUser)) {
                 $sql .= "AND j.idUser = ? ";
                 $params[] = $idUser;
             }
@@ -5275,7 +5276,7 @@ class Leads
         return $results;
     }
 
-    public function inboundRecordSearch($email, $phone, $url, $ip)
+    public function inboundRecordSearch($startDate, $endDate, $status, $idFeedIn, $email, $phone, $url, $ip)
     {
         $params = array();
 
@@ -5285,13 +5286,38 @@ class Leads
         $checkSql = $this->db->prepare("SELECT COUNT(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = 'archive') AND (TABLE_NAME = ?)");
 
         // Establish our baseline SQL that we'll change in the loop
-        $baseSql = "( SELECT fi.label,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.result,i.rawData,i.custom1,i.custom2,i.custom3,i.custom4,i.custom5,i.custom6,ci.name as companyName ";
+        $baseSql = "( SELECT fi.label,fi.description,i.idFeedIn,CONVERT_TZ(i.timestamp,?,?) AS timestampConverted,i.idRecord,i.leadstamp,i.listcode,i.url,i.fname,i.lname,i.addr,i.addr2,i.city,i.state,i.zip,i.country,i.dob,i.gender,i.landline,i.cellphone,i.email,i.ip,i.result,i.rawData,i.custom1,i.custom2,i.custom3,i.custom4,i.custom5,i.custom6,ci.name as companyName ";
         $params[] = DB_TIMEZONE;
         $params[] = LOCAL_TIMEZONE;
         $baseSql .= "FROM data_inbound AS i ";
         $baseSql .= "LEFT JOIN feedinc fi ON fi.idFeedIn = i.idFeedIn ";
         $baseSql .= "LEFT JOIN companies ci ON fi.idCompany = ci.idCompany ";
         $baseSql .= "WHERE 1=1 ";
+        if (!empty($startDate)) {
+            $baseSql .= "AND i.timestamp >= CONVERT_TZ(?,?,?) ";
+            $params[] = $startDate . ' 00:00:00';
+            $params[] = LOCAL_TIMEZONE;
+            $params[] = DB_TIMEZONE;
+        }
+        if (!empty($endDate)) {
+            $baseSql .= "AND i.timestamp <= CONVERT_TZ(?,?,?) ";
+            $params[] = $endDate . ' 23:59:59';
+            $params[] = LOCAL_TIMEZONE;
+            $params[] = DB_TIMEZONE;
+        }
+        if ('accepted' === $status) {
+            // Since clients have access, we need to trick them into thinking we accepted choked records
+            //$baseSql .= "AND (i.result IS NULL OR i.result LIKE 'Third-party rejection [%1]') ";
+            $baseSql .= "AND i.result IS NULL ";
+        }
+        if ('rejected' === $status) {
+            //$baseSql .= "AND (i.result IS NOT NULL AND i.result NOT LIKE 'Third-party rejection [%1]') ";
+            $baseSql .= "AND i.result IS NOT NULL ";
+        }
+        if (!empty($idFeedIn)) {
+            $baseSql .= "AND i.idFeedIn = ? ";
+            $params[] = $idFeedIn;
+        }
         if (!empty($email)) {
             $baseSql .= "AND i.email = ? ";
             $params[] = $email;
@@ -5321,10 +5347,22 @@ class Leads
             $checkSql->execute(array('data_inbound_' . $dateStart->format('Ym')));
             if ($checkSql && $checkSql->fetchColumn()) {
 
-                $sql .= " UNION " . str_replace("FROM data_inbound",
-                        "FROM archive." . $this->quoteIdentifier('data_inbound_' . $dateStart->format('Ym')), $baseSql);
+                $sql .= " UNION " . str_replace("FROM data_inbound", "FROM archive." . $this->quoteIdentifier('data_inbound_' . $dateStart->format('Ym')), $baseSql);
                 $params[] = DB_TIMEZONE;
                 $params[] = LOCAL_TIMEZONE;
+                if (!empty($startDate)) {
+                    $params[] = $startDate . ' 00:00:00';
+                    $params[] = LOCAL_TIMEZONE;
+                    $params[] = DB_TIMEZONE;
+                }
+                if (!empty($endDate)) {
+                    $params[] = $endDate . ' 23:59:59';
+                    $params[] = LOCAL_TIMEZONE;
+                    $params[] = DB_TIMEZONE;
+                }
+                if (!empty($idFeedIn)) {
+                    $params[] = $idFeedIn;
+                }
                 if (!empty($email)) {
                     $params[] = $email;
                 }
