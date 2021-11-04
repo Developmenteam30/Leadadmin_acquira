@@ -308,9 +308,11 @@ include(INCLUDES . "c_header.php");
                                                     <td class="text-center dashboard-incoming-col-small"><a class="btn btn-primary btn-xs nonLink" href="#" id="link_feedinc_<?php echo $feed->idFeedIn; ?>"
                                                                                                             onclick="displayToggle('feedinc', { 'sub':'<?php echo $feed->idFeedIn; ?>', 'idFeedIn':'<?php echo $feed->idFeedIn; ?>', 'hiddenText': 'Show URLs', 'shownText': 'Close' } );">Show
                                                             URLs</a></td>
-                                                    <td class="text-right dashboard-incoming-col-small"><?php echo number_format($feed->dailyCount, 0); ?></td>
                                                     <td class="text-right dashboard-incoming-col-small"><a
-                                                                href="mgr_rejections.php?type=inbound&amp;id=<?php echo urlencode($feed->idFeedIn); ?>&amp;label=<?php echo urlencode($feed->label); ?>"
+                                                                href="record-search.php?startDate=<?php echo urlencode($statsStart); ?>&amp;idFeedIn=<?php echo urlencode($feed->idFeedIn); ?>&amp;status=accepted&amp;viewType=condensed&amp;submit=Search"
+                                                                target="_blank"><?php echo number_format($feed->dailyCount, 0); ?></a></td>
+                                                    <td class="text-right"><a
+                                                                href="record-search.php?startDate=<?php echo urlencode($statsStart); ?>&amp;idFeedIn=<?php echo urlencode($feed->idFeedIn); ?>&amp;status=rejected&amp;viewType=condensed&amp;submit=Search"
                                                                 target="_blank"><?php echo number_format($feed->dailyCountInvalid, 0); ?></a></td>
                                                 </tr>
                                                 <tr>
