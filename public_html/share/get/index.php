@@ -4,6 +4,8 @@ include("../../../includes/c_config.php");
 
 require_once(INCLUDES . 'display.php');
 
+set_time_limit(0);
+
 include(INCLUDES . "f_site.php");
 include(INCLUDES . "vendor/autoload.php");
 
@@ -63,7 +65,12 @@ try {
     header('Content-Disposition: attachment; filename="' . basename($filePath) . '"');
     header('Content-Length: ' . filesize($filePath));
 
-    readfile($filePath);
+    $file = @fopen($filePath, "rb");
+    while (!feof($file)) {
+        print(@fread($file, 1024 * 8));
+        ob_flush();
+        flush();
+    }
 
 } catch (SignatureInvalidException $e) {
     showError("We could not verify the file download link you provided. Please try copy and pasting the original link in your browser.");
