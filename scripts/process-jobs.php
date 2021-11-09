@@ -364,7 +364,7 @@ if ('clear-outbound-queue' === $job->type) {
             $cellIterator = $row->getCellIterator();
             $raw_data = [];
             foreach ($cellIterator as $cell) {
-                $raw_data[] = trim($cell->getValue());
+                $raw_data[] = trim($cell->getFormattedValue());
             }
 
             $data = array();
@@ -383,8 +383,7 @@ if ('clear-outbound-queue' === $job->type) {
                                 } else {
                                     $date = $raw_data[$col];
                                 }
-                                $data['stamp'] = date("Y-m-d H:i:s",
-                                    strtotime($date . (!empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '')));
+                                $data['stamp'] = date("Y-m-d H:i:s", strtotime($date . (!empty($raw_data[$time_col]) ? ' ' . $raw_data[$time_col] : '')));
                             } else {
                                 $data['stamp'] = date("Y-m-d H:i:s", strtotime($raw_data[$col]));
                             }
@@ -418,8 +417,7 @@ if ('clear-outbound-queue' === $job->type) {
                 }
 
                 // Combine our fake date with a random hour plus the original minutes and seconds
-                $timestampOverride = $splitTimestamp->format('Y-m-d') . ' ' . rand(6, 23) . date(':i:s',
-                        strtotime($data['stamp']));
+                $timestampOverride = $splitTimestamp->format('Y-m-d') . ' ' . rand(6, 23) . date(':i:s', strtotime($data['stamp']));
                 $data['stamp'] = $timestampOverride;
                 $data['timestampOverride'] = $timestampOverride;
             }
@@ -446,11 +444,20 @@ if ('clear-outbound-queue' === $job->type) {
 
             } else {
 
-                $counts['invalid']++;
+                $foundDupe = false;
 
                 print " - ERROR\n";
                 foreach ($result['errors'] as $error) {
+                    if (strpos($error, 'Duplicate') === 0) {
+                        $foundDupe = true;
+                    }
                     print "\t{$error}\n";
+                }
+
+                if ($foundDupe) {
+                    $counts['dupe']++;
+                } else {
+                    $counts['invalid']++;
                 }
 
                 $inboundId = $leads->inboundAdd($feedParams->idFeedIn, $data, date('Y-m-d'), $result['errors'][0],
