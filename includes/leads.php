@@ -5335,6 +5335,7 @@ class Leads
             $params[] = $phone;
             $params[] = $phone;
         }
+        $baseSql .= "ORDER BY i.timestamp DESC ";
         $baseSql .= "LIMIT 1000 ) " . PHP_EOL;
 
         $sql = "SELECT * FROM ( ";
