@@ -331,6 +331,13 @@ if ('clear-outbound-queue' === $job->type) {
 
         $worksheet = $spreadsheet->getActiveSheet();
 
+        // Update the record count to reflect the number of data rows
+        $lines = $spreadsheet->getActiveSheet()->getHighestDataRow();
+        $leads->updateJob($job->jobId, array(
+            'records' => $lines,
+        ));
+        $job->records = $lines;
+
         print "Importing legacy records from: {$job->filename}\n";
 
         $feedParams = $leads->getInboundFeed($job->destination);
