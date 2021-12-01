@@ -129,7 +129,7 @@ if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF, L
                         );
                         print '<ul class="dropdown-menu">' . PHP_EOL;
                         foreach ($item['menu'] as $sub_item) {
-                            if (!LeadsSession::isValid($sub_item['level'])) {
+                            if (!LeadsSession::isValid($sub_item['level']) || !empty($sub_item['hidden'])) {
                                 continue;
                             }
 
