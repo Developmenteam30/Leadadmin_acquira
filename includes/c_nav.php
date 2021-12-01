@@ -28,7 +28,7 @@ if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF, L
                 array('name' => 'URL Mapping Report', 'url' => '/leadadmin/reports-mapping.php', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => 'Feed Mapping Report', 'url' => '/leadadmin/feed-map.php?feedCategory=phone&amp;status=active', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_STAFF),
-                array('name' => '*List Owner - Email', 'url' => '/leadadmin/list-owner.php', 'level' => LEADS_SESSION_LEVEL_ADMIN),
+                array('name' => '*List Owner - Email', 'url' => '/leadadmin/list-owner.php', 'level' => LEADS_SESSION_LEVEL_ADMIN, 'hidden' => 'NM' === COMPANY_INITIALS),
                 array('name' => 'Phone Leads Report', 'url' => '/leadadmin/phone-leads-report.php', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => '+Phone Revenue Report', 'url' => '/leadadmin/revenue/phones/', 'level' => [LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]),
                 array('name' => 'Offline', 'url' => '/leadadmin/offline.php', 'level' => LEADS_SESSION_LEVEL_STAFF),
@@ -36,14 +36,14 @@ if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF, L
                 array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => 'Publisher', 'url' => '/leadadmin/ledger.php?type=0', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => 'Advertiser', 'url' => '/leadadmin/ledger.php?type=1', 'level' => LEADS_SESSION_LEVEL_STAFF),
-                array('name' => '+PPC Billable Leads', 'url' => '/leadadmin/ppc-billable.php', 'level' => [LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]),
+                array('name' => '+PPC Billable Leads', 'url' => '/leadadmin/ppc-billable.php', 'level' => [LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN], 'hidden' => 'NM' === COMPANY_INITIALS),
                 array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => 'Commissions Report', 'url' => '/leadadmin/commissions.php', 'level' => LEADS_SESSION_LEVEL_STAFF),
                 array('name' => '+Revenue Expectations', 'url' => '/leadadmin/forecast/expectations.php', 'level' => [LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]),
                 array('name' => '+Calendar Weights', 'url' => '/leadadmin/forecast/weights.php', 'level' => [LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]),
                 array('name' => '*Financial Reports', 'url' => '/leadadmin/financial.php', 'level' => LEADS_SESSION_LEVEL_ADMIN),
                 array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN),
-                array('name' => '*Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN),
+                array('name' => '*Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN, 'hidden' => 'NM' === COMPANY_INITIALS),
             ),
         ),
         array(
@@ -108,7 +108,7 @@ if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF, L
                 <?php
                 foreach ($nav as $item) {
 
-                    if (!LeadsSession::isValid($item['level'])) {
+                    if (!LeadsSession::isValid($item['level']) || !empty($item['hidden'])) {
                         continue;
                     }
 

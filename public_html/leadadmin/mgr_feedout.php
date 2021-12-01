@@ -1848,6 +1848,7 @@ if (isset($_REQUEST['d'])) {
                                     all day boxes.</strong></p>
                         </td>
                     </tr>
+                    <?php if('NM' !== COMPANY_INITIALS) { ?>
                     <tr>
                         <td><p>Revenue and Cost Per Lead</p></td>
                         <td>
@@ -1863,6 +1864,7 @@ if (isset($_REQUEST['d'])) {
                             </p>
                         </td>
                     </tr>
+                    <?php } ?>
                     <tr>
                         <td><p>Salesperson Override</p></td>
                         <td>
