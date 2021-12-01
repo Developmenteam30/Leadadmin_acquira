@@ -42,7 +42,7 @@ if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF, L
                 array('name' => '+Revenue Expectations', 'url' => '/leadadmin/forecast/expectations.php', 'level' => [LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]),
                 array('name' => '+Calendar Weights', 'url' => '/leadadmin/forecast/weights.php', 'level' => [LEADS_SESSION_LEVEL_MANAGER, LEADS_SESSION_LEVEL_ADMIN]),
                 array('name' => '*Financial Reports', 'url' => '/leadadmin/financial.php', 'level' => LEADS_SESSION_LEVEL_ADMIN),
-                array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN),
+                array('name' => 'separator', 'level' => LEADS_SESSION_LEVEL_ADMIN, 'hidden' => 'NM' === COMPANY_INITIALS),
                 array('name' => '*Client Reports', 'url' => '/leadadmin/client_reports.php', 'level' => LEADS_SESSION_LEVEL_ADMIN, 'hidden' => 'NM' === COMPANY_INITIALS),
             ),
         ),
