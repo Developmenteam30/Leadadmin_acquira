@@ -98,21 +98,34 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Company cannot be empty.';
             }
 
-            if (!isset($_REQUEST['filterState']) || empty($_REQUEST['filterState'])) {
-                $filterStateField = '';
-            } else {
-                $filterStateField = $_REQUEST['filterState'];
-            }
+            $filterStateField = !empty($_REQUEST['filterState']) ? $_REQUEST['filterState'] : '';
+            $filterStateChoice = empty($filterStateField) || empty($_REQUEST['filterStateChoice']) ? '' : $_REQUEST['filterStateChoice'];
 
-            if ($filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice'])) {
-                $filterStateChoice = '';
-            } else {
-                $filterStateChoice = $_REQUEST['filterStateChoice'];
-            }
-
-            if (!empty($filterStateField) && empty($filterStateChoice)) {
+            if ($c && !empty($filterStateField) && empty($filterStateChoice)) {
                 $c = false;
                 $result['error'] = 'If using the state filter feature, at least one state must be selected.';
+            }
+
+            $filterZipField = !empty($_REQUEST['filterZip']) ? $_REQUEST['filterZip'] : '';
+            $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? '' : $_REQUEST['filterZipCodes'];
+
+            if ($c && !empty($filterZipField) && empty($filterZipCodes)) {
+                $c = false;
+                $result['error'] = 'If using the zip filter feature, at least one zip must be added.';
+            }
+
+            if ($c && !empty($filterZipCodes)) {
+                foreach ($filterZipCodes as $filterZipCode) {
+                    if (strlen($filterZipCode) === 0) {
+                        $c = false;
+                        $result['error'] = "Please remove any empty zip code filter entries.";
+                        break;
+                    } elseif (strlen($filterZipCode) !== 5) {
+                        $c = false;
+                        $result['error'] = "Zip Code {$filterZipCode} does not have exactly 5 characters.";
+                        break;
+                    }
+                }
             }
 
             if ($c && (empty($_REQUEST['allowedFields']) || !is_array($_REQUEST['allowedFields']))) {
@@ -196,32 +209,32 @@ if (isset($_REQUEST['a'])) {
                 }
             }
 
-            if ($c && !empty($_REQUEST['custom1Label']) && sizeOf($_REQUEST['custom1Label']) > 255) {
+            if ($c && !empty($_REQUEST['custom1Label']) && strlen($_REQUEST['custom1Label']) > 255) {
                 $c = false;
                 $result['error'] = 'Please limit custom1 label to 255 characters or less.';
             }
 
-            if ($c && !empty($_REQUEST['custom2Label']) && sizeOf($_REQUEST['custom2Label']) > 255) {
+            if ($c && !empty($_REQUEST['custom2Label']) && strlen($_REQUEST['custom2Label']) > 255) {
                 $c = false;
                 $result['error'] = 'Please limit custom2 label to 255 characters or less.';
             }
 
-            if ($c && !empty($_REQUEST['custom3Label']) && sizeOf($_REQUEST['custom3Label']) > 255) {
+            if ($c && !empty($_REQUEST['custom3Label']) && strlen($_REQUEST['custom3Label']) > 255) {
                 $c = false;
                 $result['error'] = 'Please limit custom3 label to 255 characters or less.';
             }
 
-            if ($c && !empty($_REQUEST['custom4Label']) && sizeOf($_REQUEST['custom4Label']) > 255) {
+            if ($c && !empty($_REQUEST['custom4Label']) && strlen($_REQUEST['custom4Label']) > 255) {
                 $c = false;
                 $result['error'] = 'Please limit custom4 label to 255 characters or less.';
             }
 
-            if ($c && !empty($_REQUEST['custom5Label']) && sizeOf($_REQUEST['custom5Label']) > 255) {
+            if ($c && !empty($_REQUEST['custom5Label']) && strlen($_REQUEST['custom5Label']) > 255) {
                 $c = false;
                 $result['error'] = 'Please limit custom5 label to 255 characters or less.';
             }
 
-            if ($c && !empty($_REQUEST['custom6Label']) && sizeOf($_REQUEST['custom6Label']) > 255) {
+            if ($c && !empty($_REQUEST['custom6Label']) && strlen($_REQUEST['custom6Label']) > 255) {
                 $c = false;
                 $result['error'] = 'Please limit custom6 label to 255 characters or less.';
             }
@@ -343,6 +356,13 @@ if (isset($_REQUEST['a'])) {
                     );
                     $filterState = json_encode($filterStateArray);
 
+                    sort($filterZipCodes);
+                    $filterZipArray = array(
+                        'mode' => $filterZipField,
+                        'zipCodes' => $filterZipCodes,
+                    );
+                    $filterZip = json_encode($filterZipArray);
+
                     $idFeedIn = $leads->addInboundFeed(array(
                         'label' => empty($_REQUEST['label']) ? null : $_REQUEST['label'],
                         'description' => empty($_REQUEST['description']) ? null : $_REQUEST['description'],
@@ -364,6 +384,7 @@ if (isset($_REQUEST['a'])) {
                         'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                         'chokePercent' => empty($_REQUEST['chokePercent']) ? 0 : intval($_REQUEST['chokePercent']),
                         'filterState' => $filterState,
+                        'filterZip' => $filterZip,
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'dailyLimit' => empty($_REQUEST['dailyLimit']) ? null : intval($_REQUEST['dailyLimit']),
                         'custom1Label' => empty($_REQUEST['custom1Label']) ? null : $_REQUEST['custom1Label'],
@@ -434,6 +455,36 @@ if (isset($_REQUEST['a'])) {
                         if (true === $checkResult) {
                             $c = false;
                             $result['error'] = 'Label is already in use.';
+                        }
+                    }
+                }
+
+                $filterStateField = !empty($_REQUEST['filterState']) ? $_REQUEST['filterState'] : '';
+                $filterStateChoice = empty($filterStateField) || empty($_REQUEST['filterStateChoice']) ? '' : $_REQUEST['filterStateChoice'];
+
+                if ($c && !empty($filterStateField) && empty($filterStateChoice)) {
+                    $c = false;
+                    $result['error'] = 'If using the state filter feature, at least one state must be selected.';
+                }
+
+                $filterZipField = !empty($_REQUEST['filterZip']) ? $_REQUEST['filterZip'] : '';
+                $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? '' : $_REQUEST['filterZipCodes'];
+
+                if ($c && !empty($filterZipField) && empty($filterZipCodes)) {
+                    $c = false;
+                    $result['error'] = 'If using the zip filter feature, at least one zip must be added.';
+                }
+
+                if ($c && !empty($filterZipCodes)) {
+                    foreach ($filterZipCodes as $filterZipCode) {
+                        if (strlen($filterZipCode) === 0) {
+                            $c = false;
+                            $result['error'] = "Please remove any empty zip code filter entries.";
+                            break;
+                        } elseif (strlen($filterZipCode) !== 5) {
+                            $c = false;
+                            $result['error'] = "Zip Code {$filterZipCode} does not have exactly 5 characters.";
+                            break;
                         }
                     }
                 }
@@ -610,23 +661,18 @@ if (isset($_REQUEST['a'])) {
 
                 if ($c) {
 
-                    if (!isset($_REQUEST['filterState']) || empty($_REQUEST['filterState'])) {
-                        $filterStateField = '';
-                    } else {
-                        $filterStateField = $_REQUEST['filterState'];
-                    }
-
-                    if ($filterStateField == '' || !isset($_REQUEST['filterStateChoice']) || empty($_REQUEST['filterStateChoice'])) {
-                        $filterStateChoice = '';
-                    } else {
-                        $filterStateChoice = $_REQUEST['filterStateChoice'];
-                    }
-
                     $filterStateArray = array(
                         'mode' => $filterStateField,
                         'states' => $filterStateChoice,
                     );
                     $filterState = json_encode($filterStateArray);
+
+                    sort($filterZipCodes);
+                    $filterZipArray = array(
+                        'mode' => $filterZipField,
+                        'zipCodes' => $filterZipCodes,
+                    );
+                    $filterZip = json_encode($filterZipArray);
 
                     $status = $leads->updateInboundFeed($_REQUEST['idFeedIn'], array(
                         'label' => trim($_REQUEST['label']),
@@ -648,6 +694,7 @@ if (isset($_REQUEST['a'])) {
                         'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                         'chokePercent' => empty($_REQUEST['chokePercent']) ? 0 : intval($_REQUEST['chokePercent']),
                         'filterState' => $filterState,
+                        'filterZip' => $filterZip,
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'dailyLimit' => empty($_REQUEST['dailyLimit']) ? null : intval($_REQUEST['dailyLimit']),
                         'custom1Label' => empty($_REQUEST['custom1Label']) ? null : $_REQUEST['custom1Label'],
@@ -792,6 +839,15 @@ if (isset($_REQUEST['d'])) {
             Display::errorList();
             break;
 
+        case 'filterZipCode':
+            $e = $_REQUEST['e'] ?? '';
+            ?>
+            <div>
+                <input type='text' name='filterZipCodes[]' value=''/> <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+            </div>
+            <?php
+            break;
+
         case 'dialog_editfeed':
             $id = 'edit_feedinc';
             $mode = 'edit';
@@ -856,6 +912,7 @@ if (isset($_REQUEST['d'])) {
                 'chokePercent',
                 'dailyLimit',
                 'filterState',
+                'filterZip',
                 'feedCategory',
                 'custom1Label',
                 'custom2Label',
@@ -1024,6 +1081,58 @@ if (isset($_REQUEST['d'])) {
                                                     $filterState_value->states)) { ?> checked='checked'<?php } ?> />&nbsp;<?php echo $st; ?>
                                         </label>
                                     <?php } ?></p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <script>
+                            $('input[name="filterZip"]:radio').change(function () {
+                                if ($(this).val() === 'includeOnly' || $(this).val() === 'excludeOnly') {
+                                    $('#filterZipChoice').show();
+                                } else {
+                                    $('#filterZipChoice').hide();
+                                }
+                            });
+                        </script>
+                        <td><p>Filter Zip Code</p></td>
+                        <td>
+                            <?php $filterZip_value = json_decode($feed_filterZip); ?>
+                            <p>Use this feature to limit which zip code(s) leads are allowed to come from.</p>
+                            <p>
+                                <input type="radio" name="filterZip"
+                                       value=""<?php if (empty($filterZip_value->mode)) {
+                                    print ' checked="checked"';
+                                } ?> /> Off<br/>
+                                <input type="radio" name="filterZip"
+                                       value="includeOnly"<?php if (!empty($filterZip_value->mode) && 'includeOnly' == $filterZip_value->mode) {
+                                    print ' checked="checked"';
+                                } ?> /> Include Only<br/>
+                                <input type="radio" name="filterZip"
+                                       value="excludeOnly"<?php if (!empty($filterZip_value->mode) && 'excludeOnly' == $filterZip_value->mode) {
+                                    print ' checked="checked"';
+                                } ?> /> Exclude Only<br/>
+                            </p>
+                            <div id="filterZipChoice"<?php if (empty($filterZip_value->mode) || ($filterZip_value->mode != 'includeOnly' && $filterZip_value->mode != 'excludeOnly')) {
+                                echo ' style="display: none;"';
+                            } ?>>
+                                <p>Choose which zip codes to include/exclude.</p>
+                                <p>
+                                    <a href='#' class='nonLink' onclick='element("filterZipCodes_container", "filterZipCode", {});'>Add New Zip Code</a>
+                                </p>
+                                <div>
+                                    <div id='filterZipCodes_container'>
+                                        <?php
+                                        if (!empty($filterZip_value->zipCodes)) {
+                                            foreach ($filterZip_value->zipCodes as $zipCode) {
+                                                ?>
+                                                <div>
+                                                    <input type='text' name='filterZipCodes[]' value='<?php echo Display::escHtml($zipCode); ?>'/>
+                                                    <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                                </div>
+                                            <?php }
+                                        } ?>
+                                    </div>
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -1691,6 +1800,173 @@ if (isset($_REQUEST['d'])) {
                 <?php
             }
             break;
+
+        case 'dialog_filter_zip_import':
+            $idFeedIn = $_REQUEST['idFeedIn'];
+
+            if (!LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF])) {
+                $idCompany = LeadsSession::getCompanyId();
+                if (empty($idCompany)) {
+                    $idCompany = -9999;
+                }
+                if (!$leads->checkInboundFeedAccess($idCompany, $idFeedIn)) {
+                    die('Sorry, you do not have access to this feed.');
+                }
+            }
+
+            $feed = $leads->getInboundFeed($idFeedIn);
+
+            if ($feed === false) {
+                ?>
+                <p>Database failure - could not fetch feed information.</p>
+                <?php
+            } elseif (!is_object($feed) && $feed == 0) {
+                ?>
+                <p>Error fetching feed information - feed does not exist.</p>
+                <?php
+            } else {
+
+                $company = $leads->getCompany($feed->idCompany);
+
+                ?>
+
+                <script type="text/template" id="qq-template">
+                    <div class="qq-uploader-selector qq-uploader" qq-drop-area-text="Drop file here">
+                        <div class="qq-total-progress-bar-container-selector qq-total-progress-bar-container">
+                            <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                                 class="qq-total-progress-bar-selector qq-progress-bar qq-total-progress-bar"></div>
+                        </div>
+                        <div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
+                            <span class="qq-upload-drop-area-text-selector"></span>
+                        </div>
+                        <div class="qq-upload-button-selector qq-upload-button">
+                            <div>Upload a file</div>
+                        </div>
+                        <span class="qq-drop-processing-selector qq-drop-processing">
+                    <span>Processing dropped file...</span>
+                    <span class="qq-drop-processing-spinner-selector qq-drop-processing-spinner"></span>
+                </span>
+                        <ul class="qq-upload-list-selector qq-upload-list" aria-live="polite"
+                            aria-relevant="additions removals">
+                            <li>
+                                <div class="qq-progress-bar-container-selector">
+                                    <div role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                                         class="qq-progress-bar-selector qq-progress-bar"></div>
+                                </div>
+                                <span class="qq-upload-spinner-selector qq-upload-spinner"></span>
+                                <img class="qq-thumbnail-selector" qq-max-size="100" qq-server-scale>
+                                <span class="qq-upload-file-selector qq-upload-file"></span>
+                                <span class="qq-upload-size-selector qq-upload-size"></span>
+                                <button type="button" class="qq-btn qq-upload-cancel-selector qq-upload-cancel">Cancel
+                                </button>
+                                <button type="button" class="qq-btn qq-upload-retry-selector qq-upload-retry">Retry
+                                </button>
+                                <button type="button" class="qq-btn qq-upload-delete-selector qq-upload-delete">Delete
+                                </button>
+                                <span role="status" class="qq-upload-status-text-selector qq-upload-status-text"></span>
+                            </li>
+                        </ul>
+
+                        <dialog class="qq-alert-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">Close</button>
+                            </div>
+                        </dialog>
+
+                        <dialog class="qq-confirm-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">No</button>
+                                <button type="button" class="qq-ok-button-selector">Yes</button>
+                            </div>
+                        </dialog>
+
+                        <dialog class="qq-prompt-dialog-selector">
+                            <div class="qq-dialog-message-selector"></div>
+                            <input type="text">
+                            <div class="qq-dialog-buttons">
+                                <button type="button" class="qq-cancel-button-selector">Cancel</button>
+                                <button type="button" class="qq-ok-button-selector">Ok</button>
+                            </div>
+                        </dialog>
+                    </div>
+                </script>
+                <p><strong>Company:</strong> <?php echo htmlentities($company->name); ?></p>
+                <p><strong>Feed:</strong> <?php echo htmlentities($feed->label); ?> (#<?php echo $feed->idFeedIn; ?>)
+                </p>
+
+                <form enctype="multipart/form-data" id="form-filter-zip-import" action="mgr_import.php" method="post" target="_blank">
+                    <input type="hidden" name="destination" value="<?php echo intval($idFeedIn); ?>"/>
+                    <input type="hidden" name="type" value="filter-zip-import"/>
+                    <input type="hidden" name="a" value="Upload"/>
+                    <input type="hidden" name="filename" value=""/>
+                    <input type="hidden" name="uuid" value=""/>
+
+                    <table class="table table-bordered table-condensed table-striped">
+                        <tr>
+                            <td>File</p></td>
+                            <td>
+                                <p>Please select the file to upload from your computer. File may be in CSV or Excel format.</p>
+                                <p>The first column in the spreadsheet must contain the Zip Codes.</p>
+                                <p>Zip Codes must be exactly 5 characters long.</p>
+                                <p>The upload feature will APPEND this file to any existing zip codes filters already in the database for this feed.</p>
+                                <div id="filter-zip-import-uploader"></div>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+                <script>
+                    var importUploader = new qq.FineUploader({
+                        callbacks: {
+                            onComplete: function (id, name, responseJSON) {
+                                if (responseJSON.success) {
+                                    $("#form-filter-zip-import input[name='filename']").val(importUploader.getName(id));
+                                    $("#form-filter-zip-import input[name='uuid']").val(importUploader.getUuid(id));
+                                }
+                            },
+                        },
+                        chunking: {
+                            concurrent: {
+                                enabled: true
+                            },
+                            enabled: true,
+                            success: {
+                                endpoint: '/leadadmin/ajax/fileUpload.php?done=1'
+                            }
+                        },
+                        debug: <?php print ('development' === APPLICATION_ENV ? "true" : "false"); ?>,
+                        element: document.getElementById("filter-zip-import-uploader"),
+                        failedUploadTextDisplay: {
+                            mode: 'custom'
+                        },
+                        multiple: false,
+                        request: {
+                            endpoint: '/leadadmin/ajax/fileUpload.php',
+                            params: {
+                                'type': 'filter-zip-import',
+                            },
+                        },
+                        retry: {
+                            enableAuto: true
+                        },
+                        template: 'qq-template',
+                        thumbnails: {
+                            placeholders: {
+                                waitingPath: '/leadadmin/libraries/fine-uploader/placeholders/waiting-generic.png',
+                                notAvailablePath: '/leadadmin/libraries/fine-uploader/placeholders/not_available-generic.png'
+                            }
+                        },
+                        validation: {
+                            allowedExtensions: ['csv', 'txt', 'xlsx', 'xls'],
+                            itemLimit: 1
+                        }
+                    });
+                </script>
+                <?php
+            }
+            break;
+
         case 'dialog_export':
             $idFeedIn = $_REQUEST['idFeedIn'];
 
@@ -2331,18 +2607,11 @@ include(INCLUDES . "c_header.php");
                                         <ul class="dropdown-menu">
                                             <li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>&amp;h=<?php echo urlencode(hash('sha256', $feed->idFeedIn . HASH_SALT . $feed->password)) ?>"
                                                    target="_blank">API Spec</a></li>
-                                            <li><a href="#" data-toggle="modal" data-backdrop="static"
-                                                   data-target="#modal-import"
-                                                   data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Import
-                                                    data</a></li>
-                                            <li><a href="#" data-toggle="modal" data-backdrop="static"
-                                                   data-target="#modal-export"
-                                                   data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Export
-                                                    data</a></li>
-                                            <li><a href="#" data-toggle="modal" data-backdrop="static"
-                                                   data-target="#modal-urlreport"
-                                                   data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">URL
-                                                    report</a></li>
+                                            <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Import data</a></li>
+                                            <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Export data</a></li>
+                                            <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">URL report</a></li>
+                                            <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-filter-zip-import" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Filter Zip import</a>
+                                            </li>
                                         </ul>
                                     </div>
                                 <?php } else { ?>
@@ -2417,6 +2686,23 @@ include(INCLUDES . "c_header.php");
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button id="modal-save-import" type="button" class="btn btn-primary">Import Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-filter-zip-import" tabindex="-1" role="dialog" aria-labelledby="modal-filter-zip-import_title">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modal-filter-zip-import_title">Import Filter Zip Codes</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="modal-save-filter-zip-import" type="button" class="btn btn-primary">Import Zip Codes</button>
             </div>
         </div>
     </div>
@@ -2576,6 +2862,53 @@ include(INCLUDES . "c_header.php");
                 type: "POST",
                 async: true,
                 data: $("#form-import").serialize()
+            }).done(function (result) {
+                if (result.success === true) {
+                    if (result.link) {
+                        window.location = result.link;
+                    }
+                } else {
+                    alert("Error: " + (result.error || 'Unknown'));
+                }
+            });
+
+            //$('#form-import').submit();
+        }
+    });
+
+    $('#modal-filter-zip-import').on('show.bs.modal', function (e) {
+        var modal = $(this);
+        var idFeedIn = $(e.relatedTarget).data('feedinc-id');
+
+        $.ajax({
+            cache: false,
+            type: 'POST',
+            url: 'mgr_feedinc.php',
+            data: {
+                'd': 'dialog_filter_zip_import',
+                'idFeedIn': idFeedIn
+            },
+            success: function (data) {
+                modal.find('.modal-body').html(data);
+            }
+        });
+    });
+
+    $('#modal-save-filter-zip-import').click(function (event) {
+        event.preventDefault();
+        if (importUploader.getInProgress()) {
+            alert('Please wait until your file has finished uploading before submitting this job.');
+        } else if (importUploader.getNetUploads() === 0 || $("#form-import input[name='filename']").val() === '' || $("#form-import input[name='uuid']").val() === '') {
+            alert('Please upload a file.');
+        } else {
+
+            var modal = $(this);
+
+            var response = $.ajax({
+                url: "/leadadmin/ajax/submitJob.php",
+                type: "POST",
+                async: true,
+                data: $("#form-filter-zip-import").serialize()
             }).done(function (result) {
                 if (result.success === true) {
                     if (result.link) {

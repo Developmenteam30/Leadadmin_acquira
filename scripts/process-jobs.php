@@ -64,7 +64,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
-    $body .= "Job Type: clear-outbound-queue\r\n";
+    $body .= "Job Type: {$job->type}\r\n";
     $body .= "\r\n";
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
@@ -148,7 +148,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
-    $body .= "Job Type: retry-outbound-rejections\r\n";
+    $body .= "Job Type: {$job->type}\r\n";
     $body .= "\r\n";
     $body .= "Company: {$feedCompany->name}\r\n";
     $body .= "Feed ID: {$job->destination}\r\n";
@@ -217,7 +217,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
-    $body .= "Job Type: export-incoming\r\n";
+    $body .= "Job Type: {$job->type}\r\n";
     $body .= "\r\n";
     if (empty($fields['feedIds'])) {
         $body .= "Company: ALL\r\n";
@@ -288,7 +288,7 @@ if ('clear-outbound-queue' === $job->type) {
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
-    $body .= "Job Type: export-outgoing\r\n";
+    $body .= "Job Type: {$job->type}\r\n";
     $body .= "\r\n";
     if (empty($fields['feedIds'])) {
         $body .= "Company: ALL\r\n";
@@ -503,7 +503,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body = "Job Results\r\n";
         $body .= "\r\n";
         $body .= "Job ID: {$job->jobId}\r\n";
-        $body .= "Job Type: export-incoming\r\n";
+        $body .= "Job Type: {$job->type}\r\n";
         $body .= "\r\n";
         $body .= "Company: {$feedCompany->name}\r\n";
         $body .= "Feed ID: {$job->destination}\r\n";
@@ -712,7 +712,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body = "Job Results\r\n";
         $body .= "\r\n";
         $body .= "Job ID: {$job->jobId}\r\n";
-        $body .= "Job Type: upload-outbound\r\n";
+        $body .= "Job Type: {$job->type}\r\n";
         $body .= "\r\n";
         $body .= "Company: {$feedCompany->name}\r\n";
         $body .= "Feed ID: {$job->destination}\r\n";
@@ -943,7 +943,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body = "Job Results\r\n";
         $body .= "\r\n";
         $body .= "Job ID: {$job->jobId}\r\n";
-        $body .= "Job Type: email-suppression\r\n";
+        $body .= "Job Type: {$job->type}\r\n";
         $body .= "\r\n";
         $body .= "Total Records: {$cnt}\r\n";
         $body .= "\r\n";
@@ -1071,7 +1071,7 @@ if ('clear-outbound-queue' === $job->type) {
         $body = "Job Results\r\n";
         $body .= "\r\n";
         $body .= "Job ID: {$job->jobId}\r\n";
-        $body .= "Job Type: phone-suppression\r\n";
+        $body .= "Job Type: {$job->type}\r\n";
         $body .= "\r\n";
         $body .= "Total Records: {$cnt}\r\n";
         $body .= "\r\n";
@@ -1086,6 +1086,144 @@ if ('clear-outbound-queue' === $job->type) {
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Phone Suppression Import';
         $header = "From:" . $fromName . " <" . $from . ">\n";
+        $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+
+    } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'Cannot open uploaded file for reading',
+        ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
+    } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+        $leads->updateJob($job->jobId, array(
+            'status' => 'error',
+            'message' => 'Cannot open default worksheet for reading',
+        ));
+        print 'ERROR: Cannot open uploaded file for reading';
+        exit;
+    }
+
+} elseif ('filter-zip-import' === $job->type) {
+
+    try {
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($job->filename);
+        $spreadsheet = $reader->load($job->filename);
+
+        $worksheet = $spreadsheet->getActiveSheet();
+
+        print "Importing filter zip code records from: {$job->filename}\n";
+
+        // Update the record count to reflect the number of data rows
+        $lines = $spreadsheet->getActiveSheet()->getHighestDataRow();
+        $leads->updateJob($job->jobId, array(
+            'records' => $lines,
+        ));
+        $job->records = $lines;
+
+        $counts = array(
+            'success' => 0,
+            'invalid' => 0,
+            'failures' => 0,
+            'dupe' => 0,
+        );
+
+        $feedIn = $leads->getInboundFeed($job->destination);
+        $filterZipArray = json_decode($feedIn->filterZip);
+
+        // Use default setting if not set.
+        if (empty($filterZipArray)) {
+            $filterZipArray = array(
+                'mode' => 'includeOnly',
+                'zipCodes' => [],
+            );
+        }
+
+        $cnt = 0;
+        foreach ($worksheet->getRowIterator() as $row) {
+            $cellIterator = $row->getCellIterator();
+            $raw_data = [];
+            foreach ($cellIterator as $cell) {
+                $raw_data = preg_replace('/[^0-9]/', '', trim($cell->getValue()));
+                if (strlen($raw_data) === 4) {
+                    $raw_data = str_pad($raw_data, 5, '0', STR_PAD_LEFT);
+                }
+
+                if (empty($raw_data) || strlen($raw_data) !== 5) {
+                    $counts['invalid']++;
+                } elseif (in_array($raw_data, $filterZipArray->zipCodes)) {
+                    $counts['dupe']++;
+                } else {
+                    $filterZipArray->zipCodes[] = $raw_data;
+                    $counts['success']++;
+                }
+            }
+
+            $cnt++;
+        }
+
+        sort($filterZipArray->zipCodes);
+        $status = $leads->updateInboundFeed($job->destination, array(
+            'filterZip' => json_encode($filterZipArray),
+        ));
+
+        if (null === $status) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Error saving to the database',
+            ));
+            exit;
+        }
+
+        if ($cnt == intval($job->records)) {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'finished',
+            ));
+        } else {
+            $leads->updateJob($job->jobId, array(
+                'status' => 'error',
+                'message' => 'Record count does not match',
+            ));
+        }
+
+        print "FILE IMPORT COMPLETE!\n";
+
+        print "Successful: {$counts['success']}\n";
+        print "Duplicates: {$counts['dupe']}\n";
+        print "Invalid: {$counts['invalid']}\n";
+        print "Failures: {$counts['failures']}\n";
+
+        $feedCompany = $leads->getCompany($feedIn->idCompany);
+
+        $body = "Job Results\r\n";
+        $body .= "\r\n";
+        $body .= "Job ID: {$job->jobId}\r\n";
+        $body .= "Job Type: {$job->type}\r\n";
+        $body .= "\r\n";
+        $body .= "Company: {$feedCompany->name}\r\n";
+        $body .= "Feed ID: {$job->destination}\r\n";
+        $body .= "Feed Label: {$feedIn->label}\r\n";
+        $body .= "Feed Description: {$feedIn->description}\r\n";
+        $body .= "\r\n";
+        $body .= "Total Records: {$cnt}\r\n";
+        $body .= "\r\n";
+        $body .= "Successful: {$counts['success']}\r\n";
+        $body .= "Duplicates: {$counts['dupe']}\r\n";
+        $body .= "Invalid: {$counts['invalid']}\r\n";
+        $body .= "Failures: {$counts['failures']}\r\n";
+        $body .= "\r\n";
+
+        $user = $leads->getUser($job->idUser);
+        if (empty($user) || empty($user->email)) {
+            return;
+        }
+
+        $from = SYSTEM_FROM_EMAIL;
+        $fromName = CONFIG_COMPANY_NAME;
+        $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
+        $subject = 'Job Results - Filter Zip Code Import';
+        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $header .= "CC: " . OWNER_EMAIL . "\r\n";
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
     } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {

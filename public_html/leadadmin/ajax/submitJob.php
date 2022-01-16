@@ -54,6 +54,7 @@ $validTypes = array(
     'email-suppression',
     'phone-suppression',
     'upload-outbound',
+    'filter-zip-import',
 );
 
 if (!in_array($_REQUEST['type'], $validTypes)) {
@@ -93,6 +94,10 @@ switch ($_REQUEST['type']) {
 
     case 'upload-outbound':
         $leads->auditLog('FEEDOUT:IMPORT', $jobId);
+        break;
+
+    case 'filter-zip-import':
+        $leads->auditLog('FILTERZIP:IMPORT', $jobId);
         break;
 }
 

@@ -1168,6 +1168,23 @@ class ProcessLeads
                     $c = false;
                     $result['reason'] = 'Zip (zip) contains invalid characters.';
                 }
+
+                $filterZip = json_decode($feedParams->filterZip);
+                if ($c && $filterZip !== null && !empty($filterZip->mode) && !empty($filterZip->zipCodes) && is_array($filterZip->zipCodes)) {
+                    $checkZip = substr($value, 0, 5); // Only check the first 5 characters
+                    if (strlen($checkZip) !== 5) {
+                        $c = false;
+                        $result['reason'] = 'Zip must be exactly 5 characters.';
+                    } else {
+                        if ($filterZip->mode == 'includeOnly' && !in_array($checkZip, $filterZip->zipCodes)) {
+                            $c = false;
+                            $result['reason'] = 'We do not accept leads from this zip.';
+                        } elseif ($filterZip->mode == 'excludeOnly' && in_array($checkZip, $filterZip->zipCodes)) {
+                            $c = false;
+                            $result['reason'] = 'We do not accept leads from this zip.';
+                        }
+                    }
+                }
                 break;
 
             case 'dob':

@@ -97,6 +97,7 @@ $uploader = new UploadHandler();
 switch ($_REQUEST['type']) {
 	case 'feedinc':
 	case 'upload-outbound':
+    case 'filter-zip-import':
         $uploader->allowedExtensions = array('csv', 'txt', 'xls', 'xlsx');
         break;
 
