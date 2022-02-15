@@ -2608,7 +2608,9 @@ include(INCLUDES . "c_header.php");
                                             <li><a href="/leadadmin/apispec.php?idFeedIn=<?php echo $feed->idFeedIn; ?>&amp;h=<?php echo urlencode(hash('sha256', $feed->idFeedIn . HASH_SALT . $feed->password)) ?>"
                                                    target="_blank">API Spec</a></li>
                                             <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-import" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Import data</a></li>
-                                            <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Export data</a></li>
+                                            <?php if ('EQ' !== COMPANY_INITIALS || LeadsSession::isValid(LEADS_SESSION_LEVEL_ADMIN)) { // #5742 ?>
+                                                <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-export" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Export data</a></li>
+                                            <?php } ?>
                                             <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-urlreport" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">URL report</a></li>
                                             <li><a href="#" data-toggle="modal" data-backdrop="static" data-target="#modal-filter-zip-import" data-feedinc-id="<?php echo intval($feed->idFeedIn); ?>">Filter Zip import</a>
                                             </li>

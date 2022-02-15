@@ -1848,22 +1848,22 @@ if (isset($_REQUEST['d'])) {
                                     all day boxes.</strong></p>
                         </td>
                     </tr>
-                    <?php if('NM' !== COMPANY_INITIALS) { ?>
-                    <tr>
-                        <td><p>Revenue and Cost Per Lead</p></td>
-                        <td>
-                            <p>
-                                RPL: <input type="text" name="revenuePerLead"
-                                            value="<?php echo Display::escHtml($feed_revenuePerLead); ?>"/> CPL
-                                Override: <input type="text"
-                                                 name="costPerLeadOverride"
-                                                 value="<?php echo Display::escHtml($feed_costPerLeadOverride); ?>"/><br/>
-                                If a value is set for CPL Override (including a 0.00 amount), this will override the CPL
-                                set on the incoming feed. To use the default CPL from the incoming feed, leave
-                                this field completely blank.
-                            </p>
-                        </td>
-                    </tr>
+                    <?php if ('NM' !== COMPANY_INITIALS) { ?>
+                        <tr>
+                            <td><p>Revenue and Cost Per Lead</p></td>
+                            <td>
+                                <p>
+                                    RPL: <input type="text" name="revenuePerLead"
+                                                value="<?php echo Display::escHtml($feed_revenuePerLead); ?>"/> CPL
+                                    Override: <input type="text"
+                                                     name="costPerLeadOverride"
+                                                     value="<?php echo Display::escHtml($feed_costPerLeadOverride); ?>"/><br/>
+                                    If a value is set for CPL Override (including a 0.00 amount), this will override the CPL
+                                    set on the incoming feed. To use the default CPL from the incoming feed, leave
+                                    this field completely blank.
+                                </p>
+                            </td>
+                        </tr>
                     <?php } ?>
                     <tr>
                         <td><p>Salesperson Override</p></td>
@@ -3815,10 +3815,12 @@ include(INCLUDES . "c_header.php");
                                                data-target="#modal-upload"
                                                data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Upload data</a>
                                         </li>
-                                        <li><a href="#" data-toggle="modal" data-backdrop="static"
-                                               data-target="#modal-export"
-                                               data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Export data</a>
-                                        </li>
+                                        <?php if ('EQ' !== COMPANY_INITIALS || LeadsSession::isValid(LEADS_SESSION_LEVEL_ADMIN)) { // #5742 ?>
+                                            <li><a href="#" data-toggle="modal" data-backdrop="static"
+                                                   data-target="#modal-export"
+                                                   data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Export data</a>
+                                            </li>
+                                        <?php } ?>
                                         <li><a href="#" data-toggle="modal" data-backdrop="static"
                                                data-target="#modal-retry-rejections"
                                                data-feed-id="<?php echo intval($feed->idFeedOut); ?>">Retry

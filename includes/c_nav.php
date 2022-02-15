@@ -7,7 +7,7 @@ if (LeadsSession::isValid([LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF, L
 
     $nav = array(
         array('name' => 'Dashboard', 'url' => '/leadadmin/dashboard.php', 'level' => [LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF]),
-        array('name' => 'Companies', 'url' => '/leadadmin/companies.php?searchStatus=active', 'level' => LEADS_SESSION_LEVEL_STAFF),
+        array('name' => 'Companies', 'url' => '/leadadmin/companies.php?searchStatus=active', 'level' => 'EQ' === COMPANY_INITIALS ? LEADS_SESSION_LEVEL_ADMIN: LEADS_SESSION_LEVEL_STAFF), // #5742
         array('name' => 'Incoming Feeds', 'url' => '/leadadmin/mgr_feedinc.php?status=active', 'level' => [LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF]),
         array('name' => 'Outgoing Feeds', 'url' => '/leadadmin/mgr_feedout.php?status=active', 'level' => [LEADS_SESSION_LEVEL_PPC, LEADS_SESSION_LEVEL_STAFF]),
         array('name' => 'CRM', 'url' => '/leadadmin/crm/prospects.php?searchIsArchived=0', 'level' => [LEADS_SESSION_LEVEL_CRM, LEADS_SESSION_LEVEL_STAFF]),

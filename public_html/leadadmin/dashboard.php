@@ -83,6 +83,8 @@ if (isset($_REQUEST['d'])) {
                 }
             }
 
+            $statsStart = !empty($_REQUEST['statsStart']) ? $_REQUEST['statsStart'] : date('Y-m-d');
+            $statsEnd = !empty($_REQUEST['statsEnd']) ? $_REQUEST['statsEnd'] : date('Y-m-d');
             $urls = $leads->getInboundURLStatsRange($idFeedIn, date('Y-m-d', strtotime($statsStart)), date('Y-m-d', strtotime($statsEnd)));
             ?>
             <?php
