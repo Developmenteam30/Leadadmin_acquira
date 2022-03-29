@@ -1138,6 +1138,9 @@ if ('clear-outbound-queue' === $job->type) {
                 'zipCodes' => [],
             );
         }
+        if (!is_array($filterZipArray->zipCodes)) {
+            $filterZipArray->zipCodes = [];
+        }
 
         $cnt = 0;
         foreach ($worksheet->getRowIterator() as $row) {
