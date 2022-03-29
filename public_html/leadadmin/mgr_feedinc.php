@@ -107,7 +107,7 @@ if (isset($_REQUEST['a'])) {
             }
 
             $filterZipField = !empty($_REQUEST['filterZip']) ? $_REQUEST['filterZip'] : '';
-            $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? '' : $_REQUEST['filterZipCodes'];
+            $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? [] : $_REQUEST['filterZipCodes'];
 
             if ($c && !empty($filterZipField) && empty($filterZipCodes)) {
                 $c = false;
@@ -468,7 +468,7 @@ if (isset($_REQUEST['a'])) {
                 }
 
                 $filterZipField = !empty($_REQUEST['filterZip']) ? $_REQUEST['filterZip'] : '';
-                $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? '' : $_REQUEST['filterZipCodes'];
+                $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? [] : $_REQUEST['filterZipCodes'];
 
                 if ($c && !empty($filterZipField) && empty($filterZipCodes)) {
                     $c = false;
