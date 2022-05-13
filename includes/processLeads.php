@@ -208,6 +208,9 @@ class ProcessLeads
                 $header .= "Reply-To: <" . $from . ">\r\n";
                 $header .= "X-Sender: <" . $from . ">\r\n";
                 $header .= "Return-Path: <" . $from . ">\r\n";
+                if (defined('GLOBAL_BCC')) {
+                    $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+                }
                 $sent = @mail($to, $subject, $body, $header, "-f {$from}");
                 if (!$sent) {
                     $leads->logError('Failed to send error report notification to administrator');

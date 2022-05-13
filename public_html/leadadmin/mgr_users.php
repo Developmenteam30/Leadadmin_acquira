@@ -80,7 +80,14 @@ if (isset($_REQUEST['a'])) {
             $message .= "Password: " . $_REQUEST['password'] . "\r\n";
             $message .= "\r\n";
 
-            mail(OWNER_EMAIL_FROM, CONFIG_COMPANY_NAME . ' User Added', $message, 'From: lmsalerts@' . SITE_URL . "\r\nCC: " . OWNER_EMAIL . "\r\nBCC: " . ADMINISTRATOR_EMAIL, '-f' . 'lmsalerts@' . SITE_URL);
+            $header = "From: lmsalerts@" . SITE_URL . "\r\n";
+            $header .= "CC: " . OWNER_EMAIL . "\r\n";
+            $header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
+            if (defined('GLOBAL_BCC')) {
+                $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+            }
+
+            @mail(OWNER_EMAIL_FROM, CONFIG_COMPANY_NAME . ' User Added', $message, $header, '-f' . 'lmsalerts@' . SITE_URL);
 
             $leads->auditLog('USERS:ADD', $idUser);
 

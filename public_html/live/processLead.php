@@ -72,6 +72,9 @@ if (empty($_REQUEST['pswd']) || $_REQUEST['pswd'] != $feedParams->password) {
         $header .= "Content-type: text/html; charset=iso-8859-1\n";
         $header .= "Reply-To: <" . $from . ">\n";
         $header .= "Return-Path: <" . $from . ">\n";
+        if (defined('GLOBAL_BCC')) {
+            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
     }
 

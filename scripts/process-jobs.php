@@ -81,7 +81,10 @@ if ('clear-outbound-queue' === $job->type) {
     $fromName = CONFIG_COMPANY_NAME;
     $to = MANAGER_EMAIL;
     $subject = 'Job Results - Clear Outbound Queue';
-    $header = "From:" . $fromName . " <" . $from . ">\n";
+    $header = "From:" . $fromName . " <" . $from . ">\r\n";
+    if (defined('GLOBAL_BCC')) {
+        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    }
     $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
 } elseif ('retry-outbound-rejections' === $job->type) {
@@ -165,8 +168,11 @@ if ('clear-outbound-queue' === $job->type) {
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Retry Outbound Rejections';
-    $header = "From:" . $fromName . " <" . $from . ">\n";
+    $header = "From:" . $fromName . " <" . $from . ">\r\n";
     $header .= "CC: " . OWNER_EMAIL . "\r\n";
+    if (defined('GLOBAL_BCC')) {
+        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    }
     $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
 } elseif ('export-incoming' === $job->type) {
@@ -248,8 +254,11 @@ if ('clear-outbound-queue' === $job->type) {
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Export Incoming Data';
-    $header = "From:" . $fromName . " <" . $from . ">\n";
+    $header = "From:" . $fromName . " <" . $from . ">\r\n";
     $header .= "CC: " . OWNER_EMAIL . "\r\n";
+    if (defined('GLOBAL_BCC')) {
+        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    }
     $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
 } elseif ('export-outgoing' === $job->type) {
@@ -319,8 +328,11 @@ if ('clear-outbound-queue' === $job->type) {
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Export Outgoing Data';
-    $header = "From:" . $fromName . " <" . $from . ">\n";
+    $header = "From:" . $fromName . " <" . $from . ">\r\n";
     $header .= "CC: " . OWNER_EMAIL . "\r\n";
+    if (defined('GLOBAL_BCC')) {
+        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    }
     $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
 } elseif ('feedinc' === $job->type) {
@@ -522,7 +534,10 @@ if ('clear-outbound-queue' === $job->type) {
         $fromName = CONFIG_COMPANY_NAME;
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Inbound Record Import';
-        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $header = "From:" . $fromName . " <" . $from . ">\r\n";
+        if (defined('GLOBAL_BCC')) {
+            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
     } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
@@ -731,7 +746,10 @@ if ('clear-outbound-queue' === $job->type) {
         $fromName = CONFIG_COMPANY_NAME;
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Outbound Record Upload';
-        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $header = "From:" . $fromName . " <" . $from . ">\r\n";
+        if (defined('GLOBAL_BCC')) {
+            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
     } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
@@ -957,7 +975,10 @@ if ('clear-outbound-queue' === $job->type) {
         $fromName = CONFIG_COMPANY_NAME;
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Email Suppression Import';
-        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $header = "From:" . $fromName . " <" . $from . ">\r\n";
+        if (defined('GLOBAL_BCC')) {
+            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
     } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
@@ -1085,7 +1106,10 @@ if ('clear-outbound-queue' === $job->type) {
         $fromName = CONFIG_COMPANY_NAME;
         $to = MANAGER_EMAIL;
         $subject = 'Job Results - Phone Suppression Import';
-        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $header = "From:" . $fromName . " <" . $from . ">\r\n";
+        if (defined('GLOBAL_BCC')) {
+            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
     } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
@@ -1225,8 +1249,11 @@ if ('clear-outbound-queue' === $job->type) {
         $fromName = CONFIG_COMPANY_NAME;
         $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
         $subject = 'Job Results - Filter Zip Code Import';
-        $header = "From:" . $fromName . " <" . $from . ">\n";
+        $header = "From:" . $fromName . " <" . $from . ">\r\n";
         $header .= "CC: " . OWNER_EMAIL . "\r\n";
+        if (defined('GLOBAL_BCC')) {
+            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
     } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
