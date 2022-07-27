@@ -172,6 +172,14 @@ table tr.bg-gray {
 	vertical-align: top;
 }
 
+.form-input label.no-formatting {
+	width: auto;
+	text-align: left;
+	margin: 0;
+	font-weight: normal;
+	vertical-align: middle;
+}
+
 .form-input textarea {
 	width: 375px !important;
 	height: 75px !important;
@@ -496,4 +504,9 @@ div.logoContainer {
 		width: auto;
 		margin: 5px 0;
 	}
+
+	.form-input label.no-formatting {
+		display: inline-block;
+	}
+
 }
