@@ -2475,15 +2475,15 @@ class Leads
             $sql .= "LEFT JOIN companies_verticals cv ON cv.companyId = c.idCompany ";
             $sql .= "LEFT JOIN companies_notes cn ON cn.companyId = c.idCompany ";
             $sql .= "WHERE 1 = 1 ";
-            if (!empty($filters['textSearch'])) {
+            if (!empty($filters['text'])) {
                 $sql .= "AND ( c.name LIKE ? OR c.note LIKE ? OR c.url LIKE ? OR c.main_name LIKE ? OR c.returns_name LIKE ? OR c.tech_name LIKE ? OR cn.note LIKE ? ) ";
-                $params[] = '%' . $filters['textSearch'] . '%';
-                $params[] = '%' . $filters['textSearch'] . '%';
-                $params[] = '%' . $filters['textSearch'] . '%';
-                $params[] = '%' . $filters['textSearch'] . '%';
-                $params[] = '%' . $filters['textSearch'] . '%';
-                $params[] = '%' . $filters['textSearch'] . '%';
-                $params[] = '%' . $filters['textSearch'] . '%';
+                $params[] = '%' . $filters['text'] . '%';
+                $params[] = '%' . $filters['text'] . '%';
+                $params[] = '%' . $filters['text'] . '%';
+                $params[] = '%' . $filters['text'] . '%';
+                $params[] = '%' . $filters['text'] . '%';
+                $params[] = '%' . $filters['text'] . '%';
+                $params[] = '%' . $filters['text'] . '%';
             }
             if (!empty($filters['status'])) {
                 $sql .= "AND c.status = ? ";
