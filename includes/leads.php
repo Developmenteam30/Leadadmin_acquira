@@ -2220,6 +2220,9 @@ class Leads
             if (!empty($filters['companyType']) && 'isAdvertiser' == $filters['companyType']) {
                 $sql .= "AND p.isAdvertiser = 1 ";
             }
+            if (!empty($filters['companyType']) && 'isCallCenter' == $filters['companyType']) {
+                $sql .= "AND p.isCallCenter = 1 ";
+            }
             if (!empty($filters['divisions']) && is_array($filters['divisions'])) {
                 $sql .= "AND (";
                 foreach ($filters['divisions'] as $division) {
@@ -2503,6 +2506,9 @@ class Leads
             }
             if (!empty($filters['companyType']) && 'isAdvertiser' == $filters['companyType']) {
                 $sql .= "AND c.isAdvertiser = 1 ";
+            }
+            if (!empty($filters['companyType']) && 'isCallCenter' == $filters['companyType']) {
+                $sql .= "AND c.isCallCenter = 1 ";
             }
             if (!empty($filters['divisions']) && is_array($filters['divisions'])) {
                 $sql .= "AND cd.divisionId IN (";

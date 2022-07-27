@@ -66,14 +66,15 @@ if (isset($_REQUEST['a'])) {
             if ($c) {
                 $isPublisher = false;
                 $isAdvertiser = false;
+                $isCallCenter = false;
                 if (!empty($_REQUEST['companyType']) && is_array($_REQUEST['companyType'])) {
                     foreach ($_REQUEST['companyType'] as $key => $val) {
                         if ('isPublisher' === $val) {
                             $isPublisher = true;
-                        } else {
-                            if ('isAdvertiser' === $val) {
-                                $isAdvertiser = true;
-                            }
+                        } elseif ('isAdvertiser' === $val) {
+                            $isAdvertiser = true;
+                        } elseif ('isCallCenter' === $val) {
+                            $isCallCenter = true;
                         }
                     }
                 }
@@ -103,6 +104,7 @@ if (isset($_REQUEST['a'])) {
                     'salesperson' => empty($_REQUEST['salesperson']) ? null : $_REQUEST['salesperson'],
                     'isPublisher' => $isPublisher ? 1 : 0,
                     'isAdvertiser' => $isAdvertiser ? 1 : 0,
+                    'isCallCenter' => $isCallCenter ? 1 : 0,
                     'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
                     'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                 ));
@@ -182,14 +184,15 @@ if (isset($_REQUEST['a'])) {
             if ($c) {
                 $isPublisher = false;
                 $isAdvertiser = false;
+                $isCallCenter = false;
                 if (!empty($_REQUEST['companyType']) && is_array($_REQUEST['companyType'])) {
                     foreach ($_REQUEST['companyType'] as $key => $val) {
                         if ('isPublisher' === $val) {
                             $isPublisher = true;
-                        } else {
-                            if ('isAdvertiser' === $val) {
-                                $isAdvertiser = true;
-                            }
+                        } elseif ('isAdvertiser' === $val) {
+                            $isAdvertiser = true;
+                        } elseif ('isCallCenter' === $val) {
+                            $isCallCenter = true;
                         }
                     }
                 }
@@ -221,6 +224,7 @@ if (isset($_REQUEST['a'])) {
                     'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                     'isPublisher' => $isPublisher ? 1 : 0,
                     'isAdvertiser' => $isAdvertiser ? 1 : 0,
+                    'isCallCenter' => $isCallCenter ? 1 : 0,
                     'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
                     'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                 ));
@@ -375,6 +379,7 @@ if (isset($_REQUEST['d'])) {
                     'choices' => array(
                         'isPublisher' => 'Publisher / Affiliate',
                         'isAdvertiser' => 'Advertiser',
+                        'isCallCenter' => 'Call Center',
                     ),
                     'choice_append' => '<br/>',
                 ),
@@ -724,11 +729,13 @@ if (isset($_REQUEST['d'])) {
                         'choices' => array(
                             'isPublisher' => 'Publisher / Affiliate',
                             'isAdvertiser' => 'Advertiser',
+                            'isCallCenter' => 'Call Center',
                         ),
                         'choice_append' => '<br/>',
                         'value' => array(
                             'isPublisher' => !empty($company->isPublisher) ? true : false,
                             'isAdvertiser' => !empty($company->isAdvertiser) ? true : false,
+                            'isCallCenter' => !empty($company->isCallCenter) ? true : false,
                         ),
                     ),
                     array(
@@ -1111,6 +1118,7 @@ include(INCLUDES . "c_header.php");
             'choices' => array(
                 'isPublisher' => 'Publisher / Affiliate',
                 'isAdvertiser' => 'Advertiser',
+                'isCallCenter' => 'Call Center',
             ),
             'value' => $_REQUEST['searchCompanyType'] ?? '',
         ),
@@ -1397,17 +1405,17 @@ include(INCLUDES . "c_header.php");
 </script>
 
 <style>
-    td.hidden-xs {
-        word-break: break-word;
-    }
+	td.hidden-xs {
+		word-break: break-word;
+	}
 
-    .btn-group {
-        min-width: 60px;
-    }
+	.btn-group {
+		min-width: 60px;
+	}
 
-    .dropdown-menu {
-        min-width: 80px;
-    }
+	.dropdown-menu {
+		min-width: 80px;
+	}
 </style>
 
 </body>
