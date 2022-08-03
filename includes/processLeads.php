@@ -1309,6 +1309,11 @@ class ProcessLeads
             $data['url'] = 'https://www.instantcheckmate.com/register';
         }
 
+        // 6127: Special handling for Mojo Media feed that contains an invalid URL
+        if (!empty($data['url']) && 'the_savvy_sampler.com' == $data['url']) {
+            $data['url'] = 'https://thesavvysampler.com';
+        }
+
         // Fix cases where gender is set to a blank value
         if (!empty($data['gender']) && ' ' == $data['gender']) {
             unset($data['gender']);
