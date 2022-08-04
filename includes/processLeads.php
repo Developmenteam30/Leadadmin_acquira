@@ -1310,7 +1310,7 @@ class ProcessLeads
         }
 
         // 6127: Special handling for Mojo Media feed that contains an invalid URL
-        if (!empty($data['url']) && 'the_savvy_sampler.com' == $data['url']) {
+        if (!empty($data['url']) && 'The_Savvy_Sampler.com' == $data['url']) {
             $data['url'] = 'https://thesavvysampler.com';
         }
 
