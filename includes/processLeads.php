@@ -1309,9 +1309,14 @@ class ProcessLeads
             $data['url'] = 'https://www.instantcheckmate.com/register';
         }
 
-        // 6127: Special handling for Mojo Media feed that contains an invalid URL
-        if (!empty($data['url']) && 'The_Savvy_Sampler.com' == $data['url']) {
-            $data['url'] = 'https://thesavvysampler.com';
+        // 6127: Special handling for Mojo Media URLs that come in with underscores
+        // the_savvy_sampler.com
+        // sample_that.com
+        // american_family_assistance.com
+        // getitfree_sweepstakes.com
+        // instant_winner_sweeps.com
+        if (!empty($data['url'])) {
+            $data['url'] = str_replace('_', '', $data['url']);
         }
 
         // Fix cases where gender is set to a blank value
