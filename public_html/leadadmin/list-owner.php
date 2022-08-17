@@ -113,9 +113,8 @@ if (isset($_REQUEST['a'])) {
             $message .= COMPANY_ADDRESS_2 . "\r\n";
 
             $header = "From: \"" . CONFIG_COMPANY_NAME . "\" <" . PAYMENT_EMAIL . ">\r\n";
-            $header .= "BCC: " . PAYMENT_EMAIL . "\r\n";
-            if (defined('GLOBAL_BCC')) {
-                $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+            if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_ACCOUNTING))) {
+                $header .= "BCC: " . $bcc . "\r\n";
             }
 
             if (@mail($company->acct_email, "{$date} List Management Report Available | " . CONFIG_COMPANY_NAME, $message, $header, '-f' . PAYMENT_EMAIL)) {
@@ -203,8 +202,8 @@ if (isset($_REQUEST['a'])) {
                 if (!empty($company->accountManager) && !empty($user = $leads->getUser($company->accountManager)) && !empty($user->email)) {
                     $BCCText .= "BCC: {$user->email}\r\n";
                 }
-                if (defined('GLOBAL_BCC')) {
-                    $BCCText .= "BCC: " . GLOBAL_BCC . "\r\n";
+                if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_ACCOUNTING))) {
+                    $BCCText .= "BCC: " . $bcc . "\r\n";
                 }
 
                 if (@mail($company->acct_email, "Invoice #" . $_REQUEST['invoiceNumber'] . " PAID | " . CONFIG_COMPANY_NAME, $message, "From: \"" . CONFIG_COMPANY_NAME . "\" <" . PAYMENT_EMAIL . ">\r\n" . $BCCText,

@@ -1,7 +1,5 @@
 <?php
 
-use ELIAS\PortalSession;
-
 require_once(INCLUDES . 'leads.php');
 
 require_once(INCLUDES . 'sessions-database.php');
@@ -36,6 +34,16 @@ define('LEADS_SESSION_LEVEL_CLIENT_REPORTS', 0x1);
 
 class LeadsSession
 {
+    const EMAIL_BITS_DEVELOPER = 0x01;
+    const EMAIL_BITS_DORMANT_URL = 0x02;
+    const EMAIL_BITS_NEW_URL = 0x04;
+    const EMAIL_BITS_LEAD_THRESHOLD = 0x08;
+    const EMAIL_BITS_JOB_STATUS = 0x10;
+    const EMAIL_BITS_NEW_USER = 0x20;
+    const EMAIL_BITS_PAYROLL = 0x40;
+    const EMAIL_BITS_ACCOUNTING = 0x80;
+    const EMAIL_BITS_CRM = 0x100;
+
     public static function login($userId, $accessBits, $idCompany)
     {
         LeadsSession::start();

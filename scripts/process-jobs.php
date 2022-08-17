@@ -6,6 +6,7 @@ include(__DIR__ . "/../includes/c_config.php");
 
 require_once(INCLUDES . 'leads.php');
 require_once(INCLUDES . 'processLeads.php');
+require_once(INCLUDES . 'session.php');
 
 $mysqlErrorSource = 'Process Jobs';
 require_once(INCLUDES . "f_site.php");
@@ -77,13 +78,18 @@ if ('clear-outbound-queue' === $job->type) {
     }
     $body .= "\r\n";
 
+    $user = $leads->getUser($job->idUser);
+    if (empty($user) || empty($user->email)) {
+        return;
+    }
+
     $from = SYSTEM_FROM_EMAIL;
     $fromName = CONFIG_COMPANY_NAME;
-    $to = MANAGER_EMAIL;
+    $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Clear Outbound Queue';
     $header = "From:" . $fromName . " <" . $from . ">\r\n";
-    if (defined('GLOBAL_BCC')) {
-        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+        $header .= "BCC: " . $bcc . "\r\n";
     }
     $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
@@ -140,11 +146,6 @@ if ('clear-outbound-queue' === $job->type) {
         }
     }
 
-    $user = $leads->getUser($job->idUser);
-    if (empty($user) || empty($user->email)) {
-        return;
-    }
-
     $feedOut = $leads->getOutboundFeed($job->destination);
     $feedCompany = $leads->getCompany($feedOut->idCompany);
 
@@ -164,14 +165,19 @@ if ('clear-outbound-queue' === $job->type) {
     }
     $body .= "\r\n";
 
+    $user = $leads->getUser($job->idUser);
+    if (empty($user) || empty($user->email)) {
+        return;
+    }
+
     $from = SYSTEM_FROM_EMAIL;
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Retry Outbound Rejections';
     $header = "From:" . $fromName . " <" . $from . ">\r\n";
     $header .= "CC: " . OWNER_EMAIL . "\r\n";
-    if (defined('GLOBAL_BCC')) {
-        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+        $header .= "BCC: " . $bcc . "\r\n";
     }
     $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
@@ -215,11 +221,6 @@ if ('clear-outbound-queue' === $job->type) {
 
     }
 
-    $user = $leads->getUser($job->idUser);
-    if (empty($user) || empty($user->email)) {
-        return;
-    }
-
     $body = "Job Results\r\n";
     $body .= "\r\n";
     $body .= "Job ID: {$job->jobId}\r\n";
@@ -250,14 +251,19 @@ if ('clear-outbound-queue' === $job->type) {
     }
     $body .= "\r\n";
 
+    $user = $leads->getUser($job->idUser);
+    if (empty($user) || empty($user->email)) {
+        return;
+    }
+
     $from = SYSTEM_FROM_EMAIL;
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Export Incoming Data';
     $header = "From:" . $fromName . " <" . $from . ">\r\n";
     $header .= "CC: " . OWNER_EMAIL . "\r\n";
-    if (defined('GLOBAL_BCC')) {
-        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+        $header .= "BCC: " . $bcc . "\r\n";
     }
     $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
@@ -287,11 +293,6 @@ if ('clear-outbound-queue' === $job->type) {
             'message' => null,
         ));
         $status = "Successful";
-    }
-
-    $user = $leads->getUser($job->idUser);
-    if (empty($user) || empty($user->email)) {
-        return;
     }
 
     $body = "Job Results\r\n";
@@ -324,14 +325,19 @@ if ('clear-outbound-queue' === $job->type) {
     }
     $body .= "\r\n";
 
+    $user = $leads->getUser($job->idUser);
+    if (empty($user) || empty($user->email)) {
+        return;
+    }
+
     $from = SYSTEM_FROM_EMAIL;
     $fromName = CONFIG_COMPANY_NAME;
     $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
     $subject = 'Job Results - Export Outgoing Data';
     $header = "From:" . $fromName . " <" . $from . ">\r\n";
     $header .= "CC: " . OWNER_EMAIL . "\r\n";
-    if (defined('GLOBAL_BCC')) {
-        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+        $header .= "BCC: " . $bcc . "\r\n";
     }
     $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
@@ -530,13 +536,18 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Failures: {$counts['failures']}\r\n";
         $body .= "\r\n";
 
+        $user = $leads->getUser($job->idUser);
+        if (empty($user) || empty($user->email)) {
+            return;
+        }
+
         $from = SYSTEM_FROM_EMAIL;
         $fromName = CONFIG_COMPANY_NAME;
-        $to = MANAGER_EMAIL;
+        $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
         $subject = 'Job Results - Inbound Record Import';
         $header = "From:" . $fromName . " <" . $from . ">\r\n";
-        if (defined('GLOBAL_BCC')) {
-            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+            $header .= "BCC: " . $bcc . "\r\n";
         }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
@@ -742,13 +753,18 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Failures: {$counts['failures']}\r\n";
         $body .= "\r\n";
 
+        $user = $leads->getUser($job->idUser);
+        if (empty($user) || empty($user->email)) {
+            return;
+        }
+
         $from = SYSTEM_FROM_EMAIL;
         $fromName = CONFIG_COMPANY_NAME;
-        $to = MANAGER_EMAIL;
+        $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
         $subject = 'Job Results - Outbound Record Upload';
         $header = "From:" . $fromName . " <" . $from . ">\r\n";
-        if (defined('GLOBAL_BCC')) {
-            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+            $header .= "BCC: " . $bcc . "\r\n";
         }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
@@ -971,13 +987,18 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Failures: {$counts['failures']}\r\n";
         $body .= "\r\n";
 
+        $user = $leads->getUser($job->idUser);
+        if (empty($user) || empty($user->email)) {
+            return;
+        }
+
         $from = SYSTEM_FROM_EMAIL;
         $fromName = CONFIG_COMPANY_NAME;
-        $to = MANAGER_EMAIL;
+        $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
         $subject = 'Job Results - Email Suppression Import';
         $header = "From:" . $fromName . " <" . $from . ">\r\n";
-        if (defined('GLOBAL_BCC')) {
-            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+            $header .= "BCC: " . $bcc . "\r\n";
         }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
@@ -1102,13 +1123,18 @@ if ('clear-outbound-queue' === $job->type) {
         $body .= "Failures: {$counts['failures']}\r\n";
         $body .= "\r\n";
 
+        $user = $leads->getUser($job->idUser);
+        if (empty($user) || empty($user->email)) {
+            return;
+        }
+
         $from = SYSTEM_FROM_EMAIL;
         $fromName = CONFIG_COMPANY_NAME;
-        $to = MANAGER_EMAIL;
+        $to = filter_var($user->email, FILTER_SANITIZE_EMAIL);
         $subject = 'Job Results - Phone Suppression Import';
         $header = "From:" . $fromName . " <" . $from . ">\r\n";
-        if (defined('GLOBAL_BCC')) {
-            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+            $header .= "BCC: " . $bcc . "\r\n";
         }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 
@@ -1251,8 +1277,8 @@ if ('clear-outbound-queue' === $job->type) {
         $subject = 'Job Results - Filter Zip Code Import';
         $header = "From:" . $fromName . " <" . $from . ">\r\n";
         $header .= "CC: " . OWNER_EMAIL . "\r\n";
-        if (defined('GLOBAL_BCC')) {
-            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_JOB_STATUS))) {
+            $header .= "BCC: " . $bcc . "\r\n";
         }
         $sent = @mail($to, $subject, $body, $header, "-f {$from}");
 

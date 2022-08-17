@@ -90,8 +90,8 @@ if (isset($_REQUEST['a'])) {
                 if ($c) {
 
                     $BCCText = "BCC: " . PAYMENT_EMAIL . "\r\n";
-                    if (defined('GLOBAL_BCC')) {
-                        $BCCText .= "BCC: " . GLOBAL_BCC . "\r\n";
+                    if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_ACCOUNTING))) {
+                        $BCCText .= "BCC: " . $bcc . "\r\n";
                     }
                     /* Disabled per #1590.
                     if( !empty( $_REQUEST['commissionBCC'] ) ) {

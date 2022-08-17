@@ -3,6 +3,7 @@ require_once("../../includes/c_config.php");
 require_once(INCLUDES . 'leads.php');
 require_once(INCLUDES . 'Array2XML.php');
 require_once(INCLUDES . 'processLeads.php');
+require_once(INCLUDES . 'session.php');
 include(INCLUDES . "vendor/autoload.php");
 
 use Firebase\JWT\JWT;
@@ -66,16 +67,14 @@ if (empty($_REQUEST['pswd']) || $_REQUEST['pswd'] != $feedParams->password) {
         $body = print_r($_REQUEST, true) . PHP_EOL;
         $body .= print_r($_SERVER, true) . PHP_EOL;
         $fromName = CONFIG_COMPANY_NAME . ' List Management System';
-        $to = ADMINISTRATOR_EMAIL;
         $subject = 'Incoming Feed Password Mismatch';
         $header = "From:" . $fromName . " <" . $from . ">\n";
         $header .= "Content-type: text/html; charset=iso-8859-1\n";
         $header .= "Reply-To: <" . $from . ">\n";
         $header .= "Return-Path: <" . $from . ">\n";
-        if (defined('GLOBAL_BCC')) {
-            $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+        if(!empty($to = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_DEVELOPER))) {
+            $sent = @mail($to, $subject, $body, $header, "-f {$from}");
         }
-        $sent = @mail($to, $subject, $body, $header, "-f {$from}");
     }
 
     // Only log if a password was actually sent

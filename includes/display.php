@@ -160,11 +160,13 @@ class Display
                 print '<div class="checkbox-choices">';
                 if (!empty($field['choices']) && is_array($field['choices'])) {
                     foreach ($field['choices'] as $key => $val) {
-                        printf("\t<input class=\"form-control\" type=\"checkbox\" name=\"%s%s\" value=\"%s\"%s /> %s%s\n",
+                        printf("\t<input class=\"form-control\" type=\"checkbox\" id=\"%s\" name=\"%s%s\" value=\"%s\"%s /> <label class=\"no-formatting\" for=\"%s\">%s</label>%s\n",
+                            htmlspecialchars($field['id'] . '_' . $key),
                             htmlspecialchars($field['id']),
                             (sizeOf($field['choices']) > 1 ? '[]' : ''),
                             htmlspecialchars($key),
                             isset($field['value']) && LeadsSession::checkBit($field['value'], $key) ? ' checked="checked"' : '',
+                            htmlspecialchars($field['id'] . '_' . $key),
                             htmlspecialchars($val),
                             (!empty($field['choice_append']) ? $field['choice_append'] : '')
                         );

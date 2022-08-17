@@ -247,7 +247,7 @@ class Leads
         return $value;
     }
 
-    public function addUser($username, $password, $fullName, $idCompany, $accessBits, $email)
+    public function addUser($username, $password, $fullName, $idCompany, $accessBits, $emailBits, $email)
     {
 
         try {
@@ -256,6 +256,7 @@ class Leads
                 'fullName' => $fullName,
                 'idCompany' => $idCompany,
                 'accessBits' => $accessBits,
+                'emailBits' => $emailBits,
                 'email' => $email,
             ));
         } catch (Leads_PDOException $e) {
@@ -288,7 +289,7 @@ class Leads
     public function getUser($idUser)
     {
         try {
-            $query = $this->db->prepare("SELECT idUser,username,password,fullName,idCompany,accessBits,email FROM users WHERE idUser = ?");
+            $query = $this->db->prepare("SELECT idUser,username,password,fullName,idCompany,accessBits,emailBits,email FROM users WHERE idUser = ?");
             $query->execute(array($idUser));
             $results = $query->fetch(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
@@ -7723,6 +7724,20 @@ SQL;
         }
 
         return true;
+    }
+
+    public function getEmailBitsAddresses($bits)
+    {
+        try {
+            $query = $this->db->prepare("SELECT GROUP_CONCAT(email) FROM users WHERE (emailBits & ?) AND email IS NOT NULL AND email != ''");
+            $query->execute(array($bits));
+
+            return $query->fetchColumn();
+        } catch (PDOException $e) {
+            $this->logError('Unable to email bits addresses: ' . $e->getMessage());
+        }
+
+        return null;
     }
 
     public function getErrorCount()

@@ -5,9 +5,11 @@ chdir(__DIR__);
 require('../includes/c_config.php');
 
 require_once(INCLUDES . 'leads.php');
+require_once(INCLUDES . 'session.php');
 
 function sendInboundNotification($notification)
 {
+    $leads = Leads::getInstance();
     print "Sending notification for #{$notification->idFeedIn}" . PHP_EOL;
     $fromName = CONFIG_COMPANY_NAME . ' List Management System';
     $subject = "{$notification->name} - {$notification->label} - Below Daily Threshold";
@@ -16,13 +18,10 @@ function sendInboundNotification($notification)
     $body .= "Feed Description: {$notification->description}\r\n";
     $body .= "We have received {$notification->leadsPassed} leads on this feed today and we are expecting to have received at least {$notification->notifyThresholdCount} leads by {$notification->notifyThresholdTimeFormatted}.\r\n\r\n";
     $header = "From: \"{$fromName}\" <" . OWNER_EMAIL_FROM . ">\r\n";
-    //$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
     $header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
-    if (defined('GLOBAL_BCC')) {
-        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    if (!empty($to = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_LEAD_THRESHOLD))) {
+        $sent = @mail($to, $subject, wordwrap($body, 70), $header, "-f" . OWNER_EMAIL_FROM);
     }
-    $sent = @mail(MANAGER_EMAIL, $subject, wordwrap($body, 70), $header, "-f" . OWNER_EMAIL_FROM);
-
     if (!$sent) {
         $leads = Leads::getInstance();
         $leads->logError('Failed to send threshold notification to ' . MANAGER_EMAIL);
@@ -31,6 +30,7 @@ function sendInboundNotification($notification)
 
 function sendOutboundNotification($notification)
 {
+    $leads = Leads::getInstance();
     print "Sending notification for #{$notification->idFeedOut}" . PHP_EOL;
     $fromName = CONFIG_COMPANY_NAME . ' List Management System';
     $subject = "{$notification->name} - {$notification->label} - Below Daily Threshold";
@@ -39,13 +39,10 @@ function sendOutboundNotification($notification)
     $body .= "Feed Description: {$notification->description}\r\n\r\n";
     $body .= "We have sent {$notification->leadsPassed} leads on this feed today and we are expecting to have sent at least {$notification->notifyThresholdCount} leads by {$notification->notifyThresholdTimeFormatted}.\r\n\r\n";
     $header = "From: \"{$fromName}\" <" . OWNER_EMAIL_FROM . ">\r\n";
-    //$header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
     $header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
-    if (defined('GLOBAL_BCC')) {
-        $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+    if (!empty($to = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_LEAD_THRESHOLD))) {
+        $sent = @mail($to, $subject, wordwrap($body, 70), $header, "-f" . OWNER_EMAIL_FROM);
     }
-    $sent = @mail(MANAGER_EMAIL, $subject, wordwrap($body, 70), $header, "-f" . OWNER_EMAIL_FROM);
-
     if (!$sent) {
         $leads = Leads::getInstance();
         $leads->logError('Failed to send threshold notification to ' . MANAGER_EMAIL);

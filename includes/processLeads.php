@@ -3,6 +3,7 @@
 require_once('c_config.php');
 require_once(INCLUDES . '_f_validation.php');
 require_once(INCLUDES . 'f_site.php');
+require_once(INCLUDES . 'session.php');
 include(INCLUDES . "vendor/autoload.php");
 
 use Firebase\JWT\JWT;
@@ -201,19 +202,17 @@ class ProcessLeads
 
                 $from = SYSTEM_FROM_EMAIL;
                 $fromName = CONFIG_COMPANY_NAME . ' List Management System';
-                $to = MANAGER_EMAIL;
                 $subject = 'List Management - New URL Alert';
                 $header = "From:" . $fromName . " <" . $from . ">\r\n";
                 $header .= "Content-type: text/plain; charset=iso-8859-1\r\n";
                 $header .= "Reply-To: <" . $from . ">\r\n";
                 $header .= "X-Sender: <" . $from . ">\r\n";
                 $header .= "Return-Path: <" . $from . ">\r\n";
-                if (defined('GLOBAL_BCC')) {
-                    $header .= "BCC: " . GLOBAL_BCC . "\r\n";
-                }
-                $sent = @mail($to, $subject, $body, $header, "-f {$from}");
-                if (!$sent) {
-                    $leads->logError('Failed to send error report notification to administrator');
+                if (!empty($to = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_NEW_URL))) {
+                    $sent = @mail($to, $subject, $body, $header, "-f {$from}");
+                    if (!$sent) {
+                        $leads->logError('Failed to send error report notification to administrator');
+                    }
                 }
 
             }

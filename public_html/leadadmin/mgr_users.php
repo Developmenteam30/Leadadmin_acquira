@@ -54,6 +54,16 @@ if (isset($_REQUEST['a'])) {
                 });
             }
 
+            if (empty($_REQUEST['emailBits']) || !is_array($_REQUEST['emailBits'])) {
+                $_REQUEST['emailBits'] = 0;
+            } else {
+                $_REQUEST['emailBits'] = array_reduce($_REQUEST['emailBits'], function ($carry, $item) {
+                    $carry += intval($item);
+
+                    return $carry;
+                });
+            }
+
             if ((LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) || LeadsSession::checkBit($_REQUEST['accessBits'],
                         LEADS_SESSION_LEVEL_CLIENT_REPORTS) || LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) && empty($_REQUEST['idCompany'])) {
                 $result['error'] = 'Please associate this user with a company.';
@@ -66,8 +76,15 @@ if (isset($_REQUEST['a'])) {
                 $_REQUEST['idCompany'] = null;
             }
 
-            $idUser = $leads->addUser(strtolower(trim($_REQUEST['username'])), $_REQUEST['password'], empty(trim($_REQUEST['fullName'])) ? null : trim($_REQUEST['fullName']),
-                empty($_REQUEST['idCompany']) ? null : $_REQUEST['idCompany'], empty($_REQUEST['accessBits']) ? 0 : $_REQUEST['accessBits'], empty(trim($_REQUEST['email'])) ? null : trim($_REQUEST['email']));
+            $idUser = $leads->addUser(
+                strtolower(trim($_REQUEST['username'])),
+                $_REQUEST['password'],
+                empty(trim($_REQUEST['fullName'])) ? null : trim($_REQUEST['fullName']),
+                empty($_REQUEST['idCompany']) ? null : $_REQUEST['idCompany'],
+                empty($_REQUEST['accessBits']) ? 0 : $_REQUEST['accessBits'],
+                empty($_REQUEST['emailBits']) ? 0 : $_REQUEST['emailBits'],
+                empty(trim($_REQUEST['email'])) ? null : trim($_REQUEST['email'])
+            );
             if (null === $idUser) {
                 $result['error'] = 'Unable to add new user';
                 break;
@@ -81,13 +98,13 @@ if (isset($_REQUEST['a'])) {
             $message .= "\r\n";
 
             $header = "From: lmsalerts@" . SITE_URL . "\r\n";
-            $header .= "CC: " . OWNER_EMAIL . "\r\n";
-            $header .= "BCC: " . ADMINISTRATOR_EMAIL . "\r\n";
-            if (defined('GLOBAL_BCC')) {
-                $header .= "BCC: " . GLOBAL_BCC . "\r\n";
+            if (!empty($bcc = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_DEVELOPER))) {
+                $header .= "BCC: " . $bcc . "\r\n";
             }
 
-            @mail(OWNER_EMAIL_FROM, CONFIG_COMPANY_NAME . ' User Added', $message, $header, '-f' . 'lmsalerts@' . SITE_URL);
+            if (!empty($to = $leads->getEmailBitsAddresses(LeadsSession::EMAIL_BITS_NEW_USER))) {
+                @mail($to, CONFIG_COMPANY_NAME . ' User Added', $message, $header, '-f' . 'lmsalerts@' . SITE_URL);
+            }
 
             $leads->auditLog('USERS:ADD', $idUser);
 
@@ -119,6 +136,16 @@ if (isset($_REQUEST['a'])) {
                 });
             }
 
+            if (empty($_REQUEST['emailBits']) || !is_array($_REQUEST['emailBits'])) {
+                $_REQUEST['emailBits'] = 0;
+            } else {
+                $_REQUEST['emailBits'] = array_reduce($_REQUEST['emailBits'], function ($carry, $item) {
+                    $carry += intval($item);
+
+                    return $carry;
+                });
+            }
+
             if ((LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) || LeadsSession::checkBit($_REQUEST['accessBits'],
                         LEADS_SESSION_LEVEL_CLIENT_REPORTS) || LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) && empty($_REQUEST['idCompany'])) {
                 $result['error'] = 'Please associate this user with a company.';
@@ -139,12 +166,14 @@ if (isset($_REQUEST['a'])) {
             if (isset($_REQUEST['isArchived']) && 1 == $_REQUEST['isArchived']) {
                 $isArchived = 1;
                 $_REQUEST['accessBits'] = 0;
+                $_REQUEST['emailBits'] = 0;
             }
 
             $status = $leads->updateUser($_REQUEST['idUser'], array(
                 'fullName' => empty($_REQUEST['fullName']) ? null : $_REQUEST['fullName'],
                 'idCompany' => empty($_REQUEST['idCompany']) ? null : $_REQUEST['idCompany'],
                 'accessBits' => empty($_REQUEST['accessBits']) ? 0 : $_REQUEST['accessBits'],
+                'emailBits' => empty($_REQUEST['emailBits']) ? 0 : $_REQUEST['emailBits'],
                 'email' => empty($_REQUEST['email']) ? null : $_REQUEST['email'],
                 'isArchived' => $isArchived,
             ));
@@ -233,6 +262,23 @@ if (isset($_REQUEST['d'])) {
                     'required' => true,
                 ),
                 array(
+                    'id' => 'emailBits',
+                    'label' => 'Email Notifications',
+                    'type' => 'checkboxBits',
+                    'choices' => array(
+                        LeadsSession::EMAIL_BITS_DORMANT_URL => 'Dormant URL Notifications',
+                        LeadsSession::EMAIL_BITS_NEW_URL => 'New URL Notifications',
+                        LeadsSession::EMAIL_BITS_LEAD_THRESHOLD => 'Lead Threshold Notifications',
+                        LeadsSession::EMAIL_BITS_NEW_USER => 'New User Added Notifications',
+                        LeadsSession::EMAIL_BITS_PAYROLL => 'Dialer Payroll Report',
+                        LeadsSession::EMAIL_BITS_ACCOUNTING => 'BCC Accounting Notifications',
+                        LeadsSession::EMAIL_BITS_CRM => 'BCC CRM Followup Notifications',
+                        LeadsSession::EMAIL_BITS_JOB_STATUS => 'BCC Job Status Notifications',
+                        LeadsSession::EMAIL_BITS_DEVELOPER => 'Developer Notifications',
+                    ),
+                    'choice_append' => '<br/>',
+                ),
+                array(
                     'id' => 'idCompany',
                     'label' => 'Company Access',
                     'type' => 'select',
@@ -311,6 +357,24 @@ if (isset($_REQUEST['d'])) {
                         'choice_append' => '<br/>',
                         'required' => true,
                         'value' => $user->accessBits,
+                    ),
+                    array(
+                        'id' => 'emailBits',
+                        'label' => 'Email Notifications',
+                        'type' => 'checkboxBits',
+                        'choices' => array(
+                            LeadsSession::EMAIL_BITS_DORMANT_URL => 'Dormant URL Notifications',
+                            LeadsSession::EMAIL_BITS_NEW_URL => 'New URL Notifications',
+                            LeadsSession::EMAIL_BITS_LEAD_THRESHOLD => 'Lead Threshold Notifications',
+                            LeadsSession::EMAIL_BITS_NEW_USER => 'New User Added Notifications',
+                            LeadsSession::EMAIL_BITS_PAYROLL => 'Dialer Payroll Report',
+                            LeadsSession::EMAIL_BITS_ACCOUNTING => 'BCC Accounting Notifications',
+                            LeadsSession::EMAIL_BITS_CRM => 'BCC CRM Followup Notifications',
+                            LeadsSession::EMAIL_BITS_JOB_STATUS => 'BCC Job Status Notifications',
+                            LeadsSession::EMAIL_BITS_DEVELOPER => 'Developer Notifications',
+                        ),
+                        'choice_append' => '<br/>',
+                        'value' => $user->emailBits,
                     ),
                     array(
                         'id' => 'idCompany',
