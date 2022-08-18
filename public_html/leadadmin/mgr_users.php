@@ -483,16 +483,19 @@ include(INCLUDES . "c_header.php");
                 $level[] = 'CRM Access';
             }
             if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
-                $level[] = 'Client Dashboard Access';
+                $level[] = 'Publisher Dashboard Access';
             }
             if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CLIENT_IMPORT)) {
-                $level[] = 'Client Import Access';
+                $level[] = 'Publisher Import Access';
             }
             if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS)) {
-                $level[] = 'Client Phone Leads Report';
+                $level[] = 'Publisher Phone Leads Report';
             }
             if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CLIENT_REPORTS)) {
-                $level[] = 'Client Reporting Access';
+                $level[] = 'Publisher Reporting Access';
+            }
+            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CALL_CENTER)) {
+                $level[] = 'Call Center Reporting Access';
             }
 
             if (!empty($user->idCompany)) {
