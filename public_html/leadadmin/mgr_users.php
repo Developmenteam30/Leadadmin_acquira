@@ -71,8 +71,11 @@ if (isset($_REQUEST['a'])) {
             }
 
             // Do not set a company for CRM users and higher
-            if (!LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) && !LeadsSession::checkBit($_REQUEST['accessBits'],
-                    LEADS_SESSION_LEVEL_CLIENT_REPORTS) && !LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if (!LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) &&
+                !LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_REPORTS) &&
+                !LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD) &&
+                !LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CALL_CENTER)
+            ) {
                 $_REQUEST['idCompany'] = null;
             }
 
@@ -153,8 +156,11 @@ if (isset($_REQUEST['a'])) {
             }
 
             // Do not set a company for CRM users and higher
-            if (!LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) && !LeadsSession::checkBit($_REQUEST['accessBits'],
-                    LEADS_SESSION_LEVEL_CLIENT_REPORTS) && !LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
+            if (!LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) &&
+                !LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_REPORTS) &&
+                !LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD) &&
+                !LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CALL_CENTER)
+            ) {
                 $_REQUEST['idCompany'] = null;
             }
 
