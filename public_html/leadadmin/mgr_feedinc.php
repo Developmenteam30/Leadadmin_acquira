@@ -106,6 +106,7 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'If using the state filter feature, at least one state must be selected.';
             }
 
+            /*
             $filterZipField = !empty($_REQUEST['filterZip']) ? $_REQUEST['filterZip'] : '';
             $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? [] : $_REQUEST['filterZipCodes'];
 
@@ -126,7 +127,7 @@ if (isset($_REQUEST['a'])) {
                         break;
                     }
                 }
-            }
+            }*/
 
             if ($c && (empty($_REQUEST['allowedFields']) || !is_array($_REQUEST['allowedFields']))) {
                 // Must allow some fields, or the feed is worthless isn't it
@@ -384,7 +385,7 @@ if (isset($_REQUEST['a'])) {
                         'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                         'chokePercent' => empty($_REQUEST['chokePercent']) ? 0 : intval($_REQUEST['chokePercent']),
                         'filterState' => $filterState,
-                        'filterZip' => $filterZip,
+                        //'filterZip' => $filterZip,
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'dailyLimit' => empty($_REQUEST['dailyLimit']) ? null : intval($_REQUEST['dailyLimit']),
                         'custom1Label' => empty($_REQUEST['custom1Label']) ? null : $_REQUEST['custom1Label'],
@@ -467,6 +468,7 @@ if (isset($_REQUEST['a'])) {
                     $result['error'] = 'If using the state filter feature, at least one state must be selected.';
                 }
 
+                /*
                 $filterZipField = !empty($_REQUEST['filterZip']) ? $_REQUEST['filterZip'] : '';
                 $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? [] : $_REQUEST['filterZipCodes'];
 
@@ -487,7 +489,7 @@ if (isset($_REQUEST['a'])) {
                             break;
                         }
                     }
-                }
+                }*/
 
                 if ($c && empty($_REQUEST['timezone'])) {
                     $c = false;
@@ -694,7 +696,7 @@ if (isset($_REQUEST['a'])) {
                         'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                         'chokePercent' => empty($_REQUEST['chokePercent']) ? 0 : intval($_REQUEST['chokePercent']),
                         'filterState' => $filterState,
-                        'filterZip' => $filterZip,
+                        //'filterZip' => $filterZip,
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'dailyLimit' => empty($_REQUEST['dailyLimit']) ? null : intval($_REQUEST['dailyLimit']),
                         'custom1Label' => empty($_REQUEST['custom1Label']) ? null : $_REQUEST['custom1Label'],
@@ -1084,6 +1086,7 @@ if (isset($_REQUEST['d'])) {
                             </div>
                         </td>
                     </tr>
+                    <?php if(false) { ?>
                     <tr>
                         <script>
                             $('input[name="filterZip"]:radio').change(function () {
@@ -1136,6 +1139,7 @@ if (isset($_REQUEST['d'])) {
                             </div>
                         </td>
                     </tr>
+                    <?php } ?>
                     <tr>
                         <td><p>Feed Category</p></td>
                         <td>
