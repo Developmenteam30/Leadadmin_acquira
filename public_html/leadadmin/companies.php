@@ -106,6 +106,7 @@ if (isset($_REQUEST['a'])) {
                     'isAdvertiser' => $isAdvertiser ? 1 : 0,
                     'isCallCenter' => $isCallCenter ? 1 : 0,
                     'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
+                    'dialer_report_type' => empty($_REQUEST['dialer_report_type']) ? null : $_REQUEST['dialer_report_type'],
                     'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                 ));
                 if ($idCompany === null) {
@@ -226,6 +227,7 @@ if (isset($_REQUEST['a'])) {
                     'isAdvertiser' => $isAdvertiser ? 1 : 0,
                     'isCallCenter' => $isCallCenter ? 1 : 0,
                     'paymentTerms' => empty($_REQUEST['paymentTerms']) ? null : $_REQUEST['paymentTerms'],
+                    'dialer_report_type' => empty($_REQUEST['dialer_report_type']) ? null : $_REQUEST['dialer_report_type'],
                     'costPerLead' => empty($_REQUEST['costPerLead']) ? 0.00 : floatval($_REQUEST['costPerLead']),
                 ));
 
@@ -382,6 +384,17 @@ if (isset($_REQUEST['d'])) {
                         'isCallCenter' => 'Call Center',
                     ),
                     'choice_append' => '<br/>',
+                ),
+                array(
+                    'id' => 'dialer_report_type',
+                    'label' => 'Dialer Reporting View',
+                    'type' => 'radio',
+                    'choices' => array(
+                        'billable' => 'Client (Billable)',
+                        'payable' => 'Vendor (Payable)',
+                    ),
+                    'value' => 'billable',
+                    'choice_append' => '&nbsp;&nbsp;',
                 ),
                 array(
                     'id' => 'paymentTerms',
@@ -737,6 +750,17 @@ if (isset($_REQUEST['d'])) {
                             'isAdvertiser' => !empty($company->isAdvertiser) ? true : false,
                             'isCallCenter' => !empty($company->isCallCenter) ? true : false,
                         ),
+                    ),
+                    array(
+                        'id' => 'dialer_report_type',
+                        'label' => 'Dialer Reporting View',
+                        'type' => 'radio',
+                        'choices' => array(
+                            'billable' => 'Client (Billable)',
+                            'payable' => 'Vendor (Payable)',
+                        ),
+                        'value' => $company->dialer_report_type,
+                        'choice_append' => '&nbsp;&nbsp;',
                     ),
                     array(
                         'id' => 'paymentTerms',
