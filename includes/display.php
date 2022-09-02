@@ -183,12 +183,14 @@ class Display
                 );
                 if (!empty($field['choices']) && is_array($field['choices'])) {
                     foreach ($field['choices'] as $key => $val) {
-                        printf("\t<input type=\"radio\" name=\"%s\" value=\"%s\"%s%s%s /> %s%s\n",
+                        printf("\t<input type=\"radio\" id=\"%s\" name=\"%s\" value=\"%s\"%s%s%s /> <label class=\"no-formatting\" for=\"%s\">%s</label>%s\n",
+                            htmlspecialchars($field['id'] . '_' . $key),
                             htmlspecialchars($field['id']),
                             htmlspecialchars($key),
                             (isset($field['value']) && $key == $field['value']) ? ' checked="checked"' : '',
                             (!empty($field['required']) ? ' required="required" ' : ''),
                             (!empty($field['readonly']) ? ' readonly' : ''),
+                            htmlspecialchars($field['id'] . '_' . $key),
                             htmlspecialchars($val),
                             (!empty($field['choice_append']) ? $field['choice_append'] : '')
                         );
