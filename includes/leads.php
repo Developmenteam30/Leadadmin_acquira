@@ -3396,8 +3396,8 @@ class Leads
                             } else {
                                 print "EMPTY FIELD {$row->idFeedOut}\n";
                                 var_dump([
-                                    $fieldValuePair[0] ?? null,
-                                    $fieldValuePair[1] ?? null,
+                                        $fieldValuePair[0] ?? null,
+                                        $fieldValuePair[1] ?? null,
                                 ]);
                             }
                         }
@@ -3413,8 +3413,8 @@ class Leads
                         } else {
                             print "EMPTY FIELD {$row->idFeedOut}\n";
                             var_dump([
-                                $varFields[$count] ?? null,
-                                $fieldMap[$count] ?? null,
+                                    $varFields[$count] ?? null,
+                                    $fieldMap[$count] ?? null,
                             ]);
                         }
                     }
@@ -6732,6 +6732,26 @@ class Leads
             return null;
         } finally {
             $this->setBufferedQuery();
+        }
+    }
+
+    public function fixInboundStats($date)
+    {
+        $queryCountAccepted = $this->db->prepare("SELECT COUNT(*) FROM data_inbound WHERE DATE(CONVERT_TZ(`timestamp`,?,?)) = ? AND idFeedIn = ? AND url = ? AND result IS NULL");
+        $queryCountRejected = $this->db->prepare("SELECT COUNT(*) FROM data_inbound WHERE DATE(CONVERT_TZ(`timestamp`,?,?)) = ? AND idFeedIn = ? AND url = ? AND result IS NOT NULL");
+        $queryReplaceStatsInbound = $this->db->prepare("REPLACE INTO stats_inbound(idFeedIn,url,stamp,accepted,rejected) VALUES(?,?,?,?,?)");
+
+        $query = $this->db->prepare("SELECT idFeedIn,url,DATE(`timestamp`) AS `date` FROM data_inbound WHERE DATE(`timestamp`) = ? GROUP BY idFeedIn,url,DATE(`timestamp`)");
+        $query->execute([$date]);
+        while ($row = $query->fetch(PDO::FETCH_OBJ)) {
+
+            $queryCountAccepted->execute([DB_TIMEZONE, LOCAL_TIMEZONE, $row->date, $row->idFeedIn, $row->url]);
+            $accepted = $queryCountAccepted->fetchColumn();
+            $queryCountRejected->execute([DB_TIMEZONE, LOCAL_TIMEZONE, $row->date, $row->idFeedIn, $row->url]);
+            $rejected = $queryCountRejected->fetchColumn();
+
+            printf("%s %s %s %s %s", $row->date, $row->idFeedIn, $row->url ?? '', $accepted, $rejected);
+            $queryReplaceStatsInbound->execute([$row->idFeedIn, $row->url ?? '', $row->date, $accepted, $rejected]);
         }
     }
 
