@@ -64,8 +64,11 @@ if (isset($_REQUEST['a'])) {
                 });
             }
 
-            if ((LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) || LeadsSession::checkBit($_REQUEST['accessBits'],
-                        LEADS_SESSION_LEVEL_CLIENT_REPORTS) || LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) && empty($_REQUEST['idCompany'])) {
+            if ((LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) ||
+                    LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_REPORTS) ||
+                    LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD) ||
+                    LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CALL_CENTER)
+                ) && empty($_REQUEST['idCompany'])) {
                 $result['error'] = 'Please associate this user with a company.';
                 break;
             }
@@ -149,8 +152,11 @@ if (isset($_REQUEST['a'])) {
                 });
             }
 
-            if ((LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) || LeadsSession::checkBit($_REQUEST['accessBits'],
-                        LEADS_SESSION_LEVEL_CLIENT_REPORTS) || LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) && empty($_REQUEST['idCompany'])) {
+            if ((LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) ||
+                    LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_REPORTS) ||
+                    LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CLIENT_DASHBOARD) ||
+                    LeadsSession::checkBit($_REQUEST['accessBits'], LEADS_SESSION_LEVEL_CALL_CENTER)
+                ) && empty($_REQUEST['idCompany'])) {
                 $result['error'] = 'Please associate this user with a company.';
                 break;
             }
