@@ -1122,7 +1122,7 @@ if (isset($_REQUEST['d'])) {
                                     print ' checked="checked"';
                                 } ?> /> Exclude Only<br/>
                             </p>
-                            <p>There are <?= !empty($filterZip_value->zipCodes) ? count($filterZip_value->zipCodes) : 'no'; ?> zip codes on file.</p>
+                            <p>There are <?= !empty($filterZip_value->zipCodes) ? number_format(count($filterZip_value->zipCodes)) : 'no'; ?> zip codes on file.</p>
                             <?php if (false) { ?>
                                 <div id="filterZipChoice"<?php if (empty($filterZip_value->mode) || ($filterZip_value->mode != 'includeOnly' && $filterZip_value->mode != 'excludeOnly')) {
                                     echo ' style="display: none;"';
