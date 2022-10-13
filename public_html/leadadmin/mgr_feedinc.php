@@ -106,9 +106,9 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'If using the state filter feature, at least one state must be selected.';
             }
 
-            /*
             $filterZipField = !empty($_REQUEST['filterZip']) ? $_REQUEST['filterZip'] : '';
             $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? [] : $_REQUEST['filterZipCodes'];
+            /*
 
             if ($c && !empty($filterZipField) && empty($filterZipCodes)) {
                 $c = false;
@@ -385,7 +385,7 @@ if (isset($_REQUEST['a'])) {
                         'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                         'chokePercent' => empty($_REQUEST['chokePercent']) ? 0 : intval($_REQUEST['chokePercent']),
                         'filterState' => $filterState,
-                        //'filterZip' => $filterZip,
+                        'filterZip' => $filterZip,
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'dailyLimit' => empty($_REQUEST['dailyLimit']) ? null : intval($_REQUEST['dailyLimit']),
                         'custom1Label' => empty($_REQUEST['custom1Label']) ? null : $_REQUEST['custom1Label'],
@@ -468,8 +468,16 @@ if (isset($_REQUEST['a'])) {
                     $result['error'] = 'If using the state filter feature, at least one state must be selected.';
                 }
 
-                /*
                 $filterZipField = !empty($_REQUEST['filterZip']) ? $_REQUEST['filterZip'] : '';
+
+                $feed = $leads->getInboundFeed($_REQUEST['idFeedIn']);
+                $filterZipCodes = [];
+                if (!empty($feed->filterZip) && false !== json_decode($feed->filterZip)) {
+                    $filterZip = json_decode($feed->filterZip);
+                    $filterZipCodes = $filterZip->zipCodes ?? [];
+                }
+
+                /*
                 $filterZipCodes = empty($filterZipField) || empty($_REQUEST['filterZipCodes']) ? [] : $_REQUEST['filterZipCodes'];
 
                 if ($c && !empty($filterZipField) && empty($filterZipCodes)) {
@@ -696,7 +704,7 @@ if (isset($_REQUEST['a'])) {
                         'status' => empty($_REQUEST['status']) ? 'active' : $_REQUEST['status'],
                         'chokePercent' => empty($_REQUEST['chokePercent']) ? 0 : intval($_REQUEST['chokePercent']),
                         'filterState' => $filterState,
-                        //'filterZip' => $filterZip,
+                        'filterZip' => $filterZip,
                         'feedCategory' => empty($_REQUEST['feedCategory']) ? 'email' : $_REQUEST['feedCategory'],
                         'dailyLimit' => empty($_REQUEST['dailyLimit']) ? null : intval($_REQUEST['dailyLimit']),
                         'custom1Label' => empty($_REQUEST['custom1Label']) ? null : $_REQUEST['custom1Label'],
@@ -1086,7 +1094,6 @@ if (isset($_REQUEST['d'])) {
                             </div>
                         </td>
                     </tr>
-                    <?php if(false) { ?>
                     <tr>
                         <script>
                             $('input[name="filterZip"]:radio').change(function () {
@@ -1115,31 +1122,33 @@ if (isset($_REQUEST['d'])) {
                                     print ' checked="checked"';
                                 } ?> /> Exclude Only<br/>
                             </p>
-                            <div id="filterZipChoice"<?php if (empty($filterZip_value->mode) || ($filterZip_value->mode != 'includeOnly' && $filterZip_value->mode != 'excludeOnly')) {
-                                echo ' style="display: none;"';
-                            } ?>>
-                                <p>Choose which zip codes to include/exclude.</p>
-                                <p>
-                                    <a href='#' class='nonLink' onclick='element("filterZipCodes_container", "filterZipCode", {});'>Add New Zip Code</a>
-                                </p>
-                                <div>
-                                    <div id='filterZipCodes_container'>
-                                        <?php
-                                        if (!empty($filterZip_value->zipCodes)) {
-                                            foreach ($filterZip_value->zipCodes as $zipCode) {
-                                                ?>
-                                                <div>
-                                                    <input type='text' name='filterZipCodes[]' value='<?php echo Display::escHtml($zipCode); ?>'/>
-                                                    <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
-                                                </div>
-                                            <?php }
-                                        } ?>
+                            <p>There are <?= !empty($filterZip_value->zipCodes) ? count($filterZip_value->zipCodes) : 'no'; ?> zip codes on file.</p>
+                            <?php if (false) { ?>
+                                <div id="filterZipChoice"<?php if (empty($filterZip_value->mode) || ($filterZip_value->mode != 'includeOnly' && $filterZip_value->mode != 'excludeOnly')) {
+                                    echo ' style="display: none;"';
+                                } ?>>
+                                    <p>Choose which zip codes to include/exclude.</p>
+                                    <p>
+                                        <a href='#' class='nonLink' onclick='element("filterZipCodes_container", "filterZipCode", {});'>Add New Zip Code</a>
+                                    </p>
+                                    <div>
+                                        <div id='filterZipCodes_container'>
+                                            <?php
+                                            if (!empty($filterZip_value->zipCodes)) {
+                                                foreach ($filterZip_value->zipCodes as $zipCode) {
+                                                    ?>
+                                                    <div>
+                                                        <input type='text' name='filterZipCodes[]' value='<?php echo Display::escHtml($zipCode); ?>'/>
+                                                        <a href='#' class='nonLink' onclick='$(this).parent().remove(); return false;'>[X]</a>
+                                                    </div>
+                                                <?php }
+                                            } ?>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            <?php } ?>
                         </td>
                     </tr>
-                    <?php } ?>
                     <tr>
                         <td><p>Feed Category</p></td>
                         <td>
