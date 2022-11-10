@@ -266,6 +266,7 @@ if (isset($_REQUEST['d'])) {
                         LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Publisher Dashboard Access',
                         LEADS_SESSION_LEVEL_CALL_CENTER => 'Call Center Reporting Access',
                         LEADS_SESSION_LEVEL_CALL_CENTER_QA => 'Call Center QA Access',
+                        LEADS_SESSION_LEVEL_CALL_CENTER_AGENT => 'Call Center Agent Access',
                         LEADS_SESSION_LEVEL_PPC => 'PPC Feed Access',
                         LEADS_SESSION_LEVEL_CRM => 'CRM Access',
                         LEADS_SESSION_LEVEL_SALESPERSON => 'Show in salesperson list',
@@ -364,6 +365,7 @@ if (isset($_REQUEST['d'])) {
                             LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Publisher Dashboard Access',
                             LEADS_SESSION_LEVEL_CALL_CENTER => 'Call Center Reporting Access',
                             LEADS_SESSION_LEVEL_CALL_CENTER_QA => 'Call Center QA Access',
+                            LEADS_SESSION_LEVEL_CALL_CENTER_AGENT => 'Call Center Agent Access',
                             LEADS_SESSION_LEVEL_PPC => 'PPC Feed Access',
                             LEADS_SESSION_LEVEL_CRM => 'CRM Access',
                             LEADS_SESSION_LEVEL_SALESPERSON => 'Show in salesperson list',
@@ -513,6 +515,9 @@ include(INCLUDES . "c_header.php");
             }
             if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CALL_CENTER_QA)) {
                 $level[] = 'Call Center QA Access';
+            }
+            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CALL_CENTER_AGENT)) {
+                $level[] = 'Call Center Agent Access';
             }
 
             if (!empty($user->idCompany)) {
