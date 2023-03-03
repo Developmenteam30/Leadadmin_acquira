@@ -319,7 +319,7 @@ class Leads
 
         try {
 
-            $sql = "SELECT idUser,username,fullName,idCompany,accessBits ";
+            $sql = "SELECT idUser,username,fullName,idCompany,accessBits,emailBits ";
             $sql .= "FROM users ";
             if (!empty($status) && 'active' === $status) {
                 $sql .= "WHERE isArchived = 0 ";
@@ -7535,6 +7535,85 @@ class Leads
         }
 
         return null;
+    }
+
+    public function getZipLists()
+    {
+        $results = array();
+
+        try {
+            $query = $this->db->prepare("SELECT id,description FROM ziplists ORDER BY description");
+            $query->execute();
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get zip lists: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function getZipList($zipListId)
+    {
+        $results = array();
+
+        try {
+            $query = $this->db->prepare("SELECT id,description FROM ziplists WHERE id = ?");
+            $query->execute([$zipListId]);
+            $results = $query->fetch(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to get zip list: ' . $e->getMessage());
+        }
+
+        return $results;
+    }
+
+    public function addZipList($fields)
+    {
+        try {
+            return $this->insertRow('ziplists', $fields);
+        } catch (Leads_PDOException $e) {
+            $pdoException = $e->getPrevious();
+            $this->logError('Unable to add zip list: ' . $pdoException->getMessage());
+
+            return null;
+        }
+    }
+
+    public function updateZipList($zipListId, $fields)
+    {
+
+        try {
+            $status = $this->update('ziplists', $fields, array(
+                'id' => $zipListId,
+            ));
+
+            return $status;
+        } catch (Leads_PDOException $e) {
+            $pdoException = $e->getPrevious();
+            $this->logError('Unable to update zip code list: ' . $pdoException->getMessage());
+
+            return null;
+        }
+    }
+
+    public function findZipListByDescription($description, $zipListId = null)
+    {
+        $results = array();
+
+        try {
+            if (!empty($zipListId)) {
+                $query = $this->db->prepare("SELECT id FROM ziplists WHERE description = ? AND id != ?");
+                $query->execute([$description, $zipListId]);
+            } else {
+                $query = $this->db->prepare("SELECT id FROM ziplists WHERE description = ?");
+                $query->execute([$description]);
+            }
+            $results = $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {
+            $this->logError('Unable to find zip list by description: ' . $e->getMessage());
+        }
+
+        return $results;
     }
 
     public function checkInboundFeedThresholds()
