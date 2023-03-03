@@ -275,7 +275,6 @@ if (isset($_REQUEST['d'])) {
                         LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
                     ),
                     'choice_append' => '<br/>',
-                    'required' => true,
                 ),
                 array(
                     'id' => 'emailBits',
