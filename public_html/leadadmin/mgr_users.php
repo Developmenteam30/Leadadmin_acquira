@@ -475,6 +475,7 @@ include(INCLUDES . "c_header.php");
             <th>Username</th>
             <th>Full Name</th>
             <th>Access Flags</th>
+            <th>Email Notifications</th>
             <th>Company Id</th>
             <th>Options</th>
         </tr>
@@ -527,6 +528,38 @@ include(INCLUDES . "c_header.php");
                 $level[] = 'Call Center Agent Access';
             }
 
+            $notifications = [];
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_DEVELOPER)) {
+                $notifications[] = 'Developer Notifications';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_DORMANT_URL)) {
+                $notifications[] = 'Dormant URL Notifications';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_NEW_URL)) {
+                $notifications[] = 'New URL Notifications';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_LEAD_THRESHOLD)) {
+                $notifications[] = 'Lead Threshold Notifications';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_JOB_STATUS)) {
+                $notifications[] = 'BCC Job Status Notifications';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_NEW_USER)) {
+                $notifications[] = 'New User Added Notifications';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_PAYROLL)) {
+                $notifications[] = 'Dialer Payroll Report';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_ACCOUNTING)) {
+                $notifications[] = 'BCC Accounting Notifications';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_CRM)) {
+                $notifications[] = 'BCC CRM Followup Notifications';
+            }
+            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_LICENSING_REPORT)) {
+                $notifications[] = 'Dialer Agent Licensing Report';
+            }
+
             if (!empty($user->idCompany)) {
                 $company = $leads->getCompany($user->idCompany);
                 $user->idCompany = $company->name . ' (' . $company->idCompany . ')';
@@ -537,6 +570,7 @@ include(INCLUDES . "c_header.php");
                 <td><?php echo htmlentities($user->username); ?></td>
                 <td><?php echo htmlentities($user->fullName); ?></td>
                 <td><?php echo implode('<br>', $level); ?></td>
+                <td><?php echo implode('<br>', $notifications); ?></td>
                 <td><?php echo $user->idCompany; ?></td>
                 <td class="text-center">
                     <button type="button" class="btn btn-primary btn-xs" data-toggle="modal" data-backdrop="static" data-target="#edituser" data-user-id="<?php echo $user->idUser; ?>">Edit</button>
