@@ -47,6 +47,7 @@ class LeadsSession
     const EMAIL_BITS_PAYROLL = 0x40;
     const EMAIL_BITS_ACCOUNTING = 0x80;
     const EMAIL_BITS_CRM = 0x100;
+    const EMAIL_BITS_LICENSING_REPORT = 0x200;
 
     public static function login($userId, $accessBits, $idCompany)
     {
