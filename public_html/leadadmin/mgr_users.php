@@ -259,39 +259,14 @@ if (isset($_REQUEST['d'])) {
                     'id' => 'accessBits',
                     'label' => 'Access Flags',
                     'type' => 'checkboxBits',
-                    'choices' => array(
-                        LEADS_SESSION_LEVEL_CLIENT_REPORTS => 'Publisher Reporting Access',
-                        LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS => 'Publisher Phone Leads Report',
-                        LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Publisher Import Access',
-                        LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Publisher Dashboard Access',
-                        LEADS_SESSION_LEVEL_CALL_CENTER => 'Call Center Reporting Access',
-                        LEADS_SESSION_LEVEL_CALL_CENTER_QA => 'Call Center QA Access',
-                        LEADS_SESSION_LEVEL_CALL_CENTER_HR_MANAGER => 'Call Center HR Manager Access',
-                        LEADS_SESSION_LEVEL_CALL_CENTER_AGENT => 'Call Center Agent Access',
-                        LEADS_SESSION_LEVEL_PPC => 'PPC Feed Access',
-                        LEADS_SESSION_LEVEL_CRM => 'CRM Access',
-                        LEADS_SESSION_LEVEL_SALESPERSON => 'Show in salesperson list',
-                        LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
-                        LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
-                    ),
+                    'choices' => LeadsSession::getAccessBits(),
                     'choice_append' => '<br/>',
                 ),
                 array(
                     'id' => 'emailBits',
                     'label' => 'Email Notifications',
                     'type' => 'checkboxBits',
-                    'choices' => array(
-                        LeadsSession::EMAIL_BITS_DORMANT_URL => 'Dormant URL Notifications',
-                        LeadsSession::EMAIL_BITS_NEW_URL => 'New URL Notifications',
-                        LeadsSession::EMAIL_BITS_LEAD_THRESHOLD => 'Lead Threshold Notifications',
-                        LeadsSession::EMAIL_BITS_NEW_USER => 'New User Added Notifications',
-                        LeadsSession::EMAIL_BITS_PAYROLL => 'Dialer Payroll Report',
-                        LeadsSession::EMAIL_BITS_ACCOUNTING => 'BCC Accounting Notifications',
-                        LeadsSession::EMAIL_BITS_CRM => 'BCC CRM Followup Notifications',
-                        LeadsSession::EMAIL_BITS_JOB_STATUS => 'BCC Job Status Notifications',
-                        LeadsSession::EMAIL_BITS_DEVELOPER => 'Developer Notifications',
-                        LeadsSession::EMAIL_BITS_LICENSING_REPORT => 'Dialer Agent Licensing Report',
-                    ),
+                    'choices' => LeadsSession::getEmailBits(),
                     'choice_append' => '<br/>',
                 ),
                 array(
@@ -359,21 +334,7 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'accessBits',
                         'label' => 'Access Flags',
                         'type' => 'checkboxBits',
-                        'choices' => array(
-                            LEADS_SESSION_LEVEL_CLIENT_REPORTS => 'Publisher Reporting Access',
-                            LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS => 'Publisher Phone Leads Report',
-                            LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Publisher Import Access',
-                            LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Publisher Dashboard Access',
-                            LEADS_SESSION_LEVEL_CALL_CENTER => 'Call Center Reporting Access',
-                            LEADS_SESSION_LEVEL_CALL_CENTER_QA => 'Call Center QA Access',
-                            LEADS_SESSION_LEVEL_CALL_CENTER_HR_MANAGER => 'Call Center HR Manager Access',
-                            LEADS_SESSION_LEVEL_CALL_CENTER_AGENT => 'Call Center Agent Access',
-                            LEADS_SESSION_LEVEL_PPC => 'PPC Feed Access',
-                            LEADS_SESSION_LEVEL_CRM => 'CRM Access',
-                            LEADS_SESSION_LEVEL_SALESPERSON => 'Show in salesperson list',
-                            LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
-                            LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
-                        ),
+                        'choices' => LeadsSession::getAccessBits(),
                         'choice_append' => '<br/>',
                         'required' => true,
                         'value' => $user->accessBits,
@@ -382,18 +343,7 @@ if (isset($_REQUEST['d'])) {
                         'id' => 'emailBits',
                         'label' => 'Email Notifications',
                         'type' => 'checkboxBits',
-                        'choices' => array(
-                            LeadsSession::EMAIL_BITS_DORMANT_URL => 'Dormant URL Notifications',
-                            LeadsSession::EMAIL_BITS_NEW_URL => 'New URL Notifications',
-                            LeadsSession::EMAIL_BITS_LEAD_THRESHOLD => 'Lead Threshold Notifications',
-                            LeadsSession::EMAIL_BITS_NEW_USER => 'New User Added Notifications',
-                            LeadsSession::EMAIL_BITS_PAYROLL => 'Dialer Payroll Report',
-                            LeadsSession::EMAIL_BITS_ACCOUNTING => 'BCC Accounting Notifications',
-                            LeadsSession::EMAIL_BITS_CRM => 'BCC CRM Followup Notifications',
-                            LeadsSession::EMAIL_BITS_JOB_STATUS => 'BCC Job Status Notifications',
-                            LeadsSession::EMAIL_BITS_DEVELOPER => 'Developer Notifications',
-                            LeadsSession::EMAIL_BITS_LICENSING_REPORT => 'Dialer Agent Licensing Report',
-                        ),
+                        'choices' => LeadsSession::getEmailBits(),
                         'choice_append' => '<br/>',
                         'value' => $user->emailBits,
                     ),
@@ -484,79 +434,19 @@ include(INCLUDES . "c_header.php");
         foreach ($users as $user) {
 
             $level = [];
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_ADMIN)) {
-                $level[] = 'Administrator';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_MANAGER)) {
-                $level[] = 'Manager';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_STAFF)) {
-                $level[] = 'Staff';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_SALESPERSON)) {
-                $level[] = 'Show in salesperson list';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_PPC)) {
-                $level[] = 'PPC Feed Access';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CRM)) {
-                $level[] = 'CRM Access';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CLIENT_DASHBOARD)) {
-                $level[] = 'Publisher Dashboard Access';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CLIENT_IMPORT)) {
-                $level[] = 'Publisher Import Access';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS)) {
-                $level[] = 'Publisher Phone Leads Report';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CLIENT_REPORTS)) {
-                $level[] = 'Publisher Reporting Access';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CALL_CENTER)) {
-                $level[] = 'Call Center Reporting Access';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CALL_CENTER_QA)) {
-                $level[] = 'Call Center QA Access';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CALL_CENTER_HR_MANAGER)) {
-                $level[] = 'Call Center HR Manager Access';
-            }
-            if (LeadsSession::checkBit($user->accessBits, LEADS_SESSION_LEVEL_CALL_CENTER_AGENT)) {
-                $level[] = 'Call Center Agent Access';
+            $bits = LeadsSession::getAccessBits();
+            foreach ($bits as $bit => $desc) {
+                if (LeadsSession::checkBit($user->accessBits, $bit)) {
+                    $level[] = LeadsSession::getAccessBitDescription($bit);
+                }
             }
 
             $notifications = [];
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_DEVELOPER)) {
-                $notifications[] = 'Developer Notifications';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_DORMANT_URL)) {
-                $notifications[] = 'Dormant URL Notifications';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_NEW_URL)) {
-                $notifications[] = 'New URL Notifications';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_LEAD_THRESHOLD)) {
-                $notifications[] = 'Lead Threshold Notifications';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_JOB_STATUS)) {
-                $notifications[] = 'BCC Job Status Notifications';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_NEW_USER)) {
-                $notifications[] = 'New User Added Notifications';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_PAYROLL)) {
-                $notifications[] = 'Dialer Payroll Report';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_ACCOUNTING)) {
-                $notifications[] = 'BCC Accounting Notifications';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_CRM)) {
-                $notifications[] = 'BCC CRM Followup Notifications';
-            }
-            if (LeadsSession::checkBit($user->emailBits, LeadsSession::EMAIL_BITS_LICENSING_REPORT)) {
-                $notifications[] = 'Dialer Agent Licensing Report';
+            $bits = LeadsSession::getEmailBits();
+            foreach ($bits as $bit => $desc) {
+                if (LeadsSession::checkBit($user->emailBits, $bit)) {
+                    $notifications[] = LeadsSession::getEmailBitDescription($bit);
+                }
             }
 
             if (!empty($user->idCompany)) {

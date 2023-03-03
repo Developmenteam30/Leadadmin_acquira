@@ -36,6 +36,8 @@ define('LEADS_SESSION_LEVEL_CLIENT_IMPORT', 0x4);
 define('LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS', 0x2);
 define('LEADS_SESSION_LEVEL_CLIENT_REPORTS', 0x1);
 
+// Add new entries to bit getAccessBits below
+
 class LeadsSession
 {
     const EMAIL_BITS_DEVELOPER = 0x01;
@@ -47,7 +49,10 @@ class LeadsSession
     const EMAIL_BITS_PAYROLL = 0x40;
     const EMAIL_BITS_ACCOUNTING = 0x80;
     const EMAIL_BITS_CRM = 0x100;
-    const EMAIL_BITS_LICENSING_REPORT = 0x200;
+    const EMAIL_BITS_DIALER_LICENSING_REPORT = 0x200;
+    const EMAIL_BITS_DIALER_STATS_REPORT = 0x400;
+
+    // Add new entries to bit getEmailBits below
 
     public static function login($userId, $accessBits, $idCompany)
     {
@@ -191,5 +196,60 @@ class LeadsSession
             }
         }
 
+    }
+
+    public static function getAccessBits(): array
+    {
+        return [
+            LEADS_SESSION_LEVEL_ADMIN => 'Administrator',
+            LEADS_SESSION_LEVEL_STAFF => 'Staff Member',
+
+            LEADS_SESSION_LEVEL_CLIENT_DASHBOARD => 'Publisher Dashboard Access',
+            LEADS_SESSION_LEVEL_CLIENT_IMPORT => 'Publisher Import Access',
+            LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS => 'Publisher Phone Leads Report',
+            LEADS_SESSION_LEVEL_CLIENT_REPORTS => 'Publisher Reporting Access',
+            LEADS_SESSION_LEVEL_CRM => 'CRM Access',
+            LEADS_SESSION_LEVEL_PPC => 'PPC Feed Access',
+
+            LEADS_SESSION_LEVEL_SALESPERSON => 'Show in salesperson list',
+
+            LEADS_SESSION_LEVEL_CALL_CENTER => 'Call Center Reporting Access',
+            LEADS_SESSION_LEVEL_CALL_CENTER_AGENT => 'Call Center Agent Access',
+            LEADS_SESSION_LEVEL_CALL_CENTER_HR_MANAGER => 'Call Center HR Manager Access',
+            LEADS_SESSION_LEVEL_CALL_CENTER_QA => 'Call Center QA Access',
+        ];
+    }
+
+    public static function getAccessBitDescription($bit): string
+    {
+        $bits = self::getAccessBits();
+
+        return $bits[$bit] ?? 'Unknown access level';
+    }
+
+    public static function getEmailBits(): array
+    {
+        return [
+            LeadsSession::EMAIL_BITS_DORMANT_URL => 'Dormant URL Notifications',
+            LeadsSession::EMAIL_BITS_LEAD_THRESHOLD => 'Lead Threshold Notifications',
+            LeadsSession::EMAIL_BITS_NEW_URL => 'New URL Notifications',
+            LeadsSession::EMAIL_BITS_NEW_USER => 'New User Added Notifications',
+            LeadsSession::EMAIL_BITS_ACCOUNTING => 'BCC Accounting Notifications',
+            LeadsSession::EMAIL_BITS_CRM => 'BCC CRM Followup Notifications',
+
+            LeadsSession::EMAIL_BITS_JOB_STATUS => 'BCC Job Status Notifications',
+            LeadsSession::EMAIL_BITS_DIALER_LICENSING_REPORT => 'Dialer Agent Licensing Report',
+            LeadsSession::EMAIL_BITS_DIALER_STATS_REPORT => 'Dialer Stats Report',
+            LeadsSession::EMAIL_BITS_PAYROLL => 'Dialer Payroll Report',
+
+            LeadsSession::EMAIL_BITS_DEVELOPER => 'Developer Notifications',
+        ];
+    }
+
+    public static function getEmailBitDescription($bit): string
+    {
+        $bits = self::getEmailBits();
+
+        return $bits[$bit] ?? 'Unknown email notification';
     }
 }
