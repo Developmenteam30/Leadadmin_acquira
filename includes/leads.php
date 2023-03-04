@@ -2948,7 +2948,7 @@ class Leads
         } catch (Leads_PDOException $e) {
             $this->rollBack();
             $pdoException = $e->getPrevious();
-            $this->logError('Unable to add inbound record: ' . $pdoException->getMessage());
+            $this->logError('Unable to add inbound feed: ' . $pdoException->getMessage());
         }
 
         $this->commit();
