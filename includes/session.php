@@ -52,6 +52,7 @@ class LeadsSession
     const EMAIL_BITS_DIALER_LICENSING_REPORT = 0x200;
     const EMAIL_BITS_DIALER_STATS_REPORT = 0x400;
     const EMAIL_BITS_DIALER_BILLABLE_HOURS_REPORT = 0x800;
+    const EMAIL_BITS_DIALER_WRITEUP_NOTIFICATION = 0x1000;
 
     // Add new entries to bit getEmailBits below
 
@@ -243,6 +244,7 @@ class LeadsSession
             LeadsSession::EMAIL_BITS_DIALER_BILLABLE_HOURS_REPORT => 'Dialer Billable Hours Report',
             LeadsSession::EMAIL_BITS_DIALER_STATS_REPORT => 'Dialer Stats Report',
             LeadsSession::EMAIL_BITS_PAYROLL => 'Dialer Payroll Report',
+            LeadsSession::EMAIL_BITS_DIALER_WRITEUP_NOTIFICATION => 'Dialer Write-Up Notification',
 
             LeadsSession::EMAIL_BITS_DEVELOPER => 'Developer Notifications',
         ];
