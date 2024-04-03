@@ -255,7 +255,7 @@ if (isset($_REQUEST['a'])) {
                 $result['error'] = 'Please enter a positive number for the daily limit.';
             }
 
-            if ($c && is_numeric($_REQUEST['lookbackPeriod']) === false) {
+            if ($c && empty($_REQUEST['lookbackPeriod']) || is_numeric($_REQUEST['lookbackPeriod']) === false) {
                 $c = false;
                 $result['error'] = 'Please select a valid value for the lookback period.';
             }
@@ -1315,10 +1315,10 @@ if (isset($_REQUEST['d'])) {
                             Dedupe across same listcode of all feeds
 
                             <p style="margin-top: 1em;">Lookback period</p>
-                            <input type='radio' name='lookbackPeriod' id='lookbackPeriod_30' value='30'<?php if ('30' === $feed_lookbackPeriod) { ?> checked='checked'<?php } ?>/> 30 days<br/>
-                            <input type='radio' name='lookbackPeriod' id='lookbackPeriod_60' value='60'<?php if ('60' === $feed_lookbackPeriod) { ?> checked='checked'<?php } ?>/> 60 days<br/>
-                            <input type='radio' name='lookbackPeriod' id='lookbackPeriod_90' value='90'<?php if ('90' === $feed_lookbackPeriod) { ?> checked='checked'<?php } ?>/> 90 days<br/>
-                            <input type='radio' name='lookbackPeriod' id='lookbackPeriod_120' value='120'<?php if (empty($feed_lookbackPeriod) || '120' === $feed_lookbackPeriod) { ?> checked='checked'<?php } ?>/> 120
+                            <input type='radio' name='lookbackPeriod' id='lookbackPeriod_30' value='30'<?php if (30 === $feed_lookbackPeriod) { ?> checked='checked'<?php } ?>/> 30 days<br/>
+                            <input type='radio' name='lookbackPeriod' id='lookbackPeriod_60' value='60'<?php if (60 === $feed_lookbackPeriod) { ?> checked='checked'<?php } ?>/> 60 days<br/>
+                            <input type='radio' name='lookbackPeriod' id='lookbackPeriod_90' value='90'<?php if (90 === $feed_lookbackPeriod) { ?> checked='checked'<?php } ?>/> 90 days<br/>
+                            <input type='radio' name='lookbackPeriod' id='lookbackPeriod_120' value='120'<?php if (empty($feed_lookbackPeriod) || 120 === $feed_lookbackPeriod) { ?> checked='checked'<?php } ?>/> 120
                             days (default)<br/>
 
                         </td>
