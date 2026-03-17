@@ -338,7 +338,7 @@
                 </div>
                 <div v-if="populationsLoading" class="text-center">Loading...</div>
                 <template v-else>
-                  <p>
+                  <p v-show="false">
                     <button type="button" class="btn btn-primary btn-sm" @click="openAddPopulationModal">
                       Add a new population parameter
                     </button>
@@ -347,6 +347,7 @@
                     <table class="table table-bordered table-condensed table-striped">
                       <thead>
                         <tr class="bgGray">
+                          <th>Order</th>
                           <th>Populating Feed</th>
                           <th>Population Status</th>
                           <th>Filtering By URL</th>
@@ -362,6 +363,7 @@
                       </thead>
                       <tbody>
                         <tr v-for="p in populations" :key="p.idAssoc">
+                          <td>{{ p.order ?? '—' }}</td>
                           <td>{{ p.populatingFeed || p.inboundLabel }}</td>
                           <td>
                             <label class="switch">
@@ -1089,6 +1091,7 @@ export default {
       forceUrl: '0',
       forceUrlList: '',
       queueType: 'livedata',
+      order: 1,
       waterfallPriority: 0,
       startDate: '',
       enabled: '1',
@@ -1228,6 +1231,7 @@ export default {
       addPopulationModal.forceUrl = '0';
       addPopulationModal.forceUrlList = '';
       addPopulationModal.queueType = 'livedata';
+      addPopulationModal.order = (populations.value.length ? Math.max(...populations.value.map((p) => p.order || 0), 0) + 1 : 1);
       addPopulationModal.waterfallPriority = 0;
       addPopulationModal.startDate = '';
       addPopulationModal.enabled = '1';
@@ -1250,6 +1254,7 @@ export default {
       addPopulationModal.forceUrl = p.forceUrl ? '1' : '0';
       addPopulationModal.forceUrlList = p.forceUrlList || '';
       addPopulationModal.queueType = p.queueType || 'livedata';
+      addPopulationModal.order = p.order ?? 1;
       addPopulationModal.waterfallPriority = p.waterfallPriority ?? 0;
       addPopulationModal.startDate = p.startDate ? p.startDate.split(' ')[0] : '';
       addPopulationModal.enabled = p.enabled === '1' ? '1' : '0';
@@ -1269,6 +1274,7 @@ export default {
         addPopulationSaving.value = true;
         const payload = {
           enabled: addPopulationModal.enabled,
+          order: addPopulationModal.order ?? 1,
           waterfallPriority: addPopulationModal.waterfallPriority,
           queueType: addPopulationModal.queueType,
           startDate: addPopulationModal.startDate || null,

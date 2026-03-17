@@ -258,6 +258,7 @@ class PushIncomingDataService
                     });
                 }
             })
+            ->orderByRaw('COALESCE(feedPopulation.`order`, 999) ASC')
             ->orderByDesc('feedPopulation.waterfallPriority')
             ->orderByRaw("FIELD(feedPopulation.queueType, 'livedata', 'waterfallLimitLive', 'waterfall', 'waterfallLimit', 'queue')")
             ->select(

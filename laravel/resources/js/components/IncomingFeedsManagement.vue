@@ -154,6 +154,7 @@
                         @click="openDropdownFeedId = null"
                       >
                         <li><a href="#" @click.prevent="openApiSpec(feed)">API Spec</a></li>
+                        <li><a href="#" @click.prevent="openOutgoingFeedsModal(feed)">Connect Outgoing Feeds</a></li>
                         <li><a href="#" @click.prevent="openImportDataModal(feed)">Import Data</a></li>
                         <li><a href="#" @click.prevent="openExportDataModal(feed)">Export Data</a></li>
                         <li><a href="#" @click.prevent="openUrlReportModal(feed)">URL Report</a></li>
@@ -484,13 +485,215 @@
             </div>
           </div>
         </div>
+
+        <!-- Connect Outgoing Feeds Modal -->
+        <div v-show="outgoingFeedsModal.show" class="incoming-feed-modal" tabindex="-1" @click.self="closeOutgoingFeedsModal">
+          <div class="modal-dialog modal-lg" @click.stop>
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Connected Outgoing Feeds – {{ outgoingFeedsModal.feedLabel || '' }}</h4>
+                <button type="button" class="close" @click="closeOutgoingFeedsModal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <p class="text-muted">Leads from this incoming feed are sent to these outgoing feeds in order. If one rejects, the next is tried (waterfall).</p>
+                <div v-if="outgoingFeedsLoading" class="text-center">Loading...</div>
+                <template v-else>
+                  <p>
+                    <button type="button" class="btn btn-primary btn-sm" @click="openAddOutgoingFeedModal">
+                      Add Outgoing Feed
+                    </button>
+                  </p>
+                  <div v-if="outgoingFeedsPopulations.length" class="table-responsive">
+                    <table class="table table-bordered table-condensed table-striped">
+                      <thead>
+                        <tr class="bgGray">
+                          <th>Order</th>
+                          <th>Outgoing Feed</th>
+                          <th>Queue Type</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="p in outgoingFeedsPopulations" :key="p.idAssoc">
+                          <td>{{ p.order ?? '—' }}</td>
+                          <td>{{ p.populatingFeed || p.outboundLabel }}</td>
+                          <td>{{ p.queueType }}</td>
+                          <td>
+                            <label class="switch">
+                              <input
+                                type="checkbox"
+                                :checked="p.enabled === '1'"
+                                @change="toggleOutgoingFeedPopulation(p.idAssoc)"
+                              />
+                              <span class="slider"></span>
+                            </label>
+                            <span class="ml-1">{{ p.enabled === '1' ? 'Enabled' : 'Disabled' }}</span>
+                          </td>
+                          <td>
+                            <button type="button" class="btn btn-xs btn-default" @click="openEditOutgoingFeedModal(p)">Edit</button>
+                            <button type="button" class="btn btn-xs btn-danger" @click="deleteOutgoingFeedPopulation(p.idAssoc)">Remove</button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p v-else>No outgoing feeds connected. Click "Add Outgoing Feed" to connect one.</p>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add/Edit Outgoing Feed Modal -->
+        <div v-show="addOutgoingFeedModal.show" class="incoming-feed-modal add-population-modal" tabindex="-1" @click.self="closeAddOutgoingFeedModal">
+          <div class="modal-dialog modal-lg" @click.stop>
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">{{ addOutgoingFeedModal.editId ? 'Edit outgoing feed' : 'Add Outgoing Feed' }}</h4>
+                <button type="button" class="close" @click="closeAddOutgoingFeedModal">&times;</button>
+              </div>
+              <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div v-if="!addOutgoingFeedModal.editId" class="add-pop-row">
+                  <div class="add-pop-heading">Outgoing Feed</div>
+                  <div class="add-pop-content">
+                    <select v-model="addOutgoingFeedModal.idFeedOut" class="form-control add-pop-select" required>
+                      <option value="">Select outgoing feed...</option>
+                      <option v-for="f in availableOutboundFeedsForPopulation" :key="f.idFeedOut" :value="f.idFeedOut">
+                        {{ f.displayLabel }}
+                      </option>
+                    </select>
+                    <p v-if="availableOutboundFeedsForPopulation.length === 0 && outboundFeedsForPopulation.length > 0" class="add-pop-desc text-muted mt-2">All outgoing feeds are already connected to this incoming feed.</p>
+                  </div>
+                </div>
+                <div v-else class="add-pop-row">
+                  <div class="add-pop-heading">Outgoing Feed</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-readonly">{{ addOutgoingFeedModal.editFeedLabel || '—' }}</p>
+                  </div>
+                </div>
+
+                <div class="add-pop-row">
+                  <div class="add-pop-heading">Order</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-desc">Waterfall sequence: 1 = first, 2 = second, etc. If Company A (order 1) rejects, the lead is sent to Company B (order 2).</p>
+                    <input v-model.number="addOutgoingFeedModal.order" type="number" min="1" max="999" class="form-control add-pop-input add-pop-input-sm" style="width: 120px;" placeholder="1" />
+                  </div>
+                </div>
+
+                <!-- Queue Type -->
+                <div class="add-pop-row">
+                  <div class="add-pop-heading">Queue Type</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-desc">Incoming records will be sent to this provider in REAL TIME as they come in. Do not use this option unless authorized. Most feeds have this option disabled.</p>
+                    <div class="add-pop-queue-options">
+                      <label class="add-pop-queue-opt"><input type="radio" v-model="addOutgoingFeedModal.queueType" value="livedata" /> Live Data (leads sent in real-time) [DEFAULT]</label>
+                      <label class="add-pop-queue-opt"><input type="radio" v-model="addOutgoingFeedModal.queueType" value="queue" /> Standard Queue</label>
+                      <label class="add-pop-queue-opt"><input type="radio" v-model="addOutgoingFeedModal.queueType" value="waterfall" /> Waterfall Live Standard (attempt each vendor in order; stop after the first accepted response)</label>
+                      <label class="add-pop-queue-opt"><input type="radio" v-model="addOutgoingFeedModal.queueType" value="waterfallLimit" /> Waterfall Limit &amp; Queue (attempt vendors in priority order and queue; only skip to the next after the feed limits are hit)</label>
+                      <label class="add-pop-queue-opt"><input type="radio" v-model="addOutgoingFeedModal.queueType" value="waterfallLimitLive" /> Waterfall Limit Live (attempt vendors in real-time in priority order; only skip to the next after the feed limits are hit)</label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- URL Filter Options -->
+                <div class="add-pop-row">
+                  <div class="add-pop-heading">URL Filter Options</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-desc">Using the 'Accept' option, urls that are listed here are the only ones that will be accepted into the feed. Using the 'Reject' option, all urls will be accepted, except the ones listed here.</p>
+                    <div class="add-pop-radios">
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeUrl" value="" /> Disabled</label>
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeUrl" value="accept" /> Accept</label>
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeUrl" value="reject" /> Reject</label>
+                    </div>
+                    <input v-if="addOutgoingFeedModal.filterTypeUrl" v-model="addOutgoingFeedModal.filterUrl" type="text" class="form-control add-pop-input" placeholder="URLs (semicolon-separated)" />
+                  </div>
+                </div>
+
+                <!-- Email Filter Options -->
+                <div class="add-pop-row">
+                  <div class="add-pop-heading">Email Filter Options</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-desc">Using the 'Accept' option, email domains that are listed here are the only ones that will be accepted into the feed. Using the 'Reject' option, all email domains will be accepted, except the ones listed here.</p>
+                    <div class="add-pop-radios">
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeEmail" value="" /> Disabled</label>
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeEmail" value="accept" /> Accept</label>
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeEmail" value="reject" /> Reject</label>
+                    </div>
+                    <input v-if="addOutgoingFeedModal.filterTypeEmail" v-model="addOutgoingFeedModal.filterEmail" type="text" class="form-control add-pop-input" placeholder="Email domains (semicolon-separated)" />
+                  </div>
+                </div>
+
+                <!-- Listcode Filter Options -->
+                <div class="add-pop-row">
+                  <div class="add-pop-heading">Listcode Filter Options</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-desc">Using the 'Accept' option, listcodes that are listed here are the only ones that will be accepted into the feed. Using the 'Reject' option, all listcodes will be accepted, except the ones listed here.</p>
+                    <div class="add-pop-radios">
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeListcode" value="" /> Disabled</label>
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeListcode" value="accept" /> Accept</label>
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.filterTypeListcode" value="reject" /> Reject</label>
+                    </div>
+                    <input v-if="addOutgoingFeedModal.filterTypeListcode" v-model="addOutgoingFeedModal.filterListcode" type="text" class="form-control add-pop-input" placeholder="Listcodes (semicolon-separated)" />
+                  </div>
+                </div>
+
+                <!-- Force URL Options -->
+                <div class="add-pop-row">
+                  <div class="add-pop-heading">Force URL Options</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-desc">Utilizing 'URL Forcing' changes the url listed in the incoming feed to a completely different URL for use in the outgoing feed.</p>
+                    <div class="add-pop-radios">
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.forceUrl" value="0" /> Disabled</label>
+                      <label class="add-pop-radio"><input type="radio" v-model="addOutgoingFeedModal.forceUrl" value="1" /> Enabled</label>
+                    </div>
+                    <input v-if="addOutgoingFeedModal.forceUrl === '1'" v-model="addOutgoingFeedModal.forceUrlList" type="text" class="form-control add-pop-input" placeholder="Force URL mappings (semicolon-separated)" />
+                  </div>
+                </div>
+
+                <!-- Waterfall Priority -->
+                <div class="add-pop-row">
+                  <div class="add-pop-heading">Waterfall Priority</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-desc">Only applies if the Queue Type setting above is set to "Waterfall" or "Waterfall Limit". Use any number from 0 to 65,535. A higher number means higher priority in the waterfall. (Secondary to Order when Order is set.)</p>
+                    <input v-model.number="addOutgoingFeedModal.waterfallPriority" type="number" min="0" max="65535" class="form-control add-pop-input add-pop-input-sm" placeholder="Waterfall Priority" />
+                  </div>
+                </div>
+
+                <!-- Population Start Date -->
+                <div class="add-pop-row">
+                  <div class="add-pop-heading">Population Start Date</div>
+                  <div class="add-pop-content">
+                    <p class="add-pop-desc">If a value is filled in here, then records will not start populating this queue until midnight of the date provided.</p>
+                    <input v-model="addOutgoingFeedModal.startDate" type="date" class="form-control add-pop-input add-pop-input-sm" />
+                  </div>
+                </div>
+
+                <div v-if="addOutgoingFeedModal.editId" class="add-pop-row">
+                  <div class="add-pop-heading"></div>
+                  <div class="add-pop-content">
+                    <label class="add-pop-checkbox"><input v-model="addOutgoingFeedModal.enabled" type="checkbox" true-value="1" false-value="0" /> Enabled</label>
+                  </div>
+                </div>
+
+                <div v-if="addOutgoingFeedModalError" class="alert alert-danger">{{ addOutgoingFeedModalError }}</div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" @click="closeAddOutgoingFeedModal">Close</button>
+                <button type="button" class="btn btn-primary" @click="saveOutgoingFeed" :disabled="addOutgoingFeedSaving">
+                  {{ addOutgoingFeedSaving ? 'Saving...' : (addOutgoingFeedModal.editId ? 'Save' : 'Add') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </Teleport>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, nextTick, reactive } from 'vue';
+import { ref, onMounted, nextTick, reactive, watch, computed } from 'vue';
 import axios from 'axios';
 import Navigation from './Navigation.vue';
 import InboundFeedForm from './InboundFeedForm.vue';
@@ -791,6 +994,208 @@ export default {
     const urlReportResults = ref([]);
     const urlReportUrlList = ref([]);
     const urlReportLoading = ref(false);
+
+    const outgoingFeedsModal = reactive({ show: false, idFeedIn: null, feedLabel: '' });
+    const outgoingFeedsPopulations = ref([]);
+    const outgoingFeedsLoading = ref(false);
+    const outboundFeedsForPopulation = ref([]);
+    const availableOutboundFeedsForPopulation = computed(() => {
+      const connectedIds = outgoingFeedsPopulations.value.map((p) => p.idFeedOut);
+      return outboundFeedsForPopulation.value.filter((f) => !connectedIds.includes(f.idFeedOut));
+    });
+    const addOutgoingFeedModal = reactive({
+      show: false,
+      editId: null,
+      editFeedLabel: '',
+      idFeedOut: '',
+      order: 1,
+      queueType: 'waterfall',
+      enabled: '1',
+      filterTypeUrl: '',
+      filterUrl: '',
+      filterTypeEmail: '',
+      filterEmail: '',
+      filterTypeListcode: '',
+      filterListcode: '',
+      forceUrl: '0',
+      forceUrlList: '',
+      waterfallPriority: 0,
+      startDate: '',
+    });
+    const addOutgoingFeedModalError = ref('');
+    const addOutgoingFeedSaving = ref(false);
+
+    const openOutgoingFeedsModal = async (feed) => {
+      outgoingFeedsModal.idFeedIn = feed.idFeedIn;
+      outgoingFeedsModal.feedLabel = feed.label;
+      outgoingFeedsModal.show = true;
+    };
+
+    const closeOutgoingFeedsModal = () => {
+      outgoingFeedsModal.show = false;
+      outgoingFeedsModal.idFeedIn = null;
+      outgoingFeedsModal.feedLabel = '';
+    };
+
+    const fetchOutgoingFeedsPopulations = async () => {
+      if (!outgoingFeedsModal.idFeedIn) return;
+      outgoingFeedsLoading.value = true;
+      try {
+        const r = await axios.get(`/api/inbound-feeds/${outgoingFeedsModal.idFeedIn}/populations`);
+        outgoingFeedsPopulations.value = r.data.status === 1 ? r.data.data : [];
+      } catch (e) {
+        outgoingFeedsPopulations.value = [];
+      } finally {
+        outgoingFeedsLoading.value = false;
+      }
+    };
+
+    const fetchOutboundFeedsForPopulation = async () => {
+      try {
+        const r = await axios.get('/api/feed-populations/outbound-feeds');
+        outboundFeedsForPopulation.value = r.data.status === 1 ? r.data.data : [];
+      } catch (e) {
+        outboundFeedsForPopulation.value = [];
+      }
+    };
+
+    watch(() => outgoingFeedsModal.show, (show) => {
+      if (show && outgoingFeedsModal.idFeedIn) {
+        fetchOutgoingFeedsPopulations();
+        fetchOutboundFeedsForPopulation();
+      }
+    });
+
+    const openAddOutgoingFeedModal = () => {
+      addOutgoingFeedModal.editId = null;
+      addOutgoingFeedModal.editFeedLabel = '';
+      addOutgoingFeedModal.idFeedOut = '';
+      addOutgoingFeedModal.order = (outgoingFeedsPopulations.value.length
+        ? Math.max(...outgoingFeedsPopulations.value.map((p) => p.order || 0), 0) + 1
+        : 1);
+      addOutgoingFeedModal.queueType = 'waterfall';
+      addOutgoingFeedModal.enabled = '1';
+      addOutgoingFeedModal.filterTypeUrl = '';
+      addOutgoingFeedModal.filterUrl = '';
+      addOutgoingFeedModal.filterTypeEmail = '';
+      addOutgoingFeedModal.filterEmail = '';
+      addOutgoingFeedModal.filterTypeListcode = '';
+      addOutgoingFeedModal.filterListcode = '';
+      addOutgoingFeedModal.forceUrl = '0';
+      addOutgoingFeedModal.forceUrlList = '';
+      addOutgoingFeedModal.waterfallPriority = 0;
+      addOutgoingFeedModal.startDate = '';
+      addOutgoingFeedModalError.value = '';
+      addOutgoingFeedModal.show = true;
+    };
+
+    const closeAddOutgoingFeedModal = () => {
+      addOutgoingFeedModal.show = false;
+      addOutgoingFeedModal.editId = null;
+      addOutgoingFeedModalError.value = '';
+    };
+
+    const openEditOutgoingFeedModal = (p) => {
+      addOutgoingFeedModal.editId = p.idAssoc;
+      addOutgoingFeedModal.editFeedLabel = p.populatingFeed || p.outboundLabel;
+      addOutgoingFeedModal.idFeedOut = p.idFeedOut;
+      addOutgoingFeedModal.order = p.order ?? 1;
+      addOutgoingFeedModal.queueType = p.queueType || 'waterfall';
+      addOutgoingFeedModal.enabled = p.enabled || '1';
+      addOutgoingFeedModal.filterTypeUrl = p.filterTypeUrl || '';
+      addOutgoingFeedModal.filterUrl = p.filterUrl || '';
+      addOutgoingFeedModal.filterTypeEmail = p.filterTypeEmail || '';
+      addOutgoingFeedModal.filterEmail = p.filterEmail || '';
+      addOutgoingFeedModal.filterTypeListcode = p.filterTypeListcode || '';
+      addOutgoingFeedModal.filterListcode = p.filterListcode || '';
+      addOutgoingFeedModal.forceUrl = p.forceUrl ? '1' : '0';
+      addOutgoingFeedModal.forceUrlList = p.forceUrlList || '';
+      addOutgoingFeedModal.waterfallPriority = p.waterfallPriority ?? 0;
+      addOutgoingFeedModal.startDate = p.startDate ? p.startDate.split(' ')[0] : '';
+      addOutgoingFeedModalError.value = '';
+      addOutgoingFeedModal.show = true;
+    };
+
+    const saveOutgoingFeed = async () => {
+      if (!outgoingFeedsModal.idFeedIn) return;
+      if (!addOutgoingFeedModal.editId && !addOutgoingFeedModal.idFeedOut) {
+        addOutgoingFeedModalError.value = 'Please select an outgoing feed.';
+        return;
+      }
+      addOutgoingFeedSaving.value = true;
+      addOutgoingFeedModalError.value = '';
+      try {
+        if (addOutgoingFeedModal.editId) {
+          const r = await axios.put(`/api/feed-populations/${addOutgoingFeedModal.editId}`, {
+            order: addOutgoingFeedModal.order,
+            queueType: addOutgoingFeedModal.queueType,
+            enabled: addOutgoingFeedModal.enabled,
+            waterfallPriority: addOutgoingFeedModal.waterfallPriority,
+            startDate: addOutgoingFeedModal.startDate || null,
+            filterTypeUrl: addOutgoingFeedModal.filterTypeUrl || null,
+            filterUrl: addOutgoingFeedModal.filterTypeUrl ? addOutgoingFeedModal.filterUrl : null,
+            filterTypeEmail: addOutgoingFeedModal.filterTypeEmail || null,
+            filterEmail: addOutgoingFeedModal.filterTypeEmail ? addOutgoingFeedModal.filterEmail : null,
+            filterTypeListcode: addOutgoingFeedModal.filterTypeListcode || null,
+            filterListcode: addOutgoingFeedModal.filterTypeListcode ? addOutgoingFeedModal.filterListcode : null,
+            forceUrl: addOutgoingFeedModal.forceUrl === '1' ? 1 : 0,
+            forceUrlList: addOutgoingFeedModal.forceUrl === '1' ? addOutgoingFeedModal.forceUrlList : null,
+          });
+          if (r.data.status === 1) {
+            closeAddOutgoingFeedModal();
+            await fetchOutgoingFeedsPopulations();
+          } else {
+            addOutgoingFeedModalError.value = r.data.error || 'Update failed';
+          }
+        } else {
+          const r = await axios.post(`/api/inbound-feeds/${outgoingFeedsModal.idFeedIn}/populations`, {
+            idFeedOut: addOutgoingFeedModal.idFeedOut,
+            order: addOutgoingFeedModal.order,
+            queueType: addOutgoingFeedModal.queueType,
+            enabled: addOutgoingFeedModal.enabled,
+            waterfallPriority: addOutgoingFeedModal.waterfallPriority,
+            startDate: addOutgoingFeedModal.startDate || null,
+            filterTypeUrl: addOutgoingFeedModal.filterTypeUrl || null,
+            filterUrl: addOutgoingFeedModal.filterTypeUrl ? addOutgoingFeedModal.filterUrl : null,
+            filterTypeEmail: addOutgoingFeedModal.filterTypeEmail || null,
+            filterEmail: addOutgoingFeedModal.filterTypeEmail ? addOutgoingFeedModal.filterEmail : null,
+            filterTypeListcode: addOutgoingFeedModal.filterTypeListcode || null,
+            filterListcode: addOutgoingFeedModal.filterTypeListcode ? addOutgoingFeedModal.filterListcode : null,
+            forceUrl: addOutgoingFeedModal.forceUrl === '1' ? 1 : 0,
+            forceUrlList: addOutgoingFeedModal.forceUrl === '1' ? addOutgoingFeedModal.forceUrlList : null,
+          });
+          if (r.data.status === 1) {
+            closeAddOutgoingFeedModal();
+            await fetchOutgoingFeedsPopulations();
+          } else {
+            addOutgoingFeedModalError.value = r.data.error || 'Add failed';
+          }
+        }
+      } catch (e) {
+        addOutgoingFeedModalError.value = e.response?.data?.error || e.message || 'Request failed';
+      } finally {
+        addOutgoingFeedSaving.value = false;
+      }
+    };
+
+    const toggleOutgoingFeedPopulation = async (idAssoc) => {
+      try {
+        const r = await axios.patch(`/api/feed-populations/${idAssoc}/toggle`);
+        if (r.data.status === 1) await fetchOutgoingFeedsPopulations();
+      } catch (e) {
+        console.error('Toggle failed:', e);
+      }
+    };
+
+    const deleteOutgoingFeedPopulation = async (idAssoc) => {
+      if (!confirm('Remove this outgoing feed connection?')) return;
+      try {
+        const r = await axios.delete(`/api/feed-populations/${idAssoc}`);
+        if (r.data.status === 1) await fetchOutgoingFeedsPopulations();
+      } catch (e) {
+        console.error('Delete failed:', e);
+      }
+    };
 
     const openApiSpec = async (feed) => {
       apiSpecModal.feedLabel = feed.label;
@@ -1487,6 +1892,22 @@ export default {
       urlReportLoading,
       closeUrlReportModal,
       runUrlReport,
+      outgoingFeedsModal,
+      outgoingFeedsPopulations,
+      outgoingFeedsLoading,
+      outboundFeedsForPopulation,
+      availableOutboundFeedsForPopulation,
+      addOutgoingFeedModal,
+      addOutgoingFeedModalError,
+      addOutgoingFeedSaving,
+      openOutgoingFeedsModal,
+      closeOutgoingFeedsModal,
+      openAddOutgoingFeedModal,
+      closeAddOutgoingFeedModal,
+      openEditOutgoingFeedModal,
+      saveOutgoingFeed,
+      toggleOutgoingFeedPopulation,
+      deleteOutgoingFeedPopulation,
     };
   },
 };
@@ -1547,6 +1968,99 @@ export default {
 
 .incoming-col-small {
   width: 15%;
+}
+
+/* Add Outgoing Feed modal (matches OutgoingFeedsManagement population modal) */
+.add-population-modal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.add-population-modal .modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #eee;
+  background: #f9f9f9;
+}
+.add-pop-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.add-pop-row + .add-pop-row {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #eee;
+}
+.add-pop-heading {
+  flex: 0 0 180px;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+  padding-right: 20px;
+  padding-top: 2px;
+}
+.add-pop-content {
+  flex: 1;
+  min-width: 0;
+}
+.add-pop-desc {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 10px 0;
+}
+.add-pop-radios {
+  margin-bottom: 10px;
+}
+.add-pop-radio {
+  display: inline-block;
+  margin-right: 20px;
+  margin-bottom: 0;
+  font-weight: normal;
+  cursor: pointer;
+  font-size: 14px;
+}
+.add-pop-radio input {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.add-pop-select,
+.add-pop-input {
+  max-width: 450px;
+  margin-top: 6px;
+}
+.add-pop-input-sm {
+  max-width: 180px;
+}
+.add-pop-queue-options {
+  margin-top: 6px;
+}
+.add-pop-queue-opt {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: normal;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.add-pop-queue-opt input {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.add-pop-checkbox {
+  cursor: pointer;
+  font-weight: normal;
+}
+.add-pop-checkbox input {
+  margin-right: 6px;
+}
+.add-pop-readonly {
+  margin: 8px 0 0 0;
+  padding: 6px 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .text-right {

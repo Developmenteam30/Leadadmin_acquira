@@ -23,6 +23,7 @@ class FeedPopulation extends Model
         'forceUrlList',
         'forceUrl',
         'waterfallPriority',
+        'order',
         'queueType',
         'startDate',
         'populationType',
@@ -31,6 +32,7 @@ class FeedPopulation extends Model
 
     protected $casts = [
         'waterfallPriority' => 'integer',
+        'order' => 'integer',
     ];
 
     public function inboundFeed()

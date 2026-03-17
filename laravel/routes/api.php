@@ -69,6 +69,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/record-search/outbound-feeds', [\App\Http\Controllers\RecordSearchController::class, 'getOutboundFeeds']);
     Route::get('/record-search/outbound', [\App\Http\Controllers\RecordSearchController::class, 'searchOutbound']);
     Route::post('/inbound-feeds/{id}/import-filter-zip', [\App\Http\Controllers\InboundFeedController::class, 'importFilterZip']);
+    Route::get('/inbound-feeds/{id}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'indexByInbound']);
+    Route::post('/inbound-feeds/{id}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'storeByInbound']);
     Route::get('/inbound-feeds/{id}/url-list', [\App\Http\Controllers\InboundFeedController::class, 'getUrlList']);
     Route::get('/inbound-feeds/{id}/url-report', [\App\Http\Controllers\InboundFeedController::class, 'getUrlReport']);
     Route::get('/inbound-feeds/{id}/export-columns', [\App\Http\Controllers\InboundFeedController::class, 'getExportColumns']);
@@ -101,6 +103,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Feed Populations (for outbound feeds)
     Route::get('/outbound-feeds/{idFeedOut}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'index']);
     Route::get('/feed-populations/inbound-feeds', [\App\Http\Controllers\FeedPopulationController::class, 'getInboundFeeds']);
+    Route::get('/feed-populations/outbound-feeds', [\App\Http\Controllers\FeedPopulationController::class, 'getOutboundFeeds']);
     Route::get('/feed-populations/categories', [\App\Http\Controllers\FeedPopulationController::class, 'getFeedCategories']);
     Route::post('/outbound-feeds/{idFeedOut}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'store']);
     Route::put('/feed-populations/{idAssoc}', [\App\Http\Controllers\FeedPopulationController::class, 'update']);
