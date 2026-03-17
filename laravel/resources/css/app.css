@@ -1,0 +1,29 @@
+/* Custom styles for the application */
+/* Bootstrap 3.3.7 is imported in app.js */
+
+/* Global select element styling */
+select {
+  min-height: 40px;
+}
+
+/* Consistent blue modal headers across all modals */
+.modal-header {
+  background: #072f5f !important;
+  color: #fff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 15px;
+  border-radius: 4px 4px 0 0;
+}
+.modal-header .modal-title {
+  color: #fff !important;
+  font-weight: 600;
+}
+.modal-header .close {
+  color: #fff !important;
+  opacity: 0.9;
+  text-shadow: none;
+}
+.modal-header .close:hover {
+  opacity: 1;
+  color: #fff !important;
+}
