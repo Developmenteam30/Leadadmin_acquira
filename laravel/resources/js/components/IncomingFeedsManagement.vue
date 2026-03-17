@@ -557,27 +557,39 @@
                 <div v-if="!addOutgoingFeedModal.editId" class="add-pop-row">
                   <div class="add-pop-heading">Outgoing Feed</div>
                   <div class="add-pop-content">
-                    <select v-model="addOutgoingFeedModal.idFeedOut" class="form-control add-pop-select" required>
-                      <option value="">Select outgoing feed...</option>
-                      <option v-for="f in availableOutboundFeedsForPopulation" :key="f.idFeedOut" :value="f.idFeedOut">
-                        {{ f.displayLabel }}
-                      </option>
-                    </select>
-                    <p v-if="availableOutboundFeedsForPopulation.length === 0 && outboundFeedsForPopulation.length > 0" class="add-pop-desc text-muted mt-2">All outgoing feeds are already connected to this incoming feed.</p>
+                    <p class="add-pop-desc">Select outgoing feeds and click Add to add them to the list below. Click "Save changes" to save all to the database.</p>
+                    <div class="d-flex align-items-center mb-2" style="flex-wrap: nowrap; gap: 10px; display: flex;">
+                      <select v-model="addOutgoingFeedModal.idFeedOut" class="form-control" style="width: 300px; max-width: 300px; flex: 1 1 auto;">
+                        <option value="">Select outgoing feed...</option>
+                        <option v-for="f in availableOutboundFeedsForPopulation" :key="f.idFeedOut" :value="f.idFeedOut">
+                          {{ f.displayLabel }}
+                        </option>
+                      </select>
+                      <button type="button" class="btn btn-primary btn-sm" @click="addToPendingOutgoingFeeds" :disabled="!addOutgoingFeedModal.idFeedOut" style="flex-shrink: 0;">
+                        Add
+                      </button>
+                    </div>
+                    <p v-if="availableOutboundFeedsForPopulation.length === 0 && outboundFeedsForPopulation.length > 0" class="add-pop-desc text-muted mt-2">All outgoing feeds are already connected.</p>
+                    <div v-if="pendingOutgoingFeeds.length" class="mt-3">
+                      <strong>To be saved ({{ pendingOutgoingFeeds.length }}):</strong>
+                      <table class="table table-bordered table-condensed table-striped mt-2">
+                        <thead><tr><th>Order</th><th>Outgoing Feed</th><th>Queue Type</th><th></th></tr></thead>
+                        <tbody>
+                          <tr v-for="(item, idx) in pendingOutgoingFeeds" :key="item.tempId">
+                            <td>{{ idx + 1 }}</td>
+                            <td>{{ item.displayLabel }}</td>
+                            <td>{{ item.queueType }}</td>
+                            <td><button type="button" class="btn btn-xs btn-danger" @click="removeFromPendingOutgoingFeeds(item.tempId)">Remove</button></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
                 <div v-else class="add-pop-row">
                   <div class="add-pop-heading">Outgoing Feed</div>
                   <div class="add-pop-content">
                     <p class="add-pop-readonly">{{ addOutgoingFeedModal.editFeedLabel || '—' }}</p>
-                  </div>
-                </div>
-
-                <div class="add-pop-row">
-                  <div class="add-pop-heading">Order</div>
-                  <div class="add-pop-content">
-                    <p class="add-pop-desc">Waterfall sequence: 1 = first, 2 = second, etc. If Company A (order 1) rejects, the lead is sent to Company B (order 2).</p>
-                    <input v-model.number="addOutgoingFeedModal.order" type="number" min="1" max="999" class="form-control add-pop-input add-pop-input-sm" style="width: 120px;" placeholder="1" />
                   </div>
                 </div>
 
@@ -680,8 +692,8 @@
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-default" @click="closeAddOutgoingFeedModal">Close</button>
-                <button type="button" class="btn btn-primary" @click="saveOutgoingFeed" :disabled="addOutgoingFeedSaving">
-                  {{ addOutgoingFeedSaving ? 'Saving...' : (addOutgoingFeedModal.editId ? 'Save' : 'Add') }}
+                <button type="button" class="btn btn-primary" @click="saveOutgoingFeed" :disabled="addOutgoingFeedSaving || (!addOutgoingFeedModal.editId && pendingOutgoingFeeds.length === 0)">
+                  {{ addOutgoingFeedSaving ? 'Saving...' : (addOutgoingFeedModal.editId ? 'Save changes' : 'Save changes') }}
                 </button>
               </div>
             </div>
@@ -999,9 +1011,12 @@ export default {
     const outgoingFeedsPopulations = ref([]);
     const outgoingFeedsLoading = ref(false);
     const outboundFeedsForPopulation = ref([]);
+    const pendingOutgoingFeeds = ref([]);
+    let tempIdCounter = 0;
     const availableOutboundFeedsForPopulation = computed(() => {
       const connectedIds = outgoingFeedsPopulations.value.map((p) => p.idFeedOut);
-      return outboundFeedsForPopulation.value.filter((f) => !connectedIds.includes(f.idFeedOut));
+      const pendingIds = pendingOutgoingFeeds.value.map((p) => p.idFeedOut);
+      return outboundFeedsForPopulation.value.filter((f) => !connectedIds.includes(f.idFeedOut) && !pendingIds.includes(f.idFeedOut));
     });
     const addOutgoingFeedModal = reactive({
       show: false,
@@ -1070,9 +1085,6 @@ export default {
       addOutgoingFeedModal.editId = null;
       addOutgoingFeedModal.editFeedLabel = '';
       addOutgoingFeedModal.idFeedOut = '';
-      addOutgoingFeedModal.order = (outgoingFeedsPopulations.value.length
-        ? Math.max(...outgoingFeedsPopulations.value.map((p) => p.order || 0), 0) + 1
-        : 1);
       addOutgoingFeedModal.queueType = 'waterfall';
       addOutgoingFeedModal.enabled = '1';
       addOutgoingFeedModal.filterTypeUrl = '';
@@ -1086,6 +1098,7 @@ export default {
       addOutgoingFeedModal.waterfallPriority = 0;
       addOutgoingFeedModal.startDate = '';
       addOutgoingFeedModalError.value = '';
+      pendingOutgoingFeeds.value = [];
       addOutgoingFeedModal.show = true;
     };
 
@@ -1093,13 +1106,41 @@ export default {
       addOutgoingFeedModal.show = false;
       addOutgoingFeedModal.editId = null;
       addOutgoingFeedModalError.value = '';
+      pendingOutgoingFeeds.value = [];
+    };
+
+    const addToPendingOutgoingFeeds = () => {
+      if (!addOutgoingFeedModal.idFeedOut) return;
+      const feed = outboundFeedsForPopulation.value.find((f) => f.idFeedOut === addOutgoingFeedModal.idFeedOut);
+      const displayLabel = feed ? feed.displayLabel : String(addOutgoingFeedModal.idFeedOut);
+      pendingOutgoingFeeds.value.push({
+        tempId: ++tempIdCounter,
+        idFeedOut: addOutgoingFeedModal.idFeedOut,
+        displayLabel,
+        queueType: addOutgoingFeedModal.queueType,
+        enabled: addOutgoingFeedModal.enabled,
+        filterTypeUrl: addOutgoingFeedModal.filterTypeUrl || null,
+        filterUrl: addOutgoingFeedModal.filterTypeUrl ? addOutgoingFeedModal.filterUrl : null,
+        filterTypeEmail: addOutgoingFeedModal.filterTypeEmail || null,
+        filterEmail: addOutgoingFeedModal.filterTypeEmail ? addOutgoingFeedModal.filterEmail : null,
+        filterTypeListcode: addOutgoingFeedModal.filterTypeListcode || null,
+        filterListcode: addOutgoingFeedModal.filterTypeListcode ? addOutgoingFeedModal.filterListcode : null,
+        forceUrl: addOutgoingFeedModal.forceUrl === '1' ? 1 : 0,
+        forceUrlList: addOutgoingFeedModal.forceUrl === '1' ? addOutgoingFeedModal.forceUrlList : null,
+        waterfallPriority: addOutgoingFeedModal.waterfallPriority,
+        startDate: addOutgoingFeedModal.startDate || null,
+      });
+      addOutgoingFeedModal.idFeedOut = '';
+    };
+
+    const removeFromPendingOutgoingFeeds = (tempId) => {
+      pendingOutgoingFeeds.value = pendingOutgoingFeeds.value.filter((p) => p.tempId !== tempId);
     };
 
     const openEditOutgoingFeedModal = (p) => {
       addOutgoingFeedModal.editId = p.idAssoc;
       addOutgoingFeedModal.editFeedLabel = p.populatingFeed || p.outboundLabel;
       addOutgoingFeedModal.idFeedOut = p.idFeedOut;
-      addOutgoingFeedModal.order = p.order ?? 1;
       addOutgoingFeedModal.queueType = p.queueType || 'waterfall';
       addOutgoingFeedModal.enabled = p.enabled || '1';
       addOutgoingFeedModal.filterTypeUrl = p.filterTypeUrl || '';
@@ -1118,16 +1159,11 @@ export default {
 
     const saveOutgoingFeed = async () => {
       if (!outgoingFeedsModal.idFeedIn) return;
-      if (!addOutgoingFeedModal.editId && !addOutgoingFeedModal.idFeedOut) {
-        addOutgoingFeedModalError.value = 'Please select an outgoing feed.';
-        return;
-      }
       addOutgoingFeedSaving.value = true;
       addOutgoingFeedModalError.value = '';
       try {
         if (addOutgoingFeedModal.editId) {
           const r = await axios.put(`/api/feed-populations/${addOutgoingFeedModal.editId}`, {
-            order: addOutgoingFeedModal.order,
             queueType: addOutgoingFeedModal.queueType,
             enabled: addOutgoingFeedModal.enabled,
             waterfallPriority: addOutgoingFeedModal.waterfallPriority,
@@ -1148,28 +1184,34 @@ export default {
             addOutgoingFeedModalError.value = r.data.error || 'Update failed';
           }
         } else {
-          const r = await axios.post(`/api/inbound-feeds/${outgoingFeedsModal.idFeedIn}/populations`, {
-            idFeedOut: addOutgoingFeedModal.idFeedOut,
-            order: addOutgoingFeedModal.order,
-            queueType: addOutgoingFeedModal.queueType,
-            enabled: addOutgoingFeedModal.enabled,
-            waterfallPriority: addOutgoingFeedModal.waterfallPriority,
-            startDate: addOutgoingFeedModal.startDate || null,
-            filterTypeUrl: addOutgoingFeedModal.filterTypeUrl || null,
-            filterUrl: addOutgoingFeedModal.filterTypeUrl ? addOutgoingFeedModal.filterUrl : null,
-            filterTypeEmail: addOutgoingFeedModal.filterTypeEmail || null,
-            filterEmail: addOutgoingFeedModal.filterTypeEmail ? addOutgoingFeedModal.filterEmail : null,
-            filterTypeListcode: addOutgoingFeedModal.filterTypeListcode || null,
-            filterListcode: addOutgoingFeedModal.filterTypeListcode ? addOutgoingFeedModal.filterListcode : null,
-            forceUrl: addOutgoingFeedModal.forceUrl === '1' ? 1 : 0,
-            forceUrlList: addOutgoingFeedModal.forceUrl === '1' ? addOutgoingFeedModal.forceUrlList : null,
-          });
-          if (r.data.status === 1) {
-            closeAddOutgoingFeedModal();
-            await fetchOutgoingFeedsPopulations();
-          } else {
-            addOutgoingFeedModalError.value = r.data.error || 'Add failed';
+          const baseOrder = outgoingFeedsPopulations.value.length
+            ? Math.max(...outgoingFeedsPopulations.value.map((p) => p.order || 0), 0)
+            : 0;
+          for (let i = 0; i < pendingOutgoingFeeds.value.length; i++) {
+            const item = pendingOutgoingFeeds.value[i];
+            const r = await axios.post(`/api/inbound-feeds/${outgoingFeedsModal.idFeedIn}/populations`, {
+              idFeedOut: item.idFeedOut,
+              order: baseOrder + i + 1,
+              queueType: item.queueType,
+              enabled: item.enabled,
+              waterfallPriority: item.waterfallPriority,
+              startDate: item.startDate,
+              filterTypeUrl: item.filterTypeUrl,
+              filterUrl: item.filterUrl,
+              filterTypeEmail: item.filterTypeEmail,
+              filterEmail: item.filterEmail,
+              filterTypeListcode: item.filterTypeListcode,
+              filterListcode: item.filterListcode,
+              forceUrl: item.forceUrl,
+              forceUrlList: item.forceUrlList,
+            });
+            if (r.data.status !== 1) {
+              addOutgoingFeedModalError.value = r.data.error || 'Add failed';
+              return;
+            }
           }
+          closeAddOutgoingFeedModal();
+          await fetchOutgoingFeedsPopulations();
         }
       } catch (e) {
         addOutgoingFeedModalError.value = e.response?.data?.error || e.message || 'Request failed';
@@ -1897,6 +1939,9 @@ export default {
       outgoingFeedsLoading,
       outboundFeedsForPopulation,
       availableOutboundFeedsForPopulation,
+      pendingOutgoingFeeds,
+      addToPendingOutgoingFeeds,
+      removeFromPendingOutgoingFeeds,
       addOutgoingFeedModal,
       addOutgoingFeedModalError,
       addOutgoingFeedSaving,
