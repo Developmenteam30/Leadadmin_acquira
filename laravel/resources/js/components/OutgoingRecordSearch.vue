@@ -102,7 +102,7 @@
                   <th>Outgoing Feed</th>
                   <th>Status</th>
                   <th>Timestamp</th>
-                  <th>Result / Response</th>
+                  <!-- <th>Result / Response</th> -->
                   <th>Cost</th>
                   <th>Email</th>
                   <th>Name</th>
@@ -120,9 +120,9 @@
                     </span>
                   </td>
                   <td>{{ record.timestampConverted || record.timestamp }}</td>
-                  <td style="max-width: 300px; word-break: break-word;">
+                  <!-- <td style="max-width: 300px; word-break: break-word;">
                     {{ record.result || (record.accepted ? 'Success' : '-') }}
-                  </td>
+                  </td> -->
                   <td>{{ record.cost != null ? formatCost(record.cost) : '' }}</td>
                   <td>{{ record.email }}</td>
                   <td>{{ record.fname }} {{ record.lname }}</td>
