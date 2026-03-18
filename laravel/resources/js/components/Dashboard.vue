@@ -4,26 +4,15 @@
     <div class="container-fluid" style="padding: 0;">
       <div class="dashboard-new-header">Life Leads</div>
 
-      <!-- Date Filter Form -->
+      <!-- Quick Jump and Date Range -->
       <div class="date-filter-container">
-        <form @submit.prevent="updateDate" class="form-inline">
-          <label for="dateFilter">Select Date:</label>
-          <input
-            type="date"
-            id="dateFilter"
-            v-model="selectedDate"
-            class="form-control"
-          />
-          <button type="submit" class="btn btn-primary btn-sm">Update</button>
-          <button
-            type="button"
-            class="btn btn-default btn-sm"
-            style="margin-left: 5px"
-            @click="resetToYesterday"
-          >
-            Reset to Yesterday
-          </button>
-        </form>
+        <QuickJump
+          :start="filters.statsStart"
+          :end="filters.statsEnd"
+          @update:start="filters.statsStart = $event"
+          @update:end="filters.statsEnd = $event"
+          @change="fetchDashboardData"
+        />
       </div>
 
       <table class="dashboard-new-table">
@@ -32,66 +21,16 @@
             <th colspan="2">Company</th>
             <th>Purchase Count</th>
             <th>Lead Expense</th>
-            <th>MP Sale Count</th>
             <th>RT Sale Count</th>
+            <th>MP Sale Count</th>
             <th>Lead Sales</th>
             <th>Avg Sale</th>
             <th>Profit</th>
             <th>Profit%</th>
-            <th>Avg Score MP Sales</th>
           </tr>
         </thead>
         <tbody>
-          <!-- Grand Total Row -->
-          <tr class="total-row">
-            <td colspan="2">GRAND TOTAL</td>
-            <td class="text-right">{{ formatNumber(grandTotal.purchaseCount) }}</td>
-            <td class="text-right">${{ formatNumber(grandTotal.leadExpense, 2) }}</td>
-            <td class="text-right">{{ formatNumber(grandTotal.mpSaleCount) }}</td>
-            <td class="text-right">{{ formatNumber(grandTotal.rtSaleCount) }}</td>
-            <td class="text-right">${{ formatNumber(grandTotal.leadSales, 2) }}</td>
-            <td class="text-right">${{ formatNumber(grandTotal.avgSale, 2) }}</td>
-            <td
-              class="text-right"
-              :class="{ 'negative-profit': grandTotal.profit < 0 }"
-            >
-              ${{ formatNumber(grandTotal.profit, 2) }}
-            </td>
-            <td
-              class="text-right"
-              :class="{ 'negative-profit': grandTotal.profitPercent < 0 }"
-            >
-              {{ formatNumber(grandTotal.profitPercent, 1) }}%
-            </td>
-            <td class="text-center">-</td>
-          </tr>
-
-          <!-- Date-Specific Total Row -->
-          <tr class="total-row-light">
-            <td>{{ selectedDateDisplay }}</td>
-            <td>Total</td>
-            <td class="text-right">{{ formatNumber(grandTotal.purchaseCount) }}</td>
-            <td class="text-right">${{ formatNumber(grandTotal.leadExpense, 2) }}</td>
-            <td class="text-right">{{ formatNumber(grandTotal.mpSaleCount) }}</td>
-            <td class="text-right">{{ formatNumber(grandTotal.rtSaleCount) }}</td>
-            <td class="text-right">${{ formatNumber(grandTotal.leadSales, 2) }}</td>
-            <td class="text-right">${{ formatNumber(grandTotal.avgSale, 2) }}</td>
-            <td
-              class="text-right"
-              :class="{ 'negative-profit': grandTotal.profit < 0 }"
-            >
-              ${{ formatNumber(grandTotal.profit, 2) }}
-            </td>
-            <td
-              class="text-right"
-              :class="{ 'negative-profit': grandTotal.profitPercent < 0 }"
-            >
-              {{ formatNumber(grandTotal.profitPercent, 1) }}%
-            </td>
-            <td class="text-center">-</td>
-          </tr>
-
-          <!-- Individual Company Rows -->
+          <!-- Individual Company Rows (by company) -->
           <tr
             v-for="(row, index) in companyData"
             :key="index"
@@ -102,8 +41,8 @@
             <td>{{ row.company_name || 'Unknown' }}</td>
             <td class="text-right">{{ formatNumber(row.purchase_count || 0) }}</td>
             <td class="text-right">${{ formatNumber(row.lead_expense || 0, 2) }}</td>
-            <td class="text-right">{{ formatNumber(row.mp_sale_count || 0) }}</td>
             <td class="text-right">{{ formatNumber(row.rt_sale_count || 0) }}</td>
+            <td class="text-right">{{ formatNumber(row.mp_sale_count || 0) }}</td>
             <td class="text-right">${{ formatNumber(row.lead_sales || 0, 2) }}</td>
             <td class="text-right">${{ formatNumber(row.avg_sale || 0, 2) }}</td>
             <td
@@ -118,7 +57,29 @@
             >
               {{ formatNumber(row.profit_percent || 0, 1) }}%
             </td>
-            <td class="text-center">-</td>
+          </tr>
+
+          <!-- Grand Total Row -->
+          <tr class="total-row">
+            <td colspan="2">GRAND TOTAL</td>
+            <td class="text-right">{{ formatNumber(grandTotal.purchaseCount) }}</td>
+            <td class="text-right">${{ formatNumber(grandTotal.leadExpense, 2) }}</td>
+            <td class="text-right">{{ formatNumber(grandTotal.rtSaleCount) }}</td>
+            <td class="text-right">{{ formatNumber(grandTotal.mpSaleCount) }}</td>
+            <td class="text-right">${{ formatNumber(grandTotal.leadSales, 2) }}</td>
+            <td class="text-right">${{ formatNumber(grandTotal.avgSale, 2) }}</td>
+            <td
+              class="text-right"
+              :class="{ 'negative-profit': grandTotal.profit < 0 }"
+            >
+              ${{ formatNumber(grandTotal.profit, 2) }}
+            </td>
+            <td
+              class="text-right"
+              :class="{ 'negative-profit': grandTotal.profitPercent < 0 }"
+            >
+              {{ formatNumber(grandTotal.profitPercent, 1) }}%
+            </td>
           </tr>
         </tbody>
       </table>
@@ -131,27 +92,30 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, reactive } from 'vue';
 import axios from 'axios';
 import Navigation from './Navigation.vue';
+import QuickJump from './QuickJump.vue';
 
 export default {
   name: 'Dashboard',
   components: {
     Navigation,
+    QuickJump,
   },
   setup() {
-    const selectedDate = ref(getYesterdayDate());
+    const filters = reactive({
+      statsStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      statsEnd: new Date().toISOString().split('T')[0],
+    });
     const companyData = ref([]);
     const loading = ref(false);
 
     const selectedDateDisplay = computed(() => {
-      const date = new Date(selectedDate.value);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+      const start = new Date(filters.statsStart);
+      const end = new Date(filters.statsEnd);
+      const fmt = (d) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      return filters.statsStart === filters.statsEnd ? fmt(start) : `${fmt(start)} – ${fmt(end)}`;
     });
 
     const grandTotal = computed(() => {
@@ -171,7 +135,8 @@ export default {
 
       const profit = leadSales - leadExpense;
       const profitPercent = leadExpense > 0 ? (profit / leadExpense) * 100 : 0;
-      const avgSale = mpSaleCount > 0 ? leadSales / mpSaleCount : 0;
+      // Avg Sale = Lead Sales / Purchase Count
+      const avgSale = purchaseCount > 0 ? leadSales / purchaseCount : 0;
 
       return {
         purchaseCount,
@@ -185,12 +150,6 @@ export default {
       };
     });
 
-    function getYesterdayDate() {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      return yesterday.toISOString().split('T')[0];
-    }
-
     function formatNumber(value, decimals = 0) {
       const num = parseFloat(value || 0);
       return num.toLocaleString('en-US', {
@@ -203,17 +162,18 @@ export default {
       loading.value = true;
       try {
         const response = await axios.get('/api/dashboard/life-leads', {
-          params: { date: selectedDate.value },
+          params: { start: filters.statsStart, end: filters.statsEnd },
         });
         companyData.value = response.data.data || [];
         
         // Calculate derived fields for each row
+        // Avg Sale = Lead Sales / Purchase Count, Profit = Lead Sales - Lead Expense, Profit% = profit percent
         companyData.value = companyData.value.map((row) => {
-          const mpSaleCount = parseFloat(row.mp_sale_count || 0);
+          const purchaseCount = parseFloat(row.purchase_count || 0);
           const leadSales = parseFloat(row.lead_sales || 0);
           const leadExpense = parseFloat(row.lead_expense || 0);
           
-          const avgSale = mpSaleCount > 0 ? leadSales / mpSaleCount : 0;
+          const avgSale = purchaseCount > 0 ? leadSales / purchaseCount : 0;
           const profit = leadSales - leadExpense;
           const profitPercent = leadExpense > 0 ? (profit / leadExpense) * 100 : 0;
           
@@ -232,28 +192,18 @@ export default {
       }
     };
 
-    const updateDate = () => {
-      fetchDashboardData();
-    };
-
-    const resetToYesterday = () => {
-      selectedDate.value = getYesterdayDate();
-      fetchDashboardData();
-    };
-
     onMounted(() => {
       fetchDashboardData();
     });
 
     return {
-      selectedDate,
+      filters,
       selectedDateDisplay,
       companyData,
       loading,
       grandTotal,
       formatNumber,
-      updateDate,
-      resetToYesterday,
+      fetchDashboardData,
     };
   },
 };
