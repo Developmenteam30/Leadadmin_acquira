@@ -14,6 +14,11 @@ class PushIncomingDataService
      * Push incoming lead data to outgoing feeds based on population settings.
      * Called after a lead is stored in data_inbound.
      *
+     * Acceptance rules:
+     * - No connection to outgoing feeds → accepted (reason = null)
+     * - Has connection but no outgoing feed accepts (all reject, skip, or filter out) → rejected (reason set)
+     * - At least one outgoing feed accepts → accepted (reason = null)
+     *
      * @param int $idRecord The idRecord from data_inbound
      * @param int $idFeedIn Inbound feed ID
      * @param array $data Request data (url, email, listcode, etc.)
@@ -110,6 +115,13 @@ class PushIncomingDataService
                 continue;
             }
 
+            // Mark that we have live-type connection: if none accept, lead will be rejected
+            $isPingFlow = ($feedOutModel->feedCategory ?? '') === 'phone-preping' && ($inboundFeed->feedCategory ?? '') === 'phone-preping';
+            $isLiveType = $isPingFlow || in_array($pop->queueType ?? '', ['livedata', 'waterfall', 'waterfallLimitLive']);
+            if ($isLiveType && !$idFeedOut) {
+                $liveData['enabled'] = true;
+            }
+
             if (!empty($pop->dailyLimit) && (int) $pop->dailyLimit > 0) {
                 $cnt = self::getOutboundDailyCount($popIdFeedOut);
                 if ($cnt >= (int) $pop->dailyLimit) {
@@ -127,8 +139,6 @@ class PushIncomingDataService
             }
 
             // Live types: push instantly and return outgoing response. For phone-preping (ping) flows, always use live for instant request-response.
-            $isPingFlow = ($feedOutModel->feedCategory ?? '') === 'phone-preping' && ($inboundFeed->feedCategory ?? '') === 'phone-preping';
-            $isLiveType = $isPingFlow || in_array($pop->queueType ?? '', ['livedata', 'waterfall', 'waterfallLimitLive']);
             $processed = ($isLiveType && !$idFeedOut) ? -1 : 0;
 
             Log::channel('single')->info('[LiveFeed] Adding to data_outbound', [
