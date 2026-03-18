@@ -15,7 +15,8 @@
         />
       </div>
 
-      <table class="dashboard-new-table">
+      <div class="dashboard-table-scroll">
+        <table class="dashboard-new-table">
         <thead>
           <tr>
             <th colspan="2">Company</th>
@@ -27,6 +28,8 @@
             <th>Avg Sale</th>
             <th>Profit</th>
             <th>Profit%</th>
+            <th>Avg Score MP Sales</th>
+            <th v-for="sp in salespersons" :key="sp.idUser">{{ sp.fullName || 'Unknown' }}</th>
           </tr>
         </thead>
         <tbody>
@@ -57,6 +60,14 @@
             >
               {{ formatNumber(row.profit_percent || 0, 1) }}%
             </td>
+            <td class="text-right">${{ formatNumber(row.avg_score_mp_sales || 0, 2) }}</td>
+            <td
+              v-for="sp in salespersons"
+              :key="sp.idUser"
+              class="text-right"
+            >
+              {{ formatNumber((row.purchase_by_salesperson || {})[sp.idUser] || 0) }}
+            </td>
           </tr>
 
           <!-- Grand Total Row -->
@@ -80,9 +91,18 @@
             >
               {{ formatNumber(grandTotal.profitPercent, 1) }}%
             </td>
+            <td class="text-right">${{ formatNumber(grandTotal.avgScoreMpSales, 2) }}</td>
+            <td
+              v-for="sp in salespersons"
+              :key="sp.idUser"
+              class="text-right"
+            >
+              {{ formatNumber(grandTotal.purchaseBySalesperson[sp.idUser] || 0) }}
+            </td>
           </tr>
         </tbody>
       </table>
+      </div>
 
       <p v-if="companyData.length === 0" class="no-data-message">
         No data available for {{ selectedDateDisplay }}
@@ -109,6 +129,7 @@ export default {
       statsEnd: new Date().toISOString().split('T')[0],
     });
     const companyData = ref([]);
+    const salespersons = ref([]);
     const loading = ref(false);
 
     const selectedDateDisplay = computed(() => {
@@ -124,6 +145,7 @@ export default {
       let mpSaleCount = 0;
       let rtSaleCount = 0;
       let leadSales = 0;
+      const purchaseBySalesperson = {};
 
       companyData.value.forEach((row) => {
         purchaseCount += parseFloat(row.purchase_count || 0);
@@ -131,12 +153,15 @@ export default {
         mpSaleCount += parseFloat(row.mp_sale_count || 0);
         rtSaleCount += parseFloat(row.rt_sale_count || 0);
         leadSales += parseFloat(row.lead_sales || 0);
+        Object.entries(row.purchase_by_salesperson || {}).forEach(([id, cnt]) => {
+          purchaseBySalesperson[id] = (purchaseBySalesperson[id] || 0) + parseFloat(cnt || 0);
+        });
       });
 
       const profit = leadSales - leadExpense;
       const profitPercent = leadExpense > 0 ? (profit / leadExpense) * 100 : 0;
-      // Avg Sale = Lead Sales / Purchase Count
       const avgSale = purchaseCount > 0 ? leadSales / purchaseCount : 0;
+      const avgScoreMpSales = mpSaleCount > 0 ? leadSales / mpSaleCount : 0;
 
       return {
         purchaseCount,
@@ -147,6 +172,8 @@ export default {
         profit,
         profitPercent,
         avgSale,
+        avgScoreMpSales,
+        purchaseBySalesperson,
       };
     });
 
@@ -165,6 +192,7 @@ export default {
           params: { start: filters.statsStart, end: filters.statsEnd },
         });
         companyData.value = response.data.data || [];
+        salespersons.value = response.data.salespersons || [];
         
         // Calculate derived fields for each row
         // Avg Sale = Lead Sales / Purchase Count, Profit = Lead Sales - Lead Expense, Profit% = profit percent
@@ -187,6 +215,7 @@ export default {
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         companyData.value = [];
+        salespersons.value = [];
       } finally {
         loading.value = false;
       }
@@ -200,6 +229,7 @@ export default {
       filters,
       selectedDateDisplay,
       companyData,
+      salespersons,
       loading,
       grandTotal,
       formatNumber,
@@ -221,10 +251,17 @@ export default {
   display: block;
 }
 
+.dashboard-table-scroll {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
 .dashboard-new-table {
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-bottom: 0;
   margin-top: 0;
 }
 
