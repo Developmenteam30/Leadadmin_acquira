@@ -55,11 +55,69 @@ class DashboardController extends Controller
                     AND fi.feedCategory = 'phone'
                     GROUP BY ci.idCompany, ci.name, COALESCE(fi.salesperson, ci.salesperson)";
 
+            // Feed-level data for expand/collapse (per incoming feed)
+            $inboundFeedSql = "SELECT 
+                        fi.idFeedIn,
+                        fi.idCompany,
+                        COALESCE(fi.label, CONCAT('Feed ', fi.idFeedIn)) as feed_name,
+                        SUM(si.accepted) as purchase_count,
+                        SUM(si.accepted * COALESCE(fi.costPerLead, 0)) as lead_expense
+                    FROM stats_inbound AS si
+                    JOIN feedinc AS fi ON fi.idFeedIn = si.idFeedIn
+                    LEFT JOIN companies ci ON ci.idCompany = fi.idCompany
+                    WHERE si.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE)
+                    AND fi.feedCategory = 'phone'
+                    GROUP BY fi.idFeedIn, fi.label, fi.idCompany";
+
+            $correlatedFeedSql = "SELECT 
+                        fi.idFeedIn,
+                        SUM(CASE WHEN sc.accepted > 0 AND sc.billable > 0 THEN sc.accepted ELSE 0 END) as mp_sale_count,
+                        SUM(CASE WHEN sc.accepted > 0 AND sc.billable = 0 THEN sc.accepted ELSE 0 END) as rt_sale_count,
+                        SUM(sc.revenuePerLead * sc.billable) as lead_sales
+                    FROM stats_correlated AS sc
+                    JOIN feedinc AS fi ON fi.idFeedIn = sc.idFeedIn
+                    WHERE sc.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE)
+                    AND fi.feedCategory = 'phone'
+                    GROUP BY fi.idFeedIn";
+
+            $salespersonFeedSql = "SELECT 
+                        fi.idFeedIn,
+                        COALESCE(fi.salesperson, ci.salesperson) as idSalesperson,
+                        SUM(si.accepted) as purchase_count
+                    FROM stats_inbound AS si
+                    JOIN feedinc AS fi ON fi.idFeedIn = si.idFeedIn
+                    LEFT JOIN companies ci ON ci.idCompany = fi.idCompany
+                    WHERE si.stamp BETWEEN CAST(? AS DATE) AND CAST(? AS DATE)
+                    AND fi.feedCategory = 'phone'
+                    GROUP BY fi.idFeedIn, COALESCE(fi.salesperson, ci.salesperson)";
+
             $inbound = collect(DB::select($inboundSql, [$startDate, $endDate]))->keyBy('idCompany');
             try {
                 $correlated = collect(DB::select($correlatedSql, [$startDate, $endDate]))->keyBy('idCompany');
             } catch (\Exception $e) {
                 $correlated = collect();
+            }
+
+            // Fetch feed-level data
+            $inboundFeeds = collect(DB::select($inboundFeedSql, [$startDate, $endDate]))->keyBy('idFeedIn');
+            $correlatedFeeds = collect();
+            try {
+                $correlatedFeeds = collect(DB::select($correlatedFeedSql, [$startDate, $endDate]))->keyBy('idFeedIn');
+            } catch (\Exception $e) {
+                // ignore
+            }
+            $salespersonFeedRows = DB::select($salespersonFeedSql, [$startDate, $endDate]);
+            $purchaseBySalespersonByFeed = [];
+            foreach ($salespersonFeedRows as $r) {
+                $idFeedIn = $r->idFeedIn;
+                $idSp = $r->idSalesperson ?? 0;
+                if ($idSp === 0 || $idSp === null) {
+                    $idSp = 0;
+                }
+                if (!isset($purchaseBySalespersonByFeed[$idFeedIn])) {
+                    $purchaseBySalespersonByFeed[$idFeedIn] = [];
+                }
+                $purchaseBySalespersonByFeed[$idFeedIn][$idSp] = (float) ($r->purchase_count ?? 0);
             }
 
             $salespersonRows = DB::select($salespersonSql, [$startDate, $endDate]);
@@ -88,8 +146,48 @@ class DashboardController extends Controller
                 array_unshift($salespersons, ['idUser' => 0, 'fullName' => 'Unassigned']);
             }
 
+            // Build feeds by company (for expand/collapse)
+            $feedsByCompany = [];
+            foreach ($inboundFeeds as $feedRow) {
+                $idCompany = $feedRow->idCompany ?? 0;
+                if (!isset($feedsByCompany[$idCompany])) {
+                    $feedsByCompany[$idCompany] = [];
+                }
+                $corrFeed = $correlatedFeeds->get($feedRow->idFeedIn);
+                $mpSaleCount = (float) ($corrFeed?->mp_sale_count ?? 0);
+                $leadSales = (float) ($corrFeed?->lead_sales ?? 0);
+                $avgScoreMpSales = $mpSaleCount > 0 ? $leadSales / $mpSaleCount : 0;
+
+                $bySp = $purchaseBySalespersonByFeed[$feedRow->idFeedIn] ?? [];
+                $purchaseBySp = [];
+                foreach ($salespersons as $sp) {
+                    $purchaseBySp[$sp['idUser']] = $bySp[$sp['idUser']] ?? 0;
+                }
+
+                $purchaseCount = (float) ($feedRow->purchase_count ?? 0);
+                $leadExpense = (float) ($feedRow->lead_expense ?? 0);
+                $avgSale = $purchaseCount > 0 ? $leadSales / $purchaseCount : 0;
+                $profit = $leadSales - $leadExpense;
+                $profitPercent = $leadExpense > 0 ? ($profit / $leadExpense) * 100 : 0;
+
+                $feedsByCompany[$idCompany][] = [
+                    'idFeedIn' => $feedRow->idFeedIn,
+                    'feed_name' => $feedRow->feed_name ?? 'Unknown',
+                    'purchase_count' => $purchaseCount,
+                    'lead_expense' => $leadExpense,
+                    'rt_sale_count' => (float) ($corrFeed?->rt_sale_count ?? 0),
+                    'mp_sale_count' => $mpSaleCount,
+                    'lead_sales' => $leadSales,
+                    'avg_sale' => $avgSale,
+                    'profit' => $profit,
+                    'profit_percent' => $profitPercent,
+                    'avg_score_mp_sales' => $avgScoreMpSales,
+                    'purchase_by_salesperson' => $purchaseBySp,
+                ];
+            }
+
             // Merge: use inbound as base, add sale metrics and purchase by salesperson
-            $data = $inbound->map(function ($row) use ($correlated, $purchaseBySalesperson, $salespersons) {
+            $data = $inbound->map(function ($row) use ($correlated, $purchaseBySalesperson, $salespersons, $feedsByCompany) {
                 $corr = $correlated->get($row->idCompany);
                 $mpSaleCount = (float) ($corr?->mp_sale_count ?? 0);
                 $leadSales = (float) ($corr?->lead_sales ?? 0);
@@ -101,6 +199,8 @@ class DashboardController extends Controller
                     $purchaseBySp[$sp['idUser']] = $bySp[$sp['idUser']] ?? 0;
                 }
 
+                $feeds = $feedsByCompany[$row->idCompany] ?? [];
+
                 return [
                     'company_name' => $row->company_name,
                     'idCompany' => $row->idCompany,
@@ -111,6 +211,7 @@ class DashboardController extends Controller
                     'lead_sales' => $leadSales,
                     'avg_score_mp_sales' => $avgScoreMpSales,
                     'purchase_by_salesperson' => $purchaseBySp,
+                    'feeds' => $feeds,
                 ];
             })->values()->all();
 

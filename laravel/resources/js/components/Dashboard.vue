@@ -2,7 +2,7 @@
   <div>
     <Navigation />
     <div class="container-fluid" style="padding: 0;">
-      <div class="dashboard-new-header">Life Leads</div>
+      <div class="dashboard-new-header">Dashboard</div>
 
       <!-- Quick Jump and Date Range -->
       <div class="date-filter-container">
@@ -34,14 +34,25 @@
         </thead>
         <tbody>
           <!-- Individual Company Rows (by company) -->
-          <tr
-            v-for="(row, index) in companyData"
-            :key="index"
-            class="data-row"
-            :class="index % 2 === 0 ? 'data-row-dark' : 'data-row-light'"
-          >
-            <td></td>
-            <td>{{ row.company_name || 'Unknown' }}</td>
+          <template v-for="(row, index) in companyData" :key="index">
+            <tr
+              class="data-row"
+              :class="index % 2 === 0 ? 'data-row-dark' : 'data-row-light'"
+            >
+              <td class="expand-cell">
+                <button
+                  v-if="(row.feeds || []).length > 0"
+                  type="button"
+                  class="expand-btn"
+                  :class="{ expanded: expandedRows[index] }"
+                  :aria-label="expandedRows[index] ? 'Collapse' : 'Expand'"
+                  @click="toggleExpand(index)"
+                >
+                  {{ expandedRows[index] ? '−' : '+' }}
+                </button>
+                <span v-else></span>
+              </td>
+              <td>{{ row.company_name || 'Unknown' }}</td>
             <td class="text-right">{{ formatNumber(row.purchase_count || 0) }}</td>
             <td class="text-right">${{ formatNumber(row.lead_expense || 0, 2) }}</td>
             <td class="text-right">{{ formatNumber(row.rt_sale_count || 0) }}</td>
@@ -69,6 +80,44 @@
               {{ formatNumber((row.purchase_by_salesperson || {})[sp.idUser] || 0) }}
             </td>
           </tr>
+
+          <!-- Feed-level rows (shown when expanded) -->
+          <tr
+            v-for="feed in (expandedRows[index] ? (row.feeds || []) : [])"
+            :key="feed.idFeedIn"
+            class="feed-row"
+            :class="index % 2 === 0 ? 'data-row-dark' : 'data-row-light'"
+          >
+            <td></td>
+            <td class="feed-name-cell">{{ feed.feed_name || 'Unknown' }}</td>
+            <td class="text-right">{{ formatNumber(feed.purchase_count || 0) }}</td>
+            <td class="text-right">${{ formatNumber(feed.lead_expense || 0, 2) }}</td>
+            <td class="text-right">{{ formatNumber(feed.rt_sale_count || 0) }}</td>
+            <td class="text-right">{{ formatNumber(feed.mp_sale_count || 0) }}</td>
+            <td class="text-right">${{ formatNumber(feed.lead_sales || 0, 2) }}</td>
+            <td class="text-right">${{ formatNumber(feed.avg_sale || 0, 2) }}</td>
+            <td
+              class="text-right"
+              :class="{ 'negative-profit': (feed.profit || 0) < 0 }"
+            >
+              ${{ formatNumber(feed.profit || 0, 2) }}
+            </td>
+            <td
+              class="text-right"
+              :class="{ 'negative-profit': (feed.profit_percent || 0) < 0 }"
+            >
+              {{ formatNumber(feed.profit_percent || 0, 1) }}%
+            </td>
+            <td class="text-right">${{ formatNumber(feed.avg_score_mp_sales || 0, 2) }}</td>
+            <td
+              v-for="sp in salespersons"
+              :key="sp.idUser"
+              class="text-right"
+            >
+              {{ formatNumber((feed.purchase_by_salesperson || {})[sp.idUser] || 0) }}
+            </td>
+          </tr>
+          </template>
 
           <!-- Grand Total Row -->
           <tr class="total-row">
@@ -131,6 +180,11 @@ export default {
     const companyData = ref([]);
     const salespersons = ref([]);
     const loading = ref(false);
+    const expandedRows = ref({});
+
+    const toggleExpand = (index) => {
+      expandedRows.value[index] = !expandedRows.value[index];
+    };
 
     const selectedDateDisplay = computed(() => {
       const start = new Date(filters.statsStart);
@@ -193,6 +247,7 @@ export default {
         });
         companyData.value = response.data.data || [];
         salespersons.value = response.data.salespersons || [];
+        expandedRows.value = {};
         
         // Calculate derived fields for each row
         // Avg Sale = Lead Sales / Purchase Count, Profit = Lead Sales - Lead Expense, Profit% = profit percent
@@ -234,6 +289,8 @@ export default {
       grandTotal,
       formatNumber,
       fetchDashboardData,
+      expandedRows,
+      toggleExpand,
     };
   },
 };
@@ -342,5 +399,46 @@ export default {
   padding: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.expand-cell {
+  width: 36px;
+  padding: 6px 8px !important;
+  vertical-align: middle;
+}
+
+.expand-btn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0;
+  border: 1px solid #072f5f;
+  background: white;
+  color: #072f5f;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.expand-btn:hover {
+  background: #072f5f;
+  color: white;
+}
+
+.expand-btn.expanded {
+  background: #072f5f;
+  color: white;
+}
+
+.feed-row .feed-name-cell {
+  padding-left: 24px;
+  font-style: italic;
+  color: #444;
 }
 </style>
