@@ -118,10 +118,18 @@ class RecordSearchController extends Controller
             if (!empty($endDate)) {
                 $query->where('i.timestamp', '<=', $endDate . ' 23:59:59');
             }
+            // Accepted = result is NULL, '', or 'Success' (LiveFeed stores accepted leads with result='Success')
+            // Rejected = result has a non-empty rejection message
             if ($status === 'accepted') {
-                $query->whereNull('i.result');
+                $query->where(function ($q) {
+                    $q->whereNull('i.result')
+                        ->orWhere('i.result', '')
+                        ->orWhere('i.result', 'Success');
+                });
             } elseif ($status === 'rejected') {
-                $query->whereNotNull('i.result');
+                $query->whereNotNull('i.result')
+                    ->where('i.result', '!=', '')
+                    ->where('i.result', '!=', 'Success');
             }
             if (!empty($idFeedIn)) {
                 $query->where('i.idFeedIn', $idFeedIn);
