@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Helpers\CompanyScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -91,22 +92,49 @@ class DashboardController extends Controller
                     AND fi.feedCategory = 'phone'
                     GROUP BY fi.idFeedIn, COALESCE(fi.salesperson, ci.salesperson)";
 
-            $inbound = collect(DB::select($inboundSql, [$startDate, $endDate]))->keyBy('idCompany');
+            $params = [$startDate, $endDate];
+            $companyFilter = '';
+            $idCompany = CompanyScope::getUserCompanyId($request->user());
+            if ($idCompany !== null) {
+                $companyFilter = ' AND fi.idCompany = ?';
+                $params[] = $idCompany;
+            }
+
+            $inbound = collect(DB::select(
+                str_replace('AND fi.feedCategory = \'phone\'', 'AND fi.feedCategory = \'phone\'' . $companyFilter, $inboundSql),
+                $params
+            ))->keyBy('idCompany');
             try {
-                $correlated = collect(DB::select($correlatedSql, [$startDate, $endDate]))->keyBy('idCompany');
+                $correlated = collect(DB::select(
+                    str_replace('AND fi.feedCategory = \'phone\'', 'AND fi.feedCategory = \'phone\'' . $companyFilter, $correlatedSql),
+                    $params
+                ))->keyBy('idCompany');
             } catch (\Exception $e) {
                 $correlated = collect();
             }
 
             // Fetch feed-level data
-            $inboundFeeds = collect(DB::select($inboundFeedSql, [$startDate, $endDate]))->keyBy('idFeedIn');
+            $feedParams = [$startDate, $endDate];
+            if ($idCompany !== null) {
+                $feedParams[] = $idCompany;
+            }
+            $inboundFeeds = collect(DB::select(
+                str_replace('AND fi.feedCategory = \'phone\'', 'AND fi.feedCategory = \'phone\'' . $companyFilter, $inboundFeedSql),
+                $feedParams
+            ))->keyBy('idFeedIn');
             $correlatedFeeds = collect();
             try {
-                $correlatedFeeds = collect(DB::select($correlatedFeedSql, [$startDate, $endDate]))->keyBy('idFeedIn');
+                $correlatedFeeds = collect(DB::select(
+                    str_replace('AND fi.feedCategory = \'phone\'', 'AND fi.feedCategory = \'phone\'' . $companyFilter, $correlatedFeedSql),
+                    $feedParams
+                ))->keyBy('idFeedIn');
             } catch (\Exception $e) {
                 // ignore
             }
-            $salespersonFeedRows = DB::select($salespersonFeedSql, [$startDate, $endDate]);
+            $salespersonFeedRows = DB::select(
+                str_replace('AND fi.feedCategory = \'phone\'', 'AND fi.feedCategory = \'phone\'' . $companyFilter, $salespersonFeedSql),
+                $feedParams
+            );
             $purchaseBySalespersonByFeed = [];
             foreach ($salespersonFeedRows as $r) {
                 $idFeedIn = $r->idFeedIn;
@@ -120,7 +148,10 @@ class DashboardController extends Controller
                 $purchaseBySalespersonByFeed[$idFeedIn][$idSp] = (float) ($r->purchase_count ?? 0);
             }
 
-            $salespersonRows = DB::select($salespersonSql, [$startDate, $endDate]);
+            $salespersonRows = DB::select(
+                str_replace('AND fi.feedCategory = \'phone\'', 'AND fi.feedCategory = \'phone\'' . $companyFilter, $salespersonSql),
+                $feedParams
+            );
             $purchaseBySalesperson = [];
             $hasUnassigned = false;
             foreach ($salespersonRows as $r) {

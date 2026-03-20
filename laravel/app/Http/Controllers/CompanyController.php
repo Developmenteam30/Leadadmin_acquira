@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Division;
 use App\Models\Vertical;
 use App\Models\User;
+use App\Helpers\CompanyScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -74,7 +75,9 @@ class CompanyController extends Controller
                     $q->whereIn('verticals.verticalId', $searchVerticals);
                 });
             }
-            
+
+            CompanyScope::apply($query, $request->user(), 'idCompany');
+
             $companies = $query->orderBy('name')->get()->map(function ($company) {
                 return [
                     'idCompany' => $company->idCompany,

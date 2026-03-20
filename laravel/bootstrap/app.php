@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
+
+        $middleware->alias([
+            'require.access.bit' => \App\Http\Middleware\RequireAccessBit::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

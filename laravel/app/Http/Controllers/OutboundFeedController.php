@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OutboundFeed;
 use App\Models\Company;
+use App\Helpers\CompanyScope;
 use App\Services\OutboundTestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,8 @@ class OutboundFeedController extends Controller
                 $query->where('feedout.feedCategory', $feedCategory);
             }
 
+            CompanyScope::apply($query, $request->user(), 'feedout.idCompany');
+
             return $this->getFeedsGroupedByCompany($query, $statsStart, $statsEnd);
         } catch (\Exception $e) {
             return response()->json([
@@ -61,6 +64,8 @@ class OutboundFeedController extends Controller
             if ($status) {
                 $query->where('feedout.status', $status);
             }
+
+            CompanyScope::apply($query, $request->user(), 'feedout.idCompany');
 
             return $this->getFeedsGroupedByCompany($query, $statsStart, $statsEnd);
         } catch (\Exception $e) {

@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Company;
 use App\Helpers\SessionHelper;
+use App\Services\EmailNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -208,8 +210,7 @@ class UserController extends Controller
                 'isArchived' => 0,
             ]);
 
-            // TODO: Add audit log entry
-            // TODO: Send email notification
+            $this->sendNewUserNotification($username, $request->password);
 
             return response()->json([
                 'status' => 1,
@@ -327,6 +328,43 @@ class UserController extends Controller
                 'status' => 0,
                 'error' => 'Failed when trying to edit user: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Send "New User Added" notification to EMAIL_BITS_NEW_USER recipients.
+     * Mirrors legacy mgr_users.php behavior.
+     */
+    private function sendNewUserNotification(string $username, string $password): void
+    {
+        $companyName = config('app.name', 'List Management System');
+        $message = "\r\n";
+        $message .= "A new user was created in the {$companyName} System.\r\n";
+        $message .= "\r\n";
+        $message .= "Username: {$username}\r\n";
+        $message .= "Password: {$password}\r\n";
+        $message .= "\r\n";
+
+        $to = EmailNotificationService::getRecipientsForBit(SessionHelper::EMAIL_BITS_NEW_USER);
+        if (empty($to)) {
+            return;
+        }
+
+        $bcc = EmailNotificationService::getRecipientsForBit(SessionHelper::EMAIL_BITS_DEVELOPER);
+
+        try {
+            $recipients = array_map('trim', explode(',', $to));
+            Mail::raw($message, function ($mail) use ($recipients, $bcc, $companyName) {
+                $mail->to($recipients)
+                    ->subject("{$companyName} User Added");
+
+                if (!empty($bcc)) {
+                    $mail->bcc(array_map('trim', explode(',', $bcc)));
+                }
+            });
+        } catch (\Exception $e) {
+            // Log but don't fail user creation
+            report($e);
         }
     }
 }

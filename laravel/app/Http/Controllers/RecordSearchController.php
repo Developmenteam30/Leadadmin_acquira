@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\CompanyScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,13 +14,16 @@ class RecordSearchController extends Controller
     public function getFeeds(Request $request)
     {
         try {
-            $feeds = DB::table('feedinc')
+            $query = DB::table('feedinc')
                 ->leftJoin('companies', 'feedinc.idCompany', '=', 'companies.idCompany')
                 ->whereIn('feedinc.status', ['active', 'hidden'])
                 ->orderBy('companies.name')
                 ->orderBy('feedinc.idFeedIn')
-                ->select('feedinc.idFeedIn', 'feedinc.label', 'feedinc.description', 'feedinc.idCompany', 'companies.name as companyName')
-                ->get();
+                ->select('feedinc.idFeedIn', 'feedinc.label', 'feedinc.description', 'feedinc.idCompany', 'companies.name as companyName');
+
+            CompanyScope::apply($query, $request->user(), 'feedinc.idCompany');
+
+            $feeds = $query->get();
 
             $grouped = [];
             foreach ($feeds as $feed) {
@@ -177,6 +181,8 @@ class RecordSearchController extends Controller
                 });
             }
 
+            CompanyScope::apply($query, $request->user(), 'fi.idCompany');
+
             $records = $query->get();
 
             if ($viewType === 'expanded' && $records->isNotEmpty()) {
@@ -230,13 +236,16 @@ class RecordSearchController extends Controller
     public function getOutboundFeeds(Request $request)
     {
         try {
-            $feeds = DB::table('feedout')
+            $query = DB::table('feedout')
                 ->leftJoin('companies', 'feedout.idCompany', '=', 'companies.idCompany')
                 ->whereIn('feedout.status', ['active', 'hidden', 'retired'])
                 ->orderBy('companies.name')
                 ->orderBy('feedout.idFeedOut')
-                ->select('feedout.idFeedOut', 'feedout.label', 'feedout.description', 'feedout.idCompany', 'feedout.feedCategory', 'companies.name as companyName')
-                ->get();
+                ->select('feedout.idFeedOut', 'feedout.label', 'feedout.description', 'feedout.idCompany', 'feedout.feedCategory', 'companies.name as companyName');
+
+            CompanyScope::apply($query, $request->user(), 'feedout.idCompany');
+
+            $feeds = $query->get();
 
             $grouped = [];
             foreach ($feeds as $feed) {
@@ -370,6 +379,8 @@ class RecordSearchController extends Controller
                     $q->where('i.cellphone', $phone)->orWhere('i.landline', $phone);
                 });
             }
+
+            CompanyScope::apply($query, $request->user(), 'fo.idCompany');
 
             $records = $query->get();
 

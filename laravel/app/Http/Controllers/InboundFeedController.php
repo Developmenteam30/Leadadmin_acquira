@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InboundFeed;
 use App\Models\Company;
+use App\Helpers\CompanyScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -31,6 +32,8 @@ class InboundFeedController extends Controller
             if ($feedCategory) {
                 $query->where('feedinc.feedCategory', $feedCategory);
             }
+
+            CompanyScope::apply($query, $request->user(), 'feedinc.idCompany');
 
             return $this->getFeedsGroupedByCompany($query, $statsStart, $statsEnd);
         } catch (\Exception $e) {
@@ -60,6 +63,8 @@ class InboundFeedController extends Controller
             if ($status) {
                 $query->where('feedinc.status', $status);
             }
+
+            CompanyScope::apply($query, $request->user(), 'feedinc.idCompany');
 
             return $this->getFeedsGroupedByCompany($query, $statsStart, $statsEnd);
         } catch (\Exception $e) {
