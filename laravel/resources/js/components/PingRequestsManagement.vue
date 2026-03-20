@@ -61,6 +61,7 @@
               <th class="incoming-col-large" colspan="2">Company</th>
               <th class="incoming-col-small text-right">Accepted</th>
               <th class="incoming-col-small text-right">Rejected</th>
+              <th class="incoming-col-small text-right">Pending</th>
               <th class="incoming-col-small">Actions</th>
             </tr>
           </thead>
@@ -82,6 +83,13 @@
                     :to="recordSearchLink(company.idCompany, null, 'rejected')"
                   >
                     {{ formatNumber(company.totalRejected) }}
+                  </router-link>
+                </td>
+                <td class="text-right record-search-link-cell">
+                  <router-link
+                    :to="recordSearchLink(company.idCompany, null, 'pending')"
+                  >
+                    {{ formatNumber(company.totalPending) }}
                   </router-link>
                 </td>
                 <td class="text-center">
@@ -127,6 +135,13 @@
                       :to="recordSearchLink(null, feed.idFeedIn, 'rejected')"
                     >
                       {{ formatNumber(feed.rejected) }}
+                    </router-link>
+                  </td>
+                  <td class="text-right record-search-link-cell">
+                    <router-link
+                      :to="recordSearchLink(null, feed.idFeedIn, 'pending')"
+                    >
+                      {{ formatNumber(feed.pending) }}
                     </router-link>
                   </td>
                   <td class="text-center">

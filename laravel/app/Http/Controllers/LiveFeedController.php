@@ -186,6 +186,11 @@ class LiveFeedController extends Controller
         if (isset($pushResult['status']) && $pushResult['status'] === 'pending') {
             $reason = $pushResult['reason'] ?? 'Lead received; awaiting buyer response.';
             DB::table('data_inbound')->where('idRecord', $idRecord)->update(['result' => 'Pending']);
+            // Update stats: move from accepted to pending
+            DB::statement(
+                'UPDATE stats_inbound SET accepted = GREATEST(0, accepted - 1), pending = COALESCE(pending, 0) + 1 WHERE idFeedIn = ? AND url = ? AND stamp = ?',
+                [$idFeedIn, $url, $statsDay]
+            );
             Log::channel('single')->info('[LiveFeed] Pending', ['idRecord' => $idRecord]);
             return $this->leadResponse(true, $reason, $request, 'pending');
         }

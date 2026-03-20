@@ -118,14 +118,20 @@ class RecordSearchController extends Controller
             if (!empty($endDate)) {
                 $query->where('i.timestamp', '<=', $endDate . ' 23:59:59');
             }
-            // Accepted = result is NULL, '', or 'Success' (LiveFeed stores accepted leads with result='Success')
-            // Rejected = result has a non-empty rejection message (excludes Pending)
-            // Pending = result is 'Pending' (awaiting buyer response)
+            // Accepted = lead was sent to at least one outgoing feed (has data_outbound)
+            // Pending = not sent to any outgoing OR awaiting webhook (result='Pending' or Success with no data_outbound)
+            // Rejected = result has a non-empty rejection message
             if ($status === 'accepted') {
                 $query->where(function ($q) {
                     $q->whereNull('i.result')
                         ->orWhere('i.result', '')
                         ->orWhere('i.result', 'Success');
+                });
+                $query->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('data_outbound as o')
+                        ->whereColumn('o.idRecord', 'i.idRecord')
+                        ->whereColumn('o.idFeedIn', 'i.idFeedIn');
                 });
             } elseif ($status === 'rejected') {
                 $query->whereNotNull('i.result')
@@ -133,7 +139,22 @@ class RecordSearchController extends Controller
                     ->where('i.result', '!=', 'Success')
                     ->where('i.result', '!=', 'Pending');
             } elseif ($status === 'pending') {
-                $query->where('i.result', 'Pending');
+                $query->where(function ($q) {
+                    $q->where('i.result', 'Pending')
+                        ->orWhere(function ($q2) {
+                            $q2->where(function ($q3) {
+                                $q3->whereNull('i.result')
+                                    ->orWhere('i.result', '')
+                                    ->orWhere('i.result', 'Success');
+                            });
+                            $q2->whereNotExists(function ($sub) {
+                                $sub->select(DB::raw(1))
+                                    ->from('data_outbound as o')
+                                    ->whereColumn('o.idRecord', 'i.idRecord')
+                                    ->whereColumn('o.idFeedIn', 'i.idFeedIn');
+                            });
+                        });
+                });
             }
             if (!empty($idFeedIn)) {
                 $query->where('i.idFeedIn', $idFeedIn);

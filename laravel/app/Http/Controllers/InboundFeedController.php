@@ -94,6 +94,7 @@ class InboundFeedController extends Controller
                         'feeds' => [],
                         'totalAccepted' => 0,
                         'totalRejected' => 0,
+                        'totalPending' => 0,
                     ];
                 }
 
@@ -108,11 +109,13 @@ class InboundFeedController extends Controller
                     'paused' => $feed->paused ?? 0,
                     'accepted' => $stats['accepted'],
                     'rejected' => $stats['rejected'],
+                    'pending' => $stats['pending'],
                 ];
 
                 $companyGroups[$companyId]['feeds'][] = $feedData;
                 $companyGroups[$companyId]['totalAccepted'] += $stats['accepted'];
                 $companyGroups[$companyId]['totalRejected'] += $stats['rejected'];
+                $companyGroups[$companyId]['totalPending'] += $stats['pending'];
             }
 
             // Convert to array and sort by company name
@@ -136,24 +139,68 @@ class InboundFeedController extends Controller
 
     /**
      * Get stats for a specific feed
+     * Accepted = sent to at least one outgoing feed; Pending = not sent or awaiting webhook; Rejected = rejection message
      */
     private function getFeedStats($idFeedIn, $startDate, $endDate)
     {
         try {
-            $stats = DB::table('stats_inbound')
-                ->where('idFeedIn', $idFeedIn)
-                ->whereBetween('stamp', [$startDate, $endDate])
-                ->selectRaw('SUM(accepted) as accepted, SUM(rejected) as rejected')
-                ->first();
+            $tsStart = $startDate . ' 00:00:00';
+            $tsEnd = $endDate . ' 23:59:59';
+
+            $acceptedCount = DB::table('data_inbound as i')
+                ->where('i.idFeedIn', $idFeedIn)
+                ->whereBetween('i.timestamp', [$tsStart, $tsEnd])
+                ->where(function ($q) {
+                    $q->whereNull('i.result')->orWhere('i.result', '')->orWhere('i.result', 'Success');
+                })
+                ->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('data_outbound as o')
+                        ->whereColumn('o.idRecord', 'i.idRecord')
+                        ->whereColumn('o.idFeedIn', 'i.idFeedIn');
+                })
+                ->count();
+
+            $rejectedCount = DB::table('data_inbound as i')
+                ->where('i.idFeedIn', $idFeedIn)
+                ->whereBetween('i.timestamp', [$tsStart, $tsEnd])
+                ->whereNotNull('i.result')
+                ->where('i.result', '!=', '')
+                ->where('i.result', '!=', 'Success')
+                ->where('i.result', '!=', 'Pending')
+                ->count();
+
+            $pendingCount = DB::table('data_inbound as i')
+                ->where('i.idFeedIn', $idFeedIn)
+                ->whereBetween('i.timestamp', [$tsStart, $tsEnd])
+                ->where(function ($q) {
+                    $q->where('i.result', 'Pending')
+                        ->orWhere(function ($q2) {
+                            $q2->where(function ($q3) {
+                                $q3->whereNull('i.result')
+                                    ->orWhere('i.result', '')
+                                    ->orWhere('i.result', 'Success');
+                            });
+                            $q2->whereNotExists(function ($sub) {
+                                $sub->select(DB::raw(1))
+                                    ->from('data_outbound as o')
+                                    ->whereColumn('o.idRecord', 'i.idRecord')
+                                    ->whereColumn('o.idFeedIn', 'i.idFeedIn');
+                            });
+                        });
+                })
+                ->count();
 
             return [
-                'accepted' => (int)($stats->accepted ?? 0),
-                'rejected' => (int)($stats->rejected ?? 0),
+                'accepted' => (int) $acceptedCount,
+                'rejected' => (int) $rejectedCount,
+                'pending' => (int) $pendingCount,
             ];
         } catch (\Exception $e) {
             return [
                 'accepted' => 0,
                 'rejected' => 0,
+                'pending' => 0,
             ];
         }
     }
