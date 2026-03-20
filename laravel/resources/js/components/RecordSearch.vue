@@ -31,6 +31,9 @@
             <label class="radio-inline">
               <input v-model="filters.status" type="radio" value="rejected" /> Rejected
             </label>
+            <label class="radio-inline">
+              <input v-model="filters.status" type="radio" value="pending" /> Pending
+            </label>
           </div>
         </div>
         <div class="form-group">
@@ -179,7 +182,7 @@
                     <td colspan="10">
                       <p v-if="filters.viewType === 'expanded'">
                         <strong>Incoming Response</strong>:
-                        <span :style="{ color: record.result ? 'red' : 'green', fontWeight: 'bold' }">
+                        <span :style="{ color: record.result === 'Pending' ? '#8a6d3b' : record.result ? 'red' : 'green', fontWeight: 'bold' }">
                           {{ record.result || 'Success' }}
                         </span>
                       </p>
@@ -194,7 +197,7 @@
                       <p v-else-if="filters.viewType === 'expanded' && (!record.outboundRecords || !record.outboundRecords.length)">
                         No outgoing records found.
                       </p>
-                      <span v-else :style="{ color: record.result ? 'red' : 'green', fontWeight: 'bold' }">
+                      <span v-else :style="{ color: record.result === 'Pending' ? '#8a6d3b' : record.result ? 'red' : 'green', fontWeight: 'bold' }">
                         {{ record.result || 'Success' }}
                       </span>
                     </td>

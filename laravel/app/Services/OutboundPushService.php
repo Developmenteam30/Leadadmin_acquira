@@ -13,8 +13,9 @@ class OutboundPushService
     /**
      * Build request data from inbound record and feed config, then send to outbound URL.
      * Returns ['status' => bool, 'text' => string, 'fields' => array]
+     * @param string|null $webhookCallbackId When provided (marketplace), inject as callbackId for webhook return
      */
-    public static function pushRecord(object $record, OutboundFeed $feed, ?InboundFeed $inboundFeed = null): array
+    public static function pushRecord(object $record, OutboundFeed $feed, ?InboundFeed $inboundFeed = null, ?string $webhookCallbackId = null): array
     {
         $staticFields = is_array($feed->staticFieldsJSON) ? $feed->staticFieldsJSON : (json_decode($feed->staticFieldsJSON ?? '{}', true) ?: []);
         $varFields = is_array($feed->varFieldsJSON) ? $feed->varFieldsJSON : (json_decode($feed->varFieldsJSON ?? '{}', true) ?: []);
@@ -114,6 +115,9 @@ class OutboundPushService
                 case 'inbound_cpl':
                     $value = $inboundFeed?->costPerLead ?? '';
                     break;
+                case 'callbackId':
+                    $value = $webhookCallbackId ?? '';
+                    break;
                 default:
                     $value = $row->{$mapVal} ?? $row->{$externalKey} ?? '';
                     break;
@@ -128,6 +132,12 @@ class OutboundPushService
                     $requestData[$vm['field']] = $vm['newValue'];
                 }
             }
+        }
+
+        // Marketplace: inject leadId/callbackId so buyer can return it in webhook body
+        if ($webhookCallbackId !== null) {
+            $requestData['leadId'] = $webhookCallbackId;
+            $requestData['callbackId'] = $webhookCallbackId;
         }
 
         $url = $feed->postUrl;

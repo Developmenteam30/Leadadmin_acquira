@@ -183,6 +183,12 @@ class LiveFeedController extends Controller
         }
 
         $reason = 'Successfully inserted new record.';
+        if (isset($pushResult['status']) && $pushResult['status'] === 'pending') {
+            $reason = $pushResult['reason'] ?? 'Lead received; awaiting buyer response.';
+            DB::table('data_inbound')->where('idRecord', $idRecord)->update(['result' => 'Pending']);
+            Log::channel('single')->info('[LiveFeed] Pending', ['idRecord' => $idRecord]);
+            return $this->leadResponse(true, $reason, $request, 'pending');
+        }
         if (isset($pushResult['reason']) && $pushResult['reason'] !== null) {
             $reason = $pushResult['reason'];
             DB::table('data_inbound')->where('idRecord', $idRecord)->update(['result' => $reason]);
@@ -257,18 +263,25 @@ class LiveFeedController extends Controller
         return $host ? str_replace('www.', '', $host) : '';
     }
 
-    protected function leadResponse(bool $success, string $reason, Request $request)
+    protected function leadResponse(bool $success, string $reason, Request $request, ?string $status = null)
     {
         $outFormat = strtolower($request->input('outFormat', 'xml'));
 
         if ($outFormat === 'json') {
-            return response()->json(['success' => $success, 'reason' => $reason]);
+            $data = ['success' => $success, 'reason' => $reason];
+            if ($status !== null) {
+                $data['status'] = $status;
+            }
+            return response()->json($data);
         }
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<response>' . "\n";
         $xml .= '  <success>' . ($success ? 'true' : 'false') . '</success>' . "\n";
         $xml .= '  <reason>' . htmlspecialchars($reason) . '</reason>' . "\n";
+        if ($status !== null) {
+            $xml .= '  <status>' . htmlspecialchars($status) . '</status>' . "\n";
+        }
         $xml .= '</response>';
 
         return response($xml, 200, ['Content-Type' => 'text/xml']);

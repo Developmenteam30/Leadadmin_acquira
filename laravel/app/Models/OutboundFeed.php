@@ -29,6 +29,8 @@ class OutboundFeed extends Model
         'queued',
         'status',
         'feedCategory',
+        'responseType',
+        'webhookSecret',
         'delayDump',
         'notifyThresholdCount',
         'notifyThresholdTime',

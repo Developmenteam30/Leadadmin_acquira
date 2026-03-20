@@ -31,6 +31,9 @@
             <label class="radio-inline">
               <input v-model="filters.status" type="radio" value="rejected" /> Rejected
             </label>
+            <label class="radio-inline">
+              <input v-model="filters.status" type="radio" value="pending" /> Pending
+            </label>
           </div>
         </div>
         <div class="form-group">
@@ -115,8 +118,8 @@
                 <tr v-for="record in records" :key="record.idRecord + '-' + record.idFeedOut">
                   <td>{{ record.outboundCompanyName }} - ({{ record.idFeedOut }}) {{ record.outboundLabel }}</td>
                   <td>
-                    <span :class="record.accepted ? 'text-success' : 'text-danger'" style="font-weight: bold;">
-                      {{ record.accepted ? 'Accepted' : 'Rejected' }}
+                    <span :class="record.processed === 0 ? 'text-warning' : (record.accepted ? 'text-success' : 'text-danger')" style="font-weight: bold;">
+                      {{ record.processed === 0 ? 'Pending' : (record.accepted ? 'Accepted' : 'Rejected') }}
                     </span>
                   </td>
                   <td>{{ record.timestampConverted || record.timestamp }}</td>
@@ -165,7 +168,7 @@
               <table class="table table-bordered table-condensed">
                 <tbody>
                   <tr><td><strong>Outgoing Feed</strong></td><td>{{ detailsRecord.outboundCompanyName }} - {{ detailsRecord.outboundLabel }} (#{{ detailsRecord.idFeedOut }})</td></tr>
-                  <tr><td><strong>Status</strong></td><td><span :class="detailsRecord.accepted ? 'text-success' : 'text-danger'">{{ detailsRecord.accepted ? 'Accepted' : 'Rejected' }}</span></td></tr>
+                  <tr><td><strong>Status</strong></td><td><span :class="detailsRecord.processed === 0 ? 'text-warning' : (detailsRecord.accepted ? 'text-success' : 'text-danger')">{{ detailsRecord.processed === 0 ? 'Pending' : (detailsRecord.accepted ? 'Accepted' : 'Rejected') }}</span></td></tr>
                   <tr><td><strong>Timestamp</strong></td><td>{{ detailsRecord.timestampConverted || detailsRecord.timestamp }}</td></tr>
                   <tr><td><strong>Result / Response</strong></td><td style="word-break: break-word;">{{ detailsRecord.result || '-' }}</td></tr>
                   <tr><td><strong>Cost</strong></td><td>{{ detailsRecord.cost != null ? formatCost(detailsRecord.cost) : '-' }}</td></tr>
@@ -330,4 +333,5 @@ export default {
 }
 .text-success { color: #3c763d; }
 .text-danger { color: #a94442; }
+.text-warning { color: #8a6d3b; }
 </style>

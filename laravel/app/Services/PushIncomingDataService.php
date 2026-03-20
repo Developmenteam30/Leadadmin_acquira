@@ -7,6 +7,7 @@ use App\Models\InboundFeed;
 use App\Models\OutboundFeed;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PushIncomingDataService
 {
@@ -45,6 +46,7 @@ class PushIncomingDataService
             'enabled' => false,
             'accepted' => false,
             'anyProcessed' => false,
+            'pendingMarketplace' => false,
             'reason' => null,
             'fields' => [],
         ];
@@ -59,8 +61,8 @@ class PushIncomingDataService
         ]);
 
         if (empty($feedsOut)) {
-            Log::channel('single')->info('[LiveFeed] No populations to process');
-            return ['reason' => null, 'fields' => []];
+            Log::channel('single')->info('[LiveFeed] No populations to process - pending');
+            return ['status' => 'pending', 'reason' => 'Lead received; no outgoing feed connections.', 'fields' => []];
         }
 
         foreach ($feedsOut as $pop) {
@@ -118,7 +120,8 @@ class PushIncomingDataService
             // Mark that we have live-type connection: if none accept, lead will be rejected
             $isPingFlow = ($feedOutModel->feedCategory ?? '') === 'phone-preping' && ($inboundFeed->feedCategory ?? '') === 'phone-preping';
             $isLiveType = $isPingFlow || in_array($pop->queueType ?? '', ['livedata', 'waterfall', 'waterfallLimitLive']);
-            if ($isLiveType && !$idFeedOut) {
+            $isMarketplace = ($feedOutModel->responseType ?? 'realtime') === 'marketplace';
+            if ($isLiveType && !$idFeedOut && !$isMarketplace) {
                 $liveData['enabled'] = true;
             }
 
@@ -139,16 +142,47 @@ class PushIncomingDataService
             }
 
             // Live types: push instantly and return outgoing response. For phone-preping (ping) flows, always use live for instant request-response.
-            $processed = ($isLiveType && !$idFeedOut) ? -1 : 0;
+            // Marketplace: add with webhookCallbackId, push fire-and-forget, return pending.
+            $webhookCallbackId = null;
+            $processed = ($isLiveType && !$idFeedOut && !$isMarketplace) ? -1 : 0;
+            if ($isMarketplace && !$idFeedOut) {
+                $webhookCallbackId = (string) Str::uuid();
+                $processed = 0;
+            }
 
             Log::channel('single')->info('[LiveFeed] Adding to data_outbound', [
                 'idRecord' => $idRecord,
                 'idFeedOut' => $popIdFeedOut,
                 'processed' => $processed,
                 'queueType' => $pop->queueType ?? null,
+                'isMarketplace' => $isMarketplace,
             ]);
 
-            self::addToDataOutbound($idRecord, $idFeedIn, $popIdFeedOut, $url, $processed);
+            self::addToDataOutbound($idRecord, $idFeedIn, $popIdFeedOut, $url, $processed, $webhookCallbackId);
+
+            if (!$idFeedOut && $isMarketplace) {
+                $liveData['pendingMarketplace'] = true;
+                if (!self::isWithinProcessingSchedule($pop)) {
+                    Log::channel('single')->info('[LiveFeed] Skip marketplace: outside processing schedule');
+                    continue;
+                }
+                if ($pop->queueType === 'waterfall' && $liveData['accepted']) {
+                    continue;
+                }
+                if ($pop->queueType === 'waterfallLimitLive' && $liveData['accepted']) {
+                    continue;
+                }
+                $record = self::getInboundRecord($idRecord);
+                if ($record) {
+                    $record->url = $url ?? $record->url;
+                    Log::channel('single')->info('[LiveFeed] Pushing to marketplace (fire-and-forget)', [
+                        'idFeedOut' => $popIdFeedOut,
+                        'callbackId' => $webhookCallbackId,
+                    ]);
+                    OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed, $webhookCallbackId);
+                }
+                continue;
+            }
 
             if (!$idFeedOut && $isLiveType) {
                 $liveData['enabled'] = true;
@@ -199,6 +233,11 @@ class PushIncomingDataService
                     Log::channel('single')->warning('[LiveFeed] Inbound record not found for push', ['idRecord' => $idRecord]);
                 }
             }
+        }
+
+        if ($liveData['pendingMarketplace'] && !$liveData['accepted']) {
+            Log::channel('single')->info('[LiveFeed] Result: pending (marketplace webhook)');
+            return ['status' => 'pending', 'reason' => 'Lead received; awaiting buyer response.', 'fields' => []];
         }
 
         if ($liveData['enabled']) {
@@ -328,19 +367,24 @@ class PushIncomingDataService
         return $url;
     }
 
-    protected static function addToDataOutbound(int $idRecord, int $idFeedIn, int $idFeedOut, ?string $url, int $processed = 0): void
+    protected static function addToDataOutbound(int $idRecord, int $idFeedIn, int $idFeedOut, ?string $url, int $processed = 0, ?string $webhookCallbackId = null): void
     {
         $parsedUrl = $url ? self::parseUrl($url) : null;
 
+        $insertData = [
+            'idRecord' => $idRecord,
+            'idRecordLegacy' => $idRecord,
+            'idFeedIn' => $idFeedIn,
+            'idFeedOut' => $idFeedOut,
+            'processed' => $processed,
+            'url' => $parsedUrl,
+        ];
+        if ($webhookCallbackId !== null) {
+            $insertData['webhookCallbackId'] = $webhookCallbackId;
+        }
+
         try {
-            DB::table('data_outbound')->insertOrIgnore([
-                'idRecord' => $idRecord,
-                'idRecordLegacy' => $idRecord,
-                'idFeedIn' => $idFeedIn,
-                'idFeedOut' => $idFeedOut,
-                'processed' => $processed,
-                'url' => $parsedUrl,
-            ]);
+            DB::table('data_outbound')->insertOrIgnore($insertData);
 
             if ($processed !== 1) {
                 DB::table('feedout')->where('idFeedOut', $idFeedOut)->increment('queued');
@@ -360,6 +404,15 @@ class PushIncomingDataService
     {
         $row = DB::table('data_inbound')->where('idRecord', $idRecord)->first();
         return $row ? (object) (array) $row : null;
+    }
+
+    /**
+     * Process webhook callback from marketplace buyer. Updates data_outbound and stats.
+     * Called by OutboundWebhookController.
+     */
+    public static function processWebhookCallback(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null): void
+    {
+        self::updateDataOutboundProcessed($idRecord, $idFeedOut, $accepted, $result, $cost);
     }
 
     protected static function updateDataOutboundProcessed(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null): void

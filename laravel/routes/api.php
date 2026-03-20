@@ -11,6 +11,10 @@ Route::post('/login', [LoginController::class, 'login']);
 // Public live feed API (no auth - uses pswd for validation)
 Route::post('/live/{idFeedIn}/feed', [LiveFeedController::class, 'submitLead']);
 
+// Public webhook for marketplace outbound feeds (auth via X-Webhook-Token or Bearer)
+// Lead ID (callbackId) is in the request body, not the URL
+Route::post('/webhooks/outbound', [\App\Http\Controllers\OutboundWebhookController::class, 'receive']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [LogoutController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);

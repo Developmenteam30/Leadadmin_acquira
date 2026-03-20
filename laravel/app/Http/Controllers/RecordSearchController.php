@@ -119,7 +119,8 @@ class RecordSearchController extends Controller
                 $query->where('i.timestamp', '<=', $endDate . ' 23:59:59');
             }
             // Accepted = result is NULL, '', or 'Success' (LiveFeed stores accepted leads with result='Success')
-            // Rejected = result has a non-empty rejection message
+            // Rejected = result has a non-empty rejection message (excludes Pending)
+            // Pending = result is 'Pending' (awaiting buyer response)
             if ($status === 'accepted') {
                 $query->where(function ($q) {
                     $q->whereNull('i.result')
@@ -129,7 +130,10 @@ class RecordSearchController extends Controller
             } elseif ($status === 'rejected') {
                 $query->whereNotNull('i.result')
                     ->where('i.result', '!=', '')
-                    ->where('i.result', '!=', 'Success');
+                    ->where('i.result', '!=', 'Success')
+                    ->where('i.result', '!=', 'Pending');
+            } elseif ($status === 'pending') {
+                $query->where('i.result', 'Pending');
             }
             if (!empty($idFeedIn)) {
                 $query->where('i.idFeedIn', $idFeedIn);
@@ -274,6 +278,7 @@ class RecordSearchController extends Controller
                     'o.idRecord',
                     'o.idFeedIn',
                     'o.idFeedOut',
+                    'o.processed',
                     'o.timestamp',
                     DB::raw("DATE_FORMAT(o.timestamp, '%Y-%m-%d %H:%i:%s') as timestampConverted"),
                     'o.result',
@@ -303,19 +308,23 @@ class RecordSearchController extends Controller
                     'i.rawData',
                     'i.cost as inboundCost'
                 )
-                ->orderByDesc('o.timestamp')
+                ->orderByRaw('COALESCE(o.timestamp, i.timestamp) DESC')
                 ->limit(500);
 
+            // Use inbound timestamp for pending records (o.timestamp may be null)
+            $tsCol = "COALESCE(o.timestamp, i.timestamp)";
             if (!empty($startDate)) {
-                $query->where('o.timestamp', '>=', $startDate . ' 00:00:00');
+                $query->whereRaw("{$tsCol} >= ?", [$startDate . ' 00:00:00']);
             }
             if (!empty($endDate)) {
-                $query->where('o.timestamp', '<=', $endDate . ' 23:59:59');
+                $query->whereRaw("{$tsCol} <= ?", [$endDate . ' 23:59:59']);
             }
             if ($status === 'accepted') {
-                $query->where('o.accepted', 1);
+                $query->where('o.accepted', 1)->where('o.processed', 1);
             } elseif ($status === 'rejected') {
-                $query->where('o.accepted', 0);
+                $query->where('o.accepted', 0)->where('o.processed', 1);
+            } elseif ($status === 'pending') {
+                $query->where('o.processed', 0);
             }
             if (!empty($idFeedOut)) {
                 $query->where('o.idFeedOut', $idFeedOut);

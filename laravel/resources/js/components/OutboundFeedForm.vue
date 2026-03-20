@@ -41,6 +41,22 @@
           </td>
         </tr>
         <tr>
+          <td><p>Response Type</p></td>
+          <td>
+            <p>Real-time: buyer responds immediately. Marketplace: buyer responds asynchronously via webhook.</p>
+            <p>
+              <label class="radio-label"><input type="radio" v-model="localFeed.responseType" value="realtime" /> Real-time</label>
+              <label class="radio-label"><input type="radio" v-model="localFeed.responseType" value="marketplace" /> Marketplace (webhook)</label>
+            </p>
+            <div v-if="localFeed.responseType === 'marketplace'" style="margin-top: 10px;">
+              <p><strong>Webhook Secret</strong> (required for webhook auth):</p>
+              <p><input type="text" v-model="localFeed.webhookSecret" class="form-control" maxlength="64" placeholder="Token for X-Webhook-Token header" style="max-width: 400px;" /></p>
+              <p class="text-muted">Provide this to the marketplace buyer. They must include it in the <code>X-Webhook-Token</code> or <code>Authorization: Bearer</code> header when calling the webhook.</p>
+              <p class="text-muted"><strong>Webhook URL:</strong> <code>POST /api/webhooks/outbound</code> — Include <code>leadId</code> (or <code>callbackId</code>) in the request body along with <code>status</code>, <code>reason</code>, and optional <code>cost</code>.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
           <td><p>Timezone</p></td>
           <td>
             <p>Specify what timezone to send the outgoing leads as. Please reference the posting docs or confirm with the client, as this may throw off their acceptance rates.</p>
@@ -306,6 +322,8 @@ export default {
       postUrl: props.feed.postUrl || '',
       timezone: props.feed.timezone || 'UTC',
       feedCategory: props.feed.feedCategory || 'email',
+      responseType: props.feed.responseType || 'realtime',
+      webhookSecret: props.feed.webhookSecret || '',
       status: props.feed.status || 'active',
       cron: props.feed.cron === '1' || props.feed.cron === true ? '1' : '0',
       cronTiming: props.feed.cronTiming || 1,
@@ -393,6 +411,8 @@ export default {
         localFeed.value.postUrl = newFeed.postUrl || '';
         localFeed.value.timezone = newFeed.timezone || 'UTC';
         localFeed.value.feedCategory = newFeed.feedCategory || 'email';
+        localFeed.value.responseType = newFeed.responseType || 'realtime';
+        localFeed.value.webhookSecret = newFeed.webhookSecret || '';
         localFeed.value.status = newFeed.status || 'active';
         localFeed.value.cron = newFeed.cron === '1' || newFeed.cron === 1 || newFeed.cron === true ? '1' : '0';
         localFeed.value.cronTiming = newFeed.cronTiming || 1;
