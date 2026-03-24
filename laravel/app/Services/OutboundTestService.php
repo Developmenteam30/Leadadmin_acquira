@@ -75,6 +75,17 @@ class OutboundTestService
             ];
         }
 
+        $preping = OutboundPushService::runPrepingIfEnabled($feed, $requestData);
+        if (!$preping['ok']) {
+            return [
+                'status' => false,
+                'headers' => [],
+                'querystring' => '',
+                'text' => $preping['text'],
+                'statusCode' => $preping['statusCode'],
+            ];
+        }
+
         try {
             $response = self::sendRequest($feed->feedType, $url, $requestData);
             $success = self::checkSuccess($feed, $response['body'], $response['statusCode']);

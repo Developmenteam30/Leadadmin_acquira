@@ -48,6 +48,11 @@ class OutboundFeed extends Model
         'varFieldsJSON',
         'timezone',
         'leadStatus',
+        'prepingEnabled',
+        'prepingUrl',
+        'prepingHttpMethod',
+        'prepingAuthType',
+        'prepingAuthValue',
     ];
 
     protected function casts(): array
@@ -69,6 +74,7 @@ class OutboundFeed extends Model
             'varFieldsJSON' => 'array',
             'launchDate' => 'date',
             'notifyThresholdLastSent' => 'datetime',
+            'prepingEnabled' => 'boolean',
         ];
     }
 

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\InboundFeed;
 use App\Models\OutboundFeed;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -148,13 +147,22 @@ class OutboundPushService
             return ['status' => false, 'text' => 'No post URL configured', 'fields' => []];
         }
 
+        $prepingResult = self::runPrepingIfEnabled($feed, $requestData);
+        if (!$prepingResult['ok']) {
+            Log::channel('single')->info('[LiveFeed] OutboundPush: Preping failed', [
+                'idFeedOut' => $feed->idFeedOut ?? null,
+                'text' => substr($prepingResult['text'], 0, 300),
+            ]);
+            return ['status' => false, 'text' => $prepingResult['text'], 'fields' => []];
+        }
+
         try {
             Log::channel('single')->info('[LiveFeed] OutboundPush: Sending request', [
                 'idFeedOut' => $feed->idFeedOut ?? null,
                 'feedType' => $feed->feedType ?? null,
                 'url' => $url,
             ]);
-            $response = self::sendRequest($feed->feedType, $url, $requestData);
+            $response = self::sendRequest($feed->feedType, $url, $requestData, []);
             $success = self::checkSuccess($feed, $response['body'], $response['statusCode']);
 
             // For ping feeds with costKey: parse cost from response, apply 124% rule
@@ -200,13 +208,85 @@ class OutboundPushService
         }
     }
 
-    protected static function sendRequest(string $feedType, string $url, array $data): array
+    /**
+     * When preping is enabled and prepingUrl is set, call preping first. Success = 2xx and JSON {"result":"true"}.
+     *
+     * @return array{ok: bool, text: string, statusCode: int|null}
+     */
+    public static function runPrepingIfEnabled(OutboundFeed $feed, array $requestData): array
+    {
+        $enabled = filter_var($feed->prepingEnabled ?? false, FILTER_VALIDATE_BOOLEAN);
+        $prepingUrl = trim((string) ($feed->prepingUrl ?? ''));
+        if (!$enabled || $prepingUrl === '') {
+            return ['ok' => true, 'text' => '', 'statusCode' => null];
+        }
+
+        $method = strtoupper((string) ($feed->prepingHttpMethod ?? 'POST'));
+        if (!in_array($method, ['GET', 'POST'], true)) {
+            $method = 'POST';
+        }
+        $headers = self::buildPrepingAuthHeaders($feed);
+        $effectiveFeedType = $method === 'GET' ? 'curlGET' : (string) ($feed->feedType ?? 'curlPOST');
+
+        try {
+            $response = self::sendRequest($effectiveFeedType, $prepingUrl, $requestData, $headers);
+            if (!self::prepingResponseAllowsContinue($response['body'], $response['statusCode'])) {
+                return [
+                    'ok' => false,
+                    'text' => sprintf(
+                        'Preping rejected or invalid response (HTTP %s): %s',
+                        $response['statusCode'],
+                        substr($response['body'], 0, 500)
+                    ),
+                    'statusCode' => $response['statusCode'],
+                ];
+            }
+
+            return ['ok' => true, 'text' => '', 'statusCode' => $response['statusCode']];
+        } catch (\Exception $e) {
+            return ['ok' => false, 'text' => 'Preping error: ' . $e->getMessage(), 'statusCode' => null];
+        }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected static function buildPrepingAuthHeaders(OutboundFeed $feed): array
+    {
+        $type = (string) ($feed->prepingAuthType ?? 'none');
+        $value = (string) ($feed->prepingAuthValue ?? '');
+
+        return match ($type) {
+            'bearer' => $value !== '' ? ['Authorization' => 'Bearer ' . $value] : [],
+            'basic' => $value !== '' ? ['Authorization' => 'Basic ' . base64_encode($value)] : [],
+            default => [],
+        };
+    }
+
+    protected static function prepingResponseAllowsContinue(string $body, int $statusCode): bool
+    {
+        if ($statusCode < 200 || $statusCode >= 300) {
+            return false;
+        }
+        $decoded = json_decode($body, true);
+
+        return is_array($decoded) && array_key_exists('result', $decoded) && $decoded['result'] === 'true';
+    }
+
+    /**
+     * @param  array<string, string>  $extraHeaders
+     */
+    public static function sendRequest(string $feedType, string $url, array $data, array $extraHeaders = []): array
     {
         switch ($feedType) {
             case 'curlGET':
                 $querystring = http_build_query($data);
                 $fullUrl = $url . (str_contains($url, '?') ? '&' : '?') . $querystring;
-                $response = Http::timeout(30)->get($fullUrl);
+                $client = Http::timeout(30);
+                if ($extraHeaders !== []) {
+                    $client = $client->withHeaders($extraHeaders);
+                }
+                $response = $client->get($fullUrl);
                 return [
                     'body' => $response->body(),
                     'statusCode' => $response->status(),
@@ -215,16 +295,22 @@ class OutboundPushService
 
             case 'curlPOST':
             case 'curlPOST-urlencoded':
-                $response = Http::asForm()->timeout(30)->post($url, $data);
+                $client = Http::timeout(30);
+                if ($extraHeaders !== []) {
+                    $client = $client->withHeaders($extraHeaders);
+                }
+                $response = $client->asForm()->post($url, $data);
                 return [
                     'body' => $response->body(),
                     'statusCode' => $response->status(),
                 ];
 
             case 'JSON':
-                $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                $headers = array_merge($extraHeaders, ['Content-Type' => 'application/json']);
+                $response = Http::timeout(30)
+                    ->withHeaders($headers)
                     ->withBody(json_encode($data), 'application/json')
-                    ->timeout(30)->post($url);
+                    ->post($url);
                 return [
                     'body' => $response->body(),
                     'statusCode' => $response->status(),
@@ -233,14 +319,22 @@ class OutboundPushService
             case 'csvString':
                 $csv = implode(',', array_map(fn ($v) => str_replace(',', '', $v), $data));
                 $fullUrl = $url . '?data=' . urlencode($csv);
-                $response = Http::timeout(30)->get($fullUrl);
+                $client = Http::timeout(30);
+                if ($extraHeaders !== []) {
+                    $client = $client->withHeaders($extraHeaders);
+                }
+                $response = $client->get($fullUrl);
                 return [
                     'body' => $response->body(),
                     'statusCode' => $response->status(),
                 ];
 
             default:
-                $response = Http::asForm()->timeout(30)->post($url, $data);
+                $client = Http::timeout(30);
+                if ($extraHeaders !== []) {
+                    $client = $client->withHeaders($extraHeaders);
+                }
+                $response = $client->asForm()->post($url, $data);
                 return [
                     'body' => $response->body(),
                     'statusCode' => $response->status(),

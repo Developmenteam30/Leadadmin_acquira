@@ -941,6 +941,11 @@ export default {
       urlassignments: [],
       xmlDTD: '',
       processingSchedule: defaultProcessingSchedule(),
+      prepingEnabled: '0',
+      prepingUrl: '',
+      prepingHttpMethod: 'POST',
+      prepingAuthType: 'none',
+      prepingAuthValue: '',
     });
 
     const filters = reactive({
@@ -980,6 +985,11 @@ export default {
       urlassignments: [],
       xmlDTD: '',
       processingSchedule: defaultProcessingSchedule(),
+      prepingEnabled: '0',
+      prepingUrl: '',
+      prepingHttpMethod: 'POST',
+      prepingAuthType: 'none',
+      prepingAuthValue: '',
     });
 
     const formatNumber = (num) => {
@@ -1427,6 +1437,11 @@ export default {
             urlassignments: (d.urlassignments || []).map((x) => ({ ...x, _id: Math.random().toString(36).slice(2) })),
             xmlDTD: d.xmlDTD || '',
             processingSchedule: d.processingSchedule || defaultProcessingSchedule(),
+            prepingEnabled: d.prepingEnabled === true || d.prepingEnabled === 1 || d.prepingEnabled === '1' ? '1' : '0',
+            prepingUrl: d.prepingUrl || '',
+            prepingHttpMethod: d.prepingHttpMethod === 'GET' ? 'GET' : 'POST',
+            prepingAuthType: ['none', 'bearer', 'basic'].includes(d.prepingAuthType) ? d.prepingAuthType : 'none',
+            prepingAuthValue: d.prepingAuthValue || '',
           });
           openAddModal();
         }
@@ -1779,6 +1794,11 @@ export default {
             staticFields: feedData.staticFields || [],
             varFields: feedData.varFields || [],
             valueMap: feedData.valueMap || [],
+            prepingEnabled: feedData.prepingEnabled === true || feedData.prepingEnabled === 1 || feedData.prepingEnabled === '1' ? '1' : '0',
+            prepingUrl: feedData.prepingUrl || '',
+            prepingHttpMethod: feedData.prepingHttpMethod === 'GET' ? 'GET' : 'POST',
+            prepingAuthType: ['none', 'bearer', 'basic'].includes(feedData.prepingAuthType) ? feedData.prepingAuthType : 'none',
+            prepingAuthValue: feedData.prepingAuthValue || '',
           });
           
           // Wait for Vue to update the reactive object - wait multiple ticks to ensure form renders
@@ -1835,6 +1855,11 @@ export default {
         staticFields: [],
         varFields: [],
         valueMap: [],
+        prepingEnabled: '0',
+        prepingUrl: '',
+        prepingHttpMethod: 'POST',
+        prepingAuthType: 'none',
+        prepingAuthValue: '',
       });
       if (window.$ && window.$('#editFeedModal')) {
         window.$('#editFeedModal').modal('hide');
@@ -1967,6 +1992,11 @@ export default {
           urlassignments: newFeed.urlassignments || [],
           xmlDTD: newFeed.xmlDTD?.trim() || null,
           processingSchedule: newFeed.processingSchedule || null,
+          prepingEnabled: newFeed.prepingEnabled === '1' || newFeed.prepingEnabled === true,
+          prepingUrl: newFeed.prepingUrl?.trim() || null,
+          prepingHttpMethod: newFeed.prepingHttpMethod || 'POST',
+          prepingAuthType: newFeed.prepingAuthType || 'none',
+          prepingAuthValue: newFeed.prepingAuthValue?.trim() || null,
         };
 
         const response = await axios.post('/api/outbound-feeds', payload);
@@ -2006,6 +2036,11 @@ export default {
             urlassignments: [],
             xmlDTD: '',
             processingSchedule: defaultProcessingSchedule(),
+            prepingEnabled: '0',
+            prepingUrl: '',
+            prepingHttpMethod: 'POST',
+            prepingAuthType: 'none',
+            prepingAuthValue: '',
           });
           await fetchFeeds();
         } else {
@@ -2073,6 +2108,11 @@ export default {
           urlassignments: editingFeed.urlassignments || [],
           xmlDTD: editingFeed.xmlDTD?.trim() || null,
           processingSchedule: editingFeed.processingSchedule || null,
+          prepingEnabled: editingFeed.prepingEnabled === '1' || editingFeed.prepingEnabled === true,
+          prepingUrl: editingFeed.prepingUrl?.trim() || null,
+          prepingHttpMethod: editingFeed.prepingHttpMethod || 'POST',
+          prepingAuthType: editingFeed.prepingAuthType || 'none',
+          prepingAuthValue: editingFeed.prepingAuthValue?.trim() || null,
         };
 
         const response = await axios.put(`/api/outbound-feeds/${editingFeed.idFeedOut}`, payload);

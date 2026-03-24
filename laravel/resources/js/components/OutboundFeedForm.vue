@@ -84,6 +84,39 @@
           </td>
         </tr>
         <tr>
+          <td><p>Preping (pre-flight)</p></td>
+          <td>
+            <p class="text-muted" style="margin-bottom: 8px;">Optional: call a URL before the real post. The send continues only if the response is HTTP 2xx and JSON includes <code>"result":"true"</code> (string). GET uses the same fields as a query string; POST uses the same encoding as Feed Type above.</p>
+            <label class="checkbox-label">
+              <input type="checkbox" :checked="localFeed.prepingEnabled === '1'" @change="localFeed.prepingEnabled = $event.target.checked ? '1' : '0'" />
+              Enable preping
+            </label>
+            <div v-if="localFeed.prepingEnabled === '1'" style="margin-top: 12px;">
+              <p><label>Preping URL</label></p>
+              <p><input type="text" v-model="localFeed.prepingUrl" class="form-control input-long" maxlength="1000" placeholder="https://..." /></p>
+              <p style="margin-top: 10px;"><label>HTTP method</label></p>
+              <p>
+                <select v-model="localFeed.prepingHttpMethod" class="form-control" style="max-width: 200px;">
+                  <option value="POST">POST</option>
+                  <option value="GET">GET</option>
+                </select>
+              </p>
+              <p style="margin-top: 10px;"><label>Authorization</label></p>
+              <p>
+                <select v-model="localFeed.prepingAuthType" class="form-control" style="max-width: 280px;">
+                  <option value="none">None</option>
+                  <option value="bearer">Bearer</option>
+                  <option value="basic">Basic (user:password)</option>
+                </select>
+              </p>
+              <p v-if="localFeed.prepingAuthType !== 'none'" style="margin-top: 10px;">
+                <label>Credential</label>
+                <input type="text" v-model="localFeed.prepingAuthValue" class="form-control input-long" autocomplete="off" placeholder="Token, or user:password for Basic" />
+              </p>
+            </div>
+          </td>
+        </tr>
+        <tr>
           <td><p>Static Fields</p></td>
           <td>
             <p>These are fields that are assigned values specific to this feed, usually provided by the receiving client.</p>
@@ -347,6 +380,11 @@ export default {
       urlassignments: normalizeArray(props.feed.urlassignments, { url: '', id: '' }),
       xmlDTD: props.feed.xmlDTD || '',
       processingSchedule: props.feed.processingSchedule ? { ...props.feed.processingSchedule } : defaultProcessingSchedule(),
+      prepingEnabled: props.feed.prepingEnabled === true || props.feed.prepingEnabled === 1 || props.feed.prepingEnabled === '1' ? '1' : '0',
+      prepingUrl: props.feed.prepingUrl || '',
+      prepingHttpMethod: props.feed.prepingHttpMethod === 'GET' ? 'GET' : 'POST',
+      prepingAuthType: ['none', 'bearer', 'basic'].includes(props.feed.prepingAuthType) ? props.feed.prepingAuthType : 'none',
+      prepingAuthValue: props.feed.prepingAuthValue || '',
     });
 
     const staticFieldsList = computed(() => localFeed.value.staticFields || []);
@@ -436,6 +474,11 @@ export default {
         localFeed.value.urlassignments = normalizeArray(newFeed.urlassignments, { url: '', id: '' });
         localFeed.value.xmlDTD = newFeed.xmlDTD || '';
         localFeed.value.processingSchedule = newFeed.processingSchedule ? { ...newFeed.processingSchedule } : defaultProcessingSchedule();
+        localFeed.value.prepingEnabled = newFeed.prepingEnabled === true || newFeed.prepingEnabled === 1 || newFeed.prepingEnabled === '1' ? '1' : '0';
+        localFeed.value.prepingUrl = newFeed.prepingUrl || '';
+        localFeed.value.prepingHttpMethod = newFeed.prepingHttpMethod === 'GET' ? 'GET' : 'POST';
+        localFeed.value.prepingAuthType = ['none', 'bearer', 'basic'].includes(newFeed.prepingAuthType) ? newFeed.prepingAuthType : 'none';
+        localFeed.value.prepingAuthValue = newFeed.prepingAuthValue || '';
       }
     }, { deep: true, immediate: true });
 

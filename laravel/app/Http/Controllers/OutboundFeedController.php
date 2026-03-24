@@ -8,6 +8,7 @@ use App\Helpers\CompanyScope;
 use App\Services\OutboundTestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class OutboundFeedController extends Controller
 {
@@ -384,6 +385,21 @@ class OutboundFeedController extends Controller
                 'feedType' => 'required|string|in:curlPOST,curlGET,JSON,csvString,soapPOST,curlPOST-urlencoded,xmlPOST',
                 'postUrl' => 'required|string|max:1000',
                 'timezone' => 'required|string',
+                'prepingEnabled' => 'sometimes|boolean',
+                'prepingUrl' => [
+                    Rule::requiredIf(fn () => $request->boolean('prepingEnabled')),
+                    'nullable',
+                    'string',
+                    'max:1000',
+                ],
+                'prepingHttpMethod' => 'nullable|string|in:GET,POST',
+                'prepingAuthType' => 'nullable|string|in:none,bearer,basic',
+                'prepingAuthValue' => [
+                    Rule::requiredIf(fn () => $request->boolean('prepingEnabled')
+                        && in_array($request->input('prepingAuthType', 'none'), ['bearer', 'basic'], true)),
+                    'nullable',
+                    'string',
+                ],
             ]);
 
             // Process staticFieldsJSON
@@ -492,6 +508,8 @@ class OutboundFeedController extends Controller
                 }
             }
 
+            $prepingAttrs = $this->prepingAttributesFromRequest($request);
+
             $updateData = [
                 'label' => trim($request->label),
                 'description' => $request->description ? trim($request->description) : null,
@@ -526,6 +544,11 @@ class OutboundFeedController extends Controller
                 'processingSchedule' => $request->has('processingSchedule') ? $processingSchedule : $feed->processingSchedule,
                 'timezone' => $request->timezone ?? 'UTC',
                 'leadStatus' => $request->leadStatus ? trim($request->leadStatus) : null,
+                'prepingEnabled' => $prepingAttrs['prepingEnabled'],
+                'prepingUrl' => $prepingAttrs['prepingUrl'],
+                'prepingHttpMethod' => $prepingAttrs['prepingHttpMethod'],
+                'prepingAuthType' => $prepingAttrs['prepingAuthType'],
+                'prepingAuthValue' => $prepingAttrs['prepingAuthValue'],
             ];
             $feed->update($updateData);
 
@@ -648,6 +671,21 @@ class OutboundFeedController extends Controller
                 'feedType' => 'required|string|in:curlPOST,curlGET,JSON,csvString,soapPOST,curlPOST-urlencoded,xmlPOST',
                 'postUrl' => 'required|string|max:1000',
                 'timezone' => 'required|string',
+                'prepingEnabled' => 'sometimes|boolean',
+                'prepingUrl' => [
+                    Rule::requiredIf(fn () => $request->boolean('prepingEnabled')),
+                    'nullable',
+                    'string',
+                    'max:1000',
+                ],
+                'prepingHttpMethod' => 'nullable|string|in:GET,POST',
+                'prepingAuthType' => 'nullable|string|in:none,bearer,basic',
+                'prepingAuthValue' => [
+                    Rule::requiredIf(fn () => $request->boolean('prepingEnabled')
+                        && in_array($request->input('prepingAuthType', 'none'), ['bearer', 'basic'], true)),
+                    'nullable',
+                    'string',
+                ],
             ]);
 
             // Process staticFieldsJSON
@@ -699,6 +737,8 @@ class OutboundFeedController extends Controller
                     $valueMap = json_encode($valueMapArray);
                 }
             }
+
+            $prepingAttrs = $this->prepingAttributesFromRequest($request);
 
             // Process notifyThresholdDays
             $notifyThresholdDays = null;
@@ -791,6 +831,11 @@ class OutboundFeedController extends Controller
                 'processingSchedule' => $processingSchedule,
                 'timezone' => $request->timezone ?? 'UTC',
                 'leadStatus' => $request->leadStatus ? trim($request->leadStatus) : null,
+                'prepingEnabled' => $prepingAttrs['prepingEnabled'],
+                'prepingUrl' => $prepingAttrs['prepingUrl'],
+                'prepingHttpMethod' => $prepingAttrs['prepingHttpMethod'],
+                'prepingAuthType' => $prepingAttrs['prepingAuthType'],
+                'prepingAuthValue' => $prepingAttrs['prepingAuthValue'],
             ]);
 
             return response()->json([
@@ -1153,6 +1198,36 @@ class OutboundFeedController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 0, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Normalize preping columns from request (store/update).
+     *
+     * @return array{prepingEnabled: bool, prepingUrl: ?string, prepingHttpMethod: string, prepingAuthType: string, prepingAuthValue: ?string}
+     */
+    private function prepingAttributesFromRequest(Request $request): array
+    {
+        $prepingEnabled = $request->boolean('prepingEnabled');
+        $method = strtoupper((string) $request->input('prepingHttpMethod', 'POST'));
+        if (!in_array($method, ['GET', 'POST'], true)) {
+            $method = 'POST';
+        }
+        $authType = $request->input('prepingAuthType', 'none');
+        if (!in_array($authType, ['none', 'bearer', 'basic'], true)) {
+            $authType = 'none';
+        }
+        $authValue = null;
+        if (in_array($authType, ['bearer', 'basic'], true) && $request->filled('prepingAuthValue')) {
+            $authValue = trim((string) $request->prepingAuthValue);
+        }
+
+        return [
+            'prepingEnabled' => $prepingEnabled,
+            'prepingUrl' => $request->filled('prepingUrl') ? trim((string) $request->prepingUrl) : null,
+            'prepingHttpMethod' => $method,
+            'prepingAuthType' => $authType,
+            'prepingAuthValue' => $authValue,
+        ];
     }
 
     /**
