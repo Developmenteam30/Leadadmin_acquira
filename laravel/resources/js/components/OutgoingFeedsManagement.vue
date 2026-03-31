@@ -963,6 +963,8 @@ export default {
       postUrl: '',
       timezone: 'America/New_York',
       feedCategory: 'email',
+      responseType: 'realtime',
+      webhookSecret: '',
       status: 'active',
       cron: '0',
       cronTiming: 1,

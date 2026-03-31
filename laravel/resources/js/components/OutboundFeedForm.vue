@@ -48,11 +48,27 @@
               <label class="radio-label"><input type="radio" v-model="localFeed.responseType" value="realtime" /> Real-time</label>
               <label class="radio-label"><input type="radio" v-model="localFeed.responseType" value="marketplace" /> Marketplace (webhook)</label>
             </p>
-            <div v-if="localFeed.responseType === 'marketplace'" style="margin-top: 10px;">
-              <p><strong>Webhook Secret</strong> (required for webhook auth):</p>
-              <p><input type="text" v-model="localFeed.webhookSecret" class="form-control" maxlength="64" placeholder="Token for X-Webhook-Token header" style="max-width: 400px;" /></p>
-              <p class="text-muted">Provide this to the marketplace buyer. They must include it in the <code>X-Webhook-Token</code> or <code>Authorization: Bearer</code> header when calling the webhook.</p>
-              <p class="text-muted"><strong>Webhook URL:</strong> <code>POST /api/webhooks/outbound</code> — Include <code>leadId</code> (or <code>callbackId</code>) in the request body along with <code>status</code>, <code>reason</code>, and optional <code>cost</code>.</p>
+            <div v-if="localFeed.responseType === 'marketplace'" class="webhook-client-box" style="margin-top: 12px;">
+              <p><strong>Webhook secret</strong> (required for auth — auto-generated when you choose Marketplace; use Regenerate if needed):</p>
+              <p class="webhook-secret-row">
+                <input type="text" v-model="localFeed.webhookSecret" class="form-control" maxlength="64" placeholder="Token" style="max-width: 420px; display: inline-block; vertical-align: middle;" />
+                <button type="button" class="btn btn-default btn-sm" style="margin-left: 6px;" @click="regenerateWebhookSecret">Regenerate</button>
+                <button type="button" class="btn btn-default btn-sm" @click="copyText(localFeed.webhookSecret, 'secret')">Copy secret</button>
+                <span v-if="copyFeedback === 'secret'" class="text-success" style="margin-left: 6px;">Copied</span>
+              </p>
+              <p style="margin-top: 12px;"><strong>Webhook URL</strong> (full URL — send this to the buyer):</p>
+              <p class="webhook-url-row">
+                <input type="text" readonly :value="webhookOutboundFullUrl" class="form-control" style="max-width: 100%; font-family: monospace; font-size: 12px; display: inline-block; vertical-align: middle; max-width: min(100%, 560px);" />
+                <button type="button" class="btn btn-primary btn-sm" style="margin-left: 6px;" @click="copyText(webhookOutboundFullUrl, 'url')">Copy URL</button>
+                <span v-if="copyFeedback === 'url'" class="text-success" style="margin-left: 6px;">Copied</span>
+              </p>
+              <p class="text-muted" style="margin-top: 8px;">The buyer must send <code>POST</code> to this URL with header <code>X-Webhook-Token: &lt;secret&gt;</code> or <code>Authorization: Bearer &lt;secret&gt;</code>, and JSON body including <code>leadId</code> (or <code>callbackId</code>), <code>status</code>, <code>reason</code>, and optional <code>cost</code>.</p>
+              <p style="margin-top: 10px;"><strong>Copy for client</strong> (method, URL, headers, sample body):</p>
+              <div class="webhook-copy-block-wrap">
+                <pre class="webhook-copy-block">{{ clientWebhookInstructions }}</pre>
+                <button type="button" class="btn btn-default btn-sm" @click="copyText(clientWebhookInstructions, 'block')">Copy all</button>
+                <span v-if="copyFeedback === 'block'" class="text-success" style="margin-left: 6px;">Copied</span>
+              </div>
             </div>
           </td>
         </tr>
@@ -84,7 +100,7 @@
           </td>
         </tr>
         <tr>
-          <td><p>Preping (pre-flight)</p></td>
+          <td><p>Preping </p></td>
           <td>
             <p class="text-muted" style="margin-bottom: 8px;">Optional: call a URL before the real post. The send continues only if the response is HTTP 2xx and JSON includes <code>"result":"true"</code> (string). GET uses the same fields as a query string; POST uses the same encoding as Feed Type above.</p>
             <label class="checkbox-label">
@@ -310,7 +326,7 @@
 </template>
 
 <script>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 
 let _uid = 0;
 const nextId = () => `dyn-${Date.now()}-${++_uid}`;
@@ -393,6 +409,97 @@ export default {
     const urlassignmentsList = computed(() => localFeed.value.urlassignments || []);
 
     const isEmitting = ref(false);
+    const copyFeedback = ref(null);
+    let copyFeedbackTimer = null;
+
+    const getAppBaseUrl = () => {
+      const meta = typeof document !== 'undefined' ? document.querySelector('meta[name="app-url"]') : null;
+      const fromMeta = meta?.content?.trim();
+      if (fromMeta) {
+        return fromMeta.replace(/\/$/, '');
+      }
+      if (typeof window !== 'undefined' && window.location?.origin) {
+        return window.location.origin;
+      }
+      return '';
+    };
+
+    const webhookOutboundFullUrl = computed(() => {
+      const base = getAppBaseUrl();
+      if (!base) {
+        return '/api/webhooks/outbound';
+      }
+      return `${base}/api/webhooks/outbound`;
+    });
+
+    const clientWebhookInstructions = computed(() => {
+      const url = webhookOutboundFullUrl.value;
+      const secret = localFeed.value.webhookSecret?.trim() || '<YOUR_WEBHOOK_SECRET>';
+      return [
+        `POST ${url}`,
+        'Content-Type: application/json',
+        `X-Webhook-Token: ${secret}`,
+        '',
+        'Alternatively use: Authorization: Bearer ' + secret,
+        '',
+        'Body (JSON):',
+        '{',
+        '  "leadId": "<callbackId from the lead post response>",',
+        '  "status": "accepted",',
+        '  "reason": "Optional message",',
+        '  "cost": 0',
+        '}',
+      ].join('\n');
+    });
+
+    function generateWebhookSecret() {
+      const arr = new Uint8Array(24);
+      crypto.getRandomValues(arr);
+      return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function regenerateWebhookSecret() {
+      localFeed.value.webhookSecret = generateWebhookSecret();
+    }
+
+    async function copyText(text, key) {
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyFeedback.value = key;
+        if (copyFeedbackTimer) clearTimeout(copyFeedbackTimer);
+        copyFeedbackTimer = setTimeout(() => {
+          copyFeedback.value = null;
+        }, 2000);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        copyFeedback.value = key;
+        if (copyFeedbackTimer) clearTimeout(copyFeedbackTimer);
+        copyFeedbackTimer = setTimeout(() => {
+          copyFeedback.value = null;
+        }, 2000);
+      }
+    }
+
+    watch(
+      () => localFeed.value.responseType,
+      (rt) => {
+        if (rt === 'marketplace' && !String(localFeed.value.webhookSecret || '').trim()) {
+          localFeed.value.webhookSecret = generateWebhookSecret();
+        }
+      }
+    );
+
+    onMounted(() => {
+      if (localFeed.value.responseType === 'marketplace' && !String(localFeed.value.webhookSecret || '').trim()) {
+        localFeed.value.webhookSecret = generateWebhookSecret();
+      }
+    });
 
     const emitUpdate = () => {
       isEmitting.value = true;
@@ -491,6 +598,11 @@ export default {
       urlassignmentsList,
       dayNames,
       scheduleDayNames,
+      webhookOutboundFullUrl,
+      clientWebhookInstructions,
+      copyFeedback,
+      regenerateWebhookSecret,
+      copyText,
       addStaticField,
       removeStaticField,
       addMappedField,
@@ -537,6 +649,29 @@ small { display: block; color: #666; margin-top: 5px; }
 .field-row .form-control { display: inline-block; }
 .field-row span { white-space: nowrap; flex-shrink: 0; }
 .field-rows { overflow-x: auto; }
+.webhook-client-box {
+  padding: 12px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  max-width: 640px;
+}
+.webhook-copy-block-wrap { position: relative; margin-top: 6px; }
+.webhook-copy-block {
+  display: block;
+  margin: 0 0 8px 0;
+  padding: 10px;
+  font-size: 12px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 220px;
+  overflow: auto;
+}
+.webhook-secret-row .btn,
+.webhook-url-row .btn { vertical-align: middle; }
 .schedule-table { width: 100%; }
 .schedule-table td { width: 14%; padding: 5px; }
 .schedule-table input { width: 100%; margin-bottom: 4px; }
