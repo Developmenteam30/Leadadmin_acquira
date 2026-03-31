@@ -528,7 +528,7 @@ class OutboundFeedController extends Controller
                 'delay' => $request->delay ? (int)$request->delay : null,
                 'status' => $request->status ?? 'active',
                 'feedCategory' => $request->feedCategory ?? 'email',
-                'responseType' => in_array($request->responseType ?? 'realtime', ['realtime', 'marketplace']) ? $request->responseType : 'realtime',
+                'responseType' => $this->normalizeResponseType($request->input('responseType')),
                 'webhookSecret' => $request->webhookSecret ? trim($request->webhookSecret) : null,
                 'delayDump' => $request->has('delayDump') && ($request->delayDump === '1' || $request->delayDump === true) ? 1 : 0,
                 'notifyThresholdCount' => $request->notifyThresholdCount ? (int)$request->notifyThresholdCount : 0,
@@ -815,7 +815,7 @@ class OutboundFeedController extends Controller
                 'queued' => 0,
                 'status' => $request->status ?? 'active',
                 'feedCategory' => $request->feedCategory ?? 'email',
-                'responseType' => in_array($request->responseType ?? 'realtime', ['realtime', 'marketplace']) ? $request->responseType : 'realtime',
+                'responseType' => $this->normalizeResponseType($request->input('responseType')),
                 'webhookSecret' => $request->webhookSecret ? trim($request->webhookSecret) : null,
                 'delayDump' => $request->has('delayDump') && ($request->delayDump === '1' || $request->delayDump === true) ? 1 : 0,
                 'notifyThresholdCount' => $request->notifyThresholdCount ? (int)$request->notifyThresholdCount : 0,
@@ -1198,6 +1198,18 @@ class OutboundFeedController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 0, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Ensure responseType is always a valid non-null ENUM value for MySQL.
+     */
+    private function normalizeResponseType(mixed $value): string
+    {
+        if (is_string($value) && in_array($value, ['realtime', 'marketplace'], true)) {
+            return $value;
+        }
+
+        return 'realtime';
     }
 
     /**

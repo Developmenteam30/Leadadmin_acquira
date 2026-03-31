@@ -353,7 +353,7 @@ export default {
       idCompany: props.feed.idCompany || '',
       feedType: props.feed.feedType || 'curlPOST',
       postUrl: props.feed.postUrl || '',
-      timezone: props.feed.timezone || 'UTC',
+      timezone: props.feed.timezone || 'America/New_York',
       feedCategory: props.feed.feedCategory || 'email',
       responseType: props.feed.responseType || 'realtime',
       webhookSecret: props.feed.webhookSecret || '',
