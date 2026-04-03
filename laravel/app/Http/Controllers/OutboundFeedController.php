@@ -19,7 +19,7 @@ class OutboundFeedController extends Controller
     {
         try {
             $status = $request->input('status');
-            $feedCategory = $request->input('feedCategory', 'email'); // Default to email
+            $feedCategory = $request->input('feedCategory');
             $statsStart = $request->input('statsStart', date('Y-m-d', strtotime('-30 days')));
             $statsEnd = $request->input('statsEnd', date('Y-m-d'));
 
@@ -31,7 +31,7 @@ class OutboundFeedController extends Controller
                 $query->where('feedout.status', $status);
             }
 
-            if ($feedCategory) {
+            if ($feedCategory !== null && $feedCategory !== '') {
                 $query->where('feedout.feedCategory', $feedCategory);
             }
 

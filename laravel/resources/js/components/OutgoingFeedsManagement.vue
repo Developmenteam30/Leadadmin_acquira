@@ -56,7 +56,7 @@
       </div>
 
       <div v-else>
-        <h4>Outgoing Email Feeds</h4>
+        <h4>Outgoing Feeds</h4>
         <table class="table table-bordered table-condensed table-striped">
           <thead>
             <tr class="bgGray">
@@ -950,7 +950,6 @@ export default {
 
     const filters = reactive({
       status: 'active',
-      feedCategory: 'email',
       statsStart: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       statsEnd: new Date().toISOString().split('T')[0],
     });
@@ -1002,7 +1001,6 @@ export default {
       loading.value = true;
       try {
         const params = {
-          feedCategory: filters.feedCategory,
           statsStart: filters.statsStart,
           statsEnd: filters.statsEnd,
         };
