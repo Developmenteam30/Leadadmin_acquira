@@ -524,7 +524,7 @@
                         <tr class="bgGray">
                           <th>Order</th>
                           <th>Outgoing Feed</th>
-                          <th>Queue Type</th>
+                          <th>Response type</th>
                           <th>Status</th>
                           <th>Actions</th>
                         </tr>
@@ -533,7 +533,7 @@
                         <tr v-for="p in outgoingFeedsPopulations" :key="p.idAssoc">
                           <td>{{ p.order ?? '—' }}</td>
                           <td>{{ p.populatingFeed || p.outboundLabel }}</td>
-                          <td>{{ p.queueType }}</td>
+                          <td>{{ formatOutboundResponseType(p.responseType) }}</td>
                           <td>
                             <label class="switch">
                               <input
@@ -588,12 +588,12 @@
                     <div v-if="pendingOutgoingFeeds.length" class="mt-3">
                       <strong>To be saved ({{ pendingOutgoingFeeds.length }}):</strong>
                       <table class="table table-bordered table-condensed table-striped mt-2">
-                        <thead><tr><th>Order</th><th>Outgoing Feed</th><th>Queue Type</th><th></th></tr></thead>
+                        <thead><tr><th>Order</th><th>Outgoing Feed</th><th>Response type</th><th></th></tr></thead>
                         <tbody>
                           <tr v-for="(item, idx) in pendingOutgoingFeeds" :key="item.tempId">
                             <td>{{ idx + 1 }}</td>
                             <td>{{ item.displayLabel }}</td>
-                            <td>{{ item.queueType }}</td>
+                            <td>{{ formatOutboundResponseType(item.outboundResponseType) }}</td>
                             <td><button type="button" class="btn btn-xs btn-danger" @click="removeFromPendingOutgoingFeeds(item.tempId)">Remove</button></td>
                           </tr>
                         </tbody>
@@ -605,6 +605,12 @@
                   <div class="add-pop-heading">Outgoing Feed</div>
                   <div class="add-pop-content">
                     <p class="add-pop-readonly">{{ addOutgoingFeedModal.editFeedLabel || '—' }}</p>
+                    <p class="add-pop-heading" style="margin-top: 10px; font-size: 12px;">Response type</p>
+                    <select class="form-control input-sm" style="max-width: 220px;" disabled :value="addOutgoingFeedModal.editOutboundResponseType || 'realtime'">
+                      <option value="realtime">{{ formatOutboundResponseType('realtime') }}</option>
+                      <option value="marketplace">{{ formatOutboundResponseType('marketplace') }}</option>
+                    </select>
+                    <p class="add-pop-desc text-muted" style="margin-top: 6px;">Defined on the outgoing feed; change it in Outgoing Feeds if needed.</p>
                   </div>
                 </div>
 
@@ -905,6 +911,9 @@ export default {
       return new Intl.NumberFormat().format(num);
     };
 
+    /** Outgoing feed responseType: realtime vs marketplace (set on the outbound feed, not the population). */
+    const formatOutboundResponseType = (rt) => (rt === 'marketplace' ? 'Marketplace (webhook)' : 'Real-time');
+
     const recordSearchLink = (idCompany, idFeedIn, status) => {
       const query = {
         startDate: filters.statsStart,
@@ -1037,6 +1046,7 @@ export default {
       show: false,
       editId: null,
       editFeedLabel: '',
+      editOutboundResponseType: 'realtime',
       idFeedOut: '',
       order: 1,
       queueType: 'waterfall',
@@ -1099,6 +1109,7 @@ export default {
     const openAddOutgoingFeedModal = () => {
       addOutgoingFeedModal.editId = null;
       addOutgoingFeedModal.editFeedLabel = '';
+      addOutgoingFeedModal.editOutboundResponseType = 'realtime';
       addOutgoingFeedModal.idFeedOut = '';
       addOutgoingFeedModal.queueType = 'waterfall';
       addOutgoingFeedModal.enabled = '1';
@@ -1132,6 +1143,7 @@ export default {
         tempId: ++tempIdCounter,
         idFeedOut: addOutgoingFeedModal.idFeedOut,
         displayLabel,
+        outboundResponseType: feed?.responseType || 'realtime',
         queueType: addOutgoingFeedModal.queueType,
         enabled: addOutgoingFeedModal.enabled,
         filterTypeUrl: addOutgoingFeedModal.filterTypeUrl || null,
@@ -1155,6 +1167,7 @@ export default {
     const openEditOutgoingFeedModal = (p) => {
       addOutgoingFeedModal.editId = p.idAssoc;
       addOutgoingFeedModal.editFeedLabel = p.populatingFeed || p.outboundLabel;
+      addOutgoingFeedModal.editOutboundResponseType = p.responseType || 'realtime';
       addOutgoingFeedModal.idFeedOut = p.idFeedOut;
       addOutgoingFeedModal.queueType = p.queueType || 'waterfall';
       addOutgoingFeedModal.enabled = p.enabled || '1';
@@ -1910,6 +1923,7 @@ export default {
       openDropdownFeedId,
       toggleFeedDropdown,
       formatNumber,
+      formatOutboundResponseType,
       recordSearchLink,
       fetchFeeds,
       toggleCompanyFeeds,

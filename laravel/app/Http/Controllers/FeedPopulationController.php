@@ -80,16 +80,21 @@ class FeedPopulationController extends Controller
             $feeds = OutboundFeed::where('status', 'active')
                 ->with('company:idCompany,name')
                 ->orderBy('label')
-                ->get(['idFeedOut', 'label', 'description', 'idCompany', 'feedCategory']);
+                ->get(['idFeedOut', 'label', 'description', 'idCompany', 'feedCategory', 'responseType']);
 
             $data = $feeds->map(function ($f) {
+                $companyLabel = trim(($f->company?->name ?? '') . ' - ' . $f->label);
+                $rt = $f->responseType ?? 'realtime';
+                $rtLabel = $rt === 'marketplace' ? 'Marketplace' : 'Real-time';
+
                 return [
                     'idFeedOut' => $f->idFeedOut,
                     'label' => $f->label,
                     'description' => $f->description,
                     'feedCategory' => $f->feedCategory,
+                    'responseType' => $rt,
                     'companyName' => $f->company?->name ?? '',
-                    'displayLabel' => trim(($f->company?->name ?? '') . ' - ' . $f->label),
+                    'displayLabel' => $companyLabel . ' (' . $rtLabel . ')',
                 ];
             });
 
@@ -130,6 +135,7 @@ class FeedPopulationController extends Controller
                 $item['filterListcodeDisplay'] = $p->filterTypeListcode === null ? 'Disabled' : ($p->filterTypeListcode === 'accept' ? 'Accepting: ' : 'Rejecting: ') . ($p->filterListcode ? implode(', ', explode(';', $p->filterListcode)) : '');
                 $item['forceUrlDisplay'] = $p->forceUrl ? 'On' : 'Off';
                 $item['forceUrlListDisplay'] = empty($p->forceUrlList) ? 'No urls assigned for force urls.' : str_replace(';', "\n", $p->forceUrlList);
+                $item['responseType'] = $p->outboundFeed?->responseType ?? 'realtime';
                 return $item;
             });
 
