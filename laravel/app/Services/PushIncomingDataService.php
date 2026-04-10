@@ -15,16 +15,14 @@ class PushIncomingDataService
      * Push incoming lead data to outgoing feeds based on population settings.
      * Called after a lead is stored in data_inbound.
      *
-     * Acceptance rules:
-     * - No connection to outgoing feeds → accepted (reason = null)
-     * - Has connection but no outgoing feed accepts (all reject, skip, or filter out) → rejected (reason set)
-     * - At least one outgoing feed accepts → accepted (reason = null)
+     * buyerAccepted is true only when a realtime outbound path accepts in sync.
+     * Pending, queue-only, rejections, and invalid feed all return buyerAccepted false.
      *
      * @param int $idRecord The idRecord from data_inbound
      * @param int $idFeedIn Inbound feed ID
      * @param array $data Request data (url, email, listcode, etc.)
      * @param int|null $idFeedOut If set, force to this specific outbound feed only
-     * @return array ['reason' => string|null, 'fields' => array]
+     * @return array ['reason' => string|null, 'fields' => array, 'buyerAccepted' => bool, ...]
      */
     public static function pushToOutgoingFeeds(int $idRecord, int $idFeedIn, array $data, ?int $idFeedOut = null): array
     {
@@ -37,7 +35,7 @@ class PushIncomingDataService
         $inboundFeed = InboundFeed::with('company')->find($idFeedIn);
         if (!$inboundFeed) {
             Log::channel('single')->warning('[LiveFeed] Invalid inbound feed', ['idFeedIn' => $idFeedIn]);
-            return ['reason' => 'Invalid feed', 'fields' => []];
+            return ['reason' => 'Invalid feed', 'fields' => [], 'buyerAccepted' => false];
         }
 
         $data['originalUrl'] = $data['url'] ?? '';
@@ -47,6 +45,7 @@ class PushIncomingDataService
             'accepted' => false,
             'anyProcessed' => false,
             'pendingMarketplace' => false,
+            'pingRealtimeFailed' => false,
             'reason' => null,
             'fields' => [],
         ];
@@ -62,7 +61,7 @@ class PushIncomingDataService
 
         if (empty($feedsOut)) {
             Log::channel('single')->info('[LiveFeed] No populations to process - pending');
-            return ['status' => 'pending', 'reason' => 'Lead received; no outgoing feed connections.', 'fields' => []];
+            return ['status' => 'pending', 'reason' => 'Lead received; no outgoing feed connections.', 'fields' => [], 'buyerAccepted' => false];
         }
 
         foreach ($feedsOut as $pop) {
@@ -141,6 +140,12 @@ class PushIncomingDataService
                 $url = self::applyUrlRewrite($url, $pop->forceUrlList);
             }
 
+            // Do not send to marketplace if phone-preping realtime ping already failed
+            if (!$idFeedOut && $isMarketplace && !empty($liveData['pingRealtimeFailed'])) {
+                Log::channel('single')->info('[LiveFeed] Skip marketplace: ping realtime failed');
+                continue;
+            }
+
             // Live types: push instantly and return outgoing response. For phone-preping (ping) flows, always use live for instant request-response.
             // Marketplace: add with webhookCallbackId, push fire-and-forget, return pending.
             $webhookCallbackId = null;
@@ -217,6 +222,9 @@ class PushIncomingDataService
                     $liveData['anyProcessed'] = true;
                     if (!($result['status'] ?? false)) {
                         $liveData['reason'] = sprintf('Third-party rejection [Reason: %s] [Code: O%s0]', $result['text'] ?? 'Unknown', $popIdFeedOut);
+                        if ($isPingFlow) {
+                            $liveData['pingRealtimeFailed'] = true;
+                        }
                     } else {
                         $liveData['accepted'] = true;
                         $liveData['fields'] = $result['fields'] ?? [];
@@ -237,24 +245,24 @@ class PushIncomingDataService
 
         if ($liveData['pendingMarketplace'] && !$liveData['accepted']) {
             Log::channel('single')->info('[LiveFeed] Result: pending (marketplace webhook)');
-            return ['status' => 'pending', 'reason' => 'Lead received; awaiting buyer response.', 'fields' => []];
+            return ['status' => 'pending', 'reason' => 'Lead received; awaiting buyer response.', 'fields' => [], 'buyerAccepted' => false];
         }
 
         if ($liveData['enabled']) {
             if (!$liveData['anyProcessed']) {
                 Log::channel('single')->info('[LiveFeed] Result: No suitable buyers found');
-                return ['reason' => 'No suitable buyers found.', 'fields' => []];
+                return ['reason' => 'No suitable buyers found.', 'fields' => [], 'buyerAccepted' => false];
             }
             if (!$liveData['accepted']) {
                 Log::channel('single')->info('[LiveFeed] Result: rejection', ['reason' => $liveData['reason']]);
-                return ['reason' => $liveData['reason'], 'fields' => []];
+                return ['reason' => $liveData['reason'], 'fields' => [], 'buyerAccepted' => false];
             }
             Log::channel('single')->info('[LiveFeed] Result: success');
-            return ['reason' => null, 'fields' => $liveData['fields']];
+            return ['reason' => null, 'fields' => $liveData['fields'], 'buyerAccepted' => true];
         }
 
         Log::channel('single')->info('[LiveFeed] Result: no live populations (queue-only)');
-        return ['reason' => null, 'fields' => []];
+        return ['status' => 'queued', 'reason' => null, 'fields' => [], 'buyerAccepted' => false];
     }
 
     protected static function filterPasses(?string $filterType, string $value, ?string $filters): bool

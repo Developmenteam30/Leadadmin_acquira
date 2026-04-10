@@ -88,7 +88,10 @@ class OutboundWebhookController extends Controller
                 'status' => $status,
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Callback processed']);
+            return response()->json([
+                'success' => $accepted,
+                'message' => $accepted ? 'Lead accepted' : 'Lead rejected',
+            ]);
         } catch (\Throwable $e) {
             Log::channel('single')->error('[Webhook] Failed to process callback', [
                 'idFeedOut' => $idFeedOut,

@@ -183,6 +183,10 @@ class LiveFeedController extends Controller
         }
 
         $reason = 'Successfully inserted new record.';
+        if (!empty($pushResult['buyerAccepted'])) {
+            Log::channel('single')->info('[LiveFeed] Buyer accepted', ['idRecord' => $idRecord]);
+            return $this->leadResponse(true, $reason, $request);
+        }
         if (isset($pushResult['status']) && $pushResult['status'] === 'pending') {
             $reason = $pushResult['reason'] ?? 'Lead received; awaiting buyer response.';
             DB::table('data_inbound')->where('idRecord', $idRecord)->update(['result' => 'Pending']);
@@ -192,7 +196,7 @@ class LiveFeedController extends Controller
                 [$idFeedIn, $url, $statsDay]
             );
             Log::channel('single')->info('[LiveFeed] Pending', ['idRecord' => $idRecord]);
-            return $this->leadResponse(true, $reason, $request, 'pending');
+            return $this->leadResponse(false, $reason, $request, 'pending');
         }
         if (isset($pushResult['reason']) && $pushResult['reason'] !== null) {
             $reason = $pushResult['reason'];
@@ -205,9 +209,13 @@ class LiveFeedController extends Controller
             Log::channel('single')->info('[LiveFeed] Push rejected, updating result', ['reason' => $reason]);
             return $this->leadResponse(false, $reason, $request);
         }
+        if (isset($pushResult['status']) && $pushResult['status'] === 'queued') {
+            Log::channel('single')->info('[LiveFeed] Queued for outbound (no sync buyer acceptance)', ['idRecord' => $idRecord]);
+            return $this->leadResponse(false, 'Lead received; queued for outbound processing.', $request);
+        }
 
-        Log::channel('single')->info('[LiveFeed] Success', ['idRecord' => $idRecord]);
-        return $this->leadResponse(true, $reason, $request);
+        Log::channel('single')->info('[LiveFeed] No buyer acceptance', ['idRecord' => $idRecord]);
+        return $this->leadResponse(false, $reason, $request);
     }
 
     protected function storeInboundRecord(int $idFeedIn, array $data, string $result, bool $accepted = false, ?InboundFeed $feed = null): ?int
