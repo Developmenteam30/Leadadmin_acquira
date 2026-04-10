@@ -286,6 +286,10 @@ class OutboundPushService
                 if ($extraHeaders !== []) {
                     $client = $client->withHeaders($extraHeaders);
                 }
+                Log::channel('single')->info('[LiveFeed] OutboundPush: curlGET request payload', [
+                    'url' => $fullUrl,
+                    'headers' => $extraHeaders,
+                ]);
                 $response = $client->get($fullUrl);
                 return [
                     'body' => $response->body(),
