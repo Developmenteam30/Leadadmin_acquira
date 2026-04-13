@@ -46,6 +46,7 @@ class PushIncomingDataService
             'anyProcessed' => false,
             'pendingMarketplace' => false,
             'pingRealtimeFailed' => false,
+            'hardStopWaterfall' => false,
             'reason' => null,
             'fields' => [],
         ];
@@ -64,6 +65,11 @@ class PushIncomingDataService
             return ['status' => 'pending', 'reason' => 'Lead received; no outgoing feed connections.', 'fields' => [], 'buyerAccepted' => false];
         }
 
+        // Phone-preping: run ping/realtime (non-marketplace) before marketplace so pingRealtimeFailed can skip marketplace.
+        if (($inboundFeed->feedCategory ?? '') === 'phone-preping' && !$idFeedOut) {
+            $feedsOut = self::partitionMarketplaceLast($feedsOut);
+        }
+
         foreach ($feedsOut as $pop) {
             $popIdFeedOut = $pop->idFeedOut ?? null;
             Log::channel('single')->info('[LiveFeed] Processing population', [
@@ -72,6 +78,13 @@ class PushIncomingDataService
                 'enabled' => $pop->enabled ?? null,
                 'delayDump' => $pop->delayDump ?? null,
             ]);
+
+            if (!$idFeedOut && !empty($liveData['hardStopWaterfall'])) {
+                Log::channel('single')->info('[LiveFeed] Skip: waterfall hard-stop active', [
+                    'idFeedOut' => $popIdFeedOut,
+                ]);
+                continue;
+            }
 
             if ($idFeedOut && $idFeedOut != $popIdFeedOut) {
                 Log::channel('single')->info('[LiveFeed] Skip: idFeedOut mismatch');
@@ -222,6 +235,13 @@ class PushIncomingDataService
                     $liveData['anyProcessed'] = true;
                     if (!($result['status'] ?? false)) {
                         $liveData['reason'] = sprintf('Third-party rejection [Reason: %s] [Code: O%s0]', $result['text'] ?? 'Unknown', $popIdFeedOut);
+                        if (($result['failureType'] ?? null) === 'preping_failed') {
+                            $liveData['hardStopWaterfall'] = true;
+                            $liveData['pingRealtimeFailed'] = true;
+                            Log::channel('single')->info('[LiveFeed] Hard-stop enabled: realtime preping failed', [
+                                'idFeedOut' => $popIdFeedOut,
+                            ]);
+                        }
                         if ($isPingFlow) {
                             $liveData['pingRealtimeFailed'] = true;
                         }
@@ -263,6 +283,33 @@ class PushIncomingDataService
 
         Log::channel('single')->info('[LiveFeed] Result: no live populations (queue-only)');
         return ['status' => 'queued', 'reason' => null, 'fields' => [], 'buyerAccepted' => false];
+    }
+
+    /**
+     * Place all marketplace outbound populations after non-marketplace ones (order preserved within each group).
+     */
+    protected static function partitionMarketplaceLast(array $feedsOut): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map(
+            static fn ($p) => isset($p->idFeedOut) ? (int) $p->idFeedOut : null,
+            $feedsOut
+        ))));
+        if ($ids === []) {
+            return $feedsOut;
+        }
+        $responseTypes = OutboundFeed::whereIn('idFeedOut', $ids)->pluck('responseType', 'idFeedOut');
+        $before = [];
+        $after = [];
+        foreach ($feedsOut as $pop) {
+            $id = isset($pop->idFeedOut) ? (int) $pop->idFeedOut : 0;
+            $rt = $id ? (string) ($responseTypes[$id] ?? 'realtime') : 'realtime';
+            if ($rt === 'marketplace') {
+                $after[] = $pop;
+            } else {
+                $before[] = $pop;
+            }
+        }
+        return array_merge($before, $after);
     }
 
     protected static function filterPasses(?string $filterType, string $value, ?string $filters): bool

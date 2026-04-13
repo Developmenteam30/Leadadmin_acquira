@@ -153,7 +153,12 @@ class OutboundPushService
                 'idFeedOut' => $feed->idFeedOut ?? null,
                 'text' => substr($prepingResult['text'], 0, 300),
             ]);
-            return ['status' => false, 'text' => $prepingResult['text'], 'fields' => []];
+            return [
+                'status' => false,
+                'text' => $prepingResult['text'],
+                'fields' => [],
+                'failureType' => 'preping_failed',
+            ];
         }
 
         try {

@@ -270,12 +270,12 @@ class UserController extends Controller
                               SessionHelper::checkBit($accessBits, SessionHelper::LEADS_SESSION_LEVEL_CLIENT_DASHBOARD) ||
                               SessionHelper::checkBit($accessBits, SessionHelper::LEADS_SESSION_LEVEL_CALL_CENTER);
 
-            if ($requiresCompany && empty($request->idCompany)) {
-                return response()->json([
-                    'status' => 0,
-                    'error' => 'Please associate this user with a company.',
-                ], 422);
-            }
+            // if ($requiresCompany && empty($request->idCompany)) {
+            //     return response()->json([
+            //         'status' => 0,
+            //         'error' => 'Please associate this user with a company.',
+            //     ], 422);
+            // }
 
             // Do not set company for CRM users and higher
             $isClientLevel = SessionHelper::checkBit($accessBits, SessionHelper::LEADS_SESSION_LEVEL_CLIENT_PHONE_LEADS) ||
