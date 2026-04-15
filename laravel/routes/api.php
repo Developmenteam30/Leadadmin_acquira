@@ -3,7 +3,9 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Jobs\DemoQueueLogJob;
 use App\Http\Controllers\LiveFeedController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login']);
@@ -111,6 +113,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/outbound-feeds/{id}/retry-rejections', [\App\Http\Controllers\OutboundFeedController::class, 'retryRejections']);
         Route::post('/outbound-feeds/{id}/resend-pending-marketplace', [\App\Http\Controllers\OutboundFeedController::class, 'resendPendingMarketplace']);
         Route::get('/outbound-feeds/{id}/resend-pending-marketplace/{jobId}', [\App\Http\Controllers\OutboundFeedController::class, 'resendPendingMarketplaceStatus']);
+        Route::post('/demo-queue-log', function (Request $request) {
+            $job = DemoQueueLogJob::dispatch(
+                auth()->id(),
+                $request->input('message', 'Demo queue job executed successfully.')
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Demo queue log job dispatched successfully.',
+                'job_id' => optional($job)->getJobId(),
+            ]);
+        });
 
         // Feed Populations (for outbound feeds)
         Route::get('/outbound-feeds/{idFeedOut}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'index']);
