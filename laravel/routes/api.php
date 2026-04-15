@@ -16,6 +16,18 @@ Route::post('/live/{idFeedIn}/feed', [LiveFeedController::class, 'submitLead']);
 // Public webhook for marketplace outbound feeds (auth via X-Webhook-Token or Bearer)
 // Lead ID (callbackId) is in the request body, not the URL
 Route::post('/webhooks/outbound', [\App\Http\Controllers\OutboundWebhookController::class, 'receive']);
+Route::post('/demo-queue-log', function (Request $request) {
+    $job = DemoQueueLogJob::dispatch(
+        auth()->id(),
+        $request->input('message', 'Demo queue job executed successfully.')
+    );
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Demo queue log job dispatched successfully.',
+        'job_id' => optional($job)->getJobId(),
+    ]);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [LogoutController::class, 'logout']);
@@ -113,18 +125,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/outbound-feeds/{id}/retry-rejections', [\App\Http\Controllers\OutboundFeedController::class, 'retryRejections']);
         Route::post('/outbound-feeds/{id}/resend-pending-marketplace', [\App\Http\Controllers\OutboundFeedController::class, 'resendPendingMarketplace']);
         Route::get('/outbound-feeds/{id}/resend-pending-marketplace/{jobId}', [\App\Http\Controllers\OutboundFeedController::class, 'resendPendingMarketplaceStatus']);
-        Route::post('/demo-queue-log', function (Request $request) {
-            $job = DemoQueueLogJob::dispatch(
-                auth()->id(),
-                $request->input('message', 'Demo queue job executed successfully.')
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Demo queue log job dispatched successfully.',
-                'job_id' => optional($job)->getJobId(),
-            ]);
-        });
 
         // Feed Populations (for outbound feeds)
         Route::get('/outbound-feeds/{idFeedOut}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'index']);
