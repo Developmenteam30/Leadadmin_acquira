@@ -17,7 +17,7 @@ Route::post('/live/{idFeedIn}/feed', [LiveFeedController::class, 'submitLead']);
 // Lead ID (callbackId) is in the request body, not the URL
 Route::post('/webhooks/outbound', [\App\Http\Controllers\OutboundWebhookController::class, 'receive']);
 Route::post('/demo-queue-log', function (Request $request) {
-    $job = DemoQueueLogJob::dispatch(
+    DemoQueueLogJob::dispatch(
         auth()->id(),
         $request->input('message', 'Demo queue job executed successfully.')
     );
@@ -25,7 +25,7 @@ Route::post('/demo-queue-log', function (Request $request) {
     return response()->json([
         'success' => true,
         'message' => 'Demo queue log job dispatched successfully.',
-        'job_id' => optional($job)->getJobId(),
+        'queued' => true,
     ]);
 });
 
