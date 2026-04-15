@@ -88,7 +88,6 @@ class OutboundFeedController extends Controller
     {
         try {
             $feeds = $query->orderBy('companies.name')
-                ->orderBy('feedout.idFeedOut')
                 ->get();
 
             // Group by company and calculate stats
@@ -134,6 +133,24 @@ class OutboundFeedController extends Controller
                 $companyGroups[$companyId]['totalRejected'] += $stats['rejected'];
                 $companyGroups[$companyId]['totalQueued'] += ($feed->queued ?? 0);
             }
+
+            // Sort feeds inside each company by name ASC, then type/description DESC.
+            foreach ($companyGroups as &$companyGroup) {
+                usort($companyGroup['feeds'], function ($a, $b) {
+                    $nameCompare = strcasecmp((string)($a['label'] ?? ''), (string)($b['label'] ?? ''));
+                    if ($nameCompare !== 0) {
+                        return $nameCompare;
+                    }
+
+                    $typeCompare = strcasecmp((string)($b['description'] ?? ''), (string)($a['description'] ?? ''));
+                    if ($typeCompare !== 0) {
+                        return $typeCompare;
+                    }
+
+                    return ($a['idFeedOut'] ?? 0) <=> ($b['idFeedOut'] ?? 0);
+                });
+            }
+            unset($companyGroup);
 
             // Convert to array and sort by company name
             $result = array_values($companyGroups);
