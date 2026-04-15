@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\OutboundFeed;
 use App\Models\Company;
 use App\Helpers\CompanyScope;
+use App\Jobs\ResendPendingMarketplaceJob;
 use App\Services\OutboundTestService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -1198,6 +1201,114 @@ class OutboundFeedController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => 0, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Submit async job to resend all pending marketplace leads for one outbound feed.
+     */
+    public function resendPendingMarketplace(Request $request, $id)
+    {
+        try {
+            $feed = OutboundFeed::find($id);
+            if (!$feed) {
+                return response()->json(['status' => 0, 'error' => 'Feed not found'], 404);
+            }
+            if (($feed->responseType ?? 'realtime') !== 'marketplace') {
+                return response()->json(['status' => 0, 'error' => 'Resend pending is allowed only for marketplace feeds'], 422);
+            }
+
+            $chunkSize = (int) $request->input('chunkSize', 200);
+            if ($chunkSize < 1) {
+                $chunkSize = 200;
+            }
+            if ($chunkSize > 1000) {
+                $chunkSize = 1000;
+            }
+
+            $batch = Bus::batch([
+                new ResendPendingMarketplaceJob((int) $id, $chunkSize),
+            ])->name('resend-pending-marketplace-' . (int) $id)
+                ->allowFailures()
+                ->dispatch();
+
+            Cache::put($this->resendPendingMarketplaceCacheKey($batch->id), [
+                'summary' => [
+                    'total' => 0,
+                    'accepted' => 0,
+                    'rejected' => 0,
+                    'pending_manual' => 0,
+                    'pending_webhook' => 0,
+                    'errors' => 0,
+                ],
+                'message' => null,
+                'submittedAt' => now()->toDateTimeString(),
+            ], now()->addDays(7));
+
+            return response()->json([
+                'status' => 1,
+                'jobId' => $batch->id,
+                'message' => 'Resend pending marketplace job submitted successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get async job status/result for resend pending marketplace.
+     */
+    public function resendPendingMarketplaceStatus(Request $request, $id, $jobId)
+    {
+        try {
+            $feed = OutboundFeed::find($id);
+            if (!$feed) {
+                return response()->json(['status' => 0, 'error' => 'Feed not found'], 404);
+            }
+
+            $batch = Bus::findBatch((string) $jobId);
+            if (!$batch) {
+                return response()->json(['status' => 0, 'error' => 'Job not found'], 404);
+            }
+            $meta = Cache::get($this->resendPendingMarketplaceCacheKey((string) $jobId), []);
+            $summary = is_array($meta['summary'] ?? null) ? $meta['summary'] : [];
+            $normalizedSummary = [
+                'total' => (int) ($summary['total'] ?? 0),
+                'accepted' => (int) ($summary['accepted'] ?? 0),
+                'rejected' => (int) ($summary['rejected'] ?? 0),
+                'pending_manual' => (int) ($summary['pending_manual'] ?? 0),
+                'pending_webhook' => (int) ($summary['pending_webhook'] ?? 0),
+                'errors' => (int) ($summary['errors'] ?? 0),
+            ];
+            $jobStatus = 'pending';
+            if ($batch->cancelled()) {
+                $jobStatus = 'cancelled';
+            } elseif ($batch->finished()) {
+                $jobStatus = $batch->failedJobs > 0 ? 'error' : 'finished';
+            } elseif ($batch->pendingJobs < $batch->totalJobs) {
+                $jobStatus = 'processing';
+            }
+
+            return response()->json([
+                'status' => 1,
+                'data' => [
+                    'jobId' => (string) $jobId,
+                    'feedId' => (int) $id,
+                    'jobStatus' => $jobStatus,
+                    'records' => (int) (($summary['accepted'] ?? 0) + ($summary['rejected'] ?? 0)),
+                    'message' => $meta['message'] ?? null,
+                    'summary' => $normalizedSummary,
+                    'submittedAt' => $meta['submittedAt'] ?? null,
+                    'progress' => (int) $batch->progress(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    private function resendPendingMarketplaceCacheKey(string $jobId): string
+    {
+        return 'resend-pending-marketplace:' . $jobId;
     }
 
     /**

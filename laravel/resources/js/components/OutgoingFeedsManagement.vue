@@ -182,6 +182,7 @@
                         <li><a href="#" @click.prevent="openUploadDataModal(feed)">Upload data</a></li>
                         <li><a href="#" @click.prevent="openExportDataModal(feed)">Export data</a></li>
                         <li><a href="#" @click.prevent="openRetryRejectionsModal(feed)">Retry rejections</a></li>
+                        <li><a href="#" @click.prevent="openResendPendingMarketplaceModal(feed)">Resend pending marketplace</a></li>
                       </ul>
                     </div>
                   </td>
@@ -785,6 +786,53 @@
           </div>
         </div>
 
+        <!-- Resend Pending Marketplace Modal -->
+        <div v-show="resendPendingMarketplaceModal.show" class="outgoing-feed-modal" tabindex="-1" @click.self="closeResendPendingMarketplaceModal">
+          <div class="modal-dialog modal-lg" @click.stop>
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Resend Pending Marketplace – {{ resendPendingMarketplaceModal.feedLabel || '' }}</h4>
+                <button type="button" class="close" @click="closeResendPendingMarketplaceModal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <p class="text-muted">
+                  Submit a background job to resend all pending marketplace records for this feed.
+                  This updates existing pending rows and does not create new incoming/outgoing entries.
+                </p>
+                <div class="form-group">
+                  <label>Batch size per processing chunk</label>
+                  <input v-model.number="resendPendingMarketplaceModal.chunkSize" type="number" min="1" max="1000" class="form-control" style="width: 160px;" />
+                </div>
+                <div v-if="resendPendingMarketplaceModal.jobId" class="well well-sm">
+                  <strong>Job ID:</strong> {{ resendPendingMarketplaceModal.jobId }}<br />
+                  <strong>Status:</strong> {{ resendPendingMarketplaceModal.jobStatus || 'pending' }}
+                </div>
+                <div v-if="resendPendingMarketplaceModal.summary" class="well well-sm">
+                  <strong>Summary:</strong>
+                  Total {{ resendPendingMarketplaceModal.summary.total || 0 }},
+                  Accepted {{ resendPendingMarketplaceModal.summary.accepted || 0 }},
+                  Rejected {{ resendPendingMarketplaceModal.summary.rejected || 0 }},
+                  Pending Manual {{ resendPendingMarketplaceModal.summary.pending_manual || 0 }},
+                  Pending Webhook {{ resendPendingMarketplaceModal.summary.pending_webhook || 0 }},
+                  Errors {{ resendPendingMarketplaceModal.summary.errors || 0 }}
+                </div>
+                <div v-if="resendPendingMarketplaceModal.message" class="alert" :class="resendPendingMarketplaceModal.success ? 'alert-success' : 'alert-danger'">
+                  {{ resendPendingMarketplaceModal.message }}
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" @click="closeResendPendingMarketplaceModal">Close</button>
+                <button type="button" class="btn btn-default" @click="refreshResendPendingMarketplaceStatus" :disabled="resendPendingMarketplaceStatusLoading || !resendPendingMarketplaceModal.jobId">
+                  {{ resendPendingMarketplaceStatusLoading ? 'Refreshing...' : 'Refresh Status' }}
+                </button>
+                <button type="button" class="btn btn-primary" @click="submitResendPendingMarketplace" :disabled="resendPendingMarketplaceSending">
+                  {{ resendPendingMarketplaceSending ? 'Submitting...' : 'Submit Job' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Send Test Record Modal -->
         <div
           v-show="testRecordModal.show"
@@ -873,7 +921,7 @@
 </template>
 
 <script>
-import { ref, onMounted, nextTick, reactive, watch, computed } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, reactive, watch, computed } from 'vue';
 import axios from 'axios';
 import Navigation from './Navigation.vue';
 import OutboundFeedForm from './OutboundFeedForm.vue';
@@ -1161,6 +1209,20 @@ export default {
 
     const retryRejectionsModal = reactive({ show: false, idFeedOut: null, feedLabel: '', dateStart: '', dateEnd: '', message: '', success: false });
     const retryRejectionsSending = ref(false);
+    const resendPendingMarketplaceModal = reactive({
+      show: false,
+      idFeedOut: null,
+      feedLabel: '',
+      chunkSize: 200,
+      jobId: null,
+      jobStatus: '',
+      summary: null,
+      message: '',
+      success: false,
+    });
+    const resendPendingMarketplaceSending = ref(false);
+    const resendPendingMarketplaceStatusLoading = ref(false);
+    let resendPendingMarketplacePollTimer = null;
 
     const fetchPopulations = async () => {
       if (!populationsModal.idFeedOut) return;
@@ -1758,6 +1820,100 @@ export default {
       }
     };
 
+    const clearResendPendingMarketplacePoll = () => {
+      if (resendPendingMarketplacePollTimer) {
+        clearTimeout(resendPendingMarketplacePollTimer);
+        resendPendingMarketplacePollTimer = null;
+      }
+    };
+
+    const openResendPendingMarketplaceModal = (feed) => {
+      clearResendPendingMarketplacePoll();
+      resendPendingMarketplaceModal.idFeedOut = feed.idFeedOut;
+      resendPendingMarketplaceModal.feedLabel = feed.label;
+      resendPendingMarketplaceModal.chunkSize = 200;
+      resendPendingMarketplaceModal.jobId = null;
+      resendPendingMarketplaceModal.jobStatus = '';
+      resendPendingMarketplaceModal.summary = null;
+      resendPendingMarketplaceModal.message = '';
+      resendPendingMarketplaceModal.success = false;
+      resendPendingMarketplaceModal.show = true;
+    };
+
+    const closeResendPendingMarketplaceModal = () => {
+      clearResendPendingMarketplacePoll();
+      resendPendingMarketplaceModal.show = false;
+      resendPendingMarketplaceModal.idFeedOut = null;
+      resendPendingMarketplaceModal.feedLabel = '';
+    };
+
+    const refreshResendPendingMarketplaceStatus = async () => {
+      if (!resendPendingMarketplaceModal.idFeedOut || !resendPendingMarketplaceModal.jobId) return;
+      resendPendingMarketplaceStatusLoading.value = true;
+      try {
+        const r = await axios.get(
+          `/api/outbound-feeds/${resendPendingMarketplaceModal.idFeedOut}/resend-pending-marketplace/${resendPendingMarketplaceModal.jobId}`
+        );
+        if (r.data.status === 1 && r.data.data) {
+          const data = r.data.data;
+          resendPendingMarketplaceModal.jobStatus = data.jobStatus || '';
+          resendPendingMarketplaceModal.summary = data.summary || null;
+          resendPendingMarketplaceModal.message = data.message || '';
+          resendPendingMarketplaceModal.success = data.jobStatus === 'finished';
+          if (data.jobStatus === 'finished' || data.jobStatus === 'error') {
+            clearResendPendingMarketplacePoll();
+            await fetchFeeds();
+          }
+        } else {
+          resendPendingMarketplaceModal.message = r.data.error || 'Failed to fetch job status';
+          resendPendingMarketplaceModal.success = false;
+        }
+      } catch (e) {
+        resendPendingMarketplaceModal.message = e.response?.data?.error || e.message || 'Failed to fetch job status';
+        resendPendingMarketplaceModal.success = false;
+      } finally {
+        resendPendingMarketplaceStatusLoading.value = false;
+      }
+    };
+
+    const scheduleResendPendingMarketplacePoll = () => {
+      clearResendPendingMarketplacePoll();
+      resendPendingMarketplacePollTimer = setTimeout(async () => {
+        await refreshResendPendingMarketplaceStatus();
+        const status = resendPendingMarketplaceModal.jobStatus;
+        if (resendPendingMarketplaceModal.show && status !== 'finished' && status !== 'error') {
+          scheduleResendPendingMarketplacePoll();
+        }
+      }, 5000);
+    };
+
+    const submitResendPendingMarketplace = async () => {
+      if (!resendPendingMarketplaceModal.idFeedOut) return;
+      resendPendingMarketplaceSending.value = true;
+      resendPendingMarketplaceModal.message = '';
+      resendPendingMarketplaceModal.success = false;
+      try {
+        const r = await axios.post(`/api/outbound-feeds/${resendPendingMarketplaceModal.idFeedOut}/resend-pending-marketplace`, {
+          chunkSize: resendPendingMarketplaceModal.chunkSize,
+        });
+        if (r.data.status === 1) {
+          resendPendingMarketplaceModal.jobId = r.data.jobId || null;
+          resendPendingMarketplaceModal.jobStatus = 'pending';
+          resendPendingMarketplaceModal.message = r.data.message || 'Job submitted successfully.';
+          resendPendingMarketplaceModal.success = true;
+          scheduleResendPendingMarketplacePoll();
+        } else {
+          resendPendingMarketplaceModal.message = r.data.error || 'Failed to submit job';
+          resendPendingMarketplaceModal.success = false;
+        }
+      } catch (e) {
+        resendPendingMarketplaceModal.message = e.response?.data?.error || e.message || 'Failed to submit job';
+        resendPendingMarketplaceModal.success = false;
+      } finally {
+        resendPendingMarketplaceSending.value = false;
+      }
+    };
+
     const openEditModal = async (feed) => {
       editError.value = '';
       try {
@@ -2154,6 +2310,10 @@ export default {
       ]);
     });
 
+    onUnmounted(() => {
+      clearResendPendingMarketplacePoll();
+    });
+
     return {
       companyGroups,
       companies,
@@ -2252,6 +2412,13 @@ export default {
       openRetryRejectionsModal,
       closeRetryRejectionsModal,
       submitRetryRejections,
+      resendPendingMarketplaceModal,
+      resendPendingMarketplaceSending,
+      resendPendingMarketplaceStatusLoading,
+      openResendPendingMarketplaceModal,
+      closeResendPendingMarketplaceModal,
+      submitResendPendingMarketplace,
+      refreshResendPendingMarketplaceStatus,
     };
   },
 };

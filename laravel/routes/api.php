@@ -109,6 +109,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/outbound-feeds/{id}/import', [\App\Http\Controllers\OutboundFeedController::class, 'createImport']);
         Route::post('/outbound-feeds/{id}/upload', [\App\Http\Controllers\OutboundFeedController::class, 'createUpload']);
         Route::post('/outbound-feeds/{id}/retry-rejections', [\App\Http\Controllers\OutboundFeedController::class, 'retryRejections']);
+        Route::post('/outbound-feeds/{id}/resend-pending-marketplace', [\App\Http\Controllers\OutboundFeedController::class, 'resendPendingMarketplace']);
+        Route::get('/outbound-feeds/{id}/resend-pending-marketplace/{jobId}', [\App\Http\Controllers\OutboundFeedController::class, 'resendPendingMarketplaceStatus']);
 
         // Feed Populations (for outbound feeds)
         Route::get('/outbound-feeds/{idFeedOut}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'index']);

@@ -499,6 +499,129 @@ class PushIncomingDataService
         );
     }
 
+    /**
+     * Resend existing pending marketplace rows for a single outbound feed.
+     * This never inserts new inbound/outbound rows; it only updates current pending rows.
+     *
+     * @return array{total:int,accepted:int,rejected:int,pending_manual:int,pending_webhook:int,errors:int}
+     */
+    public static function resendPendingMarketplaceForFeed(int $idFeedOut, int $chunkSize = 200): array
+    {
+        $summary = [
+            'total' => 0,
+            'accepted' => 0,
+            'rejected' => 0,
+            'pending_manual' => 0,
+            'pending_webhook' => 0,
+            'errors' => 0,
+        ];
+
+        $feedOutModel = OutboundFeed::find($idFeedOut);
+        if (!$feedOutModel) {
+            throw new \RuntimeException('Outbound feed not found');
+        }
+        if (($feedOutModel->responseType ?? 'realtime') !== 'marketplace') {
+            throw new \RuntimeException('Resend pending is allowed only for marketplace feeds');
+        }
+
+        $chunkSize = max(1, min(1000, (int) $chunkSize));
+        $lastRecordId = 0;
+        $inboundCache = [];
+
+        while (true) {
+            $rows = DB::table('data_outbound as o')
+                ->join('data_inbound as i', function ($join) {
+                    $join->on('i.idRecord', '=', 'o.idRecord')
+                        ->on('i.idFeedIn', '=', 'o.idFeedIn');
+                })
+                ->where('o.idFeedOut', $idFeedOut)
+                ->where('o.processed', 0)
+                ->where('o.idRecord', '>', $lastRecordId)
+                ->orderBy('o.idRecord')
+                ->limit($chunkSize)
+                ->select(
+                    'o.idRecord',
+                    'o.idFeedIn',
+                    'o.idFeedOut',
+                    'o.webhookCallbackId',
+                    'i.*'
+                )
+                ->get();
+
+            if ($rows->isEmpty()) {
+                break;
+            }
+
+            foreach ($rows as $row) {
+                $lastRecordId = max($lastRecordId, (int) $row->idRecord);
+                $summary['total']++;
+
+                try {
+                    $idFeedIn = (int) $row->idFeedIn;
+                    if (!array_key_exists($idFeedIn, $inboundCache)) {
+                        $inboundCache[$idFeedIn] = InboundFeed::with('company')->find($idFeedIn);
+                    }
+                    $inboundFeed = $inboundCache[$idFeedIn];
+
+                    $result = OutboundPushService::pushRecord(
+                        $row,
+                        $feedOutModel,
+                        $inboundFeed,
+                        !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
+                    );
+
+                    $decision = $result['marketplaceDecision'] ?? null;
+                    $decisionType = is_array($decision) ? ($decision['decisionType'] ?? 'pending_webhook') : 'pending_webhook';
+                    $price = isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null;
+
+                    if ($decisionType === 'accepted') {
+                        self::updateDataOutboundProcessed(
+                            (int) $row->idRecord,
+                            $idFeedOut,
+                            true,
+                            (string) ($decision['reason'] ?? 'Marketplace accepted'),
+                            $price,
+                            false,
+                            true
+                        );
+                        $summary['accepted']++;
+                    } elseif ($decisionType === 'rejected') {
+                        $reasonText = (string) ($decision['reason'] ?? ($result['text'] ?? 'Marketplace rejected'));
+                        self::updateDataOutboundProcessed(
+                            (int) $row->idRecord,
+                            $idFeedOut,
+                            false,
+                            $reasonText,
+                            $price,
+                            false,
+                            true
+                        );
+                        $summary['rejected']++;
+                    } elseif ($decisionType === 'pending_manual') {
+                        self::markOutboundPendingManual(
+                            (int) $row->idRecord,
+                            $idFeedOut,
+                            self::MARKETPLACE_PENDING_MANUAL_REASON,
+                            $price
+                        );
+                        $summary['pending_manual']++;
+                    } else {
+                        $summary['pending_webhook']++;
+                    }
+                } catch (\Throwable $e) {
+                    $summary['errors']++;
+                    Log::channel('single')->error('[LiveFeed] ResendPendingMarketplace error', [
+                        'idRecord' => $row->idRecord ?? null,
+                        'idFeedOut' => $idFeedOut,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        return $summary;
+    }
+
     protected static function updateDataOutboundProcessed(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null, bool $allowOverride = false, bool $syncInbound = false): void
     {
         $existing = DB::table('data_outbound')
