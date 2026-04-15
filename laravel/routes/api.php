@@ -77,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/record-search', [\App\Http\Controllers\RecordSearchController::class, 'search']);
         Route::get('/record-search/outbound-feeds', [\App\Http\Controllers\RecordSearchController::class, 'getOutboundFeeds']);
         Route::get('/record-search/outbound', [\App\Http\Controllers\RecordSearchController::class, 'searchOutbound']);
+        Route::post('/record-search/outbound/{idRecord}/{idFeedOut}/confirm-marketplace', [\App\Http\Controllers\RecordSearchController::class, 'confirmMarketplacePending']);
         Route::post('/inbound-feeds/{id}/import-filter-zip', [\App\Http\Controllers\InboundFeedController::class, 'importFilterZip']);
         Route::get('/inbound-feeds/{id}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'indexByInbound']);
         Route::post('/inbound-feeds/{id}/populations', [\App\Http\Controllers\FeedPopulationController::class, 'storeByInbound']);

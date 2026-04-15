@@ -87,8 +87,10 @@
                     <strong>{{ formatNumber(company.totalRejected) }}</strong>
                   </router-link>
                 </td>
-                <td class="text-right">
-                  <strong>{{ formatNumber(company.totalQueued) }}</strong>
+                <td class="text-right record-search-link-cell">
+                  <router-link :to="outgoingRecordSearchLink(company.idCompany, null, 'pending')">
+                    <strong>{{ formatNumber(company.totalQueued) }}</strong>
+                  </router-link>
                 </td>
                 <td class="text-center">
                   <button
@@ -141,7 +143,11 @@
                       {{ formatNumber(feed.rejected) }}
                     </router-link>
                   </td>
-                  <td class="text-right">{{ formatNumber(feed.queuedCount) }}</td>
+                  <td class="text-right record-search-link-cell">
+                    <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'pending')">
+                      {{ formatNumber(feed.queuedCount) }}
+                    </router-link>
+                  </td>
                   <td class="text-center">
                     <div class="btn-group" :class="{ open: openDropdownFeedId === feed.idFeedOut }">
                       <button

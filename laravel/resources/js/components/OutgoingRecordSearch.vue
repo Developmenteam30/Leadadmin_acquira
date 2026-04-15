@@ -133,6 +133,15 @@
                   <td>{{ record.inboundCompanyName }} - {{ record.inboundLabel }}</td>
                   <td class="text-center">
                     <button
+                      v-if="canManualConfirm(record)"
+                      type="button"
+                      class="btn btn-success btn-sm"
+                      style="margin-right: 6px;"
+                      @click="confirmMarketplace(record)"
+                    >
+                      Confirm
+                    </button>
+                    <button
                       type="button"
                       class="btn btn-primary btn-sm"
                       @click="openDetailsModal(record)"
@@ -302,6 +311,23 @@ export default {
       if (this.detailsRecord) {
         $('#outboundRecordDetails' + this.detailsRecord.idRecord + '-' + this.detailsRecord.idFeedOut).modal('hide');
         this.detailsRecord = null;
+      }
+    },
+    canManualConfirm(record) {
+      if (!record) return false;
+      const isMarketplace = (record.responseType || '').toLowerCase() === 'marketplace';
+      const isPending = Number(record.processed) === 0;
+      const resultText = String(record.result || '');
+      return isMarketplace && isPending && resultText.includes('Marketplace success received, but price is missing or zero');
+    },
+    async confirmMarketplace(record) {
+      if (!this.canManualConfirm(record)) return;
+      if (!window.confirm('Mark this pending marketplace record as accepted?')) return;
+      try {
+        await axios.post(`/api/record-search/outbound/${record.idRecord}/${record.idFeedOut}/confirm-marketplace`, {});
+        await this.doSearch();
+      } catch (e) {
+        this.searchError = e.response?.data?.error || e.message || 'Failed to confirm marketplace record';
       }
     },
     formatCost(val) {

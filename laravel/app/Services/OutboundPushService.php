@@ -196,11 +196,19 @@ class OutboundPushService
                 'success' => $success,
                 'bodyPreview' => substr($response['body'] ?? '', 0, 300),
             ]);
+            $marketplaceDecision = null;
+            if (($feed->responseType ?? 'realtime') === 'marketplace') {
+                $marketplaceDecision = self::parseMarketplaceDecision(
+                    (string) ($response['body'] ?? ''),
+                    (int) ($response['statusCode'] ?? 0)
+                );
+            }
             return [
                 'status' => $success,
                 'text' => $response['body'],
                 'fields' => [],
                 'cost' => $outboundCost,
+                'marketplaceDecision' => $marketplaceDecision,
             ];
         } catch (\Exception $e) {
             Log::channel('single')->error('[LiveFeed] OutboundPush: Exception', [
@@ -383,5 +391,80 @@ class OutboundPushService
             }
         }
         return false;
+    }
+
+    /**
+     * Parse marketplace API response into a normalized decision.
+     *
+     * @return array{
+     *   decisionType:string,
+     *   accepted:bool|null,
+     *   outcome:?string,
+     *   reason:?string,
+     *   price:?float
+     * }
+     */
+    protected static function parseMarketplaceDecision(string $body, int $statusCode): array
+    {
+        $default = [
+            'decisionType' => 'pending_webhook',
+            'accepted' => null,
+            'outcome' => null,
+            'reason' => null,
+            'price' => null,
+        ];
+
+        if ($statusCode < 200 || $statusCode >= 300) {
+            return array_merge($default, [
+                'decisionType' => 'rejected',
+                'accepted' => false,
+                'reason' => sprintf('Marketplace HTTP error %s', $statusCode),
+            ]);
+        }
+
+        $decoded = json_decode($body, true);
+        if (!is_array($decoded)) {
+            return $default;
+        }
+
+        $outcome = strtolower(trim((string) ($decoded['outcome'] ?? '')));
+        $reason = isset($decoded['reason']) ? trim((string) $decoded['reason']) : null;
+        $price = isset($decoded['price']) && is_numeric($decoded['price']) ? (float) $decoded['price'] : null;
+
+        if ($outcome === 'failure') {
+            return [
+                'decisionType' => 'rejected',
+                'accepted' => false,
+                'outcome' => $outcome,
+                'reason' => $reason ?: 'Marketplace outcome=failure',
+                'price' => $price,
+            ];
+        }
+
+        if ($outcome === 'success') {
+            if ($price !== null && $price > 0) {
+                return [
+                    'decisionType' => 'accepted',
+                    'accepted' => true,
+                    'outcome' => $outcome,
+                    'reason' => 'Marketplace outcome=success',
+                    'price' => $price,
+                ];
+            }
+
+            return [
+                'decisionType' => 'pending_manual',
+                'accepted' => null,
+                'outcome' => $outcome,
+                'reason' => 'Marketplace outcome=success but price missing or zero',
+                'price' => $price,
+            ];
+        }
+
+        return array_merge($default, [
+            'outcome' => $outcome !== '' ? $outcome : null,
+            'reason' => $reason,
+            'price' => $price,
+        ]);
     }
 }

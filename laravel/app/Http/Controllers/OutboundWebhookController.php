@@ -35,7 +35,7 @@ class OutboundWebhookController extends Controller
 
         $row = DB::table('data_outbound')
             ->where('webhookCallbackId', $leadId)
-            ->where('processed', 0)
+            ->orderByDesc('idRecord')
             ->first();
 
         if (!$row) {
@@ -76,16 +76,11 @@ class OutboundWebhookController extends Controller
                 $cost
             );
 
-            $idFeedIn = $row->idFeedIn ?? null;
-            if ($idFeedIn) {
-                $inboundResult = $accepted ? 'Success' : sprintf('Third-party rejection [Reason: %s] [Code: O%d0]', $resultText, $idFeedOut);
-                DB::table('data_inbound')->where('idRecord', $idRecord)->update(['result' => $inboundResult]);
-            }
-
             Log::channel('single')->info('[Webhook] Processed callback', [
                 'idFeedOut' => $idFeedOut,
                 'idRecord' => $idRecord,
                 'status' => $status,
+                'overrideProcessed' => ((int) ($row->processed ?? 0) === 1),
             ]);
 
             return response()->json([

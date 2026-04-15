@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\CompanyScope;
+use App\Services\PushIncomingDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -314,9 +315,11 @@ class RecordSearchController extends Controller
                     'o.result',
                     'o.accepted',
                     'o.cost',
+                    'o.webhookCallbackId',
                     'o.url as outboundUrl',
                     'fo.label as outboundLabel',
                     'fo.description as outboundDescription',
+                    'fo.responseType',
                     'co.name as outboundCompanyName',
                     'fi.label as inboundLabel',
                     'ci.name as inboundCompanyName',
@@ -394,6 +397,47 @@ class RecordSearchController extends Controller
                 'status' => 0,
                 'error' => 'Search failed: ' . $e->getMessage(),
                 'data' => [],
+            ], 500);
+        }
+    }
+
+    public function confirmMarketplacePending(Request $request, int $idRecord, int $idFeedOut)
+    {
+        try {
+            $row = DB::table('data_outbound as o')
+                ->leftJoin('feedout as fo', 'fo.idFeedOut', '=', 'o.idFeedOut')
+                ->where('o.idRecord', $idRecord)
+                ->where('o.idFeedOut', $idFeedOut)
+                ->select('o.*', 'fo.responseType')
+                ->first();
+
+            if (!$row) {
+                return response()->json(['status' => 0, 'error' => 'Outbound record not found'], 404);
+            }
+            if (($row->responseType ?? 'realtime') !== 'marketplace') {
+                return response()->json(['status' => 0, 'error' => 'Manual confirmation is allowed only for marketplace records'], 422);
+            }
+            if ((int) ($row->processed ?? 0) !== 0) {
+                return response()->json(['status' => 0, 'error' => 'Record is not pending'], 422);
+            }
+            if (stripos((string) ($row->result ?? ''), PushIncomingDataService::MARKETPLACE_PENDING_MANUAL_REASON) === false) {
+                return response()->json(['status' => 0, 'error' => 'Record is not eligible for manual confirmation'], 422);
+            }
+
+            $cost = null;
+            if ($request->has('cost') && $request->input('cost') !== '' && is_numeric($request->input('cost'))) {
+                $cost = (float) $request->input('cost');
+            }
+            $result = $request->input('result');
+            $result = is_string($result) && trim($result) !== '' ? trim($result) : 'Marketplace manually confirmed';
+
+            PushIncomingDataService::confirmMarketplacePending($idRecord, $idFeedOut, $cost, $result);
+
+            return response()->json(['status' => 1, 'message' => 'Marketplace lead confirmed successfully']);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 0,
+                'error' => 'Failed to confirm marketplace record: ' . $e->getMessage(),
             ], 500);
         }
     }
