@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InboundFeed;
 use App\Services\PushIncomingDataService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
@@ -218,6 +219,48 @@ class LiveFeedController extends Controller
         return $this->leadResponse(false, $reason, $request);
     }
 
+    /**
+     * Normalize date of birth to Y-m-d for MySQL. Accepts ISO dates and common US slash/dash forms.
+     */
+    protected function normalizeDob(mixed $dob): ?string
+    {
+        if ($dob === null || $dob === '') {
+            return null;
+        }
+        if (!is_scalar($dob)) {
+            return null;
+        }
+        $dob = trim((string) $dob);
+        if ($dob === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $dob, $m)) {
+            $y = (int) $m[1];
+            $mo = (int) $m[2];
+            $d = (int) $m[3];
+            if (checkdate($mo, $d, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $mo, $d);
+            }
+
+            return null;
+        }
+
+        $formats = ['m/d/Y', 'n/j/Y', 'm-d-Y', 'n-j-Y'];
+        foreach ($formats as $format) {
+            try {
+                $parsed = Carbon::createFromFormat($format, $dob);
+                if ($parsed !== false && $parsed->format($format) === $dob) {
+                    return $parsed->format('Y-m-d');
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        return null;
+    }
+
     protected function storeInboundRecord(int $idFeedIn, array $data, string $result, bool $accepted = false, ?InboundFeed $feed = null): ?int
     {
         $stamp = $data['stamp'] ?? now()->format('Y-m-d H:i:s');
@@ -244,7 +287,7 @@ class LiveFeedController extends Controller
             'city' => $data['city'] ?? null,
             'state' => $data['state'] ?? null,
             'zip' => $data['zip'] ?? null,
-            'dob' => $data['dob'] ?? null,
+            'dob' => $this->normalizeDob($data['dob'] ?? null),
             'gender' => $data['gender'] ?? null,
             'landline' => $data['landline'] ?? null,
             'cellphone' => $data['cellphone'] ?? null,
