@@ -504,6 +504,151 @@ class PushIncomingDataService
     }
 
     /**
+     * Retry existing rejected outbound rows for a single feed/date range.
+     * Uses Laravel queue workers (no legacy process-jobs.php dependency).
+     *
+     * @return array{total:int,accepted:int,rejected:int,pending_manual:int,pending_webhook:int,errors:int}
+     */
+    public static function retryOutboundRejectionsForFeed(int $idFeedOut, string $dateStart, string $dateEnd, int $chunkSize = 200): array
+    {
+        $summary = [
+            'total' => 0,
+            'accepted' => 0,
+            'rejected' => 0,
+            'pending_manual' => 0,
+            'pending_webhook' => 0,
+            'errors' => 0,
+        ];
+
+        $feedOutModel = OutboundFeed::find($idFeedOut);
+        if (!$feedOutModel) {
+            throw new \RuntimeException('Outbound feed not found');
+        }
+
+        $chunkSize = max(1, min(1000, (int) $chunkSize));
+        $lastRecordId = 0;
+        $inboundCache = [];
+
+        while (true) {
+            $rows = DB::table('data_outbound as o')
+                ->join('data_inbound as i', function ($join) {
+                    $join->on('i.idRecord', '=', 'o.idRecord')
+                        ->on('i.idFeedIn', '=', 'o.idFeedIn');
+                })
+                ->where('o.idFeedOut', $idFeedOut)
+                ->where('o.processed', 1)
+                ->where('o.accepted', 0)
+                ->whereBetween(DB::raw('DATE(o.timestamp)'), [$dateStart, $dateEnd])
+                ->where('o.idRecord', '>', $lastRecordId)
+                ->orderBy('o.idRecord')
+                ->limit($chunkSize)
+                ->select(
+                    'o.idRecord',
+                    'o.idFeedIn',
+                    'o.idFeedOut',
+                    'o.webhookCallbackId',
+                    'i.*'
+                )
+                ->get();
+
+            if ($rows->isEmpty()) {
+                break;
+            }
+
+            foreach ($rows as $row) {
+                $lastRecordId = max($lastRecordId, (int) $row->idRecord);
+                $summary['total']++;
+
+                try {
+                    $idFeedIn = (int) $row->idFeedIn;
+                    if (!array_key_exists($idFeedIn, $inboundCache)) {
+                        $inboundCache[$idFeedIn] = InboundFeed::with('company')->find($idFeedIn);
+                    }
+                    $inboundFeed = $inboundCache[$idFeedIn];
+
+                    $result = OutboundPushService::pushRecord(
+                        $row,
+                        $feedOutModel,
+                        $inboundFeed,
+                        !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
+                    );
+
+                    if (($feedOutModel->responseType ?? 'realtime') === 'marketplace') {
+                        $decision = $result['marketplaceDecision'] ?? null;
+                        $decisionType = is_array($decision) ? ($decision['decisionType'] ?? 'pending_webhook') : 'pending_webhook';
+                        $price = isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null;
+
+                        if ($decisionType === 'accepted') {
+                            self::updateDataOutboundProcessed(
+                                (int) $row->idRecord,
+                                $idFeedOut,
+                                true,
+                                (string) ($decision['reason'] ?? 'Marketplace accepted'),
+                                $price,
+                                true,
+                                true
+                            );
+                            $summary['accepted']++;
+                        } elseif ($decisionType === 'rejected') {
+                            $reasonText = (string) ($decision['reason'] ?? ($result['text'] ?? 'Marketplace rejected'));
+                            self::updateDataOutboundProcessed(
+                                (int) $row->idRecord,
+                                $idFeedOut,
+                                false,
+                                $reasonText,
+                                $price,
+                                true,
+                                true
+                            );
+                            $summary['rejected']++;
+                        } elseif ($decisionType === 'pending_manual') {
+                            $pendingResultText = json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                            if ($pendingResultText === false || $pendingResultText === '') {
+                                $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
+                            }
+                            DB::table('data_outbound')
+                                ->where('idRecord', (int) $row->idRecord)
+                                ->where('idFeedOut', $idFeedOut)
+                                ->update([
+                                    'result' => $pendingResultText,
+                                    'cost' => $price,
+                                ]);
+                            $summary['pending_manual']++;
+                        } else {
+                            $summary['pending_webhook']++;
+                        }
+                    } else {
+                        self::updateDataOutboundProcessed(
+                            (int) $row->idRecord,
+                            $idFeedOut,
+                            (bool) ($result['status'] ?? false),
+                            (string) ($result['text'] ?? ''),
+                            isset($result['cost']) && is_numeric($result['cost']) ? (float) $result['cost'] : null,
+                            true,
+                            true
+                        );
+
+                        if ((bool) ($result['status'] ?? false)) {
+                            $summary['accepted']++;
+                        } else {
+                            $summary['rejected']++;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $summary['errors']++;
+                    Log::channel('single')->error('[LiveFeed] RetryOutboundRejections error', [
+                        'idRecord' => $row->idRecord ?? null,
+                        'idFeedOut' => $idFeedOut,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        return $summary;
+    }
+
+    /**
      * Resend existing pending marketplace rows for a single outbound feed.
      * This never inserts new inbound/outbound rows; it only updates current pending rows.
      *

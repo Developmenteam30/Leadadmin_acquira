@@ -6,11 +6,14 @@ use App\Models\OutboundFeed;
 use App\Models\Company;
 use App\Helpers\CompanyScope;
 use App\Jobs\ResendPendingMarketplaceJob;
+use App\Jobs\RetryOutboundRejectionsJob;
 use App\Services\OutboundTestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class OutboundFeedController extends Controller
@@ -1204,18 +1207,13 @@ class OutboundFeedController extends Controller
             if (!$dateStart || !$dateEnd) {
                 return response()->json(['status' => 0, 'error' => 'Date range is required'], 422);
             }
-            $jobId = $this->addLegacyJob('retry-outbound-rejections', $id, [
-                'label' => $feed->label,
-                'dateStart' => $dateStart,
-                'dateEnd' => $dateEnd,
+
+            RetryOutboundRejectionsJob::dispatch((int) $id, (string) $dateStart, (string) $dateEnd);
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Retry rejections job submitted to Laravel queue successfully.',
             ]);
-            if ($jobId) {
-                return response()->json([
-                    'status' => 1,
-                    'message' => 'Retry rejections job #' . $jobId . ' submitted successfully.',
-                ]);
-            }
-            return response()->json(['status' => 0, 'error' => 'Could not add job.'], 500);
         } catch (\Exception $e) {
             return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
         }
@@ -1377,14 +1375,85 @@ class OutboundFeedController extends Controller
     private function addLegacyJob(string $type, int $destination, array $fields, string $filename = '', int $records = 0): ?int
     {
         try {
+            if (!Schema::hasTable('jobs')) {
+                throw new \RuntimeException('Jobs table does not exist.');
+            }
+
+            $requiredColumns = ['type', 'destination', 'fields', 'filename', 'records', 'idUser', 'status'];
+            $missingColumns = array_values(array_filter($requiredColumns, fn ($col) => !Schema::hasColumn('jobs', $col)));
+            if (!empty($missingColumns)) {
+                throw new \RuntimeException(
+                    'Jobs table is missing legacy columns: ' . implode(', ', $missingColumns)
+                );
+            }
+
             $userId = auth()->id() ?? 0;
-            DB::insert(
-                'INSERT INTO jobs (type, destination, fields, filename, records, idUser, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [$type, $destination, serialize($fields), $filename, $records, $userId, 'pending']
-            );
-            return (int) DB::getPdo()->lastInsertId();
+            $insertData = [
+                'type' => $type,
+                'destination' => $destination,
+                'fields' => serialize($fields),
+                'filename' => $filename,
+                'records' => $records,
+                'idUser' => $userId,
+                'status' => 'pending',
+            ];
+
+            // Compatibility with Laravel queue jobs schema.
+            if (Schema::hasColumn('jobs', 'queue')) {
+                $insertData['queue'] = 'legacy';
+            }
+            if (Schema::hasColumn('jobs', 'payload')) {
+                $insertData['payload'] = json_encode([
+                    'type' => $type,
+                    'destination' => $destination,
+                    'fields' => $fields,
+                    'filename' => $filename,
+                    'records' => $records,
+                    'idUser' => $userId,
+                    'status' => 'pending',
+                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            }
+            if (Schema::hasColumn('jobs', 'attempts')) {
+                $insertData['attempts'] = 0;
+            }
+            if (Schema::hasColumn('jobs', 'reserved_at')) {
+                $insertData['reserved_at'] = null;
+            }
+            if (Schema::hasColumn('jobs', 'available_at')) {
+                $insertData['available_at'] = time();
+            }
+            if (Schema::hasColumn('jobs', 'created_at')) {
+                $insertData['created_at'] = time();
+            }
+
+            DB::table('jobs')->insert($insertData);
+            $lastInsertId = DB::getPdo()->lastInsertId();
+            if (is_numeric($lastInsertId) && (int) $lastInsertId > 0) {
+                return (int) $lastInsertId;
+            }
+
+            // Fallback for legacy schemas where PDO lastInsertId can be empty.
+            if (Schema::hasColumn('jobs', 'jobId')) {
+                $row = DB::table('jobs')
+                    ->where('type', $type)
+                    ->where('destination', $destination)
+                    ->where('idUser', $userId)
+                    ->orderByDesc('jobId')
+                    ->first(['jobId']);
+                if (!empty($row?->jobId)) {
+                    return (int) $row->jobId;
+                }
+            }
+
+            return 1;
         } catch (\Exception $e) {
-            return null;
+            Log::channel('single')->error('[OutboundFeed] addLegacyJob failed', [
+                'type' => $type,
+                'destination' => $destination,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
         }
     }
 }
