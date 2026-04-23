@@ -10,15 +10,44 @@ use Illuminate\Support\Facades\Log;
 class OutboundPushService
 {
     /**
+     * Normalize feed JSON-backed fields to arrays even if legacy rows are double-encoded.
+     */
+    protected static function normalizeArrayField(mixed $value, array $fallback = []): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return $fallback;
+        }
+
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+
+        // Handle legacy double-encoded JSON payloads.
+        if (is_string($decoded)) {
+            $decodedNested = json_decode($decoded, true);
+            if (is_array($decodedNested)) {
+                return $decodedNested;
+            }
+        }
+
+        return $fallback;
+    }
+
+    /**
      * Build request data from inbound record and feed config, then send to outbound URL.
      * Returns ['status' => bool, 'text' => string, 'fields' => array]
      * @param string|null $webhookCallbackId When provided (marketplace), inject as callbackId for webhook return
      */
     public static function pushRecord(object $record, OutboundFeed $feed, ?InboundFeed $inboundFeed = null, ?string $webhookCallbackId = null): array
     {
-        $staticFields = is_array($feed->staticFieldsJSON) ? $feed->staticFieldsJSON : (json_decode($feed->staticFieldsJSON ?? '{}', true) ?: []);
-        $varFields = is_array($feed->varFieldsJSON) ? $feed->varFieldsJSON : (json_decode($feed->varFieldsJSON ?? '{}', true) ?: []);
-        $valueMap = is_array($feed->valueMap) ? $feed->valueMap : (json_decode($feed->valueMap ?? '[]', true) ?: []);
+        $staticFields = self::normalizeArrayField($feed->staticFieldsJSON, []);
+        $varFields = self::normalizeArrayField($feed->varFieldsJSON, []);
+        $valueMap = self::normalizeArrayField($feed->valueMap, []);
 
         $row = (object) array_merge((array) $record, [
             'stamp' => $record->stamp ?? $record->leadstamp ?? now()->format('Y-m-d H:i:s'),

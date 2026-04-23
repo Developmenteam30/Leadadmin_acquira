@@ -432,7 +432,7 @@ class OutboundFeedController extends Controller
                     }
                 }
                 if (!empty($staticFields)) {
-                    $staticFieldsJSON = json_encode($staticFields);
+                    $staticFieldsJSON = $staticFields;
                 }
             }
 
@@ -449,7 +449,7 @@ class OutboundFeedController extends Controller
                     }
                 }
                 if (!empty($varFields)) {
-                    $varFieldsJSON = json_encode($varFields);
+                    $varFieldsJSON = $varFields;
                     $fieldMap = json_encode($fieldMapArray);
                 }
             }
@@ -718,7 +718,7 @@ class OutboundFeedController extends Controller
                     }
                 }
                 if (!empty($staticFields)) {
-                    $staticFieldsJSON = json_encode($staticFields);
+                    $staticFieldsJSON = $staticFields;
                 }
             }
 
@@ -735,7 +735,7 @@ class OutboundFeedController extends Controller
                     }
                 }
                 if (!empty($varFields)) {
-                    $varFieldsJSON = json_encode($varFields);
+                    $varFieldsJSON = $varFields;
                     $fieldMap = json_encode($fieldMapArray);
                 }
             }

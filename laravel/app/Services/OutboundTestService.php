@@ -7,6 +7,34 @@ use Illuminate\Support\Facades\Http;
 
 class OutboundTestService
 {
+    /**
+     * Normalize feed JSON-backed fields to arrays even if legacy rows are double-encoded.
+     */
+    protected static function normalizeArrayField(mixed $value, array $fallback = []): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return $fallback;
+        }
+
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+
+        if (is_string($decoded)) {
+            $decodedNested = json_decode($decoded, true);
+            if (is_array($decodedNested)) {
+                return $decodedNested;
+            }
+        }
+
+        return $fallback;
+    }
+
     protected static $testDefaults = [
         'email' => 'test@example.com',
         'fname' => 'Test',
@@ -42,9 +70,9 @@ class OutboundTestService
         $data = array_merge(self::$testDefaults, $testData);
         $data['stamp'] = $data['stamp'] ?? now()->format('Y-m-d H:i:s');
 
-        $staticFields = is_array($feed->staticFieldsJSON) ? $feed->staticFieldsJSON : [];
-        $varFields = is_array($feed->varFieldsJSON) ? $feed->varFieldsJSON : [];
-        $valueMap = is_array($feed->valueMap) ? $feed->valueMap : [];
+        $staticFields = self::normalizeArrayField($feed->staticFieldsJSON, []);
+        $varFields = self::normalizeArrayField($feed->varFieldsJSON, []);
+        $valueMap = self::normalizeArrayField($feed->valueMap, []);
 
         $requestData = [];
         foreach ($staticFields as $key => $val) {
