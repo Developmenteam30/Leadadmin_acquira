@@ -1813,7 +1813,7 @@ export default {
         retryRejectionsModal.success = r.data.status === 1;
         if (r.data.status === 1) await fetchFeeds();
       } catch (e) {
-        retryRejectionsModal.message = e.response?.data?.error || e.message || 'Failed';
+        retryRejectionsModal.message = e.response?.data?.error || e.response?.data?.message || e.message || 'Failed';
         retryRejectionsModal.success = false;
       } finally {
         retryRejectionsSending.value = false;

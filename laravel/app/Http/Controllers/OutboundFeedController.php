@@ -1205,6 +1205,7 @@ class OutboundFeedController extends Controller
                 return response()->json(['status' => 0, 'error' => 'Date range is required'], 422);
             }
             $jobId = $this->addLegacyJob('retry-outbound-rejections', $id, [
+                'label' => $feed->label,
                 'dateStart' => $dateStart,
                 'dateEnd' => $dateEnd,
             ]);
@@ -1214,9 +1215,9 @@ class OutboundFeedController extends Controller
                     'message' => 'Retry rejections job #' . $jobId . ' submitted successfully.',
                 ]);
             }
-            return response()->json(['status' => 0, 'message' => 'Could not add job.'], 500);
+            return response()->json(['status' => 0, 'error' => 'Could not add job.'], 500);
         } catch (\Exception $e) {
-            return response()->json(['status' => 0, 'message' => $e->getMessage()], 500);
+            return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
         }
     }
 
