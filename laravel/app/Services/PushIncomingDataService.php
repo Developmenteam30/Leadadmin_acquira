@@ -210,10 +210,14 @@ class PushIncomingDataService
                         $liveData['reason'] = sprintf('Third-party rejection [Reason: %s] [Code: O%s0]', $reasonText, $popIdFeedOut);
                         $liveData['pendingMarketplace'] = false;
                     } elseif ($decisionType === 'pending_manual') {
+                        $pendingResultText = json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                        if ($pendingResultText === false || $pendingResultText === '') {
+                            $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
+                        }
                         self::markOutboundPendingManual(
                             $idRecord,
                             $popIdFeedOut,
-                            self::MARKETPLACE_PENDING_MANUAL_REASON,
+                            $pendingResultText,
                             isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null
                         );
                         $liveData['reason'] = self::MARKETPLACE_PENDING_MANUAL_REASON;
@@ -598,10 +602,14 @@ class PushIncomingDataService
                         );
                         $summary['rejected']++;
                     } elseif ($decisionType === 'pending_manual') {
+                        $pendingResultText = json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                        if ($pendingResultText === false || $pendingResultText === '') {
+                            $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
+                        }
                         self::markOutboundPendingManual(
                             (int) $row->idRecord,
                             $idFeedOut,
-                            self::MARKETPLACE_PENDING_MANUAL_REASON,
+                            $pendingResultText,
                             $price
                         );
                         $summary['pending_manual']++;
