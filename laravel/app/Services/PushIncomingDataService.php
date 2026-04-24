@@ -185,6 +185,7 @@ class PushIncomingDataService
                         'idFeedOut' => $popIdFeedOut,
                         'callbackId' => $webhookCallbackId,
                     ]);
+                    self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed, $webhookCallbackId);
                     $decision = $result['marketplaceDecision'] ?? null;
                     $decisionType = is_array($decision) ? ($decision['decisionType'] ?? 'pending_webhook') : 'pending_webhook';
@@ -251,6 +252,7 @@ class PushIncomingDataService
                         'postUrl' => $feedOutModel->postUrl ?? '(empty)',
                         'feedType' => $feedOutModel->feedType ?? null,
                     ]);
+                    self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
 
                     Log::channel('single')->info('[LiveFeed] Outbound push result', [
@@ -481,6 +483,101 @@ class PushIncomingDataService
         return $row ? (object) (array) $row : null;
     }
 
+    protected static function incrementOutboundSentCount(int $idRecord, int $idFeedOut): void
+    {
+        DB::table('data_outbound')
+            ->where('idRecord', $idRecord)
+            ->where('idFeedOut', $idFeedOut)
+            ->increment('sentCount');
+    }
+
+    public static function resendSingleOutboundRecord(int $idRecord, int $idFeedOut): array
+    {
+        $row = DB::table('data_outbound as o')
+            ->join('data_inbound as i', function ($join) {
+                $join->on('i.idRecord', '=', 'o.idRecord')
+                    ->on('i.idFeedIn', '=', 'o.idFeedIn');
+            })
+            ->where('o.idRecord', $idRecord)
+            ->where('o.idFeedOut', $idFeedOut)
+            ->select('o.idRecord', 'o.idFeedIn', 'o.idFeedOut', 'o.webhookCallbackId', 'i.*')
+            ->first();
+
+        if (!$row) {
+            throw new \RuntimeException('Outbound record not found');
+        }
+
+        $feedOutModel = OutboundFeed::find($idFeedOut);
+        if (!$feedOutModel) {
+            throw new \RuntimeException('Outbound feed not found');
+        }
+
+        $inboundFeed = InboundFeed::with('company')->find((int) $row->idFeedIn);
+        self::incrementOutboundSentCount($idRecord, $idFeedOut);
+        $result = OutboundPushService::pushRecord(
+            $row,
+            $feedOutModel,
+            $inboundFeed,
+            !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
+        );
+
+        if (($feedOutModel->responseType ?? 'realtime') === 'marketplace') {
+            $decision = $result['marketplaceDecision'] ?? null;
+            $decisionType = is_array($decision) ? ($decision['decisionType'] ?? 'pending_webhook') : 'pending_webhook';
+            $price = isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null;
+
+            if ($decisionType === 'accepted') {
+                self::updateDataOutboundProcessed(
+                    $idRecord,
+                    $idFeedOut,
+                    true,
+                    (string) ($decision['reason'] ?? 'Marketplace accepted'),
+                    $price,
+                    false,
+                    true
+                );
+                return ['status' => 1, 'state' => 'accepted'];
+            }
+
+            if ($decisionType === 'rejected') {
+                $reasonText = (string) ($decision['reason'] ?? ($result['text'] ?? 'Marketplace rejected'));
+                self::updateDataOutboundProcessed(
+                    $idRecord,
+                    $idFeedOut,
+                    false,
+                    $reasonText,
+                    $price,
+                    false,
+                    true
+                );
+                return ['status' => 1, 'state' => 'rejected'];
+            }
+
+            if ($decisionType === 'pending_manual') {
+                $pendingResultText = json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                if ($pendingResultText === false || $pendingResultText === '') {
+                    $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
+                }
+                self::markOutboundPendingManual($idRecord, $idFeedOut, $pendingResultText, $price);
+                return ['status' => 1, 'state' => 'pending_manual'];
+            }
+
+            return ['status' => 1, 'state' => 'pending_webhook'];
+        }
+
+        self::updateDataOutboundProcessed(
+            $idRecord,
+            $idFeedOut,
+            (bool) ($result['status'] ?? false),
+            (string) ($result['text'] ?? ''),
+            isset($result['cost']) && is_numeric($result['cost']) ? (float) $result['cost'] : null,
+            true,
+            true
+        );
+
+        return ['status' => 1, 'state' => ((bool) ($result['status'] ?? false)) ? 'accepted' : 'rejected'];
+    }
+
     /**
      * Process webhook callback from marketplace buyer. Updates data_outbound and stats.
      * Called by OutboundWebhookController.
@@ -566,6 +663,7 @@ class PushIncomingDataService
                     }
                     $inboundFeed = $inboundCache[$idFeedIn];
 
+                    self::incrementOutboundSentCount((int) $row->idRecord, $idFeedOut);
                     $result = OutboundPushService::pushRecord(
                         $row,
                         $feedOutModel,
@@ -712,6 +810,7 @@ class PushIncomingDataService
                     }
                     $inboundFeed = $inboundCache[$idFeedIn];
 
+                    self::incrementOutboundSentCount((int) $row->idRecord, $idFeedOut);
                     $result = OutboundPushService::pushRecord(
                         $row,
                         $feedOutModel,

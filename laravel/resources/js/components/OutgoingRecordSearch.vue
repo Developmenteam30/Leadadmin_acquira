@@ -1,5 +1,14 @@
 <template>
   <div>
+    <div
+      v-if="toast.show"
+      class="alert"
+      :class="toast.type === 'success' ? 'alert-success' : 'alert-danger'"
+      style="position: fixed; top: 16px; right: 16px; z-index: 2000; min-width: 280px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"
+      role="alert"
+    >
+      {{ toast.message }}
+    </div>
     <Navigation />
     <div class="container-fluid">
       <h2>Outgoing Feeds Record Search</h2>
@@ -104,11 +113,13 @@
                 <tr>
                   <th>Outgoing Feed</th>
                   <th>Status</th>
+                  <th>Sent Count</th>
                   <th>Timestamp</th>
-                  <!-- <th>Result / Response</th> -->
+                  <th>Result / Response</th>
                   <th>Cost</th>
                   <th>Email</th>
-                  <th>Name</th>
+                  <th>First Name</th>
+                  <th>Last Name</th>
                   <th>Phone</th>
                   <th>Incoming Feed</th>
                   <th>Actions</th>
@@ -122,13 +133,15 @@
                       {{ record.processed === 0 ? 'Pending' : (record.accepted ? 'Accepted' : 'Rejected') }}
                     </span>
                   </td>
+                  <td>{{ record.sentCount || 0 }}</td>
                   <td>{{ record.timestampConverted || record.timestamp }}</td>
-                  <!-- <td style="max-width: 300px; word-break: break-word;">
+                  <td style="max-width: 300px; word-break: break-word;">
                     {{ record.result || (record.accepted ? 'Success' : '-') }}
-                  </td> -->
+                  </td>
                   <td>{{ record.cost != null ? formatCost(record.cost) : '' }}</td>
                   <td>{{ record.email }}</td>
-                  <td>{{ record.fname }} {{ record.lname }}</td>
+                  <td>{{ record.fname || '-' }}</td>
+                  <td>{{ record.lname || '-' }}</td>
                   <td>{{ record.cellphone || record.landline || '-' }}</td>
                   <td>{{ record.inboundCompanyName }} - {{ record.inboundLabel }}</td>
                   <td class="text-center">
@@ -140,6 +153,15 @@
                       @click="confirmMarketplace(record)"
                     >
                       Confirm
+                    </button>
+                    <button
+                      v-if="canResend(record)"
+                      type="button"
+                      class="btn btn-warning btn-sm"
+                      style="margin-right: 6px;"
+                      @click="resendRecord(record)"
+                    >
+                      Resend
                     </button>
                     <button
                       type="button"
@@ -179,7 +201,8 @@
                   <tr><td><strong>Outgoing Feed</strong></td><td>{{ detailsRecord.outboundCompanyName }} - {{ detailsRecord.outboundLabel }} (#{{ detailsRecord.idFeedOut }})</td></tr>
                   <tr><td><strong>Status</strong></td><td><span :class="detailsRecord.processed === 0 ? 'text-warning' : (detailsRecord.accepted ? 'text-success' : 'text-danger')">{{ detailsRecord.processed === 0 ? 'Pending' : (detailsRecord.accepted ? 'Accepted' : 'Rejected') }}</span></td></tr>
                   <tr><td><strong>Timestamp</strong></td><td>{{ detailsRecord.timestampConverted || detailsRecord.timestamp }}</td></tr>
-                  <tr><td><strong>Result / Response</strong></td><td style="word-break: break-word;">{{ detailsRecord.result || '-' }}</td></tr>
+                  <tr><td><strong>Outgoing Result / Response</strong></td><td style="word-break: break-word;">{{ detailsRecord.result || '-' }}</td></tr>
+                  <tr><td><strong>Raw Result</strong></td><td style="word-break: break-word;">{{ detailsRecord.inboundResult || '-' }}</td></tr>
                   <tr><td><strong>Cost</strong></td><td>{{ detailsRecord.cost != null ? formatCost(detailsRecord.cost) : '-' }}</td></tr>
                   <tr><td><strong>Incoming Feed</strong></td><td>{{ detailsRecord.inboundCompanyName }} - {{ detailsRecord.inboundLabel }}</td></tr>
                 </tbody>
@@ -188,9 +211,12 @@
               <table class="table table-bordered table-condensed">
                 <tbody>
                   <tr><td><strong>Email</strong></td><td>{{ detailsRecord.email }}</td></tr>
-                  <tr><td><strong>Name</strong></td><td>{{ detailsRecord.fname }} {{ detailsRecord.lname }}</td></tr>
+                  <tr><td><strong>First Name</strong></td><td>{{ detailsRecord.fname || '-' }}</td></tr>
+                  <tr><td><strong>Last Name</strong></td><td>{{ detailsRecord.lname || '-' }}</td></tr>
                   <tr><td><strong>Address</strong></td><td>{{ detailsRecord.addr }} {{ detailsRecord.addr2 }}</td></tr>
-                  <tr><td><strong>City/State/Zip</strong></td><td>{{ detailsRecord.city }}, {{ detailsRecord.state }} {{ detailsRecord.zip }}</td></tr>
+                  <tr><td><strong>City</strong></td><td>{{ detailsRecord.city || '-' }}</td></tr>
+                  <tr><td><strong>State</strong></td><td>{{ detailsRecord.state || '-' }}</td></tr>
+                  <tr><td><strong>Zip</strong></td><td>{{ detailsRecord.zip || '-' }}</td></tr>
                   <tr><td><strong>Phone</strong></td><td>{{ detailsRecord.cellphone || detailsRecord.landline || '-' }}</td></tr>
                   <tr><td><strong>Lead Stamp</strong></td><td>{{ detailsRecord.leadstamp }}</td></tr>
                 </tbody>
@@ -199,6 +225,10 @@
                 <h5>Raw Data (JSON)</h5>
                 <pre style="background: #f5f5f5; padding: 10px; overflow-x: auto;">{{ formatRawData(detailsRecord.rawData) }}</pre>
               </template>
+              <h5>Raw Data Sent to Buyer (JSON)</h5>
+              <p v-if="buyerPayloadLoading" class="text-muted">Loading buyer payload...</p>
+              <p v-else-if="buyerPayloadError" class="text-danger">{{ buyerPayloadError }}</p>
+              <pre v-else style="background: #f5f5f5; padding: 10px; overflow-x: auto;">{{ formatRawData(detailsRecord.outboundRawData || {}) }}</pre>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-default" @click="closeDetailsModal">Close</button>
@@ -238,6 +268,15 @@ export default {
       searching: false,
       searchError: '',
       detailsRecord: null,
+      buyerPayloadLoading: false,
+      buyerPayloadError: '',
+      resendingKey: '',
+      toast: {
+        show: false,
+        message: '',
+        type: 'success',
+      },
+      toastTimer: null,
     };
   },
   mounted() {
@@ -269,7 +308,7 @@ export default {
       if (q.idFeedOut) this.filters.idFeedOut = q.idFeedOut;
       if (q.idCompany || q.idFeedOut) this.doSearch();
     },
-    async doSearch() {
+    async doSearch(forceRefresh = false) {
       const hasFilter = this.filters.idFeedOut || this.filters.idCompany || this.filters.email || this.filters.phone || this.filters.url || this.filters.ip;
       if (!hasFilter) {
         this.searchError = 'You must select an outgoing feed/company OR fill out at least one of: email, phone, URL, or IP.';
@@ -282,6 +321,9 @@ export default {
         const params = new URLSearchParams();
         for (const [k, v] of Object.entries(this.filters)) {
           if (v != null && v !== '') params.set(k, v);
+        }
+        if (forceRefresh) {
+          params.set('_ts', String(Date.now()));
         }
         const r = await axios.get('/api/record-search/outbound?' + params.toString());
         if (r.data.status === 1) {
@@ -298,19 +340,76 @@ export default {
       }
     },
     openDetailsModal(record) {
-      this.detailsRecord = record;
+      this.detailsRecord = { ...record, outboundRawData: null };
+      this.buyerPayloadLoading = true;
+      this.buyerPayloadError = '';
       this.$nextTick(() => {
         const $modal = $('#outboundRecordDetails' + record.idRecord + '-' + record.idFeedOut);
         $modal.one('hidden.bs.modal', () => {
           this.detailsRecord = null;
+          this.buyerPayloadLoading = false;
+          this.buyerPayloadError = '';
         });
         $modal.modal('show');
       });
+      this.fetchBuyerPayload(record);
     },
     closeDetailsModal() {
       if (this.detailsRecord) {
         $('#outboundRecordDetails' + this.detailsRecord.idRecord + '-' + this.detailsRecord.idFeedOut).modal('hide');
         this.detailsRecord = null;
+        this.buyerPayloadLoading = false;
+        this.buyerPayloadError = '';
+      }
+    },
+    canResend(record) {
+      if (!record) return false;
+      const isPending = Number(record.processed) === 0;
+      const isRejected = Number(record.processed) === 1 && Number(record.accepted) === 0;
+      return isPending || isRejected;
+    },
+    async resendRecord(record) {
+      if (!this.canResend(record)) return;
+      const rowKey = `${record.idRecord}-${record.idFeedOut}`;
+      if (this.resendingKey === rowKey) return;
+      if (!window.confirm('Resend this record to buyer?')) return;
+      try {
+        this.resendingKey = rowKey;
+        const r = await axios.post(`/api/record-search/outbound/${record.idRecord}/${record.idFeedOut}/resend`, {});
+        this.showToast(r.data?.message || 'Record resent successfully.', 'success');
+        await this.doSearch(true);
+      } catch (e) {
+        this.searchError = e.response?.data?.error || e.message || 'Failed to resend record';
+        this.showToast(this.searchError, 'error');
+      } finally {
+        this.resendingKey = '';
+      }
+    },
+    showToast(message, type = 'success') {
+      if (this.toastTimer) {
+        clearTimeout(this.toastTimer);
+      }
+      this.toast.message = message;
+      this.toast.type = type;
+      this.toast.show = true;
+      this.toastTimer = setTimeout(() => {
+        this.toast.show = false;
+      }, 2500);
+    },
+    async fetchBuyerPayload(record) {
+      try {
+        const r = await axios.get(`/api/record-search/outbound/${record.idRecord}/${record.idFeedOut}/buyer-payload`);
+        if (r.data?.status === 1 && this.detailsRecord) {
+          this.detailsRecord.outboundRawData = r.data.data || {};
+        } else if (this.detailsRecord) {
+          this.buyerPayloadError = r.data?.error || 'Failed to load buyer payload';
+        }
+      } catch (e) {
+        if (this.detailsRecord) {
+          this.buyerPayloadError = e.response?.data?.error || e.message || 'Failed to load buyer payload';
+        }
+      } finally {
+        this.buyerPayloadLoading = false;
       }
     },
     canManualConfirm(record) {

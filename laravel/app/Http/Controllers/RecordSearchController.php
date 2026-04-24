@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\CompanyScope;
+use App\Models\InboundFeed;
+use App\Models\OutboundFeed;
+use App\Services\OutboundPushService;
 use App\Services\PushIncomingDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -314,6 +317,7 @@ class RecordSearchController extends Controller
                     DB::raw("DATE_FORMAT(o.timestamp, '%Y-%m-%d %H:%i:%s') as timestampConverted"),
                     'o.result',
                     'o.accepted',
+                    'o.sentCount',
                     'o.cost',
                     'o.webhookCallbackId',
                     'o.url as outboundUrl',
@@ -339,7 +343,8 @@ class RecordSearchController extends Controller
                     'i.ip',
                     'i.leadstamp',
                     'i.rawData',
-                    'i.cost as inboundCost'
+                    'i.cost as inboundCost',
+                    'i.result as inboundResult'
                 )
                 ->orderByRaw('COALESCE(o.timestamp, i.timestamp) DESC')
                 ->limit(500);
@@ -438,6 +443,91 @@ class RecordSearchController extends Controller
             return response()->json([
                 'status' => 0,
                 'error' => 'Failed to confirm marketplace record: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getOutboundBuyerPayload(Request $request, int $idRecord, int $idFeedOut)
+    {
+        try {
+            $query = DB::table('data_outbound as o')
+                ->join('data_inbound as i', function ($join) {
+                    $join->on('i.idRecord', '=', 'o.idRecord')->on('i.idFeedIn', '=', 'o.idFeedIn');
+                })
+                ->join('feedout as fo', 'fo.idFeedOut', '=', 'o.idFeedOut')
+                ->where('o.idRecord', $idRecord)
+                ->where('o.idFeedOut', $idFeedOut)
+                ->select('o.idRecord', 'o.idFeedIn', 'o.idFeedOut', 'o.webhookCallbackId', 'fo.idCompany as outboundCompanyId', 'i.*');
+
+            CompanyScope::apply($query, $request->user(), 'fo.idCompany');
+
+            $row = $query->first();
+            if (!$row) {
+                return response()->json(['status' => 0, 'error' => 'Outbound record not found'], 404);
+            }
+
+            $feedOut = OutboundFeed::find((int) $row->idFeedOut);
+            if (!$feedOut) {
+                return response()->json(['status' => 0, 'error' => 'Outbound feed not found'], 404);
+            }
+            $inboundFeed = InboundFeed::with('company')->find((int) $row->idFeedIn);
+
+            $payload = OutboundPushService::buildRequestData(
+                $row,
+                $feedOut,
+                $inboundFeed,
+                !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
+            );
+
+            return response()->json([
+                'status' => 1,
+                'data' => $payload,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 0,
+                'error' => 'Failed to build outbound payload: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function resendOutboundRecord(Request $request, int $idRecord, int $idFeedOut)
+    {
+        try {
+            $row = DB::table('data_outbound as o')
+                ->join('feedout as fo', 'fo.idFeedOut', '=', 'o.idFeedOut')
+                ->where('o.idRecord', $idRecord)
+                ->where('o.idFeedOut', $idFeedOut)
+                ->select('o.idRecord', 'o.idFeedOut', 'fo.idCompany', 'o.processed', 'o.accepted')
+                ->first();
+
+            if (!$row) {
+                return response()->json(['status' => 0, 'error' => 'Outbound record not found'], 404);
+            }
+
+            $scopeQuery = DB::table('feedout as fo')->where('fo.idFeedOut', $idFeedOut)->select('fo.idFeedOut');
+            CompanyScope::apply($scopeQuery, $request->user(), 'fo.idCompany');
+            if (!$scopeQuery->exists()) {
+                return response()->json(['status' => 0, 'error' => 'Outbound record not found'], 404);
+            }
+
+            $isPending = ((int) $row->processed) === 0;
+            $isRejected = ((int) $row->processed) === 1 && ((int) $row->accepted) === 0;
+            if (!$isPending && !$isRejected) {
+                return response()->json(['status' => 0, 'error' => 'Only pending or rejected records can be resent'], 422);
+            }
+
+            $result = PushIncomingDataService::resendSingleOutboundRecord($idRecord, $idFeedOut);
+
+            return response()->json([
+                'status' => 1,
+                'message' => 'Record resent successfully.',
+                'data' => $result,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 0,
+                'error' => 'Failed to resend record: ' . $e->getMessage(),
             ], 500);
         }
     }

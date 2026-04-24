@@ -9,41 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class OutboundPushService
 {
-    /**
-     * Normalize feed JSON-backed fields to arrays even if legacy rows are double-encoded.
-     */
-    protected static function normalizeArrayField(mixed $value, array $fallback = []): array
-    {
-        if (is_array($value)) {
-            return $value;
-        }
-
-        if (!is_string($value) || trim($value) === '') {
-            return $fallback;
-        }
-
-        $decoded = json_decode($value, true);
-        if (is_array($decoded)) {
-            return $decoded;
-        }
-
-        // Handle legacy double-encoded JSON payloads.
-        if (is_string($decoded)) {
-            $decodedNested = json_decode($decoded, true);
-            if (is_array($decodedNested)) {
-                return $decodedNested;
-            }
-        }
-
-        return $fallback;
-    }
-
-    /**
-     * Build request data from inbound record and feed config, then send to outbound URL.
-     * Returns ['status' => bool, 'text' => string, 'fields' => array]
-     * @param string|null $webhookCallbackId When provided (marketplace), inject as callbackId for webhook return
-     */
-    public static function pushRecord(object $record, OutboundFeed $feed, ?InboundFeed $inboundFeed = null, ?string $webhookCallbackId = null): array
+    public static function buildRequestData(object $record, OutboundFeed $feed, ?InboundFeed $inboundFeed = null, ?string $webhookCallbackId = null): array
     {
         $staticFields = self::normalizeArrayField($feed->staticFieldsJSON, []);
         $varFields = self::normalizeArrayField($feed->varFieldsJSON, []);
@@ -162,11 +128,51 @@ class OutboundPushService
             }
         }
 
-        // Marketplace: inject leadId/callbackId so buyer can return it in webhook body
         if ($webhookCallbackId !== null) {
             $requestData['leadId'] = $webhookCallbackId;
             $requestData['callbackId'] = $webhookCallbackId;
         }
+
+        return $requestData;
+    }
+
+    /**
+     * Normalize feed JSON-backed fields to arrays even if legacy rows are double-encoded.
+     */
+    protected static function normalizeArrayField(mixed $value, array $fallback = []): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return $fallback;
+        }
+
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+
+        // Handle legacy double-encoded JSON payloads.
+        if (is_string($decoded)) {
+            $decodedNested = json_decode($decoded, true);
+            if (is_array($decodedNested)) {
+                return $decodedNested;
+            }
+        }
+
+        return $fallback;
+    }
+
+    /**
+     * Build request data from inbound record and feed config, then send to outbound URL.
+     * Returns ['status' => bool, 'text' => string, 'fields' => array]
+     * @param string|null $webhookCallbackId When provided (marketplace), inject as callbackId for webhook return
+     */
+    public static function pushRecord(object $record, OutboundFeed $feed, ?InboundFeed $inboundFeed = null, ?string $webhookCallbackId = null): array
+    {
+        $requestData = self::buildRequestData($record, $feed, $inboundFeed, $webhookCallbackId);
 
         $url = $feed->postUrl;
         if (empty($url)) {
