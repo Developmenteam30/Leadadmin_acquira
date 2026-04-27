@@ -286,16 +286,17 @@ class RecordSearchController extends Controller
             $endDate = trim($request->input('endDate', ''));
             $status = trim($request->input('status', 'all'));
             $idFeedOut = trim($request->input('idFeedOut', ''));
+            $idFeedIn = trim($request->input('idFeedIn', ''));
             $idCompany = trim($request->input('idCompany', ''));
             $email = trim($request->input('email', ''));
             $phone = preg_replace('/[^0-9]/', '', trim($request->input('phone', '')));
             $url = trim($request->input('url', ''));
             $ip = trim($request->input('ip', ''));
 
-            if (empty($idFeedOut) && empty($idCompany) && empty($email) && empty($phone) && empty($url) && empty($ip)) {
+            if (empty($idFeedOut) && empty($idFeedIn) && empty($idCompany) && empty($email) && empty($phone) && empty($url) && empty($ip)) {
                 return response()->json([
                     'status' => 0,
-                    'error' => 'You must select an outgoing feed/company OR fill out at least one of: email, phone, URL, or IP.',
+                    'error' => 'You must select an outgoing feed/incoming feed/company OR fill out at least one of: email, phone, URL, or IP.',
                     'data' => [],
                 ], 400);
             }
@@ -366,6 +367,9 @@ class RecordSearchController extends Controller
             }
             if (!empty($idFeedOut)) {
                 $query->where('o.idFeedOut', $idFeedOut);
+            }
+            if (!empty($idFeedIn)) {
+                $query->where('o.idFeedIn', $idFeedIn);
             }
             if (!empty($idCompany)) {
                 $query->where('fo.idCompany', $idCompany);

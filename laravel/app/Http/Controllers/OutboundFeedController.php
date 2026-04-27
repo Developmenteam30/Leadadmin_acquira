@@ -93,6 +93,67 @@ class OutboundFeedController extends Controller
             $feeds = $query->orderBy('companies.name')
                 ->get();
 
+            $feedIds = $feeds->pluck('idFeedOut')->filter()->values();
+            $incomingFeedsByOutbound = [];
+            if ($feedIds->isNotEmpty()) {
+                $populationRows = DB::table('feedPopulation as fp')
+                    ->leftJoin('feedinc as fi', 'fi.idFeedIn', '=', 'fp.idFeedIn')
+                    ->leftJoin('companies as c', 'c.idCompany', '=', 'fi.idCompany')
+                    ->whereIn('fp.idFeedOut', $feedIds)
+                    ->select(
+                        'fp.idFeedOut',
+                        'fp.idFeedIn',
+                        'fi.label as inboundLabel',
+                        'c.name as inboundCompanyName'
+                    )
+                    ->orderBy('c.name')
+                    ->orderBy('fi.label')
+                    ->get();
+
+                $incomingStatsRows = DB::table('data_outbound as o')
+                    ->leftJoin('data_inbound as i', function ($join) {
+                        $join->on('i.idRecord', '=', 'o.idRecord')->on('i.idFeedIn', '=', 'o.idFeedIn');
+                    })
+                    ->whereIn('o.idFeedOut', $feedIds)
+                    ->whereRaw('COALESCE(o.timestamp, i.timestamp) >= ?', [$statsStart . ' 00:00:00'])
+                    ->whereRaw('COALESCE(o.timestamp, i.timestamp) <= ?', [$statsEnd . ' 23:59:59'])
+                    ->groupBy('o.idFeedOut', 'o.idFeedIn')
+                    ->selectRaw(
+                        'o.idFeedOut, o.idFeedIn,
+                        SUM(CASE WHEN o.processed = 1 AND o.accepted = 1 THEN 1 ELSE 0 END) as accepted,
+                        SUM(CASE WHEN o.processed = 1 AND o.accepted = 0 THEN 1 ELSE 0 END) as rejected,
+                        SUM(CASE WHEN o.processed = 0 THEN 1 ELSE 0 END) as pending'
+                    )
+                    ->get();
+
+                $incomingStatsByFeed = [];
+                foreach ($incomingStatsRows as $statsRow) {
+                    $incomingStatsByFeed[(int) ($statsRow->idFeedOut ?? 0) . ':' . (int) ($statsRow->idFeedIn ?? 0)] = [
+                        'accepted' => (int) ($statsRow->accepted ?? 0),
+                        'rejected' => (int) ($statsRow->rejected ?? 0),
+                        'pending' => (int) ($statsRow->pending ?? 0),
+                    ];
+                }
+
+                foreach ($populationRows as $row) {
+                    $idFeedOut = (int) ($row->idFeedOut ?? 0);
+                    $idFeedIn = (int) ($row->idFeedIn ?? 0);
+                    $statsKey = $idFeedOut . ':' . $idFeedIn;
+                    $stats = $incomingStatsByFeed[$statsKey] ?? ['accepted' => 0, 'rejected' => 0, 'pending' => 0];
+                    if (!isset($incomingFeedsByOutbound[$idFeedOut])) {
+                        $incomingFeedsByOutbound[$idFeedOut] = [];
+                    }
+                    $incomingFeedsByOutbound[$idFeedOut][] = [
+                        'idFeedIn' => $idFeedIn,
+                        'label' => $row->inboundLabel ?? '',
+                        'companyName' => $row->inboundCompanyName ?? '',
+                        'accepted' => $stats['accepted'],
+                        'rejected' => $stats['rejected'],
+                        'pending' => $stats['pending'],
+                    ];
+                }
+            }
+
             // Group by company and calculate stats
             $companyGroups = [];
             foreach ($feeds as $feed) {
@@ -125,6 +186,7 @@ class OutboundFeedController extends Controller
                     'accepted' => $stats['accepted'],
                     'rejected' => $stats['rejected'],
                     'queuedCount' => $feed->queued ?? 0,
+                    'incomingFeeds' => $incomingFeedsByOutbound[(int) ($feed->idFeedOut ?? 0)] ?? [],
                 ];
 
                 $companyGroups[$companyId]['feeds'][] = $feedData;

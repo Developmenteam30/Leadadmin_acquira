@@ -257,6 +257,7 @@ export default {
         endDate: today,
         status: 'all',
         idFeedOut: '',
+        idFeedIn: '',
         idCompany: '',
         email: '',
         phone: '',
@@ -306,12 +307,13 @@ export default {
       if (q.status) this.filters.status = q.status;
       if (q.idCompany) this.filters.idCompany = q.idCompany;
       if (q.idFeedOut) this.filters.idFeedOut = q.idFeedOut;
-      if (q.idCompany || q.idFeedOut) this.doSearch();
+      if (q.idFeedIn) this.filters.idFeedIn = q.idFeedIn;
+      if (q.idCompany || q.idFeedOut || q.idFeedIn) this.doSearch();
     },
     async doSearch(forceRefresh = false) {
-      const hasFilter = this.filters.idFeedOut || this.filters.idCompany || this.filters.email || this.filters.phone || this.filters.url || this.filters.ip;
+      const hasFilter = this.filters.idFeedOut || this.filters.idFeedIn || this.filters.idCompany || this.filters.email || this.filters.phone || this.filters.url || this.filters.ip;
       if (!hasFilter) {
-        this.searchError = 'You must select an outgoing feed/company OR fill out at least one of: email, phone, URL, or IP.';
+        this.searchError = 'You must select an outgoing feed/incoming feed/company OR fill out at least one of: email, phone, URL, or IP.';
         return;
       }
       this.searchError = '';

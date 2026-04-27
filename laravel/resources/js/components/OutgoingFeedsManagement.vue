@@ -103,90 +103,139 @@
                 </td>
               </tr>
               <template v-if="expandedCompanies[company.idCompany]">
-                <tr
-                  v-for="feed in company.feeds"
-                  :key="feed.idFeedOut"
-                  class="bg-gray feed-toggle"
-                >
-                  <td>{{ feed.idFeedOut }}</td>
-                  <td>
-                    <strong
-                      :class="{
-                        'status-active': feed.status === 'active',
-                        'status-hidden': feed.status === 'hidden',
-                        'status-retired': feed.status === 'retired',
-                      }"
-                    >
-                      {{ feed.label }}
-                    </strong>
-                  </td>
-                  <td>{{ feed.description }}</td>
-                  <td>{{ feed.status }}</td>
-                  <td>{{ feed.status }}</td>
-                  <td>
-                    <label class="switch">
-                      <input
-                        type="checkbox"
-                        :checked="feed.status === 'active'"
-                        @change="toggleStatus(feed.idFeedOut, $event.target.checked)"
-                      />
-                      <span class="slider"></span>
-                    </label>
-                  </td>
-                  <td class="text-right record-search-link-cell">
-                    <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'accepted')">
-                      {{ formatNumber(feed.accepted) }}
-                    </router-link>
-                  </td>
-                  <td class="text-right record-search-link-cell">
-                    <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'rejected')">
-                      {{ formatNumber(feed.rejected) }}
-                    </router-link>
-                  </td>
-                  <td class="text-right record-search-link-cell">
-                    <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'pending')">
-                      {{ formatNumber(feed.queuedCount) }}
-                    </router-link>
-                  </td>
-                  <td class="text-center">
-                    <div class="btn-group" :class="{ open: openDropdownFeedId === feed.idFeedOut }">
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-primary"
-                        @click="openEditModal(feed)"
+                <template v-for="feed in company.feeds" :key="feed.idFeedOut">
+                  <tr class="bg-gray feed-toggle">
+                    <td>
+                      <div class="feed-id-with-toggle">
+                        <button
+                          type="button"
+                          class="btn btn-xs btn-default incoming-toggle-btn"
+                          :disabled="!feed.incomingFeeds || !feed.incomingFeeds.length"
+                          @click="toggleIncomingFeeds(feed.idFeedOut)"
+                        >
+                          {{ expandedIncomingByFeed[feed.idFeedOut] ? '-' : '+' }}
+                        </button>
+                        <span>{{ feed.idFeedOut }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <strong
+                        :class="{
+                          'status-active': feed.status === 'active',
+                          'status-hidden': feed.status === 'hidden',
+                          'status-retired': feed.status === 'retired',
+                        }"
                       >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-primary dropdown-toggle"
-                        @click.stop="toggleFeedDropdown(feed.idFeedOut)"
-                        aria-haspopup="true"
-                        :aria-expanded="openDropdownFeedId === feed.idFeedOut"
-                      >
-                        <span class="caret"></span>
-                        <span class="sr-only">Toggle Dropdown</span>
-                      </button>
-                      <ul
-                        v-show="openDropdownFeedId === feed.idFeedOut"
-                        class="dropdown-menu dropdown-menu-right"
-                        @click="openDropdownFeedId = null"
-                      >
-                        <li><a href="#" @click.prevent="openShowPopulationsModal(feed)">Show populations</a></li>
-                        <li><a href="#" @click.prevent="openDuplicateFeedModal(feed)">Duplicate feed</a></li>
-                        <li><a href="#" @click.prevent="openSendTestRecordModal(feed)">Send test record</a></li>
-                        <li><a href="#" @click.prevent="openQueuePreviewModal(feed)">Queue preview</a></li>
-                        <li><a href="#" @click.prevent="openClearQueueModal(feed)">Clear queue</a></li>
-                        <li><a href="#" @click.prevent="openUrlReportModal(feed)">URL report</a></li>
-                        <li><a href="#" @click.prevent="openImportDataModal(feed)">Import data</a></li>
-                        <li><a href="#" @click.prevent="openUploadDataModal(feed)">Upload data</a></li>
-                        <li><a href="#" @click.prevent="openExportDataModal(feed)">Export data</a></li>
-                        <li><a href="#" @click.prevent="openRetryRejectionsModal(feed)">Retry rejections</a></li>
-                        <li><a href="#" @click.prevent="openResendPendingMarketplaceModal(feed)">Resend pending marketplace</a></li>
-                      </ul>
-                    </div>
-                  </td>
-                </tr>
+                        {{ feed.label }}
+                      </strong>
+                    </td>
+                    <td>{{ feed.description }}</td>
+                    <td>{{ feed.status }}</td>
+                    <td>{{ (feed.incomingFeeds && feed.incomingFeeds.length) || 0 }}</td>
+                    <td>
+                      <label class="switch">
+                        <input
+                          type="checkbox"
+                          :checked="feed.status === 'active'"
+                          @change="toggleStatus(feed.idFeedOut, $event.target.checked)"
+                        />
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td class="text-right record-search-link-cell">
+                      <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'accepted')">
+                        {{ formatNumber(feed.accepted) }}
+                      </router-link>
+                    </td>
+                    <td class="text-right record-search-link-cell">
+                      <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'rejected')">
+                        {{ formatNumber(feed.rejected) }}
+                      </router-link>
+                    </td>
+                    <td class="text-right record-search-link-cell">
+                      <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'pending')">
+                        {{ formatNumber(feed.queuedCount) }}
+                      </router-link>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group" :class="{ open: openDropdownFeedId === feed.idFeedOut }">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-primary"
+                          @click="openEditModal(feed)"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-primary dropdown-toggle"
+                          @click.stop="toggleFeedDropdown(feed.idFeedOut)"
+                          aria-haspopup="true"
+                          :aria-expanded="openDropdownFeedId === feed.idFeedOut"
+                        >
+                          <span class="caret"></span>
+                          <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <ul
+                          v-show="openDropdownFeedId === feed.idFeedOut"
+                          class="dropdown-menu dropdown-menu-right"
+                          @click="openDropdownFeedId = null"
+                        >
+                          <li><a href="#" @click.prevent="openShowPopulationsModal(feed)">Show populations</a></li>
+                          <li><a href="#" @click.prevent="openDuplicateFeedModal(feed)">Duplicate feed</a></li>
+                          <li><a href="#" @click.prevent="openSendTestRecordModal(feed)">Send test record</a></li>
+                          <li><a href="#" @click.prevent="openQueuePreviewModal(feed)">Queue preview</a></li>
+                          <li><a href="#" @click.prevent="openClearQueueModal(feed)">Clear queue</a></li>
+                          <li><a href="#" @click.prevent="openUrlReportModal(feed)">URL report</a></li>
+                          <li><a href="#" @click.prevent="openImportDataModal(feed)">Import data</a></li>
+                          <li><a href="#" @click.prevent="openUploadDataModal(feed)">Upload data</a></li>
+                          <li><a href="#" @click.prevent="openExportDataModal(feed)">Export data</a></li>
+                          <li><a href="#" @click.prevent="openRetryRejectionsModal(feed)">Retry rejections</a></li>
+                          <li><a href="#" @click.prevent="openResendPendingMarketplaceModal(feed)">Resend pending marketplace</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr
+                    v-if="expandedIncomingByFeed[feed.idFeedOut]"
+                    class="incoming-feed-list-row"
+                  >
+                    <td class="incoming-section-title" colspan="10">
+                      Incoming feeds for #{{ feed.idFeedOut }}
+                    </td>
+                  </tr>
+                  <tr
+                    v-for="incomingFeed in feed.incomingFeeds"
+                    :key="`${feed.idFeedOut}-${incomingFeed.idFeedIn}`"
+                    class="incoming-feed-detail-row"
+                    v-if="expandedIncomingByFeed[feed.idFeedOut]"
+                  >
+                    <td class="incoming-id-cell">
+                      {{ incomingFeed.idFeedIn }}
+                    </td>
+                    <td>{{ incomingFeed.companyName || '-' }}</td>
+                    <td>{{ incomingFeed.label || '-' }}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="text-right record-search-link-cell">
+                      <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'accepted', incomingFeed.idFeedIn)">
+                        {{ formatNumber(incomingFeed.accepted || 0) }}
+                      </router-link>
+                    </td>
+                    <td class="text-right record-search-link-cell">
+                      <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'rejected', incomingFeed.idFeedIn)">
+                        {{ formatNumber(incomingFeed.rejected || 0) }}
+                      </router-link>
+                    </td>
+                    <td class="text-right record-search-link-cell">
+                      <router-link :to="outgoingRecordSearchLink(null, feed.idFeedOut, 'pending', incomingFeed.idFeedIn)">
+                        {{ formatNumber(incomingFeed.pending || 0) }}
+                      </router-link>
+                    </td>
+                    <td></td>
+                  </tr>
+                </template>
               </template>
             </template>
           </tbody>
@@ -950,6 +999,7 @@ export default {
     const addError = ref('');
     const editError = ref('');
     const expandedCompanies = ref({});
+    const expandedIncomingByFeed = ref({});
     const openDropdownFeedId = ref(null);
 
     const toggleFeedDropdown = (idFeedOut) => {
@@ -1078,6 +1128,10 @@ export default {
       expandedCompanies.value[companyId] = !expandedCompanies.value[companyId];
     };
 
+    const toggleIncomingFeeds = (idFeedOut) => {
+      expandedIncomingByFeed.value[idFeedOut] = !expandedIncomingByFeed.value[idFeedOut];
+    };
+
     const toggleStatus = async (idFeedOut, enabled) => {
       try {
         const r = await axios.patch(`/api/outbound-feeds/${idFeedOut}/toggle-status`, {
@@ -1094,7 +1148,7 @@ export default {
       }
     };
 
-    const outgoingRecordSearchLink = (idCompany, idFeedOut, status) => {
+    const outgoingRecordSearchLink = (idCompany, idFeedOut, status, idFeedIn = null) => {
       const query = {
         startDate: filters.statsStart,
         endDate: filters.statsEnd,
@@ -1102,6 +1156,7 @@ export default {
       };
       if (idCompany) query.idCompany = idCompany;
       if (idFeedOut) query.idFeedOut = idFeedOut;
+      if (idFeedIn) query.idFeedIn = idFeedIn;
       return { path: '/record-search/outgoing', query };
     };
 
@@ -2330,11 +2385,13 @@ export default {
       editError,
       filters,
       expandedCompanies,
+      expandedIncomingByFeed,
       openDropdownFeedId,
       toggleFeedDropdown,
       formatNumber,
       fetchFeeds,
       toggleCompanyFeeds,
+      toggleIncomingFeeds,
       toggleStatus,
       outgoingRecordSearchLink,
       openAddModal,
@@ -2596,6 +2653,36 @@ export default {
 
 .bg-gray {
   background-color: #f9f9f9;
+}
+
+.incoming-feed-list-row td {
+  background: #f8f8f8;
+}
+
+.incoming-toggle-btn {
+  width: 26px;
+  min-width: 26px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.feed-id-with-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.incoming-section-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.incoming-feed-detail-row td {
+  background: #fcfcfc;
+}
+
+.incoming-id-cell {
+  padding-left: 28px;
 }
 
 .radio-inline {
