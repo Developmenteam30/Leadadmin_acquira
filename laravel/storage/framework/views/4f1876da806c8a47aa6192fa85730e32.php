@@ -14,6 +14,7 @@
 
 <h1><?php echo e($appName); ?></h1>
 <h2>Lead Submission API Specifications</h2>
+<p><a href="<?php echo e($feedFormUrl); ?>" target="_blank" rel="noopener noreferrer">Feed form</a></p>
 <h3>Company: <?php echo e($companyName); ?> (Feed: <?php echo e($feed->idFeedIn); ?>)</h3>
 
 <p>The lead submission system works on a key-value pair submission via HTTP POST (recommended) or HTTP GET. An XML (or JSON) response is

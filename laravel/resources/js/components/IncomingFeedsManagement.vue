@@ -169,6 +169,7 @@
                         @click="openDropdownFeedId = null"
                       >
                         <li><a href="#" @click.prevent="openApiSpec(feed)">API Spec</a></li>
+                        <li><a href="#" @click.prevent="openFeedForm(feed)">Feed Form</a></li>
                         <li><a href="#" @click.prevent="openOutgoingFeedsModal(feed)">Connect Outgoing Feeds</a></li>
                         <li><a href="#" @click.prevent="openImportDataModal(feed)">Import Data</a></li>
                         <li><a href="#" @click.prevent="openExportDataModal(feed)">Export Data</a></li>
@@ -1282,6 +1283,26 @@ export default {
       }
     };
 
+    const openFeedForm = async (feed) => {
+      try {
+        const r = await axios.get(`/api/inbound-feeds/${feed.idFeedIn}/api-spec-url`);
+        if (r.data?.status !== 1 || !r.data?.data) {
+          alert(r.data?.error || 'Unable to generate feed form URL.');
+          return;
+        }
+        const data = r.data.data;
+        const fallbackFromApiSpec = (data.apiSpecUrl || '').replace('/apispec?', '/feedform?');
+        const targetUrl = data.feedFormUrl || fallbackFromApiSpec;
+        if (!targetUrl) {
+          alert('Feed form URL is not available for this feed.');
+          return;
+        }
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      } catch (e) {
+        alert(e.response?.data?.error || e.message || 'Unable to open feed form.');
+      }
+    };
+
     const copyToClipboard = async (text) => {
       try {
         await navigator.clipboard.writeText(text);
@@ -1932,6 +1953,7 @@ export default {
       closeAddModal,
       openEditModal,
       openApiSpec,
+      openFeedForm,
       openImportDataModal,
       openExportDataModal,
       openUrlReportModal,

@@ -12,11 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class LiveFeedController extends Controller
 {
-    /**
-     * Show API spec as HTML page (public URL for sharing)
-     * GET /live/{idFeedIn}/apispec?h={hash}
-     */
-    public function showApiSpec(Request $request, $idFeedIn)
+    protected function buildSpecViewData(Request $request, $idFeedIn): array|\Illuminate\Http\Response
     {
         $h = $request->query('h');
         if (empty($h)) {
@@ -51,6 +47,7 @@ class LiveFeedController extends Controller
         }
         $apiUrl = $baseUrl . '/api/live/' . $feed->idFeedIn . '/feed';
         $apiSpecUrl = $baseUrl . '/live/' . $feed->idFeedIn . '/apispec?h=' . urlencode($h);
+        $feedFormUrl = $baseUrl . '/live/' . $feed->idFeedIn . '/feedform?h=' . urlencode($h);
 
         $companyName = $feed->company?->name ?? 'Unknown';
         $appName = Config::get('app.name', 'Lead Management');
@@ -71,10 +68,47 @@ class LiveFeedController extends Controller
             return '';
         };
 
-        return view('live.apispec', compact(
-            'feed', 'fields', 'requiredArray', 'allowedArray', 'allowedPingArray',
-            'apiUrl', 'apiSpecUrl', 'companyName', 'appName', 'findField'
-        ));
+        return compact(
+            'feed',
+            'fields',
+            'requiredArray',
+            'allowedArray',
+            'allowedPingArray',
+            'apiUrl',
+            'apiSpecUrl',
+            'feedFormUrl',
+            'companyName',
+            'appName',
+            'findField'
+        );
+    }
+
+    /**
+     * Show API spec as HTML page (public URL for sharing)
+     * GET /live/{idFeedIn}/apispec?h={hash}
+     */
+    public function showApiSpec(Request $request, $idFeedIn)
+    {
+        $viewData = $this->buildSpecViewData($request, $idFeedIn);
+        if ($viewData instanceof \Illuminate\Http\Response) {
+            return $viewData;
+        }
+
+        return view('live.apispec', $viewData);
+    }
+
+    /**
+     * Show interactive feed form as HTML page (public URL for sharing)
+     * GET /live/{idFeedIn}/feedform?h={hash}
+     */
+    public function showFeedForm(Request $request, $idFeedIn)
+    {
+        $viewData = $this->buildSpecViewData($request, $idFeedIn);
+        if ($viewData instanceof \Illuminate\Http\Response) {
+            return $viewData;
+        }
+
+        return view('live.feedform', $viewData);
     }
 
     /**
@@ -99,6 +133,7 @@ class LiveFeedController extends Controller
             'status' => 1,
             'data' => [
                 'apiSpecUrl' => $baseUrl . '/live/' . $feed->idFeedIn . '/apispec?h=' . urlencode($hash),
+                'feedFormUrl' => $baseUrl . '/live/' . $feed->idFeedIn . '/feedform?h=' . urlencode($hash),
                 'feedUrl' => $baseUrl . '/api/live/' . $feed->idFeedIn . '/feed',
             ],
         ]);
