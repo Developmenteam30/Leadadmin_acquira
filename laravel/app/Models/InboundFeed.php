@@ -74,7 +74,7 @@ class InboundFeed extends Model
             'chokePercent' => 'integer',
             'dailyLimit' => 'integer',
             'costPerLead' => 'decimal:4',
-            'revenuePerLead' => 'decimal:4',
+            'revenuePerLead' => 'decimal:2',
             'notifyThresholdCount' => 'integer',
             'lookbackPeriod' => 'integer',
             'pingTimeout' => 'integer',

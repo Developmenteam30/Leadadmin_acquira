@@ -13,7 +13,7 @@ return new class extends Migration
                 $table->string('revenuePerLeadType', 20)->default('fixed')->after('costPerLead');
             }
             if (!Schema::hasColumn('feedinc', 'revenuePerLead')) {
-                $table->decimal('revenuePerLead', 10, 4)->unsigned()->default(0)->after('revenuePerLeadType');
+                $table->decimal('revenuePerLead', 10, 2)->unsigned()->default(0)->after('revenuePerLeadType');
             }
         });
     }

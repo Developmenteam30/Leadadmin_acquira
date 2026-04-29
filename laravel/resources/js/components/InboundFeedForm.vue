@@ -560,16 +560,18 @@
                   value="percent"
                   v-model="localFeed.revenuePerLeadType"
                 />
-                %
+                Percentage
               </label>
             </p>
             <p>
               <input
-                type="text"
+                type="number"
                 name="revenuePerLead"
                 v-model="localFeed.revenuePerLead"
                 class="form-control"
                 placeholder="Value"
+                step="0.01"
+                min="0"
               />
             </p>
           </td>
