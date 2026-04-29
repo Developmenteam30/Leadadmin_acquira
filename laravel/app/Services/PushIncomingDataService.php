@@ -255,6 +255,26 @@ class PushIncomingDataService
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
 
+                    // For realtime flows, enforce inbound CPL + RPL ceiling when buyer price is present.
+                    if (($result['status'] ?? false) && isset($result['cost']) && is_numeric($result['cost'])) {
+                        $buyerPrice = (float) $result['cost'];
+                        $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
+                        if ($maxAllowedPrice !== null && $buyerPrice >= $maxAllowedPrice) {
+                            $result['status'] = false;
+                            $result['text'] = 'cost does not match';
+                            Log::channel('single')->info('[LiveFeed] Rejected by inbound CPL+RPL rule', [
+                                'idRecord' => $idRecord,
+                                'idFeedIn' => $idFeedIn,
+                                'idFeedOut' => $popIdFeedOut,
+                                'buyerPrice' => $buyerPrice,
+                                'maxAllowedPrice' => $maxAllowedPrice,
+                                'cpl' => (float) ($inboundFeed->costPerLead ?? 0),
+                                'rplType' => (string) ($inboundFeed->revenuePerLeadType ?? 'fixed'),
+                                'rplValue' => (float) ($inboundFeed->revenuePerLead ?? 0),
+                            ]);
+                        }
+                    }
+
                     Log::channel('single')->info('[LiveFeed] Outbound push result', [
                         'idFeedOut' => $popIdFeedOut,
                         'status' => $result['status'] ?? false,
@@ -1046,6 +1066,28 @@ class PushIncomingDataService
             return false;
         }
         return true;
+    }
+
+    /**
+     * Compute max acceptable realtime buyer price from inbound CPL + RPL.
+     * - fixed:   CPL + RPL
+     * - percent: CPL + (CPL * RPL / 100)
+     */
+    protected static function computeInboundMaxRealtimePrice(InboundFeed $inboundFeed): ?float
+    {
+        $cpl = isset($inboundFeed->costPerLead) && is_numeric($inboundFeed->costPerLead)
+            ? (float) $inboundFeed->costPerLead
+            : 0.0;
+        $rpl = isset($inboundFeed->revenuePerLead) && is_numeric($inboundFeed->revenuePerLead)
+            ? (float) $inboundFeed->revenuePerLead
+            : 0.0;
+        $rplType = (string) ($inboundFeed->revenuePerLeadType ?? 'fixed');
+
+        if ($rplType === 'percent') {
+            return $cpl + (($cpl * $rpl) / 100.0);
+        }
+
+        return $cpl + $rpl;
     }
 
     protected static function parseUrl(?string $url): string

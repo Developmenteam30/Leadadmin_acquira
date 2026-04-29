@@ -541,6 +541,40 @@
           </td>
         </tr>
         <tr>
+          <td>Revenue Per Lead</td>
+          <td>
+            <p>
+              <label class="radio-label">
+                <input
+                  type="radio"
+                  name="revenuePerLeadType"
+                  value="fixed"
+                  v-model="localFeed.revenuePerLeadType"
+                />
+                Fixed
+              </label>
+              <label class="radio-label">
+                <input
+                  type="radio"
+                  name="revenuePerLeadType"
+                  value="percent"
+                  v-model="localFeed.revenuePerLeadType"
+                />
+                %
+              </label>
+            </p>
+            <p>
+              <input
+                type="text"
+                name="revenuePerLead"
+                v-model="localFeed.revenuePerLead"
+                class="form-control"
+                placeholder="Value"
+              />
+            </p>
+          </td>
+        </tr>
+        <tr>
           <td>Salesperson</td>
           <td>
             <p>By default, salesperson revenues are assigned at a company level.</p>
@@ -806,6 +840,8 @@ export default {
       dailyLimit: props.feed.dailyLimit || '',
       chokePercent: props.feed.chokePercent || '0',
       costPerLead: props.feed.costPerLead || '',
+      revenuePerLeadType: props.feed.revenuePerLeadType || 'fixed',
+      revenuePerLead: props.feed.revenuePerLead || '',
       salesperson: props.feed.salesperson || '',
       notifications: props.feed.notifications ? '1' : '1',
       notifyThresholdCount: props.feed.notifyThresholdCount || '0',
@@ -932,6 +968,8 @@ export default {
           localFeed.value.dailyLimit = newFeed.dailyLimit ? String(newFeed.dailyLimit) : '';
           localFeed.value.chokePercent = newFeed.chokePercent ? String(newFeed.chokePercent) : '0';
           localFeed.value.costPerLead = newFeed.costPerLead ? String(newFeed.costPerLead) : '';
+          localFeed.value.revenuePerLeadType = newFeed.revenuePerLeadType || 'fixed';
+          localFeed.value.revenuePerLead = newFeed.revenuePerLead ? String(newFeed.revenuePerLead) : '';
           localFeed.value.salesperson = newFeed.salesperson ? String(newFeed.salesperson) : '';
           localFeed.value.notifications = newFeed.notifications === '1' || newFeed.notifications === true || newFeed.notifications === 1 ? '1' : '0';
           localFeed.value.notifyThresholdCount = newFeed.notifyThresholdCount ? String(newFeed.notifyThresholdCount) : '0';
