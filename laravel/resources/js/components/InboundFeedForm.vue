@@ -541,7 +541,7 @@
           </td>
         </tr>
         <tr>
-          <td>Revenue Per Lead</td>
+          <td>Margin Per Lead</td>
           <td>
             <p>
               <label class="radio-label">
