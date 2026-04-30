@@ -122,17 +122,21 @@ class OutboundFeedController extends Controller
                         'o.idFeedOut, o.idFeedIn,
                         SUM(CASE WHEN o.processed = 1 AND o.accepted = 1 THEN 1 ELSE 0 END) as accepted,
                         SUM(CASE WHEN o.processed = 1 AND o.accepted = 0 THEN 1 ELSE 0 END) as rejected,
-                        SUM(CASE WHEN o.processed = 0 THEN 1 ELSE 0 END) as pending'
+                        SUM(CASE WHEN o.processed = 0 AND COALESCE(o.sentCount, 0) > 0 THEN 1 ELSE 0 END) as pending'
                     )
                     ->get();
 
                 $incomingStatsByFeed = [];
+                $queuedByOutbound = [];
                 foreach ($incomingStatsRows as $statsRow) {
+                    $outboundId = (int) ($statsRow->idFeedOut ?? 0);
+                    $pendingCount = (int) ($statsRow->pending ?? 0);
                     $incomingStatsByFeed[(int) ($statsRow->idFeedOut ?? 0) . ':' . (int) ($statsRow->idFeedIn ?? 0)] = [
                         'accepted' => (int) ($statsRow->accepted ?? 0),
                         'rejected' => (int) ($statsRow->rejected ?? 0),
-                        'pending' => (int) ($statsRow->pending ?? 0),
+                        'pending' => $pendingCount,
                     ];
+                    $queuedByOutbound[$outboundId] = ($queuedByOutbound[$outboundId] ?? 0) + $pendingCount;
                 }
 
                 foreach ($populationRows as $row) {
@@ -175,6 +179,7 @@ class OutboundFeedController extends Controller
 
                 // Get stats for this feed
                 $stats = $this->getFeedStats($feed->idFeedOut, $statsStart, $statsEnd);
+                $feedQueuedCount = $queuedByOutbound[(int) ($feed->idFeedOut ?? 0)] ?? 0;
                 
                 $feedData = [
                     'idFeedOut' => $feed->idFeedOut,
@@ -182,10 +187,10 @@ class OutboundFeedController extends Controller
                     'description' => $feed->description ?? '',
                     'status' => $feed->status ?? 'active',
                     'cron' => $feed->cron ?? '0',
-                    'queued' => $feed->queued ?? 0,
+                    'queued' => $feedQueuedCount,
                     'accepted' => $stats['accepted'],
                     'rejected' => $stats['rejected'],
-                    'queuedCount' => $feed->queued ?? 0,
+                    'queuedCount' => $feedQueuedCount,
                     'incomingFeeds' => $incomingFeedsByOutbound[(int) ($feed->idFeedOut ?? 0)] ?? [],
                 ];
 
@@ -196,7 +201,7 @@ class OutboundFeedController extends Controller
                 }
                 $companyGroups[$companyId]['totalAccepted'] += $stats['accepted'];
                 $companyGroups[$companyId]['totalRejected'] += $stats['rejected'];
-                $companyGroups[$companyId]['totalQueued'] += ($feed->queued ?? 0);
+                $companyGroups[$companyId]['totalQueued'] += $feedQueuedCount;
             }
 
             // Sort feeds inside each company by name ASC, then type/description DESC.
