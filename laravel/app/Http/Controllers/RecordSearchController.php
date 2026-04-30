@@ -363,7 +363,7 @@ class RecordSearchController extends Controller
             } elseif ($status === 'rejected') {
                 $query->where('o.accepted', 0)->where('o.processed', 1);
             } elseif ($status === 'pending') {
-                $query->where('o.processed', 0);
+                $query->where('o.processed', 0)->where('o.sentCount', '>', 0);
             }
             if (!empty($idFeedOut)) {
                 $query->where('o.idFeedOut', $idFeedOut);
