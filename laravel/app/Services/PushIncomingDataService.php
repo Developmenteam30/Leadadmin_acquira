@@ -256,8 +256,22 @@ class PushIncomingDataService
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
 
-                    // For realtime flows, reject when buyer price is below inbound CPL + RPL minimum.
-                    if (isset($result['cost']) && is_numeric($result['cost'])) {
+                    // For realtime flows, a valid buyer price is mandatory.
+                    if (!isset($result['cost']) || !is_numeric($result['cost'])) {
+                        if (($result['status'] ?? false)) {
+                            $result['status'] = false;
+                            $result['text'] = 'price missing in realtime response';
+                            $liveData['hardRejectByCost'] = true;
+                            $liveData['pendingMarketplace'] = false;
+                            Log::channel('single')->info('[LiveFeed] Rejected: missing/invalid price in realtime response', [
+                                'idRecord' => $idRecord,
+                                'idFeedIn' => $idFeedIn,
+                                'idFeedOut' => $popIdFeedOut,
+                                'costRaw' => $result['cost'] ?? null,
+                                'rawText' => substr((string) ($result['text'] ?? ''), 0, 200),
+                            ]);
+                        }
+                    } else {
                         $buyerPrice = (float) $result['cost'];
                         $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
                         Log::channel('single')->info('[LiveFeed] Parsed outbound cost for realtime rule', [
