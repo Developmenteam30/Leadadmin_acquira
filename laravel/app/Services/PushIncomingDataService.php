@@ -256,8 +256,8 @@ class PushIncomingDataService
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
 
                     // For realtime flows, reject when buyer price is below inbound CPL + RPL minimum.
-                    if (($result['status'] ?? false) && isset($result['cost']) && is_numeric($result['cost'])) {
-                        $buyerPrice = (float) $result['cost'];
+                    if (($result['status'] ?? false) && isset($result['price']) && is_numeric($result['price'])) {
+                        $buyerPrice = (float) $result['price'];
                         $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
                         if ($maxAllowedPrice !== null && $buyerPrice < $maxAllowedPrice) {
                             $result['status'] = false;
