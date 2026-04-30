@@ -264,13 +264,14 @@ class PushIncomingDataService
                     ]);
                     if (isset($result['cost']) && is_numeric($result['cost'])) {
                         $buyerPrice = (float) $result['cost'];
+                        $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
                         Log::channel('single')->info('[LiveFeed] Parsed outbound cost for realtime rule', [
                             'idFeedOut' => $popIdFeedOut,
                             'status' => $result['status'] ?? false,
                             'cost' => $buyerPrice,
                             'rawText' => substr((string) ($result['text'] ?? ''), 0, 200),
+                            'maxAllowedPrice' => $maxAllowedPrice,
                         ]);
-                        $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
                         if ($maxAllowedPrice !== null && $buyerPrice < $maxAllowedPrice) {
                             $result['status'] = false;
                             $result['text'] = 'cost does not match';
