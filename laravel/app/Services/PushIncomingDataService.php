@@ -254,15 +254,15 @@ class PushIncomingDataService
                     ]);
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
-                    Log::channel('single')->info('[LiveFeed] Outbound push result', [
-                        'idFeedOut' => $popIdFeedOut,
-                        'status' => $result['status'] ?? false,
-                        'text' => substr($result['price'] ?? '', 0, 200),
-                    ]);
 
                     // For realtime flows, reject when buyer price is below inbound CPL + RPL minimum.
                     if (isset($result['price']) && is_numeric($result['price'])) {
                         $buyerPrice = (float) $result['price'];
+                        Log::channel('single')->info('[LiveFeed] Outbound push result', [
+                            'idFeedOut' => $popIdFeedOut,
+                            'status' => $result['status'] ?? false,
+                            'text' => substr($result['price'] ?? '', 0, 200),
+                        ]);
                         $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
                         if ($maxAllowedPrice !== null && $buyerPrice < $maxAllowedPrice) {
                             $result['status'] = false;
