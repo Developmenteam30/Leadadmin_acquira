@@ -23,6 +23,7 @@ laravel/vendor/
 laravel/.env
 laravel/.env.example
 laravel/public/hot
+laravel/public/buyer-demo/
 laravel/storage/logs/
 laravel/Dump20260202.sql
 laravel/backup.sql
