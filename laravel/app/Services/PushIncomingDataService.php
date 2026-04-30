@@ -48,6 +48,7 @@ class PushIncomingDataService
             'anyProcessed' => false,
             'pendingMarketplace' => false,
             'pingRealtimeFailed' => false,
+            'hardRejectByCost' => false,
             'reason' => null,
             'fields' => [],
         ];
@@ -256,12 +257,6 @@ class PushIncomingDataService
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
 
                     // For realtime flows, reject when buyer price is below inbound CPL + RPL minimum.
-                    Log::channel('single')->info('[LiveFeed] Realtime rule pre-check payload', [
-                        'idFeedOut' => $popIdFeedOut,
-                        'status' => $result['status'] ?? false,
-                        'costRaw' => $result['cost'] ?? null,
-                        'textRaw' => substr((string) ($result['text'] ?? ''), 0, 200),
-                    ]);
                     if (isset($result['cost']) && is_numeric($result['cost'])) {
                         $buyerPrice = (float) $result['cost'];
                         $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
@@ -274,7 +269,9 @@ class PushIncomingDataService
                         ]);
                         if ($maxAllowedPrice !== null && $buyerPrice < $maxAllowedPrice) {
                             $result['status'] = false;
-                            $result['text'] = 'cost does not match';
+                            $result['text'] = 'cost criteria does not match';
+                            $liveData['hardRejectByCost'] = true;
+                            $liveData['pendingMarketplace'] = false;
                             Log::channel('single')->info('[LiveFeed] Rejected by inbound CPL+RPL rule', [
                                 'idRecord' => $idRecord,
                                 'idFeedIn' => $idFeedIn,
@@ -312,6 +309,14 @@ class PushIncomingDataService
                         $result['text'] ?? '',
                         $result['cost'] ?? null
                     );
+                    if ($liveData['hardRejectByCost']) {
+                        Log::channel('single')->info('[LiveFeed] Stopping further buyer processing due to cost mismatch', [
+                            'idRecord' => $idRecord,
+                            'idFeedIn' => $idFeedIn,
+                            'idFeedOut' => $popIdFeedOut,
+                        ]);
+                        break;
+                    }
                 } else {
                     Log::channel('single')->warning('[LiveFeed] Inbound record not found for push', ['idRecord' => $idRecord]);
                 }
