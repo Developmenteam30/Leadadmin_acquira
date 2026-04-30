@@ -243,11 +243,11 @@
             <p>If a value is set for CPL Override (including a 0.00 amount), this will override the CPL set on the incoming feed. To use the default CPL from the incoming feed, leave this field completely blank.</p>
           </td>
         </tr>
-        <tr v-if="localFeed.feedCategory === 'phone-preping'">
-          <td><p>Cost Key (Ping)</p></td>
+        <tr>
+          <td><p>Cost Key</p></td>
           <td>
             <p><input type="text" v-model="localFeed.costKey" class="form-control" maxlength="100" placeholder="e.g. cost, data.cpl, result.price" style="max-width: 300px;" /></p>
-            <p>JSON key path in the outgoing ping server response that contains the cost. Use dot notation for nested keys (e.g. <code>data.cost</code>). When set, the lead is accepted only if the returned cost is at least 125% of the incoming feed cost; otherwise rejected. The returned cost is stored in outgoing feeds data.</p>
+            <p>JSON key path in the outgoing buyer response that contains cost/price. Use dot notation for nested keys (e.g. <code>data.cost</code>). If left blank, the system falls back to top-level <code>price</code> when present.</p>
           </td>
         </tr>
         <tr>

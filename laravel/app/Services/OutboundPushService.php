@@ -205,7 +205,7 @@ class OutboundPushService
             $response = self::sendRequest($feed->feedType, $url, $requestData, []);
             $success = self::checkSuccess($feed, $response['body'], $response['statusCode']);
 
-            // For ping feeds with costKey: parse cost from response, apply 124% rule
+            // Prefer explicit costKey mapping; fallback to top-level "price" for demo/marketplace-style buyers.
             $outboundCost = null;
             $costKey = $feed->costKey ?? null;
             if (!empty($costKey)) {
@@ -222,6 +222,12 @@ class OutboundPushService
                             'minRequired' => $minRequired,
                         ]);
                     }
+                }
+            }
+            if ($outboundCost === null) {
+                $decodedBody = json_decode((string) ($response['body'] ?? ''), true);
+                if (is_array($decodedBody) && isset($decodedBody['price']) && is_numeric($decodedBody['price'])) {
+                    $outboundCost = (float) $decodedBody['price'];
                 }
             }
 
