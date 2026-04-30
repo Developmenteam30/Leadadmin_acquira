@@ -255,11 +255,11 @@ class PushIncomingDataService
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
 
-                    // For realtime flows, enforce inbound CPL + RPL ceiling when buyer price is present.
+                    // For realtime flows, reject when buyer price is below inbound CPL + RPL minimum.
                     if (($result['status'] ?? false) && isset($result['cost']) && is_numeric($result['cost'])) {
                         $buyerPrice = (float) $result['cost'];
                         $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
-                        if ($maxAllowedPrice !== null && $buyerPrice >= $maxAllowedPrice) {
+                        if ($maxAllowedPrice !== null && $buyerPrice < $maxAllowedPrice) {
                             $result['status'] = false;
                             $result['text'] = 'cost does not match';
                             Log::channel('single')->info('[LiveFeed] Rejected by inbound CPL+RPL rule', [
