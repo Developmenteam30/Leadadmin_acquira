@@ -1537,7 +1537,13 @@ export default {
             pingTimeout: feedData.pingTimeout ? String(feedData.pingTimeout) : '300',
             dailyLimit: feedData.dailyLimit ? String(feedData.dailyLimit) : '',
             chokePercent: feedData.chokePercent ? String(feedData.chokePercent) : '0',
-            costPerLead: feedData.costPerLead ? String(feedData.costPerLead) : '',
+            costPerLead:
+              feedData.costPerLead !== null &&
+              feedData.costPerLead !== undefined &&
+              feedData.costPerLead !== '' &&
+              Number.isFinite(Number(feedData.costPerLead))
+                ? Number(feedData.costPerLead).toFixed(2)
+                : '',
             revenuePerLeadType: feedData.revenuePerLeadType || 'fixed',
             revenuePerLead: feedData.revenuePerLead ? String(feedData.revenuePerLead) : '',
             salesperson: feedData.salesperson ? String(feedData.salesperson) : '',

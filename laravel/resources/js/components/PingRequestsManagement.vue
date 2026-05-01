@@ -693,7 +693,13 @@ export default {
             pingTimeout: feedData.pingTimeout ? String(feedData.pingTimeout) : '300',
             dailyLimit: feedData.dailyLimit ? String(feedData.dailyLimit) : '',
             chokePercent: feedData.chokePercent ? String(feedData.chokePercent) : '0',
-            costPerLead: feedData.costPerLead ? String(feedData.costPerLead) : '',
+            costPerLead:
+              feedData.costPerLead !== null &&
+              feedData.costPerLead !== undefined &&
+              feedData.costPerLead !== '' &&
+              Number.isFinite(Number(feedData.costPerLead))
+                ? Number(feedData.costPerLead).toFixed(2)
+                : '',
             salesperson: feedData.salesperson ? String(feedData.salesperson) : '',
             notifications: feedData.notifications === '1' || feedData.notifications === 1 ? '1' : '0',
             notifyThresholdCount: feedData.notifyThresholdCount ? String(feedData.notifyThresholdCount) : '0',

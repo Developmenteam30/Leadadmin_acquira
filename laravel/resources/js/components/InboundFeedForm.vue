@@ -82,6 +82,14 @@
             </p>
             <div v-if="localFeed.filterState === 'includeOnly' || localFeed.filterState === 'excludeOnly'">
               <p>Choose which states to include/exclude.</p>
+              <p class="filter-state-actions">
+                <button type="button" class="btn btn-default btn-sm" @click.prevent="selectAllFilterStates">
+                  Check all
+                </button>
+                <button type="button" class="btn btn-default btn-sm" style="margin-left: 8px;" @click.prevent="clearAllFilterStates">
+                  Uncheck all
+                </button>
+              </p>
               <p>
                 <label
                   v-for="(name, code) in usStates"
@@ -536,6 +544,10 @@
                 name="costPerLead"
                 v-model="localFeed.costPerLead"
                 class="form-control"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="0.00"
+                @blur="normalizeCostPerLeadBlur"
               />
             </p>
           </td>
@@ -803,6 +815,12 @@ export default {
   setup(props, { emit }) {
     const prefix = computed(() => (props.isEdit ? 'edit' : 'new'));
 
+    const formatCostPerLeadDisplay = (val) => {
+      if (val === null || val === undefined || val === '') return '';
+      const n = typeof val === 'number' ? val : parseFloat(String(val).replace(/,/g, ''));
+      return Number.isFinite(n) ? n.toFixed(2) : '';
+    };
+
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     const zipUploading = ref(false);
@@ -841,7 +859,7 @@ export default {
       pingTimeout: props.feed.pingTimeout || '300',
       dailyLimit: props.feed.dailyLimit || '',
       chokePercent: props.feed.chokePercent || '0',
-      costPerLead: props.feed.costPerLead || '',
+      costPerLead: formatCostPerLeadDisplay(props.feed.costPerLead),
       revenuePerLeadType: props.feed.revenuePerLeadType || 'fixed',
       revenuePerLead: props.feed.revenuePerLead || '',
       salesperson: props.feed.salesperson || '',
@@ -855,6 +873,24 @@ export default {
       minimumBirthAge: props.feed.minimumBirthAge || '',
       maximumBirthAge: props.feed.maximumBirthAge || '',
     });
+
+    const normalizeCostPerLeadBlur = () => {
+      const cur = localFeed.value.costPerLead;
+      if (cur === null || cur === undefined || String(cur).trim() === '') {
+        localFeed.value.costPerLead = '';
+        return;
+      }
+      const formatted = formatCostPerLeadDisplay(cur);
+      localFeed.value.costPerLead = formatted !== '' ? formatted : String(cur).trim();
+    };
+
+    const selectAllFilterStates = () => {
+      localFeed.value.filterStateChoice = Object.keys(props.usStates || {});
+    };
+
+    const clearAllFilterStates = () => {
+      localFeed.value.filterStateChoice = [];
+    };
 
     const fetchZipCodeCount = async () => {
       if (!props.isEdit || !props.feed.idFeedIn) return;
@@ -969,7 +1005,7 @@ export default {
           localFeed.value.pingTimeout = newFeed.pingTimeout ? String(newFeed.pingTimeout) : '300';
           localFeed.value.dailyLimit = newFeed.dailyLimit ? String(newFeed.dailyLimit) : '';
           localFeed.value.chokePercent = newFeed.chokePercent ? String(newFeed.chokePercent) : '0';
-          localFeed.value.costPerLead = newFeed.costPerLead ? String(newFeed.costPerLead) : '';
+          localFeed.value.costPerLead = formatCostPerLeadDisplay(newFeed.costPerLead);
           localFeed.value.revenuePerLeadType = newFeed.revenuePerLeadType || 'fixed';
           localFeed.value.revenuePerLead = newFeed.revenuePerLead ? String(newFeed.revenuePerLead) : '';
           localFeed.value.salesperson = newFeed.salesperson ? String(newFeed.salesperson) : '';
@@ -1057,6 +1093,9 @@ export default {
       removeFilterUrl,
       handlePhoneRequiredChange,
       handleRequiredChange,
+      normalizeCostPerLeadBlur,
+      selectAllFilterStates,
+      clearAllFilterStates,
     };
   },
 };
@@ -1083,6 +1122,10 @@ export default {
 
 .input-long {
   width: 375px;
+}
+
+.filter-state-actions {
+  margin-bottom: 8px;
 }
 
 .checkbox-label,
