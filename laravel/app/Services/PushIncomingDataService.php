@@ -189,29 +189,29 @@ class PushIncomingDataService
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed, $webhookCallbackId);
                     $decision = $result['marketplaceDecision'] ?? null;
-                    $decisionType = is_array($decision) ? ($decision['decisionType'] ?? 'pending_webhook') : 'pending_webhook';
+                    $decision = is_array($decision) ? $decision : null;
+                    $final = self::finalizeMarketplaceDecision($decision, $result, $inboundFeed);
 
-                    if ($decisionType === 'accepted') {
+                    if ($final['decisionType'] === 'accepted') {
                         self::updateDataOutboundProcessed(
                             $idRecord,
                             $popIdFeedOut,
                             true,
-                            (string) ($decision['reason'] ?? 'Marketplace accepted'),
-                            isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null
+                            $final['reasonText'],
+                            $final['price']
                         );
                         $liveData['accepted'] = true;
                         $liveData['anyProcessed'] = true;
                         $liveData['enabled'] = true;
                         $liveData['pendingMarketplace'] = false;
-                    } elseif ($decisionType === 'rejected') {
-                        $reasonText = (string) ($decision['reason'] ?? ($result['text'] ?? 'Marketplace rejected'));
-                        self::updateDataOutboundProcessed($idRecord, $popIdFeedOut, false, $reasonText, isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null);
+                    } elseif ($final['decisionType'] === 'rejected') {
+                        self::updateDataOutboundProcessed($idRecord, $popIdFeedOut, false, $final['reasonText'], $final['price']);
                         $liveData['accepted'] = false;
                         $liveData['anyProcessed'] = true;
                         $liveData['enabled'] = true;
-                        $liveData['reason'] = sprintf('Third-party rejection [Reason: %s] [Code: O%s0]', $reasonText, $popIdFeedOut);
+                        $liveData['reason'] = sprintf('Third-party rejection [Reason: %s] [Code: O%s0]', $final['reasonText'], $popIdFeedOut);
                         $liveData['pendingMarketplace'] = false;
-                    } elseif ($decisionType === 'pending_manual') {
+                    } elseif ($final['decisionType'] === 'pending_manual') {
                         $pendingResultText = json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                         if ($pendingResultText === false || $pendingResultText === '') {
                             $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
@@ -220,7 +220,7 @@ class PushIncomingDataService
                             $idRecord,
                             $popIdFeedOut,
                             $pendingResultText,
-                            isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null
+                            $final['price']
                         );
                         $liveData['reason'] = self::MARKETPLACE_PENDING_MANUAL_REASON;
                         $liveData['pendingMarketplace'] = true;
@@ -307,7 +307,11 @@ class PushIncomingDataService
 
                     $liveData['anyProcessed'] = true;
                     if (!($result['status'] ?? false)) {
-                        $liveData['reason'] = sprintf('Third-party rejection [Reason: %s] [Code: O%s0]', $result['text'] ?? 'Unknown', $popIdFeedOut);
+                        $liveData['reason'] = sprintf(
+                            'Third-party rejection [Reason: %s] [Code: O%s0]',
+                            self::normalizeOutboundRejectionResult((string) ($result['text'] ?? '')),
+                            $popIdFeedOut
+                        );
                         if ($isPingFlow) {
                             $liveData['pingRealtimeFailed'] = true;
                         }
@@ -339,7 +343,19 @@ class PushIncomingDataService
 
         if ($liveData['pendingMarketplace'] && !$liveData['accepted']) {
             Log::channel('single')->info('[LiveFeed] Result: pending (marketplace awaiting webhook/manual)');
-            return ['status' => 'pending', 'reason' => $liveData['reason'] ?: 'Lead received; awaiting buyer response.', 'fields' => [], 'buyerAccepted' => false];
+            $pendingReason = $liveData['reason'];
+            // Realtime/ping rows run before marketplace (see partitionMarketplaceLast); don't surface their
+            // synchronous rejection text when the final state is marketplace awaiting webhook/manual.
+            if (is_string($pendingReason) && str_starts_with($pendingReason, 'Third-party rejection')) {
+                $pendingReason = 'Lead received; awaiting buyer response.';
+            }
+
+            return [
+                'status' => 'pending',
+                'reason' => $pendingReason ?: 'Lead received; awaiting buyer response.',
+                'fields' => [],
+                'buyerAccepted' => false,
+            ];
         }
 
         if ($liveData['enabled']) {
@@ -575,42 +591,41 @@ class PushIncomingDataService
 
         if (($feedOutModel->responseType ?? 'realtime') === 'marketplace') {
             $decision = $result['marketplaceDecision'] ?? null;
-            $decisionType = is_array($decision) ? ($decision['decisionType'] ?? 'pending_webhook') : 'pending_webhook';
-            $price = isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null;
+            $decision = is_array($decision) ? $decision : null;
+            $final = self::finalizeMarketplaceDecision($decision, $result, $inboundFeed);
 
-            if ($decisionType === 'accepted') {
+            if ($final['decisionType'] === 'accepted') {
                 self::updateDataOutboundProcessed(
                     $idRecord,
                     $idFeedOut,
                     true,
-                    (string) ($decision['reason'] ?? 'Marketplace accepted'),
-                    $price,
+                    $final['reasonText'],
+                    $final['price'],
                     false,
                     true
                 );
                 return ['status' => 1, 'state' => 'accepted'];
             }
 
-            if ($decisionType === 'rejected') {
-                $reasonText = (string) ($decision['reason'] ?? ($result['text'] ?? 'Marketplace rejected'));
+            if ($final['decisionType'] === 'rejected') {
                 self::updateDataOutboundProcessed(
                     $idRecord,
                     $idFeedOut,
                     false,
-                    $reasonText,
-                    $price,
+                    $final['reasonText'],
+                    $final['price'],
                     false,
                     true
                 );
                 return ['status' => 1, 'state' => 'rejected'];
             }
 
-            if ($decisionType === 'pending_manual') {
+            if ($final['decisionType'] === 'pending_manual') {
                 $pendingResultText = json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                 if ($pendingResultText === false || $pendingResultText === '') {
                     $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
                 }
-                self::markOutboundPendingManual($idRecord, $idFeedOut, $pendingResultText, $price);
+                self::markOutboundPendingManual($idRecord, $idFeedOut, $pendingResultText, $final['price']);
                 return ['status' => 1, 'state' => 'pending_manual'];
             }
 
@@ -636,11 +651,49 @@ class PushIncomingDataService
      */
     public static function processWebhookCallback(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null): void
     {
+        if ($accepted && $cost !== null) {
+            $existing = DB::table('data_outbound')
+                ->where('idRecord', $idRecord)
+                ->where('idFeedOut', $idFeedOut)
+                ->first();
+            $idFeedIn = (int) ($existing->idFeedIn ?? 0);
+            $inboundFeed = $idFeedIn > 0 ? InboundFeed::with('company')->find($idFeedIn) : null;
+            $costReject = self::inboundCostCriteriaRejection($cost, $inboundFeed);
+            if ($costReject !== null) {
+                $accepted = false;
+                $result = $costReject;
+            }
+        }
+
         self::updateDataOutboundProcessed($idRecord, $idFeedOut, $accepted, $result, $cost, true, true);
     }
 
     public static function confirmMarketplacePending(int $idRecord, int $idFeedOut, ?float $cost = null, ?string $result = null): void
     {
+        $existing = DB::table('data_outbound')
+            ->where('idRecord', $idRecord)
+            ->where('idFeedOut', $idFeedOut)
+            ->first();
+        $idFeedIn = (int) ($existing->idFeedIn ?? 0);
+        $inboundFeed = $idFeedIn > 0 ? InboundFeed::with('company')->find($idFeedIn) : null;
+
+        if ($cost !== null) {
+            $costReject = self::inboundCostCriteriaRejection($cost, $inboundFeed);
+            if ($costReject !== null) {
+                self::updateDataOutboundProcessed(
+                    $idRecord,
+                    $idFeedOut,
+                    false,
+                    $costReject,
+                    $cost,
+                    true,
+                    true
+                );
+
+                return;
+            }
+        }
+
         self::updateDataOutboundProcessed(
             $idRecord,
             $idFeedOut,
@@ -725,33 +778,32 @@ class PushIncomingDataService
 
                     if (($feedOutModel->responseType ?? 'realtime') === 'marketplace') {
                         $decision = $result['marketplaceDecision'] ?? null;
-                        $decisionType = is_array($decision) ? ($decision['decisionType'] ?? 'pending_webhook') : 'pending_webhook';
-                        $price = isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null;
+                        $decision = is_array($decision) ? $decision : null;
+                        $final = self::finalizeMarketplaceDecision($decision, $result, $inboundFeed);
 
-                        if ($decisionType === 'accepted') {
+                        if ($final['decisionType'] === 'accepted') {
                             self::updateDataOutboundProcessed(
                                 (int) $row->idRecord,
                                 $idFeedOut,
                                 true,
-                                (string) ($decision['reason'] ?? 'Marketplace accepted'),
-                                $price,
+                                $final['reasonText'],
+                                $final['price'],
                                 true,
                                 true
                             );
                             $summary['accepted']++;
-                        } elseif ($decisionType === 'rejected') {
-                            $reasonText = (string) ($decision['reason'] ?? ($result['text'] ?? 'Marketplace rejected'));
+                        } elseif ($final['decisionType'] === 'rejected') {
                             self::updateDataOutboundProcessed(
                                 (int) $row->idRecord,
                                 $idFeedOut,
                                 false,
-                                $reasonText,
-                                $price,
+                                $final['reasonText'],
+                                $final['price'],
                                 true,
                                 true
                             );
                             $summary['rejected']++;
-                        } elseif ($decisionType === 'pending_manual') {
+                        } elseif ($final['decisionType'] === 'pending_manual') {
                             $pendingResultText = json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                             if ($pendingResultText === false || $pendingResultText === '') {
                                 $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
@@ -761,7 +813,7 @@ class PushIncomingDataService
                                 ->where('idFeedOut', $idFeedOut)
                                 ->update([
                                     'result' => $pendingResultText,
-                                    'cost' => $price,
+                                    'cost' => $final['price'],
                                 ]);
                             $summary['pending_manual']++;
                         } else {
@@ -871,33 +923,32 @@ class PushIncomingDataService
                     );
 
                     $decision = $result['marketplaceDecision'] ?? null;
-                    $decisionType = is_array($decision) ? ($decision['decisionType'] ?? 'pending_webhook') : 'pending_webhook';
-                    $price = isset($decision['price']) && is_numeric($decision['price']) ? (float) $decision['price'] : null;
+                    $decision = is_array($decision) ? $decision : null;
+                    $final = self::finalizeMarketplaceDecision($decision, $result, $inboundFeed);
 
-                    if ($decisionType === 'accepted') {
+                    if ($final['decisionType'] === 'accepted') {
                         self::updateDataOutboundProcessed(
                             (int) $row->idRecord,
                             $idFeedOut,
                             true,
-                            (string) ($decision['reason'] ?? 'Marketplace accepted'),
-                            $price,
+                            $final['reasonText'],
+                            $final['price'],
                             false,
                             true
                         );
                         $summary['accepted']++;
-                    } elseif ($decisionType === 'rejected') {
-                        $reasonText = (string) ($decision['reason'] ?? ($result['text'] ?? 'Marketplace rejected'));
+                    } elseif ($final['decisionType'] === 'rejected') {
                         self::updateDataOutboundProcessed(
                             (int) $row->idRecord,
                             $idFeedOut,
                             false,
-                            $reasonText,
-                            $price,
+                            $final['reasonText'],
+                            $final['price'],
                             false,
                             true
                         );
                         $summary['rejected']++;
-                    } elseif ($decisionType === 'pending_manual') {
+                    } elseif ($final['decisionType'] === 'pending_manual') {
                         $pendingResultText = json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                         if ($pendingResultText === false || $pendingResultText === '') {
                             $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
@@ -906,7 +957,7 @@ class PushIncomingDataService
                             (int) $row->idRecord,
                             $idFeedOut,
                             $pendingResultText,
-                            $price
+                            $final['price']
                         );
                         $summary['pending_manual']++;
                     } else {
@@ -937,6 +988,10 @@ class PushIncomingDataService
         }
         if (!$allowOverride && (int) ($existing->processed ?? 0) === 1) {
             return;
+        }
+
+        if (!$accepted) {
+            $result = self::normalizeOutboundRejectionResult($result);
         }
 
         $previousAccepted = (int) ($existing->accepted ?? 0) === 1;
@@ -1120,6 +1175,118 @@ class PushIncomingDataService
         }
 
         return $cpl + $rpl;
+    }
+
+    /**
+     * Best-effort buyer price from marketplace decision JSON or raw push extract (costKey / top-level price).
+     */
+    protected static function marketplaceEffectiveBuyerPrice(?array $decision, array $pushResult): ?float
+    {
+        if (is_array($decision) && isset($decision['price']) && is_numeric($decision['price'])) {
+            return (float) $decision['price'];
+        }
+        if (isset($pushResult['cost']) && is_numeric($pushResult['cost'])) {
+            return (float) $pushResult['cost'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Same CPL+RPL floor as realtime: reject when buyer price is strictly below inbound max.
+     */
+    protected static function inboundCostCriteriaRejection(?float $buyerPrice, ?InboundFeed $inboundFeed): ?string
+    {
+        if ($buyerPrice === null || !$inboundFeed) {
+            return null;
+        }
+        $maxAllowedPrice = self::computeInboundMaxRealtimePrice($inboundFeed);
+        if ($maxAllowedPrice !== null && $buyerPrice < $maxAllowedPrice) {
+            return 'cost criteria does not match';
+        }
+
+        return null;
+    }
+
+    protected static function normalizeOutboundRejectionResult(string $result): string
+    {
+        $t = trim($result);
+
+        return $t !== '' ? $t : 'Unknown';
+    }
+
+    /**
+     * Apply inbound economics to marketplace parser output so realtime and marketplace agree on CPL+RPL.
+     * Keeps pending_manual (success without usable price) untouched so those leads stay pending until price exists.
+     *
+     * @return array{decisionType:string, reasonText:string, price:?float}
+     */
+    protected static function finalizeMarketplaceDecision(?array $decision, array $pushResult, ?InboundFeed $inboundFeed): array
+    {
+        $decisionArr = is_array($decision) ? $decision : [];
+        $decisionType = $decisionArr['decisionType'] ?? 'pending_webhook';
+        $priceFromDecision = isset($decisionArr['price']) && is_numeric($decisionArr['price']) ? (float) $decisionArr['price'] : null;
+        $effectivePrice = self::marketplaceEffectiveBuyerPrice(is_array($decision) ? $decision : null, $pushResult);
+        $costRejectReason = self::inboundCostCriteriaRejection($effectivePrice, $inboundFeed);
+
+        if ($costRejectReason !== null && $decisionType !== 'pending_manual') {
+            Log::channel('single')->info('[LiveFeed] Marketplace outcome overridden by inbound CPL+RPL rule', [
+                'priorDecisionType' => $decisionType,
+                'effectivePrice' => $effectivePrice,
+            ]);
+
+            return [
+                'decisionType' => 'rejected',
+                'reasonText' => self::normalizeOutboundRejectionResult($costRejectReason),
+                'price' => $priceFromDecision ?? $effectivePrice,
+            ];
+        }
+
+        if ($decisionType === 'accepted') {
+            return [
+                'decisionType' => 'accepted',
+                'reasonText' => (string) ($decisionArr['reason'] ?? 'Marketplace accepted'),
+                'price' => $priceFromDecision,
+            ];
+        }
+
+        if ($decisionType === 'rejected') {
+            $base = trim((string) ($decisionArr['reason'] ?? ''));
+
+            return [
+                'decisionType' => 'rejected',
+                'reasonText' => self::normalizeOutboundRejectionResult($base),
+                'price' => $priceFromDecision ?? $effectivePrice,
+            ];
+        }
+
+        if ($decisionType === 'pending_manual') {
+            return [
+                'decisionType' => 'pending_manual',
+                'reasonText' => '',
+                'price' => $priceFromDecision,
+            ];
+        }
+
+        // Buyer returned HTTP success and a usable price, but JSON lacked outcome success/failure — accept when CPL+RPL passes.
+        if ($decisionType === 'pending_webhook'
+            && ($pushResult['status'] ?? false)
+            && $effectivePrice !== null
+            && $effectivePrice > 0
+            && self::inboundCostCriteriaRejection($effectivePrice, $inboundFeed) === null
+        ) {
+            return [
+                'decisionType' => 'accepted',
+                'reasonText' => 'Marketplace accepted',
+                'price' => $effectivePrice,
+            ];
+        }
+
+        return [
+            'decisionType' => 'pending_webhook',
+            'reasonText' => '',
+            'price' => $priceFromDecision ?? $effectivePrice,
+        ];
     }
 
     protected static function parseUrl(?string $url): string
