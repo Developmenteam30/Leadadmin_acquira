@@ -67,13 +67,19 @@ class OutboundWebhookController extends Controller
         $accepted = $status === 'accepted';
         $resultText = $accepted ? 'Webhook accepted' : ($reason ?: 'Webhook rejected');
 
+        $buyerPayloadRaw = $request->getContent();
+        if ($buyerPayloadRaw === '') {
+            $buyerPayloadRaw = json_encode($request->all(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+
         try {
             PushIncomingDataService::processWebhookCallback(
                 (int) $idRecord,
                 (int) $idFeedOut,
                 $accepted,
                 $resultText,
-                $cost
+                $cost,
+                $buyerPayloadRaw
             );
 
             Log::channel('single')->info('[Webhook] Processed callback', [

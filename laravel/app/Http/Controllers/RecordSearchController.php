@@ -317,6 +317,7 @@ class RecordSearchController extends Controller
                     'o.timestamp',
                     DB::raw("DATE_FORMAT(o.timestamp, '%Y-%m-%d %H:%i:%s') as timestampConverted"),
                     'o.result',
+                    'o.buyer_response_raw',
                     'o.accepted',
                     'o.sentCount',
                     'o.cost',

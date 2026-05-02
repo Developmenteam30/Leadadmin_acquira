@@ -188,6 +188,7 @@ class PushIncomingDataService
                     ]);
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed, $webhookCallbackId);
+                    $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
                     $decision = $result['marketplaceDecision'] ?? null;
                     $decision = is_array($decision) ? $decision : null;
                     $final = self::finalizeMarketplaceDecision($decision, $result, $inboundFeed);
@@ -198,14 +199,26 @@ class PushIncomingDataService
                             $popIdFeedOut,
                             true,
                             $final['reasonText'],
-                            $final['price']
+                            $final['price'],
+                            false,
+                            false,
+                            $buyerResponseRaw
                         );
                         $liveData['accepted'] = true;
                         $liveData['anyProcessed'] = true;
                         $liveData['enabled'] = true;
                         $liveData['pendingMarketplace'] = false;
                     } elseif ($final['decisionType'] === 'rejected') {
-                        self::updateDataOutboundProcessed($idRecord, $popIdFeedOut, false, $final['reasonText'], $final['price']);
+                        self::updateDataOutboundProcessed(
+                            $idRecord,
+                            $popIdFeedOut,
+                            false,
+                            $final['reasonText'],
+                            $final['price'],
+                            false,
+                            false,
+                            $buyerResponseRaw
+                        );
                         $liveData['accepted'] = false;
                         $liveData['anyProcessed'] = true;
                         $liveData['enabled'] = true;
@@ -220,7 +233,8 @@ class PushIncomingDataService
                             $idRecord,
                             $popIdFeedOut,
                             $pendingResultText,
-                            $final['price']
+                            $final['price'],
+                            $buyerResponseRaw
                         );
                         $liveData['reason'] = self::MARKETPLACE_PENDING_MANUAL_REASON;
                         $liveData['pendingMarketplace'] = true;
@@ -255,6 +269,7 @@ class PushIncomingDataService
                     ]);
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
+                    $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
 
                     // For realtime flows, a valid buyer price is mandatory.
                     if (!isset($result['cost']) || !is_numeric($result['cost'])) {
@@ -325,7 +340,10 @@ class PushIncomingDataService
                         $popIdFeedOut,
                         $result['status'] ?? false,
                         $result['text'] ?? '',
-                        $result['cost'] ?? null
+                        $result['cost'] ?? null,
+                        false,
+                        false,
+                        $buyerResponseRaw
                     );
                     if ($liveData['hardRejectByCost']) {
                         Log::channel('single')->info('[LiveFeed] Stopping further buyer processing due to cost mismatch', [
@@ -588,6 +606,7 @@ class PushIncomingDataService
             $inboundFeed,
             !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
         );
+        $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
 
         if (($feedOutModel->responseType ?? 'realtime') === 'marketplace') {
             $decision = $result['marketplaceDecision'] ?? null;
@@ -602,7 +621,8 @@ class PushIncomingDataService
                     $final['reasonText'],
                     $final['price'],
                     false,
-                    true
+                    true,
+                    $buyerResponseRaw
                 );
                 return ['status' => 1, 'state' => 'accepted'];
             }
@@ -615,7 +635,8 @@ class PushIncomingDataService
                     $final['reasonText'],
                     $final['price'],
                     false,
-                    true
+                    true,
+                    $buyerResponseRaw
                 );
                 return ['status' => 1, 'state' => 'rejected'];
             }
@@ -625,7 +646,7 @@ class PushIncomingDataService
                 if ($pendingResultText === false || $pendingResultText === '') {
                     $pendingResultText = self::MARKETPLACE_PENDING_MANUAL_REASON;
                 }
-                self::markOutboundPendingManual($idRecord, $idFeedOut, $pendingResultText, $final['price']);
+                self::markOutboundPendingManual($idRecord, $idFeedOut, $pendingResultText, $final['price'], $buyerResponseRaw);
                 return ['status' => 1, 'state' => 'pending_manual'];
             }
 
@@ -639,7 +660,8 @@ class PushIncomingDataService
             (string) ($result['text'] ?? ''),
             isset($result['cost']) && is_numeric($result['cost']) ? (float) $result['cost'] : null,
             true,
-            true
+            true,
+            $buyerResponseRaw
         );
 
         return ['status' => 1, 'state' => ((bool) ($result['status'] ?? false)) ? 'accepted' : 'rejected'];
@@ -649,7 +671,7 @@ class PushIncomingDataService
      * Process webhook callback from marketplace buyer. Updates data_outbound and stats.
      * Called by OutboundWebhookController.
      */
-    public static function processWebhookCallback(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null): void
+    public static function processWebhookCallback(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null, ?string $buyerResponseRaw = null): void
     {
         if ($accepted && $cost !== null) {
             $existing = DB::table('data_outbound')
@@ -665,7 +687,7 @@ class PushIncomingDataService
             }
         }
 
-        self::updateDataOutboundProcessed($idRecord, $idFeedOut, $accepted, $result, $cost, true, true);
+        self::updateDataOutboundProcessed($idRecord, $idFeedOut, $accepted, $result, $cost, true, true, $buyerResponseRaw);
     }
 
     public static function confirmMarketplacePending(int $idRecord, int $idFeedOut, ?float $cost = null, ?string $result = null): void
@@ -687,7 +709,8 @@ class PushIncomingDataService
                     $costReject,
                     $cost,
                     true,
-                    true
+                    true,
+                    null
                 );
 
                 return;
@@ -701,7 +724,8 @@ class PushIncomingDataService
             $result ?: 'Marketplace manually confirmed',
             $cost,
             true,
-            true
+            true,
+            null
         );
     }
 
@@ -775,6 +799,7 @@ class PushIncomingDataService
                         $inboundFeed,
                         !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
                     );
+                    $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
 
                     if (($feedOutModel->responseType ?? 'realtime') === 'marketplace') {
                         $decision = $result['marketplaceDecision'] ?? null;
@@ -789,7 +814,8 @@ class PushIncomingDataService
                                 $final['reasonText'],
                                 $final['price'],
                                 true,
-                                true
+                                true,
+                                $buyerResponseRaw
                             );
                             $summary['accepted']++;
                         } elseif ($final['decisionType'] === 'rejected') {
@@ -800,7 +826,8 @@ class PushIncomingDataService
                                 $final['reasonText'],
                                 $final['price'],
                                 true,
-                                true
+                                true,
+                                $buyerResponseRaw
                             );
                             $summary['rejected']++;
                         } elseif ($final['decisionType'] === 'pending_manual') {
@@ -814,6 +841,7 @@ class PushIncomingDataService
                                 ->update([
                                     'result' => $pendingResultText,
                                     'cost' => $final['price'],
+                                    'buyer_response_raw' => $buyerResponseRaw,
                                 ]);
                             $summary['pending_manual']++;
                         } else {
@@ -827,7 +855,8 @@ class PushIncomingDataService
                             (string) ($result['text'] ?? ''),
                             isset($result['cost']) && is_numeric($result['cost']) ? (float) $result['cost'] : null,
                             true,
-                            true
+                            true,
+                            $buyerResponseRaw
                         );
 
                         if ((bool) ($result['status'] ?? false)) {
@@ -921,6 +950,7 @@ class PushIncomingDataService
                         $inboundFeed,
                         !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
                     );
+                    $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
 
                     $decision = $result['marketplaceDecision'] ?? null;
                     $decision = is_array($decision) ? $decision : null;
@@ -934,7 +964,8 @@ class PushIncomingDataService
                             $final['reasonText'],
                             $final['price'],
                             false,
-                            true
+                            true,
+                            $buyerResponseRaw
                         );
                         $summary['accepted']++;
                     } elseif ($final['decisionType'] === 'rejected') {
@@ -945,7 +976,8 @@ class PushIncomingDataService
                             $final['reasonText'],
                             $final['price'],
                             false,
-                            true
+                            true,
+                            $buyerResponseRaw
                         );
                         $summary['rejected']++;
                     } elseif ($final['decisionType'] === 'pending_manual') {
@@ -957,7 +989,8 @@ class PushIncomingDataService
                             (int) $row->idRecord,
                             $idFeedOut,
                             $pendingResultText,
-                            $final['price']
+                            $final['price'],
+                            $buyerResponseRaw
                         );
                         $summary['pending_manual']++;
                     } else {
@@ -977,7 +1010,15 @@ class PushIncomingDataService
         return $summary;
     }
 
-    protected static function updateDataOutboundProcessed(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null, bool $allowOverride = false, bool $syncInbound = false): void
+    /**
+     * HTTP response body as returned by the buyer (OutboundPushService stores this in push result "text").
+     */
+    protected static function buyerRawBodyFromPushResult(array $pushResult): string
+    {
+        return (string) ($pushResult['text'] ?? '');
+    }
+
+    protected static function updateDataOutboundProcessed(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null, bool $allowOverride = false, bool $syncInbound = false, ?string $buyerResponseRaw = null): void
     {
         $existing = DB::table('data_outbound')
             ->where('idRecord', $idRecord)
@@ -1005,6 +1046,9 @@ class PushIncomingDataService
         ];
         if ($cost !== null) {
             $update['cost'] = $cost;
+        }
+        if ($buyerResponseRaw !== null) {
+            $update['buyer_response_raw'] = $buyerResponseRaw;
         }
         DB::table('data_outbound')
             ->where('idRecord', $idRecord)
@@ -1056,13 +1100,16 @@ class PushIncomingDataService
         }
     }
 
-    protected static function markOutboundPendingManual(int $idRecord, int $idFeedOut, string $result, ?float $cost = null): void
+    protected static function markOutboundPendingManual(int $idRecord, int $idFeedOut, string $result, ?float $cost = null, ?string $buyerResponseRaw = null): void
     {
         $update = [
             'result' => $result,
         ];
         if ($cost !== null) {
             $update['cost'] = $cost;
+        }
+        if ($buyerResponseRaw !== null) {
+            $update['buyer_response_raw'] = $buyerResponseRaw;
         }
         DB::table('data_outbound')
             ->where('idRecord', $idRecord)
