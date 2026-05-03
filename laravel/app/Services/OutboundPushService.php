@@ -167,7 +167,7 @@ class OutboundPushService
 
     /**
      * Build request data from inbound record and feed config, then send to outbound URL.
-     * Returns ['status' => bool, 'text' => string, 'fields' => array]
+     * Returns ['status' => bool, 'text' => string, 'responseBody' => string, 'httpStatusCode' => int, 'fields' => array, ...]
      * @param string|null $webhookCallbackId When provided (marketplace), inject as callbackId for webhook return
      */
     public static function pushRecord(object $record, OutboundFeed $feed, ?InboundFeed $inboundFeed = null, ?string $webhookCallbackId = null): array
@@ -179,7 +179,13 @@ class OutboundPushService
             Log::channel('single')->warning('[LiveFeed] OutboundPush: No post URL configured', [
                 'idFeedOut' => $feed->idFeedOut ?? null,
             ]);
-            return ['status' => false, 'text' => 'No post URL configured', 'fields' => []];
+            return [
+                'status' => false,
+                'text' => 'No post URL configured',
+                'fields' => [],
+                'responseBody' => '',
+                'httpStatusCode' => 0,
+            ];
         }
 
         $prepingResult = self::runPrepingIfEnabled($feed, $requestData);
@@ -193,6 +199,8 @@ class OutboundPushService
                 'text' => $prepingResult['text'],
                 'fields' => [],
                 'failureType' => 'preping_failed',
+                'responseBody' => $prepingResult['text'],
+                'httpStatusCode' => (int) ($prepingResult['statusCode'] ?? 0),
             ];
         }
 
@@ -244,9 +252,14 @@ class OutboundPushService
                     (int) ($response['statusCode'] ?? 0)
                 );
             }
+            $bodyRaw = (string) ($response['body'] ?? '');
+            $statusCode = (int) ($response['statusCode'] ?? 0);
+
             return [
                 'status' => $success,
                 'text' => $response['body'],
+                'responseBody' => $bodyRaw,
+                'httpStatusCode' => $statusCode,
                 'fields' => [],
                 'cost' => $outboundCost,
                 'marketplaceDecision' => $marketplaceDecision,
@@ -258,7 +271,13 @@ class OutboundPushService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return ['status' => false, 'text' => $e->getMessage(), 'fields' => []];
+            return [
+                'status' => false,
+                'text' => $e->getMessage(),
+                'fields' => [],
+                'responseBody' => $e->getMessage(),
+                'httpStatusCode' => 0,
+            ];
         }
     }
 

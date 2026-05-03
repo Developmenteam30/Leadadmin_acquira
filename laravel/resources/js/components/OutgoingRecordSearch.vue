@@ -116,7 +116,6 @@
                   <th>Sent Count</th>
                   <th>Timestamp</th>
                   <th>Result / Response</th>
-                  <th>Buyer raw response</th>
                   <th>Cost</th>
                   <th>Email</th>
                   <th>First Name</th>
@@ -138,9 +137,6 @@
                   <td>{{ record.timestampConverted || record.timestamp }}</td>
                   <td style="max-width: 300px; word-break: break-word;">
                     {{ record.result || (record.accepted ? 'Success' : '-') }}
-                  </td>
-                  <td style="max-width: 260px; word-break: break-word; font-size: 11px;">
-                    {{ truncateText(record.buyer_response_raw, 140) }}
                   </td>
                   <td>{{ record.cost != null ? formatCost(record.cost) : '' }}</td>
                   <td>{{ record.email }}</td>
@@ -206,7 +202,13 @@
                   <tr><td><strong>Status</strong></td><td><span :class="detailsRecord.processed === 0 ? 'text-warning' : (detailsRecord.accepted ? 'text-success' : 'text-danger')">{{ detailsRecord.processed === 0 ? 'Pending' : (detailsRecord.accepted ? 'Accepted' : 'Rejected') }}</span></td></tr>
                   <tr><td><strong>Timestamp</strong></td><td>{{ detailsRecord.timestampConverted || detailsRecord.timestamp }}</td></tr>
                   <tr><td><strong>Outgoing Result / Response</strong></td><td style="word-break: break-word;">{{ detailsRecord.result || '-' }}</td></tr>
-                  <tr><td><strong>Buyer response (raw)</strong></td><td style="word-break: break-word;">{{ detailsRecord.buyer_response_raw || '-' }}</td></tr>
+                  <tr>
+                    <td><strong>Buyer response (raw)</strong></td>
+                    <td style="word-break: break-word;">
+                      <template v-if="buyerRawStored(detailsRecord)">{{ detailsRecord.buyer_response_raw }}</template>
+                      <span v-else class="text-muted">Not stored for this row (processed before buyer raw was saved, or migration not applied on the server). After deploy, use Resend to capture the buyer HTTP body.</span>
+                    </td>
+                  </tr>
                   <tr><td><strong>Inbound lead result</strong></td><td style="word-break: break-word;">{{ detailsRecord.inboundResult || '-' }}</td></tr>
                   <tr><td><strong>Cost</strong></td><td>{{ detailsRecord.cost != null ? formatCost(detailsRecord.cost) : '-' }}</td></tr>
                   <tr><td><strong>Incoming Feed</strong></td><td>{{ detailsRecord.inboundCompanyName }} - {{ detailsRecord.inboundLabel }}</td></tr>
@@ -436,11 +438,9 @@ export default {
         this.searchError = e.response?.data?.error || e.message || 'Failed to confirm marketplace record';
       }
     },
-    truncateText(text, maxLen = 120) {
-      if (text == null || text === '') return '-';
-      const s = String(text);
-      if (s.length <= maxLen) return s;
-      return `${s.slice(0, maxLen)}…`;
+    buyerRawStored(record) {
+      const v = record?.buyer_response_raw;
+      return v != null && String(v).trim() !== '';
     },
     formatCost(val) {
       const n = parseFloat(val);

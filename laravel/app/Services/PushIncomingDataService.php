@@ -188,7 +188,7 @@ class PushIncomingDataService
                     ]);
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed, $webhookCallbackId);
-                    $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
+                    $buyerResponseRaw = self::buyerRawPayloadFromPushResult($result);
                     $decision = $result['marketplaceDecision'] ?? null;
                     $decision = is_array($decision) ? $decision : null;
                     $final = self::finalizeMarketplaceDecision($decision, $result, $inboundFeed);
@@ -269,7 +269,7 @@ class PushIncomingDataService
                     ]);
                     self::incrementOutboundSentCount($idRecord, $popIdFeedOut);
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
-                    $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
+                    $buyerResponseRaw = self::buyerRawPayloadFromPushResult($result);
 
                     // For realtime flows, a valid buyer price is mandatory.
                     if (!isset($result['cost']) || !is_numeric($result['cost'])) {
@@ -606,7 +606,7 @@ class PushIncomingDataService
             $inboundFeed,
             !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
         );
-        $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
+        $buyerResponseRaw = self::buyerRawPayloadFromPushResult($result);
 
         if (($feedOutModel->responseType ?? 'realtime') === 'marketplace') {
             $decision = $result['marketplaceDecision'] ?? null;
@@ -799,7 +799,7 @@ class PushIncomingDataService
                         $inboundFeed,
                         !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
                     );
-                    $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
+                    $buyerResponseRaw = self::buyerRawPayloadFromPushResult($result);
 
                     if (($feedOutModel->responseType ?? 'realtime') === 'marketplace') {
                         $decision = $result['marketplaceDecision'] ?? null;
@@ -950,7 +950,7 @@ class PushIncomingDataService
                         $inboundFeed,
                         !empty($row->webhookCallbackId) ? (string) $row->webhookCallbackId : null
                     );
-                    $buyerResponseRaw = self::buyerRawBodyFromPushResult($result);
+                    $buyerResponseRaw = self::buyerRawPayloadFromPushResult($result);
 
                     $decision = $result['marketplaceDecision'] ?? null;
                     $decision = is_array($decision) ? $decision : null;
@@ -1011,11 +1011,27 @@ class PushIncomingDataService
     }
 
     /**
-     * HTTP response body as returned by the buyer (OutboundPushService stores this in push result "text").
+     * Persistable buyer-side payload: prefer explicit responseBody from OutboundPushService, then legacy "text",
+     * then HTTP status when the body was empty (realtime rules still replace result text afterwards).
      */
-    protected static function buyerRawBodyFromPushResult(array $pushResult): string
+    protected static function buyerRawPayloadFromPushResult(array $pushResult): string
     {
-        return (string) ($pushResult['text'] ?? '');
+        $body = array_key_exists('responseBody', $pushResult)
+            ? (string) $pushResult['responseBody']
+            : '';
+        if ($body === '') {
+            $body = (string) ($pushResult['text'] ?? '');
+        }
+        $code = array_key_exists('httpStatusCode', $pushResult) ? (int) $pushResult['httpStatusCode'] : 0;
+
+        if ($body !== '') {
+            return $body;
+        }
+        if ($code > 0) {
+            return sprintf('[HTTP %d] Empty response body', $code);
+        }
+
+        return '[OutboundPush] No buyer HTTP body was captured';
     }
 
     protected static function updateDataOutboundProcessed(int $idRecord, int $idFeedOut, bool $accepted, string $result, ?float $cost = null, bool $allowOverride = false, bool $syncInbound = false, ?string $buyerResponseRaw = null): void
