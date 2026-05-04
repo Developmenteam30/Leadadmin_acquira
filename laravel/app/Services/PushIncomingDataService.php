@@ -271,8 +271,15 @@ class PushIncomingDataService
                     $result = OutboundPushService::pushRecord($record, $feedOutModel, $inboundFeed);
                     $buyerResponseRaw = self::buyerRawPayloadFromPushResult($result);
 
-                    // For realtime flows, a valid buyer price is mandatory.
-                    if (!isset($result['cost']) || !is_numeric($result['cost'])) {
+                    $buyerBodyForJson = (string) ($result['responseBody'] ?? $result['text'] ?? '');
+                    $jsonFailureReason = OutboundPushService::jsonFailureReasonFromBuyerBody($buyerBodyForJson);
+                    if ($jsonFailureReason !== null) {
+                        $result['status'] = false;
+                        $result['text'] = $jsonFailureReason;
+                    } elseif (
+                        // For realtime flows, a valid buyer price is mandatory (skip when buyer already reported outcome=failure).
+                        !isset($result['cost']) || !is_numeric($result['cost'])
+                    ) {
                         if (($result['status'] ?? false)) {
                             $result['status'] = false;
                             $result['text'] = 'price missing in realtime response';
@@ -1292,7 +1299,8 @@ class PushIncomingDataService
         $effectivePrice = self::marketplaceEffectiveBuyerPrice(is_array($decision) ? $decision : null, $pushResult);
         $costRejectReason = self::inboundCostCriteriaRejection($effectivePrice, $inboundFeed);
 
-        if ($costRejectReason !== null && $decisionType !== 'pending_manual') {
+        // Do not replace an explicit buyer rejection (e.g. outcome=failure + reason) with a cost message when price is 0/low.
+        if ($costRejectReason !== null && $decisionType !== 'pending_manual' && $decisionType !== 'rejected') {
             Log::channel('single')->info('[LiveFeed] Marketplace outcome overridden by inbound CPL+RPL rule', [
                 'priorDecisionType' => $decisionType,
                 'effectivePrice' => $effectivePrice,

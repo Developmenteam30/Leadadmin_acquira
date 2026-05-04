@@ -245,19 +245,24 @@ class OutboundPushService
                 'success' => $success,
                 'bodyPreview' => substr($response['body'] ?? '', 0, 300),
             ]);
+            $bodyRaw = (string) ($response['body'] ?? '');
+            $jsonFailureReason = self::jsonFailureReasonFromBuyerBody($bodyRaw);
+            if ($jsonFailureReason !== null) {
+                $success = false;
+            }
             $marketplaceDecision = null;
             if (($feed->responseType ?? 'realtime') === 'marketplace') {
                 $marketplaceDecision = self::parseMarketplaceDecision(
-                    (string) ($response['body'] ?? ''),
+                    $bodyRaw,
                     (int) ($response['statusCode'] ?? 0)
                 );
             }
-            $bodyRaw = (string) ($response['body'] ?? '');
             $statusCode = (int) ($response['statusCode'] ?? 0);
+            $resultText = $jsonFailureReason ?? $bodyRaw;
 
             return [
                 'status' => $success,
-                'text' => $response['body'],
+                'text' => $resultText,
                 'responseBody' => $bodyRaw,
                 'httpStatusCode' => $statusCode,
                 'fields' => [],
@@ -451,6 +456,25 @@ class OutboundPushService
             }
         }
         return false;
+    }
+
+    /**
+     * When the buyer returns JSON with outcome=failure, return the reason string for storage/UI; otherwise null.
+     * In this case economics (CPL/RPL vs price) must not override the buyer's stated reason.
+     */
+    public static function jsonFailureReasonFromBuyerBody(string $body): ?string
+    {
+        $decoded = json_decode(trim($body), true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+        $outcome = strtolower(trim((string) ($decoded['outcome'] ?? '')));
+        if ($outcome !== 'failure') {
+            return null;
+        }
+        $reason = isset($decoded['reason']) ? trim((string) $decoded['reason']) : '';
+
+        return $reason !== '' ? $reason : 'Buyer reported failure';
     }
 
     /**
