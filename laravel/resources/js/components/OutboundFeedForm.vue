@@ -62,7 +62,7 @@
                 <button type="button" class="btn btn-primary btn-sm" style="margin-left: 6px;" @click="copyText(webhookOutboundFullUrl, 'url')">Copy URL</button>
                 <span v-if="copyFeedback === 'url'" class="text-success" style="margin-left: 6px;">Copied</span>
               </p>
-              <p class="text-muted" style="margin-top: 8px;">The buyer must send <code>POST</code> to this URL with header <code>X-Webhook-Token: &lt;secret&gt;</code> or <code>Authorization: Bearer &lt;secret&gt;</code>, and JSON body including <code>leadId</code> (or <code>callbackId</code>), <code>status</code>, <code>reason</code>, and optional <code>cost</code>.</p>
+              <p class="text-muted" style="margin-top: 8px;">The buyer must send <code>POST</code> to this URL with header <code>X-Webhook-Token: &lt;secret&gt;</code> or <code>Authorization: Bearer &lt;secret&gt;</code>, and a JSON body. Identify the lead with <code>leadId</code>, <code>callbackId</code>, or buyer-style <code>LeadId</code> (same value as the callback ID from the lead post). Either use <code>status</code> (<code>accepted</code> or <code>rejected</code>) with optional <code>reason</code> and <code>cost</code>, or send <code>LeadId</code> and numeric <code>Amount</code> (treated as <code>cost</code>) plus optional fields such as <code>SoldDate</code> and <code>LeadType</code>; if <code>status</code> is omitted but <code>Amount</code> is present, the callback is treated as accepted.</p>
               <p style="margin-top: 10px;"><strong>Copy for client</strong> (method, URL, headers, sample body):</p>
               <div class="webhook-copy-block-wrap">
                 <pre class="webhook-copy-block">{{ clientWebhookInstructions }}</pre>
@@ -442,7 +442,15 @@ export default {
         '',
         'Alternatively use: Authorization: Bearer ' + secret,
         '',
-        'Body (JSON):',
+        'Body (JSON) — buyer example (LeadId + Amount; status optional, omitted = accepted when Amount is sent):',
+        '{',
+        '  "LeadId": "<callbackId from the lead post response>",',
+        '  "SoldDate": "2023-01-04T19:23:37",',
+        '  "LeadType": "Diamond Life Lead",',
+        '  "Amount": 5.50',
+        '}',
+        '',
+        'Also supported — standard shape:',
         '{',
         '  "leadId": "<callbackId from the lead post response>",',
         '  "status": "accepted",',
