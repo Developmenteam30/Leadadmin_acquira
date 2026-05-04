@@ -15,23 +15,41 @@ class OutboundWebhookController extends Controller
      * POST /api/webhooks/outbound
      *
      * Auth: X-Webhook-Token or Authorization: Bearer {webhookSecret}
-     * Body (JSON): { "leadId": "..." or "callbackId": "...", "status": "accepted"|"rejected", "reason": "...", "cost": 12.50 }
-     * Lead ID (callbackId) is looked up from the body - no feed ID in the URL.
+     *
+     * Standard body (JSON): leadId or callbackId, status accepted|rejected, optional reason, optional cost.
+     *
+     * Alternate buyer body: LeadId (matches callbackId from lead post), Amount (maps to cost),
+     * optional SoldDate, LeadType. If status is omitted but LeadId and numeric Amount are present,
+     * the callback is treated as accepted (sale notification).
      */
     public function receive(Request $request)
     {
-        $leadId = $request->input('leadId') ?? $request->input('callbackId');
-        if (empty($leadId)) {
-            return response()->json(['success' => false, 'error' => 'leadId or callbackId is required in the request body'], 422);
+        $leadId = $request->input('leadId')
+            ?? $request->input('callbackId')
+            ?? $request->input('LeadId');
+        if ($leadId === null || $leadId === '') {
+            return response()->json(['success' => false, 'error' => 'leadId, callbackId, or LeadId is required in the request body'], 422);
         }
 
-        $status = strtolower(trim($request->input('status', '')));
-        if (!in_array($status, ['accepted', 'rejected'])) {
-            return response()->json(['success' => false, 'error' => 'status must be accepted or rejected'], 422);
+        $payload = $request->all();
+        $status = strtolower(trim((string) ($payload['status'] ?? '')));
+        if (!in_array($status, ['accepted', 'rejected'], true)) {
+            $amountPresent = array_key_exists('Amount', $payload) && is_numeric($payload['Amount']);
+            if ($amountPresent) {
+                $status = 'accepted';
+            } else {
+                return response()->json(['success' => false, 'error' => 'status must be accepted or rejected (or send Amount with LeadId for sale callbacks)'], 422);
+            }
         }
 
-        $reason = $request->input('reason', '');
-        $cost = $request->has('cost') && is_numeric($request->cost) ? (float) $request->cost : null;
+        $reason = (string) ($payload['reason'] ?? '');
+
+        $cost = null;
+        if (array_key_exists('cost', $payload) && is_numeric($payload['cost'])) {
+            $cost = (float) $payload['cost'];
+        } elseif (array_key_exists('Amount', $payload) && is_numeric($payload['Amount'])) {
+            $cost = (float) $payload['Amount'];
+        }
 
         $row = DB::table('data_outbound')
             ->where('webhookCallbackId', $leadId)
@@ -65,7 +83,7 @@ class OutboundWebhookController extends Controller
 
         $idRecord = $row->idRecord;
         $accepted = $status === 'accepted';
-        $resultText = $accepted ? 'Webhook accepted' : ($reason ?: 'Webhook rejected');
+        $resultText = $accepted ? 'Webhook accepted' : ($reason !== '' ? $reason : 'Webhook rejected');
 
         $buyerPayloadRaw = $request->getContent();
         if ($buyerPayloadRaw === '') {
