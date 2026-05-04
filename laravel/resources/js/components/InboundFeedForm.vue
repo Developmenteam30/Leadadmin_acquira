@@ -56,19 +56,8 @@
         <tr>
           <td>Filter State</td>
           <td>
-            <p>Use this feature to limit which state(s) leads are allowed to come from.</p>
+            <p>Use this feature to block leads from specific states: select <strong>Exclude Only</strong>, then check each state to exclude. Leave <strong>Exclude Only</strong> unselected to allow leads from all states.</p>
             <p>
-              <label class="radio-label">
-                <input
-                  type="radio"
-                  name="filterState"
-                  value="includeOnly"
-                  v-model="localFeed.filterState"
-                  @change="handleFilterStateChange"
-                />
-                Include Only
-              </label>
-              <br/>
               <label class="radio-label">
                 <input
                   type="radio"
@@ -81,7 +70,7 @@
               </label>
             </p>
             <div v-if="localFeed.filterState === 'includeOnly' || localFeed.filterState === 'excludeOnly'">
-              <p>Choose which states to include/exclude.</p>
+              <p>{{ localFeed.filterState === 'includeOnly' ? 'Legacy include-only: checked states are allowed; all others are blocked. Select Exclude Only above to use exclude rules instead.' : 'Choose which states to exclude.' }}</p>
               <p class="filter-state-actions">
                 <button type="button" class="btn btn-default btn-sm" @click.prevent="selectAllFilterStates">
                   Check all
