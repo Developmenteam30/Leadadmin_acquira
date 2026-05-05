@@ -14,7 +14,7 @@ class OutboundWebhookController extends Controller
      * Receive webhook callback from marketplace buyers with accept/reject result.
      * POST /api/webhooks/outbound
      *
-     * Auth: X-Webhook-Token or Authorization: Bearer {webhookSecret}
+     * Auth: optional; token is validated only when feed webhookSecret is configured.
      *
      * Standard body (JSON): leadId or callbackId, status accepted|rejected, optional reason, optional cost.
      *
@@ -76,8 +76,9 @@ class OutboundWebhookController extends Controller
         $token = $request->header('X-Webhook-Token')
             ?? (preg_match('/^Bearer\s+(.+)$/i', $request->header('Authorization', ''), $m) ? trim($m[1] ?? '') : null);
 
-        if (empty($feed->webhookSecret) || !hash_equals((string) $feed->webhookSecret, (string) $token)) {
-            Log::channel('single')->warning('[Webhook] Invalid or missing token', ['idFeedOut' => $idFeedOut]);
+        $secret = (string) ($feed->webhookSecret ?? '');
+        if ($secret !== '' && !hash_equals($secret, (string) $token)) {
+            Log::channel('single')->warning('[Webhook] Invalid token', ['idFeedOut' => $idFeedOut]);
             return response()->json(['success' => false, 'error' => 'Unauthorized'], 401);
         }
 
