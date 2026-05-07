@@ -40,9 +40,6 @@
         >
           Add a new feed
         </button>
-        <router-link to="/incoming-feeds/ping" class="btn btn-primary" style="margin-left: 10px;">
-          Ping Requests
-        </router-link>
       </p>
 
       <div v-if="loading" class="text-center">
